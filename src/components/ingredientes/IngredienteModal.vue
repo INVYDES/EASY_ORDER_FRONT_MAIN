@@ -84,10 +84,10 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { API_URL } from '@/config/api'
 
 const props = defineProps({
   ingrediente: { type: Object, default: null },
-  apiUrl: { type: String, default: import.meta.env.VITE_API_URL + '/api' }
 })
 
 const emit = defineEmits(['close', 'saved'])
@@ -142,15 +142,22 @@ const guardar = async () => {
   try {
     const esEdit = !!props.ingrediente
     const url = esEdit 
-      ? `${props.apiUrl}/ingredientes/${props.ingrediente.id}` 
-      : `${props.apiUrl}/ingredientes`
+      ? `${API_URL}/ingredientes/${props.ingrediente.id}` 
+      : `${API_URL}/ingredientes`
     
     const method = esEdit ? 'PUT' : 'POST'
+
+    const payload = {
+      ...form.value,
+      costo_unitario: form.value.costo_unitario ? parseFloat(form.value.costo_unitario) : 0,
+      stock_actual: form.value.stock_actual ? parseFloat(form.value.stock_actual) : 0,
+      stock_minimo: form.value.stock_minimo ? parseFloat(form.value.stock_minimo) : 0,
+    }
 
     const res = await fetch(url, {
       method,
       headers: getHeaders(),
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(payload)
     })
 
     const data = await res.json()

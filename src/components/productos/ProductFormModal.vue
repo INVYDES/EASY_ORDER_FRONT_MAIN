@@ -212,7 +212,7 @@ const props = defineProps({
   // ✅ Eliminada la prop apiUrl que causaba duplicación
 })
 
-const emit = emitDefinidos(['close', 'saved'])
+const emit = defineEmits(['close', 'saved'])
 
 const loading = ref(false)
 const loadingIngredientes = ref(true)

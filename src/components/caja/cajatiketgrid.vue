@@ -59,13 +59,15 @@ const props = defineProps({
 const emit = defineEmits(['refresh', 'order-paid'])
 
 // Estado
-const subTab = ref('LISTA')
+const subTab = ref('ENTREGADA')
 
 // Configuración de sub-tabs
 const subTabs = [
-  { key: 'LISTA',          label: 'Listas p/ cobrar', icon: '✅', color: '#10b981' },
-  { key: 'EN_PREPARACION', label: 'En cocina',         icon: '🔥', color: '#f97316' },
-  { key: 'ABIERTA',        label: 'Abiertas',          icon: '🟡', color: '#f59e0b' },
+  { key: 'ENTREGADA',      label: 'Para cobrar',       icon: '🏁', color: '#8b5cf6' },
+  { key: 'LISTA',          label: 'Ya preparadas',     icon: '✅', color: '#10b981' },
+  { key: 'EN_PREPARACION', label: 'En cocina/barra',   icon: '🔥', color: '#f97316' },
+  { key: 'POR_PREPARAR',   label: 'Por preparar',      icon: '🟡', color: '#f59e0b' },
+  { key: 'ABIERTA',        label: 'Nuevas',            icon: '📝', color: '#fcd34d' },
 ]
 
 // Contar órdenes por estado

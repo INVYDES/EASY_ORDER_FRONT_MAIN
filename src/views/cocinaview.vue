@@ -53,7 +53,7 @@
     </div>
 
     <!-- ══ KANBAN ══ -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <!-- Pendientes -->
       <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
@@ -104,37 +104,11 @@
             accion-label="✅ Marcar como lista"
             accion-class="bg-emerald-500 hover:bg-emerald-400 text-white"
             :procesando="procesando === order.id"
-            @accion="cambiarEstado(order.id, 'LISTA')"
+            @accion="cambiarEstado(order.id, 'LISTO')"
           />
         </div>
       </div>
 
-      <!-- Listas -->
-      <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
-        <div class="px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span>✅</span>
-            <h2 class="font-bold text-emerald-300 text-sm">Listas para entregar</h2>
-          </div>
-          <span class="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">
-            {{ readyOrders.length }}
-          </span>
-        </div>
-        <div class="p-3 space-y-3 min-h-72 max-h-[calc(100vh-320px)] overflow-y-auto">
-          <p v-if="readyOrders.length === 0 && !loading"
-            class="text-center py-12 text-gray-700 text-sm italic">
-            Sin órdenes listas
-          </p>
-          <OrdenCardCocina
-            v-for="order in readyOrders" :key="order.id"
-            :order="order"
-            accion-label="🫡 Entregada a mesero"
-            accion-class="bg-gray-700 hover:bg-gray-600 text-white"
-            :procesando="procesando === order.id"
-            @accion="marcarEntregada(order.id)"
-          />
-        </div>
-      </div>
     </div>
 
     <!-- ══ MODAL INGREDIENTES ══ -->
@@ -282,9 +256,46 @@ const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
 )
 
-const pendingOrders   = computed(() => orders.value.filter(o => o.estado === 'ABIERTA'))
-const preparingOrders = computed(() => orders.value.filter(o => o.estado === 'EN_PREPARACION'))
-const readyOrders     = computed(() => orders.value.filter(o => o.estado === 'LISTA'))
+const BEBIDA_CATEGORIA_IDS = [7]
+const esBebida = (detalle) => {
+  if (BEBIDA_CATEGORIA_IDS.includes(detalle.producto?.categoria_id)) return true
+  const cat = (detalle.producto?.categoria?.nombre || '').toLowerCase()
+  const nom = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return cat.includes('bebida') || cat.includes('refresc') || cat.includes('coctel') ||
+         cat.includes('jugo')   || cat.includes('agua')    || cat.includes('café')   ||
+         nom.includes('bebida') || nom.includes('refresc') || nom.includes('coctel') ||
+         nom.includes('jugo')   || nom.includes('agua')
+}
+
+const isCocinaOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
+const getDetallesCocina = (o) => (o.detalles || []).filter(d => !esBebida(d))
+
+const pendingOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isCocinaOrder(o)) return false
+    const detalles = getDetallesCocina(o)
+    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+  })
+})
+
+const preparingOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isCocinaOrder(o)) return false
+    const detalles = getDetallesCocina(o)
+    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'EN_PREPARACION') && !detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+  })
+})
+
+const hiddenOrders = ref([])
+
+const readyOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isCocinaOrder(o)) return false
+    if (hiddenOrders.value.includes(o.id)) return false
+    const detalles = getDetallesCocina(o)
+    return detalles.length > 0 && detalles.every(d => d.estado_preparacion === 'LISTO')
+  })
+})
 
 const showToast = (message, type = 'info', duration = 3500) => {
   const id = Date.now()
@@ -300,7 +311,7 @@ const loadOrders = async () => {
   loading.value = true
   try {
     const [aD, pD, lD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
     ])
@@ -386,20 +397,30 @@ const confirmarYCambiarEstado = async () => {
 }
 
 // ── Cambiar estado ─────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstado) => {
+const cambiarEstado = async (id, nuevoEstadoDetalle) => {
   procesando.value = id
   try {
-    const res  = await fetch(`${API_URL}/ordenes/${id}`, {
+    const orden = orders.value.find(o => o.id === id)
+    if (!orden) return
+
+    const detallesCocina = getDetallesCocina(orden).map(d => d.id)
+
+    const res  = await fetch(`${API_URL}/ordenes/${id}/station-status`, {
       method: 'PUT',
       headers: getHeaders(),
-      body: JSON.stringify({ estado: nuevoEstado }),
+      body: JSON.stringify({ detalles: detallesCocina, estado_preparacion: nuevoEstadoDetalle }),
     })
     const data = await res.json()
     if (res.ok && data.success) {
-      const o = orders.value.find(o => o.id === id)
-      if (o) o.estado = nuevoEstado
-      const labels = { EN_PREPARACION:'En preparación 🔥', LISTA:'Lista ✅' }
-      showToast(`Orden #${id} → ${labels[nuevoEstado] || nuevoEstado}`, 'success')
+      orden.detalles.forEach(d => {
+        if (detallesCocina.includes(d.id)) {
+          d.estado_preparacion = nuevoEstadoDetalle
+        }
+      })
+      orden.estado = data.data.nuevo_estado_orden
+      
+      const labels = { EN_PREPARACION:'En preparación 🔥', LISTO:'Listos ✅' }
+      showToast(`Platillos de Orden #${id} → ${labels[nuevoEstadoDetalle] || nuevoEstadoDetalle}`, 'success')
     } else {
       showToast(data.message || 'Error al actualizar', 'error')
     }
@@ -412,12 +433,11 @@ const cambiarEstado = async (id, nuevoEstado) => {
 
 const marcarEntregada = async (id) => {
   procesando.value = id
-  try {
-    orders.value = orders.value.filter(o => o.id !== id)
-    showToast(`Orden #${id} entregada al mesero 🫡`, 'success')
-  } finally {
-    procesando.value = null
+  if (!hiddenOrders.value.includes(id)) {
+    hiddenOrders.value.push(id)
   }
+  showToast(`Orden #${id} entregada al mesero 🫡`, 'success')
+  procesando.value = null
 }
 
 // ── Ciclo de vida ──────────────────────────────────────────────────────────────

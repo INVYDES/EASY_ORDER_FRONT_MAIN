@@ -155,7 +155,7 @@
                 {{ cambiando === orden.id ? 'Actualizando...' : accionEstado(orden.estado) }}
               </button>
               <div v-else class="w-full py-2.5 text-sm font-medium text-center rounded-xl bg-gray-50 text-gray-400">
-                {{ orden.estado === 'CERRADA' ? '✅ Orden cerrada' : '—' }}
+                {{ ['POR_PREPARAR', 'EN_PREPARACION'].includes(orden.estado) ? 'En manos de estación' : orden.estado === 'ENTREGADA' ? 'Esperando cobro' : orden.estado === 'CERRADA' ? '✅ Orden cerrada' : '—' }}
               </div>
             </div>
 
@@ -350,10 +350,11 @@ const nombreOrden = (orden) => {
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 const tabs = [
   { key: 'todas',          label: 'Todas',           icon: '📋', color: '#6366f1' },
-  { key: 'ABIERTA',        label: 'Por preparar',    icon: '🟡', color: '#f59e0b' },
+  { key: 'ABIERTA',        label: 'Nuevas',          icon: '📝', color: '#fcd34d' },
+  { key: 'POR_PREPARAR',   label: 'Por preparar',    icon: '🟡', color: '#f59e0b' },
   { key: 'EN_PREPARACION', label: 'En preparación',  icon: '🔥', color: '#f97316' },
-  { key: 'LISTA',          label: 'Ya preparadas',   icon: '✅', color: '#10b981' },
-  { key: 'CERRADA',        label: 'Entregadas',      icon: '🔒', color: '#6b7280' },
+  { key: 'LISTA',          label: 'Listas',          icon: '✅', color: '#10b981' },
+  { key: 'ENTREGADA',      label: 'Entregadas',      icon: '🏁', color: '#8b5cf6' },
 ]
 const tabActual        = computed(() => tabs.find(t => t.key === tabActivo.value))
 const contarOrdenes    = (key) => key === 'todas' ? ordenes.value.length : ordenes.value.filter(o => o.estado === key).length
@@ -362,14 +363,14 @@ const ordenesFiltradas = computed(() =>
 )
 
 // ── Estilos ───────────────────────────────────────────────────────────────────
-const bgEstado    = (e) => ({ ABIERTA:'bg-amber-50', EN_PREPARACION:'bg-orange-50', LISTA:'bg-emerald-50', CERRADA:'bg-gray-50' }[e] || 'bg-gray-50')
-const borderColor = (e) => ({ ABIERTA:'border-amber-200', EN_PREPARACION:'border-orange-300', LISTA:'border-emerald-300', CERRADA:'border-gray-200' }[e] || 'border-gray-200')
-const badgeEstado = (e) => ({ ABIERTA:'bg-amber-100 text-amber-700', EN_PREPARACION:'bg-orange-100 text-orange-700', LISTA:'bg-emerald-100 text-emerald-700', CERRADA:'bg-gray-100 text-gray-500' }[e] || 'bg-gray-100 text-gray-500')
-const iconEstado  = (e) => ({ ABIERTA:'🟡', EN_PREPARACION:'🔥', LISTA:'✅', CERRADA:'🔒' }[e] || '📋')
-const labelEstado = (e) => ({ ABIERTA:'Abierta', EN_PREPARACION:'En preparación', LISTA:'Lista', CERRADA:'Cerrada' }[e] || e)
-const siguienteEstado = (e) => ({ ABIERTA:'EN_PREPARACION', EN_PREPARACION:'LISTA' }[e] || null)
-const accionEstado    = (e) => ({ ABIERTA:'🔥 Enviar a cocina', EN_PREPARACION:'✅ Marcar como lista' }[e] || '')
-const btnEstado       = (e) => ({ ABIERTA:'bg-orange-500 hover:bg-orange-600 text-white', EN_PREPARACION:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-gray-100 text-gray-400')
+const bgEstado    = (e) => ({ ABIERTA:'bg-yellow-50', POR_PREPARAR:'bg-amber-50', EN_PREPARACION:'bg-orange-50', LISTA:'bg-emerald-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-gray-50' }[e] || 'bg-gray-50')
+const borderColor = (e) => ({ ABIERTA:'border-yellow-200', POR_PREPARAR:'border-amber-200', EN_PREPARACION:'border-orange-300', LISTA:'border-emerald-300', ENTREGADA:'border-purple-300', CERRADA:'border-gray-200' }[e] || 'border-gray-200')
+const badgeEstado = (e) => ({ ABIERTA:'bg-yellow-100 text-yellow-700', POR_PREPARAR:'bg-amber-100 text-amber-700', EN_PREPARACION:'bg-orange-100 text-orange-700', LISTA:'bg-emerald-100 text-emerald-700', ENTREGADA:'bg-purple-100 text-purple-700', CERRADA:'bg-gray-100 text-gray-500' }[e] || 'bg-gray-100 text-gray-500')
+const iconEstado  = (e) => ({ ABIERTA:'📝', POR_PREPARAR:'🟡', EN_PREPARACION:'🔥', LISTA:'✅', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋')
+const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Por preparar', EN_PREPARACION:'En preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cerrada' }[e] || e)
+const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
+const accionEstado    = (e) => ({ ABIERTA:'▶️ Mandar a estación', LISTA:'🤝 Entregar a cliente' }[e] || '')
+const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-gray-100 text-gray-400')
 const formatHora      = (f) => !f ? '' : new Date(f).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 
 // ── Imágenes ──────────────────────────────────────────────────────────────────
@@ -418,14 +419,16 @@ const cargarOrdenes = async () => {
   loading.value = true
   try {
     const today = new Date().toISOString().split('T')[0]
-    const [aD, pD, lD, cD] = await Promise.all([
+    const [aD, ppD, pD, lD, eD, cD] = await Promise.all([
       fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/ordenes?estado=ENTREGADA&per_page=100`,      { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
     ])
     const map = new Map()
-    for (const res of [aD, pD, lD, cD]) {
+    for (const res of [aD, ppD, pD, lD, eD, cD]) {
       if (res.success) {
         const lista = Array.isArray(res.data) ? res.data : []
         lista.forEach(o => map.set(o.id, o))

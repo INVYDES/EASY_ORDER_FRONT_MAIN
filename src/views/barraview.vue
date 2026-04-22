@@ -104,10 +104,11 @@
             accion-label="✅ Lista para entregar"
             accion-class="bg-emerald-600 hover:bg-emerald-500 text-white"
             :procesando="procesando === order.id"
-            @accion="cambiarEstado(order.id, 'LISTA')"
+            @accion="cambiarEstado(order.id, 'LISTO')"
           />
         </div>
       </div>
+
     </div>
 
     <!-- ══ MODAL INGREDIENTES ══ -->
@@ -244,9 +245,9 @@ const fechaHoy = computed(() =>
 )
 
 const esBebida = (detalle) => {
-  if (BEBIDA_CATEGORIA_IDS.includes(detalle.categoria_id)) return true
-  const cat = (detalle.categoria || '').toLowerCase()
-  const nom = (detalle.producto_nombre || '').toLowerCase()
+  if (BEBIDA_CATEGORIA_IDS.includes(detalle.producto?.categoria_id)) return true
+  const cat = (detalle.producto?.categoria?.nombre || '').toLowerCase()
+  const nom = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
   return cat.includes('bebida') || cat.includes('refresc') || cat.includes('coctel') ||
          cat.includes('jugo')   || cat.includes('agua')    || cat.includes('café')   ||
          nom.includes('bebida') || nom.includes('refresc') || nom.includes('coctel') ||
@@ -254,8 +255,36 @@ const esBebida = (detalle) => {
 }
 const tieneBebidas = (orden) => (orden.detalles || []).some(esBebida)
 
-const pendingOrders   = computed(() => orders.value.filter(o => o.estado === 'ABIERTA'        && tieneBebidas(o)))
-const preparingOrders = computed(() => orders.value.filter(o => o.estado === 'EN_PREPARACION' && tieneBebidas(o)))
+const isBarraOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
+const getDetallesBarra = (o) => (o.detalles || []).filter(esBebida)
+
+const pendingOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isBarraOrder(o)) return false
+    const detalles = getDetallesBarra(o)
+    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+  })
+})
+
+const preparingOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isBarraOrder(o)) return false
+    const detalles = getDetallesBarra(o)
+    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'EN_PREPARACION') && !detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+  })
+})
+
+const hiddenOrders = ref([])
+
+const readyOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isBarraOrder(o)) return false
+    if (hiddenOrders.value.includes(o.id)) return false
+    const detalles = getDetallesBarra(o)
+    return detalles.length > 0 && detalles.every(d => d.estado_preparacion === 'LISTO')
+  })
+})
+
 const totalBebidas    = computed(() =>
   [...pendingOrders.value, ...preparingOrders.value]
     .flatMap(o => (o.detalles || []).filter(esBebida))
@@ -275,12 +304,13 @@ const loadOrders = async () => {
   if (!token) { router.push('/'); return }
   loading.value = true
   try {
-    const [aD, pD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
+    const [aD, pD, lD] = await Promise.all([
+      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
     ])
     const map = new Map()
-    for (const res of [aD, pD]) {
+    for (const res of [aD, pD, lD]) {
       if (res.success) {
         const lista = Array.isArray(res.data) ? res.data : []
         lista.forEach(o => map.set(o.id, o))
@@ -358,28 +388,47 @@ const confirmarYCambiarEstado = async () => {
 }
 
 // ── Cambiar estado ─────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstado) => {
+const cambiarEstado = async (id, nuevoEstadoDetalle) => {
   procesando.value = id
   try {
-    const res  = await fetch(`${API_URL}/ordenes/${id}`, {
-      method: 'PUT', headers: getHeaders(),
-      body: JSON.stringify({ estado: nuevoEstado }),
+    const orden = orders.value.find(o => o.id === id)
+    if (!orden) return
+
+    const detallesBarra = getDetallesBarra(orden).map(d => d.id)
+
+    const res  = await fetch(`${API_URL}/ordenes/${id}/station-status`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ detalles: detallesBarra, estado_preparacion: nuevoEstadoDetalle }),
     })
     const data = await res.json()
     if (res.ok && data.success) {
-      const o = orders.value.find(o => o.id === id)
-      if (o) o.estado = nuevoEstado
-      if (nuevoEstado === 'LISTA') {
-        orders.value = orders.value.filter(o => o.id !== id)
-        showToast(`Bebidas de orden #${id} listas 🍹`, 'success')
-      } else {
-        showToast(`Orden #${id} en preparación`, 'success')
-      }
+      orden.detalles.forEach(d => {
+        if (detallesBarra.includes(d.id)) {
+          d.estado_preparacion = nuevoEstadoDetalle
+        }
+      })
+      orden.estado = data.data.nuevo_estado_orden
+      
+      const labels = { EN_PREPARACION:'Preparando 🍹', LISTO:'Listas ✅' }
+      showToast(`Bebidas de Orden #${id} → ${labels[nuevoEstadoDetalle] || nuevoEstadoDetalle}`, 'success')
     } else {
       showToast(data.message || 'Error al actualizar', 'error')
     }
-  } catch { showToast('Error de conexión', 'error') }
-  finally { procesando.value = null }
+  } catch {
+    showToast('Error de conexión', 'error')
+  } finally {
+    procesando.value = null
+  }
+}
+
+const marcarEntregada = async (id) => {
+  procesando.value = id
+  if (!hiddenOrders.value.includes(id)) {
+    hiddenOrders.value.push(id)
+  }
+  showToast(`Orden #${id} entregada al mesero 🫡`, 'success')
+  procesando.value = null
 }
 
 // ── Ciclo de vida ──────────────────────────────────────────────────────────────

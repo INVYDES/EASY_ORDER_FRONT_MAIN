@@ -22,6 +22,7 @@ import Productosview      from "../views/productosview.vue";
 import Barraview          from "../views/barraview.vue";
 import Perfilview         from "../views/perfilview.vue";
 import LicenciasView      from "../views/LicenciasView.vue";
+import Menuview           from "../views/menuview.vue";
 
 const routes = [
 
@@ -37,6 +38,15 @@ const routes = [
   { path: "/reset-password",     name: "reset-password",   component: ResetPassword  },
   { path: "/registro",           redirect: { name: "registro-dueno" }                },
 
+  // -------------------------
+  // KIOSKO DE MENÚ (Sin barra lateral)
+  // -------------------------
+  {
+    path: "/menu",
+    name: "menu",
+    component: Menuview,
+    meta: { requiresAuth: true, roles: ["MENU", "ADMIN", "PROPIETARIO"] }
+  },
 
   // -------------------------
   // PANEL
@@ -160,6 +170,7 @@ const defaultRouteForRole = (role?: string): string => {
     COCINA:      "/panel/cocina",
     CAJA:        "/panel/caja",
     BARRA:       "/panel/barra",
+    MENU:        "/menu",
     ADMIN:       "/panel/admin",
     PROPIETARIO: "/panel/admin",
     CLIENTE:     "/panel/cliente",   // ← directo al menú

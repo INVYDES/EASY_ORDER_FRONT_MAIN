@@ -104,11 +104,11 @@
         v-if="ticket.estado !== 'CERRADA'"
         @click="showModal = true"
         class="w-full py-2.5 text-sm font-semibold rounded-xl transition"
-        :class="ticket.estado === 'LISTA'
+        :class="['LISTA', 'ENTREGADA'].includes(ticket.estado)
           ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
           : 'bg-amber-500 hover:bg-amber-600 text-white'"
       >
-        {{ ticket.estado === 'LISTA'
+        {{ ['LISTA', 'ENTREGADA'].includes(ticket.estado)
           ? '💰 Cobrar'
           : '💰 Cobrar (pendiente)' }}
       </button>
@@ -165,6 +165,11 @@ const ESTADOS = {
     border: 'border-emerald-400',
     badge: 'bg-emerald-100 text-emerald-700',
     label: 'Lista — cobrar',
+  },
+  ENTREGADA: {
+    border: 'border-blue-400',
+    badge: 'bg-blue-100 text-blue-700',
+    label: 'Entregada — cobrar',
   },
   CERRADA: {
     border: 'border-gray-100',

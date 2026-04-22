@@ -37,6 +37,7 @@ let chartInstance = null
 
 // ── Caja ──────────────────────────────────────────────────────────────────────
 const cajaAbierta = ref(false)
+const cajaOpenedAt = ref(null)
 const openingAmount = ref(0)
 const cashInRegister = ref(0)
 const efectivoSales = ref(0)
@@ -62,8 +63,8 @@ const loading = reactive({
 // ── Computed ──────────────────────────────────────────────────────────────────
 const openOrders = computed(() => orders.value.filter(o => o.estado !== 'CERRADA'))
 const closedOrders = computed(() => orders.value.filter(o => o.estado === 'CERRADA'))
-const ordenesListas = computed(() => orders.value.filter(o => o.estado === 'LISTA').length)
-const ordenesEnProceso = computed(() => orders.value.filter(o => ['ABIERTA', 'EN_PREPARACION'].includes(o.estado)).length)
+const ordenesListas = computed(() => orders.value.filter(o => o.estado === 'ENTREGADA').length)
+const ordenesEnProceso = computed(() => orders.value.filter(o => ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)).length)
 const totalVentasDia = computed(() => efectivoSales.value + cardSales.value + transferSales.value)
 const totalTips = computed(() => closedOrders.value.reduce((s, o) => s + Number(o.propina || 0), 0))
 
@@ -199,6 +200,7 @@ const loadCajaEstado = async () => {
     if (data.success) {
       const d = data.data
       cajaAbierta.value = d.is_open
+      cajaOpenedAt.value = d.opened_at || null
       openingAmount.value = d.opening_amount || 0
       cashInRegister.value = d.cash_in_register || 0
       efectivoSales.value = d.daily_sales || d.ventas_efectivo || 0
@@ -227,15 +229,31 @@ const actualizarTotalesCaja = async () => {
 const loadOrders = async () => {
   try {
     const today = new Date().toISOString().split('T')[0]
-    const [aR, pR, lR, cR] = await Promise.all([
+    let closedOrdersQuery = `${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    
+    if (cajaAbierta.value && cajaOpenedAt.value) {
+      closedOrdersQuery = `${API_URL}/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+    } else if (!cajaAbierta.value) {
+      // Si la caja está cerrada, no mostramos órdenes cerradas para que inicie en 0
+      closedOrdersQuery = null;
+    }
+
+    const fetches = [
       fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`, { headers: getHeaders() }),
+      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`, { headers: getHeaders() }),
       fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }),
       fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`, { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }),
-    ])
-    const results = await Promise.all([aR.json(), pR.json(), lR.json(), cR.json()])
+      fetch(`${API_URL}/ordenes?estado=ENTREGADA&per_page=100`, { headers: getHeaders() })
+    ];
+    
+    if (closedOrdersQuery) {
+      fetches.push(fetch(closedOrdersQuery, { headers: getHeaders() }));
+    }
+
+    const results = await Promise.all(fetches)
+    const jsonResults = await Promise.all(results.map(r => r.json()))
     const map = new Map()
-    results.forEach(r => {
+    jsonResults.forEach(r => {
       if (r.success) {
         const items = Array.isArray(r.data) ? r.data : (r.data?.data || [])
         items.forEach(o => map.set(o.id, o))
@@ -319,7 +337,7 @@ const onOrdenWS = async (evento) => {
     if (idx !== -1) orders.value[idx] = { ...orders.value[idx], ...orden }
     else orders.value.unshift(orden)
     
-    if (orden.estado === 'LISTA') {
+    if (orden.estado === 'ENTREGADA') {
       reproducirSonido()
       showToast(`${orden.folio} lista para cobrar ✅`, 'success')
       selectedTab.value = 'open'

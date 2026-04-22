@@ -13,11 +13,7 @@
           class="text-xs text-gray-400 bg-gray-700/70 px-2 py-0.5 rounded-full shrink-0">
           🪑 Mesa {{ order.mesa }}
         </span>
-        <!-- Badge si la orden tiene también comida (orden mixta) -->
-        <span v-if="tieneComida"
-          class="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full shrink-0">
-          🍽️ + comida
-        </span>
+
         <span v-if="urgente"
           class="text-[10px] font-bold bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full shrink-0 animate-pulse">
           ⚠️ URGENTE
