@@ -1,0 +1,36 @@
+{
+  "name": "proyecto_limpio_mas_platilla",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "apexcharts": "^5.6.0",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
+    "laravel-echo": "^2.3.1",
+    "pinia": "^3.0.4",
+    "pusher-js": "^8.4.3",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.4",
+    "vue3-apexcharts": "^1.10.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/tsconfig": "^0.8.1",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vue-tsc": "^3.1.5"
+  }
+}
