@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(() => ({
-  // base './' para que los assets carguen de forma relativa (útil si está en /eorder/)
-  base: './',
+  // base para que los assets carguen correctamente en el subdirectorio de producción
+  base: '/cws/eorder/',
 
   plugins: [
     vue(),
