@@ -347,8 +347,8 @@ import { ref, computed, onMounted } from 'vue'
 import MarquesitaWidget       from '../components/MarquesitaWidget.vue'
 import ClienteCheckoutModal from '../components/cliente/Clientecheckoutmodal.vue'
 
-const API_URL     = 'http://localhost:8000/api'
-const STORAGE_URL = 'http://localhost:8000/storage/'
+const API_URL     = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const STORAGE_URL = (import.meta.env.VITE_API_URL || '').replace('/api', '/storage/') || 'http://localhost:8000/storage/'
 
 // ── ESTADO ─────────────────────────────────────────────────
 const vista                   = ref('restaurantes')

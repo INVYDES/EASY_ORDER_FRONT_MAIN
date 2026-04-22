@@ -144,7 +144,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 
 const props = defineProps({
-  apiUrl:     { type: String,   default: 'http://localhost:8000/api' },
+  apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },
   getHeaders: { type: Function, required: true },
 })
 
