@@ -69,6 +69,7 @@
       <MarquesitaWidget 
         :api-url="API_URL" 
         :get-headers="getHeaders" 
+        tipo="interno"
         variant="amber" 
         :restaurante-id="restauranteSeleccionado?.id"
         class="border-y border-white/5"

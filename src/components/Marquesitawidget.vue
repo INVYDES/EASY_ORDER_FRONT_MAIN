@@ -177,7 +177,14 @@ const startAnimation = () => {
 const fetchAnuncios = async () => {
   try {
     const url = new URL(`${props.apiUrl}/anuncios`)
-    url.searchParams.append('mostrar_cliente', '1')
+    
+    // Si es tipo cliente, filtramos por mostrar_cliente, de lo contrario por mostrar_interno (Menú Digital)
+    if (props.tipo === 'cliente') {
+      url.searchParams.append('mostrar_cliente', '1')
+    } else {
+      url.searchParams.append('mostrar_interno', '1')
+    }
+
     if (props.restauranteId) {
       url.searchParams.append('restaurante_id', props.restauranteId)
     }

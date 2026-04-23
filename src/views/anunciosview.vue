@@ -30,7 +30,11 @@
           <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
           <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wider">Vista previa en vivo (App Clientes)</h3>
         </div>
-        <div class="flex gap-1">
+        <div class="flex items-center gap-4">
+          <div class="flex bg-gray-100 p-1 rounded-xl">
+             <button @click="previewTipo = 'cliente'" :class="['px-3 py-1 text-[10px] font-bold rounded-lg transition-all', previewTipo === 'cliente' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600']">CLIENTE</button>
+             <button @click="previewTipo = 'interno'" :class="['px-3 py-1 text-[10px] font-bold rounded-lg transition-all', previewTipo === 'interno' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600']">MENÚ DIGITAL</button>
+          </div>
           <div v-for="v in ['dark', 'light', 'color', 'amber']" :key="v" 
             @click="previewVariant = v"
             :class="['w-4 h-4 rounded-full cursor-pointer border', previewVariant === v ? 'ring-2 ring-offset-2 ring-indigo-500' : '']"
@@ -41,7 +45,7 @@
       <MarquesitaWidget 
         :api-url="API_URL" 
         :get-headers="getHeaders" 
-        tipo="cliente" 
+        :tipo="previewTipo" 
         :variant="previewVariant" 
         :restaurante-id="restauranteId"
       />
@@ -85,7 +89,7 @@
               </span>
               <div class="flex gap-1">
                  <span v-if="a.mostrar_cliente" class="text-[9px] font-bold bg-white px-1.5 py-0.5 rounded border border-gray-100 text-gray-500">CLIENTES</span>
-                 <span v-if="a.mostrar_interno" class="text-[9px] font-bold bg-white px-1.5 py-0.5 rounded border border-gray-100 text-gray-500">STAFF</span>
+                 <span v-if="a.mostrar_interno" class="text-[9px] font-bold bg-white px-1.5 py-0.5 rounded border border-gray-100 text-gray-500 uppercase">MENÚ DIGITAL</span>
               </div>
             </div>
           </div>
@@ -262,7 +266,7 @@
                   </label>
                   <label class="flex items-center gap-3 cursor-pointer group p-3 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-indigo-100 transition-all">
                     <input v-model="form.mostrar_interno" type="checkbox" class="w-5 h-5 rounded-lg accent-indigo-600" />
-                    <span class="font-bold text-gray-700 text-sm group-hover:text-indigo-600">👨‍🍳 PANEL STAFF</span>
+                    <span class="font-bold text-gray-700 text-sm group-hover:text-indigo-600 uppercase">👨‍🍳 MENÚ DIGITAL</span>
                   </label>
                 </div>
               </div>
@@ -323,6 +327,7 @@ const filtroActivo = ref('todos')
 const dropdownOpen = ref(false)
 const searchTerm = ref('')
 const previewVariant = ref('dark')
+const previewTipo = ref('cliente')
 
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const restauranteId = JSON.parse(userRaw)?.restaurante_id || null
@@ -358,7 +363,7 @@ const filtros = [
   { key: 'todos', label: 'Todos' },
   { key: 'activos', label: 'En vivo' },
   { key: 'cliente', label: 'Clientes' },
-  { key: 'interno', label: 'Staff' },
+  { key: 'interno', label: 'Menú Digital' },
   { key: 'promo', label: 'Promos' },
 ]
 
