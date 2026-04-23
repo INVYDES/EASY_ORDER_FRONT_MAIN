@@ -37,6 +37,43 @@
               <span class="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">📋</span> Información General
             </h4>
             
+            <!-- SECCIÓN DE IMAGEN -->
+            <div class="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-white hover:border-indigo-300 transition-all group relative overflow-hidden h-44">
+              <input 
+                type="file" 
+                ref="fileInput"
+                class="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                accept="image/*"
+                @change="handleFileChange"
+              >
+              
+              <div v-if="imagePreview" class="absolute inset-0 w-full h-full">
+                <img :src="imagePreview" class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                  <span class="text-white text-[10px] font-black uppercase tracking-widest bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full">Cambiar Imagen</span>
+                </div>
+                <button 
+                  type="button"
+                  @click.stop="removeImage"
+                  class="absolute top-3 right-3 p-1.5 bg-white/90 text-red-500 rounded-xl z-20 shadow-sm hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div v-else class="text-center">
+                <div class="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-3 text-slate-300 group-hover:text-indigo-500 transition-colors">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subir Imagen</p>
+                <p class="text-[9px] text-slate-400 mt-1">Formatos sugeridos: PNG, JPG o WebP</p>
+              </div>
+            </div>
+
             <div class="space-y-4">
               <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Nombre del Producto *</label>
@@ -228,6 +265,44 @@ const form = ref({
   ingredientes: []
 })
 
+// --- Lógica de Imagen ---
+const fileInput = ref(null)
+const imageFile = ref(null)
+const imagePreview = ref(null)
+const imageRemoved = ref(false)
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  
+  // Validar tamaño (2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    alert("La imagen es demasiado grande. Máximo 2MB.")
+    return
+  }
+  
+  imageFile.value = file
+  imagePreview.value = URL.createObjectURL(file)
+  imageRemoved.value = false
+}
+
+const removeImage = () => {
+  imageFile.value = null
+  imagePreview.value = null
+  imageRemoved.value = true
+  if (fileInput.value) fileInput.value.value = ""
+}
+
+// Helper para resolver URL de imagen existente
+const resolveImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http') || path.startsWith('data:')) return path
+  
+  const base = API_URL.replace('/api', '')
+  if (path.startsWith('/storage/')) return `${base}${path}`
+  return `${base}/storage/${path}`
+}
+
 // ============================================
 // UTILIDAD: Obtener token de cualquier storage
 // ============================================
@@ -315,6 +390,11 @@ const mapProductToForm = () => {
       cantidad: Number(i.pivot?.cantidad || i.cantidad || 0)
     }))
   };
+
+  // Cargar preview de imagen existente
+  if (props.product.imagen || props.product.imagen_url) {
+    imagePreview.value = resolveImageUrl(props.product.imagen_url || props.product.imagen)
+  }
 };
 
 /**
@@ -404,32 +484,47 @@ const save = async () => {
   loading.value = true;
   const isEditing = !!props.product;
   
-  // ✅ Usar API_URL directamente (sin props.apiUrl)
+  // Para subida de archivos en Laravel con PUT, usamos POST + _method: PUT
   const url = isEditing 
     ? `${API_URL}/productos/${props.product.id}` 
     : `${API_URL}/productos`;
   
-  const dataToSend = {
-    nombre: form.value.nombre,
-    categoria_id: parseInt(form.value.categoria_id),
-    precio: parseFloat(form.value.precio),
-    stock: parseInt(form.value.stock) || 0,
-    stock_minimo: parseInt(form.value.stock_minimo) || 0,
-    ingredientes: form.value.ingredientes.map(ing => ({
-      ingrediente_id: Number(ing.ingrediente_id),
-      cantidad: parseFloat(ing.cantidad) || 0
-    }))
-  };
+  // Usar FormData para permitir envío de archivos
+  const formData = new FormData();
+  formData.append('nombre', form.value.nombre);
+  formData.append('categoria_id', form.value.categoria_id);
+  formData.append('precio', form.value.precio);
+  formData.append('stock', form.value.stock || 0);
+  formData.append('stock_minimo', form.value.stock_minimo || 0);
+  
+  if (isEditing) {
+    formData.append('_method', 'PUT'); // Truco de Laravel para procesar archivos en PUT
+  }
+
+  // Agregar imagen si se seleccionó una nueva
+  if (imageFile.value) {
+    formData.append('imagen', imageFile.value);
+  } else if (imageRemoved.value) {
+    formData.append('eliminar_imagen', 1);
+  }
+
+  // Agregar ingredientes como JSON string (o múltiples campos)
+  // El backend lo espera como array, FormData lo envía como strings.
+  // Lo enviamos serializado para que el backend lo maneje.
+  form.value.ingredientes.forEach((ing, index) => {
+    formData.append(`ingredientes[${index}][ingrediente_id]`, ing.ingrediente_id);
+    formData.append(`ingredientes[${index}][cantidad]`, ing.cantidad);
+  });
   
   try {
     const res = await fetch(url, {
-      method: isEditing ? 'PUT' : 'POST',
+      method: 'POST', // Siempre POST para multipart/form-data con _method
       headers: { 
         'Authorization': `Bearer ${token.trim()}`,
-        'Content-Type': 'application/json',
         'Accept': 'application/json'
+        // 'Content-Type': 'multipart/form-data' // El navegador lo pone solo con el boundary correcto
       },
-      body: JSON.stringify(dataToSend)
+      body: formData
     });
     
     const responseData = await res.json();
