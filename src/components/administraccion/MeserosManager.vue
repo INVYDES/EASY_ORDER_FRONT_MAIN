@@ -177,10 +177,12 @@ const toast = reactive({ show: false, msg: '', type: 'success' })
 // --- Helpers ---
 const getHeaders = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const restId = localStorage.getItem('restaurante_id_activo')
   return { 
     'Content-Type': 'application/json', 
     'Accept': 'application/json', 
-    'Authorization': token ? `Bearer ${token}` : '' 
+    'Authorization': token ? `Bearer ${token}` : '',
+    'X-Restaurante-Id': restId || ''
   }
 }
 
