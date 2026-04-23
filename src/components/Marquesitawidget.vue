@@ -193,7 +193,14 @@ const fetchAnuncios = async () => {
     if (!res.ok) return
     const data = await res.json()
     if (data.success && Array.isArray(data.data)) {
-      anuncios.value = data.data.filter(a => a.activo && a.mostrar_cliente && a.vigente)
+      anuncios.value = data.data.filter(a => {
+        const esVigente = a.activo && a.vigente;
+        if (props.tipo === 'cliente') {
+          return esVigente && a.mostrar_cliente;
+        } else {
+          return esVigente && a.mostrar_interno;
+        }
+      })
       await nextTick()
       setTimeout(() => { calculateWidth(); offsetPx.value = 0; startAnimation() }, 60)
     }
