@@ -141,10 +141,19 @@ const tipoLabel = (tipo) => ({ promo: '🏷 Promo', producto: '🍽 Nuevo', avis
 const resolveImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http')) return path
-  // La ruta viene como "productos/nombre.jpg" o "/storage/productos/..."
+  
+  // Limpiamos el path del producto
   const cleanPath = path.replace(/^\/?storage\//, '')
-  const storageBase = (props.apiUrl || '').replace('/api', '/storage/')
-  return `${storageBase}${cleanPath}`
+  
+  // Limpiamos la URL base (quitando index.php y api)
+  let storageBase = (props.apiUrl || '')
+    .replace(/\/index\.php$/, '')
+    .replace(/\/api$/, '')
+    .replace(/\/index\.php\/api$/, '')
+  
+  if (!storageBase.endsWith('/')) storageBase += '/'
+  
+  return `${storageBase}storage/${cleanPath}`
 }
 
 const onImageError = (e) => {
