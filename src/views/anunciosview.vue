@@ -428,7 +428,7 @@ const cargarProductos = async () => {
 const cargar = async () => {
   loading.value = true
   try {
-    const res = await fetch(`${API_URL}/anuncios`, { headers: getHeaders() })
+    const res = await fetch(`${API_URL}/admin/anuncios`, { headers: getHeaders() })
     const data = await res.json()
     if (data.success) {
       anuncios.value = data.data.map(a => ({
@@ -463,7 +463,7 @@ const guardar = async () => {
   
   guardando.value = true
   try {
-    const url = editando.value ? `${API_URL}/anuncios/${editando.value.id}` : `${API_URL}/anuncios`
+    const url = editando.value ? `${API_URL}/admin/anuncios/${editando.value.id}` : `${API_URL}/admin/anuncios`
     const method = editando.value ? 'PUT' : 'POST'
     
     const res = await fetch(url, {
@@ -488,7 +488,7 @@ const guardar = async () => {
 
 const toggleActivo = async (a) => {
   try {
-    const res = await fetch(`${API_URL}/anuncios/${a.id}`, {
+    const res = await fetch(`${API_URL}/admin/anuncios/${a.id}`, {
       method: 'PUT',
       headers: getHeaders(),
       body: JSON.stringify({ activo: !a.activo })
@@ -504,7 +504,7 @@ const toggleActivo = async (a) => {
 const eliminar = async (id) => {
   if (!confirm('¿Seguro que deseas eliminar este anuncio? Esta acción es permanente.')) return
   try {
-    const res = await fetch(`${API_URL}/anuncios/${id}`, { method: 'DELETE', headers: getHeaders() })
+    const res = await fetch(`${API_URL}/admin/anuncios/${id}`, { method: 'DELETE', headers: getHeaders() })
     const data = await res.json()
     if (data.success) {
       showToast('Anuncio eliminado del sistema')
