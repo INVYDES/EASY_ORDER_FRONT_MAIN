@@ -302,7 +302,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import MarquesitaWidget from '../components/MarquesitaWidget.vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 
@@ -329,8 +329,31 @@ const searchTerm = ref('')
 const previewVariant = ref('dark')
 const previewTipo = ref('interno')
 
-const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
-const restauranteId = JSON.parse(userRaw)?.restaurante_id || null
+// Hacemos el ID reactivo para que detecte cambios de sucursal en el header
+const restauranteId = computed(() => {
+  const activeId = localStorage.getItem('restaurante_id_activo')
+  if (activeId) return activeId
+  
+  const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+  try {
+    return JSON.parse(userRaw)?.restaurante_id || null
+  } catch { return null }
+})
+
+// Vigilamos si cambia el restaurante para recargar todo
+import { watch as vueWatch } from 'vue'
+// Usamos un intervalo pequeño o un evento para detectar el cambio en localStorage 
+// ya que localStorage no es reactivo por sí solo en Vue si no hay un evento
+const checkRestaurante = setInterval(() => {
+  const currentId = localStorage.getItem('restaurante_id_activo')
+  if (currentId && currentId !== lastRestId.value) {
+    lastRestId.value = currentId
+    cargar()
+    cargarProductos()
+  }
+}, 1000)
+
+const lastRestId = ref(localStorage.getItem('restaurante_id_activo'))
 
 // --- AUTH HEADERS ---
 const getHeaders = () => {
@@ -532,6 +555,11 @@ onMounted(() => {
   cargar()
   cargarProductos()
   document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  clearInterval(checkRestaurante)
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
