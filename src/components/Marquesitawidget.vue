@@ -206,6 +206,10 @@ const handleResize = () => {
   resizeTimeout = setTimeout(() => { calculateWidth() }, 150)
 }
 
+watch(() => props.restauranteId, () => {
+  fetchAnuncios()
+})
+
 watch(anuncios, (n, o) => {
   if (n.length !== o?.length) {
     nextTick(() => { calculateWidth(); offsetPx.value = 0; startAnimation() })
@@ -215,7 +219,7 @@ watch(anuncios, (n, o) => {
 onMounted(async () => {
   await fetchAnuncios()
   startAnimation()
-  refreshInterval = setInterval(fetchAnuncios, 5 * 60 * 1000)
+  refreshInterval = setInterval(fetchAnuncios, 30 * 1000)
   window.addEventListener('resize', handleResize)
   if (typeof ResizeObserver !== 'undefined') {
     resizeObserver = new ResizeObserver(() => calculateWidth())

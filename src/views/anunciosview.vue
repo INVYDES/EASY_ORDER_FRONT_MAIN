@@ -28,12 +28,12 @@
       <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between bg-white">
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wider">Vista previa en vivo (App Clientes)</h3>
+          <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wider">Vista previa (Menú Digital)</h3>
         </div>
         <div class="flex items-center gap-4">
-          <div class="flex bg-gray-100 p-1 rounded-xl">
-             <button @click="previewTipo = 'cliente'" :class="['px-3 py-1 text-[10px] font-bold rounded-lg transition-all', previewTipo === 'cliente' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600']">CLIENTE</button>
-             <button @click="previewTipo = 'interno'" :class="['px-3 py-1 text-[10px] font-bold rounded-lg transition-all', previewTipo === 'interno' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600']">MENÚ DIGITAL</button>
+          <div class="hidden">
+             <button @click="previewTipo = 'cliente'">CLIENTE</button>
+             <button @click="previewTipo = 'interno'">MENÚ DIGITAL</button>
           </div>
           <div v-for="v in ['dark', 'light', 'color', 'amber']" :key="v" 
             @click="previewVariant = v"
@@ -327,7 +327,7 @@ const filtroActivo = ref('todos')
 const dropdownOpen = ref(false)
 const searchTerm = ref('')
 const previewVariant = ref('dark')
-const previewTipo = ref('cliente')
+const previewTipo = ref('interno')
 
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const restauranteId = JSON.parse(userRaw)?.restaurante_id || null
