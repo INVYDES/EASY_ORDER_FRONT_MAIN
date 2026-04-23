@@ -226,6 +226,11 @@
       <GastoView />
     </template>
 
+    <!-- ══ TAB MESEROS ══ -->
+    <template v-if="mainTab === 'meseros'">
+      <MeserosManager />
+    </template>
+
     <!-- ══ MODAL EMPLEADO ══ -->
     <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalEmpleado">
@@ -373,6 +378,7 @@ import RoiChart            from '../components/RoiChart.vue'
 import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
 import GastoView           from './GastoView.vue'
+import MeserosManager      from '../components/administraccion/MeserosManager.vue'
 import { API_URL } from '@/config/api'
 const router  = useRouter()
 
@@ -407,6 +413,7 @@ const mainTabs = [
   { key:'roi',          label:'📈 ROI'             },
   { key:'ingredientes', label:'🧄 Ingredientes'    },
   { key:'anuncios',     label:'📢 Marquesina'      },
+  { key:'meseros',      label:'👥 Meseros'         },
   { key:'gastos',       label:'🧾 Gastos'          },
 ]
 
