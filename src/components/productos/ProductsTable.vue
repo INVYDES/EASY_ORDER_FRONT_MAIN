@@ -294,15 +294,15 @@ const hasImage = (p) => !!(p.imagen_url || p.imagen)
 const resolveImage = (p) => {
   const path = p.imagen_url || p.imagen
   if (!path) return ''
-  // Si ya es URL completa o data URI
+  
+  // Si ya es URL completa o data URI, devolverla tal cual
   if (path.startsWith('http') || path.startsWith('data:')) return path
-  // Si ya empieza con /storage, concatenar con base URL
-  if (path.startsWith('/storage/')) {
-    const base = API_BASE.replace('/api', '')  // http://localhost:8000
-    return `${base}${path}`
-  }
-  // Fallback para paths antiguos sin /storage/
+  
   const base = API_BASE.replace('/api', '')
+  // Si empieza con /storage, concatenar con base URL
+  if (path.startsWith('/storage/')) return `${base}${path}`
+  
+  // Fallback
   return `${base}/storage/${path}`
 }
 const onImageError = (e) => { e.target.style.display = 'none' }
