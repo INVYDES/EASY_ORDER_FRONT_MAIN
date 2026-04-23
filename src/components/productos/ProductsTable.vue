@@ -186,8 +186,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-
-const API_BASE = import.meta.env.VITE_API_URL.replace('/api', '')  // Quita /api para tener la URL base
+import { API_URL } from '@/config/api'
 
 // 1. Props y Emits
 const props = defineProps({
@@ -213,7 +212,7 @@ const loadIngredientes = async () => {
       return
     }
     
-    const res = await fetch(`${API_BASE}/ingredientes`, {
+    const res = await fetch(`${API_URL}/ingredientes`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
     })
     const data = await res.json()
@@ -298,11 +297,12 @@ const resolveImage = (p) => {
   // Si ya es URL completa o data URI, devolverla tal cual
   if (path.startsWith('http') || path.startsWith('data:')) return path
   
-  const base = API_BASE.replace('/api', '')
+  const base = API_URL.replace('/api', '')
   // Si empieza con /storage, concatenar con base URL
   if (path.startsWith('/storage/')) return `${base}${path}`
   
   // Fallback
+  const base = API_URL.replace('/api', '')
   return `${base}/storage/${path}`
 }
 const onImageError = (e) => { e.target.style.display = 'none' }
