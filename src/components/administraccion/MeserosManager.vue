@@ -186,6 +186,14 @@ const getHeaders = () => {
   }
 }
 
+// Escuchar cambios de sucursal (como en la marquesita)
+onMounted(() => {
+  loadMeserosData()
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'restaurante_id_activo') loadMeserosData()
+  })
+})
+
 const getInitials = (name) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
 }
