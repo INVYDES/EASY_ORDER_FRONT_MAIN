@@ -329,31 +329,28 @@ const searchTerm = ref('')
 const previewVariant = ref('dark')
 const previewTipo = ref('interno')
 
-// Hacemos el ID reactivo para que detecte cambios de sucursal en el header
-const restauranteId = computed(() => {
-  const activeId = localStorage.getItem('restaurante_id_activo')
-  if (activeId) return activeId
-  
+// Variable reactiva para el ID del restaurante - esto asegura que el Widget se entere del cambio
+const restauranteId = ref(localStorage.getItem('restaurante_id_activo'))
+
+// Si no hay id activo, intentamos sacar el del usuario
+if (!restauranteId.value) {
   const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
   try {
-    return JSON.parse(userRaw)?.restaurante_id || null
-  } catch { return null }
-})
+    restauranteId.value = JSON.parse(userRaw)?.restaurante_id || null
+  } catch { restauranteId.value = null }
+}
 
-// Vigilamos si cambia el restaurante para recargar todo
-import { watch as vueWatch } from 'vue'
-// Usamos un intervalo pequeño o un evento para detectar el cambio en localStorage 
-// ya que localStorage no es reactivo por sí solo en Vue si no hay un evento
+// Cronómetro para detectar cambios de sucursal en el header (localStorage no es reactivo por sí solo)
 const checkRestaurante = setInterval(() => {
   const currentId = localStorage.getItem('restaurante_id_activo')
-  if (currentId && currentId !== lastRestId.value) {
-    lastRestId.value = currentId
+  if (currentId && currentId !== restauranteId.value) {
+    restauranteId.value = currentId
     cargar()
     cargarProductos()
   }
 }, 1000)
 
-const lastRestId = ref(localStorage.getItem('restaurante_id_activo'))
+const lastRestId = ref(restauranteId.value)
 
 // --- AUTH HEADERS ---
 const getHeaders = () => {
