@@ -43,6 +43,7 @@
         :get-headers="getHeaders" 
         tipo="cliente" 
         :variant="previewVariant" 
+        :restaurante-id="restauranteId"
       />
     </div>
 
@@ -322,6 +323,9 @@ const filtroActivo = ref('todos')
 const dropdownOpen = ref(false)
 const searchTerm = ref('')
 const previewVariant = ref('dark')
+
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const restauranteId = JSON.parse(userRaw)?.restaurante_id || null
 
 // --- AUTH HEADERS ---
 const getHeaders = () => {

@@ -7,6 +7,7 @@
       :get-headers="getHeaders"
       tipo="cliente"
       :variant="vista === 'menu' ? 'color' : 'light'"
+      :restaurante-id="restauranteSeleccionado?.id || authStore?.restauranteId || null"
     />
 
     <!-- ══ VISTA: LISTA DE RESTAURANTES ══ -->

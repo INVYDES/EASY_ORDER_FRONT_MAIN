@@ -72,10 +72,11 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 
 const props = defineProps({
-  apiUrl:     { type: String,   required: true },
-  getHeaders: { type: Function, required: true },
-  tipo:       { type: String,   default: 'cliente' },
-  variant:    { type: String,   default: 'dark' },  // dark | light | color | amber
+  apiUrl:        { type: String,   required: true },
+  getHeaders:    { type: Function, required: true },
+  tipo:          { type: String,   default: 'cliente' },
+  variant:       { type: String,   default: 'dark' },  // dark | light | color | amber
+  restauranteId: { type: [Number, String], default: null },
 })
 
 const anuncios = ref([])
@@ -175,7 +176,13 @@ const startAnimation = () => {
 // ── FETCH ──────────────────────────────────────────────────
 const fetchAnuncios = async () => {
   try {
-    const res  = await fetch(`${props.apiUrl}/anuncios?mostrar_cliente=1`, { headers: safeGetHeaders() })
+    const url = new URL(`${props.apiUrl}/anuncios`)
+    url.searchParams.append('mostrar_cliente', '1')
+    if (props.restauranteId) {
+      url.searchParams.append('restaurante_id', props.restauranteId)
+    }
+
+    const res  = await fetch(url.toString(), { headers: safeGetHeaders() })
     if (!res.ok) return
     const data = await res.json()
     if (data.success && Array.isArray(data.data)) {
