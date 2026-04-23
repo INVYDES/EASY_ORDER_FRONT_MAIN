@@ -6,7 +6,7 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig(() => ({
   // base para que los assets carguen correctamente en el subdirectorio de producción
   base: '/cws/eorder/',
-
+  //cambio de prueba 
   plugins: [
     vue(),
     tailwindcss(),
