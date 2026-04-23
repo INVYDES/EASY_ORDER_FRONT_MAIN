@@ -98,7 +98,7 @@ const formError = ref('')
 // Campos iniciales limpios
 const defaultForm = () => ({
   nombre: '',
-  unidad: 'kg',
+  unidad: '',
   costo_unitario: 0,
   stock_actual: 0,
   stock_minimo: 0,
@@ -114,7 +114,7 @@ watch(() => props.ingrediente, (nuevoIngrediente) => {
     // Rellenamos el formulario con los datos exactos del JSON de la API
     form.value = {
       nombre: nuevoIngrediente.nombre || '',
-      unidad: nuevoIngrediente.unidad || 'kg',
+      unidad: nuevoIngrediente.unidad || '',
       costo_unitario: nuevoIngrediente.costo_unitario || 0,
       stock_actual: nuevoIngrediente.stock_actual || 0,
       stock_minimo: nuevoIngrediente.stock_minimo || 0,
@@ -127,7 +127,7 @@ watch(() => props.ingrediente, (nuevoIngrediente) => {
 }, { immediate: true })
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   return { 
     'Content-Type': 'application/json', 
     'Authorization': `Bearer ${token}` 
@@ -142,7 +142,7 @@ const guardar = async () => {
   try {
     const esEdit = !!props.ingrediente
     const url = esEdit 
-      ? `${API_URL}/ingredientes/${props.ingrediente.id}` 
+      ? `${API_URL}/ingredientes/${props.ingrediente.id}`
       : `${API_URL}/ingredientes`
     
     const method = esEdit ? 'PUT' : 'POST'

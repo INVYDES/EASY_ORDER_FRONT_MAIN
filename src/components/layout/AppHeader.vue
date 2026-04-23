@@ -121,7 +121,7 @@ const userInitials = computed(() => {
 })
 
 const getHeaders = () => ({
-  'Authorization': `Bearer ${localStorage.getItem('token')}`,
+  'Authorization': `Bearer ${localStorage.getItem('token') ?? sessionStorage.getItem('token')}`,
   'Content-Type': 'application/json'
 })
 
@@ -172,6 +172,7 @@ const logout = async () => {
     await fetch(`${API_URL}/logout`, { method: 'POST', headers: getHeaders() })
   } finally {
     localStorage.removeItem('token')
+    sessionStorage.removeItem('token')
     localStorage.removeItem('restaurante_id_activo')
     router.push('/')
   }

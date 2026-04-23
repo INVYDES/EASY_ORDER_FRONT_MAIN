@@ -24,7 +24,7 @@ const fechaFin = ref(new Date().toISOString().split('T')[0]) // Hoy
 
 // Headers con token
 const getHeaders = () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   return {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -34,7 +34,7 @@ const getHeaders = () => {
 
 // Verificar autenticación
 const checkAuth = () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   if (!token) {
     router.push('/')
     return false

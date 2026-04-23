@@ -13,7 +13,7 @@ const loading = ref(true)
 const error = ref('')
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
 
   return {
     'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ const getHeaders = () => {
 }
 
 const checkAuth = () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
 
   if (!token) {
     router.push('/')
