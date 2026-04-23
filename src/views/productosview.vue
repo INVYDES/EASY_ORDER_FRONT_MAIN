@@ -306,6 +306,7 @@ const activeTab = ref('productos')
 const products = ref([])
 const categories = ref([])
 const ingredientes = ref([])
+const anuncios = ref([])
 const selectedProduct = ref(null)
 const selectedCategoria = ref(null)
 const searchTerm = ref('')
@@ -348,14 +349,14 @@ const tabs = [
   { key: 'productos',    label: '📦 Productos' },
   { key: 'categorias',   label: '🏷️ Categorías' },
   { key: 'ingredientes', label: '🧄 Ingredientes' },
-  { key: 'anuncios',     label: '🎯 Ofertas' },
+  { key: 'anuncios',     label: '📢 Anuncios' },
 ]
 
 const getTabCount = (key) => {
   if (key === 'productos') return products.value.length
   if (key === 'categorias') return categories.value.length
   if (key === 'ingredientes') return ingredientes.value.length
-  if (key === 'anuncios') return 0
+  if (key === 'anuncios') return anuncios.value.length
   return 0
 }
 
@@ -596,6 +597,14 @@ const handleStockSaved = async () => {
   showToast('Stock actualizado correctamente', 'success') 
 }
 
+const loadAnuncios = async () => {
+  try {
+    const res = await fetch(`${API_URL}/admin/anuncios`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) anuncios.value = data.data || []
+  } catch (error) { console.error('Error loading anuncios count:', error) }
+}
+
 const handleDeleteIngrediente = async (id) => {
   if (!confirm('¿Eliminar este ingrediente?')) return
   try {
@@ -618,6 +627,7 @@ onMounted(() => {
   loadProducts(1)  // Cargar primera página
   loadCategories()
   loadIngredientes()
+  loadAnuncios()
 })
 </script>
 

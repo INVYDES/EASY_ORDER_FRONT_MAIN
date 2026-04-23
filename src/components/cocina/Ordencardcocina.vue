@@ -28,7 +28,7 @@
         <div class="flex-1">
           <div class="flex items-center justify-between">
             <span class="font-medium text-gray-200 text-sm">
-              {{ detalle.cantidad }}x {{ detalle.producto_nombre }}
+              {{ detalle.cantidad }}x {{ detalle.producto_nombre || detalle.producto?.nombre }}
             </span>
             <span class="text-xs text-gray-500">
               {{ '$' + detalle.subtotal_formateado }}
