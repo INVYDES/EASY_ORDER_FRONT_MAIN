@@ -28,34 +28,25 @@
             :key="i"
             class="inline-flex items-center shrink-0"
           >
-            <!-- Separador entre anuncios -->
-            <span class="mx-5 text-lg opacity-30">✦</span>
+            <!-- IMAGEN DEL PRODUCTO O EMOJI -->
+            <div v-if="a.producto?.imagen" class="w-9 h-9 ml-5 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
+              <img :src="resolveImageUrl(a.producto.imagen)" class="w-full h-full object-cover" @error="onImageError" />
+            </div>
+            <span v-else class="text-2xl ml-5 drop-shadow-md">{{ a.emoji || '📢' }}</span>
 
-            <!-- Emoji grande -->
-            <span class="text-2xl mr-2 leading-none">{{ a.emoji || '📢' }}</span>
+            <div class="flex flex-col justify-center ml-3">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-sm tracking-tight uppercase">{{ a.titulo }}</span>
+                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-2 py-0.5 rounded-lg text-[10px] font-black shadow-sm border border-black/5">
+                  ${{ Number(a.precio_promo).toFixed(2) }}
+                </span>
+                <span v-if="a.tipo === 'promo'" class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black animate-pulse">PROMO</span>
+              </div>
+              <p v-if="a.contenido" class="text-[10px] opacity-90 font-bold leading-none mt-0.5 max-w-[200px] truncate">{{ a.contenido }}</p>
+            </div>
 
-            <!-- Contenido -->
-            <span class="inline-flex flex-col leading-tight">
-              <span class="text-base font-black tracking-wide">{{ a.titulo }}</span>
-              <span v-if="a.contenido" class="text-xs font-medium opacity-75 leading-tight">{{ a.contenido }}</span>
-            </span>
-
-            <!-- Badge precio promo -->
-            <span
-              v-if="a.precio_promo"
-              class="ml-3 px-2.5 py-1 rounded-full text-sm font-black border-2"
-              :class="badgePrecioClass"
-            >
-              ${{ Number(a.precio_promo).toFixed(2) }}
-            </span>
-
-            <!-- Badge tipo -->
-            <span
-              class="ml-3 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
-              :class="badgeTipoClass(a.tipo)"
-            >
-              {{ tipoLabel(a.tipo) }}
-            </span>
+            <!-- SEPARADOR -->
+            <div class="mx-6 text-white/30 text-xs">✦</div>
           </span>
         </div>
       </div>
@@ -147,6 +138,20 @@ const badgeTipoClass = (tipo) => {
 const tipoLabel = (tipo) => ({ promo: '🏷 Promo', producto: '🍽 Nuevo', aviso: 'ℹ Aviso' }[tipo] || 'ℹ Aviso')
 
 // ── HELPERS ────────────────────────────────────────────────
+const resolveImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  // La ruta viene como "productos/nombre.jpg" o "/storage/productos/..."
+  const cleanPath = path.replace(/^\/?storage\//, '')
+  const storageBase = (props.apiUrl || '').replace('/api', '/storage/')
+  return `${storageBase}${cleanPath}`
+}
+
+const onImageError = (e) => {
+  e.target.style.display = 'none'
+  // Si falla la imagen, podríamos mostrar un emoji de respaldo aquí si quisiéramos
+}
+
 const safeGetHeaders = () => {
   try {
     if (typeof props.getHeaders === 'function') return props.getHeaders()
