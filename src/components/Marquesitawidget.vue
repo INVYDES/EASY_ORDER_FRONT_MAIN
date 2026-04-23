@@ -142,18 +142,19 @@ const resolveImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http')) return path
   
-  // Limpiamos el path del producto
+  // Quitamos "storage/" del inicio si el backend ya lo incluyó
   const cleanPath = path.replace(/^\/?storage\//, '')
   
-  // Limpiamos la URL base (quitando index.php y api)
-  let storageBase = (props.apiUrl || '')
-    .replace(/\/index\.php$/, '')
-    .replace(/\/api$/, '')
-    .replace(/\/index\.php\/api$/, '')
+  // Limpiamos la URL base de forma agresiva
+  let base = (props.apiUrl || '')
+    .split('/api')[0]
+    .split('/index.php')[0]
   
-  if (!storageBase.endsWith('/')) storageBase += '/'
+  // Nos aseguramos de que no termine en / para controlarlo nosotros
+  if (base.endsWith('/')) base = base.slice(0, -1)
   
-  return `${storageBase}storage/${cleanPath}`
+  // La ruta final debe ser: su-dominio.com/cws/eorder/backend/public/storage/ruta-imagen.webp
+  return `${base}/storage/${cleanPath}`
 }
 
 const onImageError = (e) => {
