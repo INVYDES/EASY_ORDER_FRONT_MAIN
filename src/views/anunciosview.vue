@@ -457,6 +457,15 @@ const cargarProductos = async () => {
 const cargar = async () => {
   loading.value = true
   try {
+    // Si no tenemos el ID (sucede al recargar la página), lo recuperamos de la sesión activa
+    if (!restauranteId.value) {
+      const restRes = await fetch(`${API_URL}/restaurantes`, { headers: getHeaders() })
+      const restData = await restRes.json()
+      if (restData.success && restData.data.restaurante_activo) {
+        restauranteId.value = restData.data.restaurante_activo.id
+      }
+    }
+
     const res = await fetch(`${API_URL}/admin/anuncios`, { headers: getHeaders() })
     const data = await res.json()
     if (data.success) {
