@@ -302,7 +302,6 @@ const resolveImage = (p) => {
   if (path.startsWith('/storage/')) return `${base}${path}`
   
   // Fallback
-  const base = API_URL.replace('/api', '')
   return `${base}/storage/${path}`
 }
 const onImageError = (e) => { e.target.style.display = 'none' }
