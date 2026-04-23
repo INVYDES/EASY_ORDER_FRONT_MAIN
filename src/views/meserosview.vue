@@ -330,7 +330,13 @@ const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== i
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getHeaders = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
+  const restId = localStorage.getItem('restaurante_id_activo')
+  return { 
+    'Content-Type': 'application/json', 
+    'Accept': 'application/json', 
+    'Authorization': token ? `Bearer ${token}` : '',
+    'X-Restaurante-Id': restId || ''
+  }
 }
 const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -420,12 +426,12 @@ const cargarOrdenes = async () => {
   try {
     const today = new Date().toISOString().split('T')[0]
     const [aD, ppD, pD, lD, eD, cD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=ENTREGADA&per_page=100`,      { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/meseros/mis-ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/meseros/mis-ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/meseros/mis-ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/meseros/mis-ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/meseros/mis-ordenes?estado=ENTREGADA&per_page=100`,      { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
     ])
     const map = new Map()
     for (const res of [aD, ppD, pD, lD, eD, cD]) {
