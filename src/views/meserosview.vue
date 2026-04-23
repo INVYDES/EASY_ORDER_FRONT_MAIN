@@ -130,7 +130,7 @@
               <div class="space-y-1 mt-2">
                 <div v-for="detalle in (orden.detalles || []).slice(0, 3)" :key="detalle.id"
                   class="flex items-center justify-between text-xs text-gray-600">
-                  <span class="truncate flex-1">{{ detalle.cantidad }}× {{ detalle.producto_nombre }}</span>
+                  <span class="truncate flex-1">{{ detalle.cantidad }}× {{ detalle.producto_nombre || detalle.producto?.nombre }}</span>
                   <span class="font-semibold ml-2 shrink-0">{{ detalle.subtotal_formateado }}</span>
                 </div>
                 <p v-if="(orden.detalles || []).length > 3" class="text-[10px] text-gray-400 italic">
