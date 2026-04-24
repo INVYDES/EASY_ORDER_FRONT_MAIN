@@ -1,25 +1,17 @@
 <template>
   <div>
-    <!-- Sub-tabs para órdenes abiertas -->
-    <div v-if="type === 'open'" class="flex gap-2 mb-4 flex-wrap">
-      <button 
-        v-for="sub in subTabs" 
-        :key="sub.key"
-        @click="subTab = sub.key"
-        :class="['flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border',
-          subTab === sub.key
-            ? 'text-white border-transparent'
-            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300']"
-        :style="subTab === sub.key ? { backgroundColor: sub.color } : {}"
-      >
-        {{ sub.icon }} {{ sub.label }}
-        <span 
-          class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-          :class="subTab === sub.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'"
-        >
-          {{ contarPorEstado(sub.key) }}
+    <!-- Título de sección para Abiertos -->
+    <div v-if="type === 'open'" class="mb-6">
+      <div class="flex items-center gap-3">
+        <span class="p-2 bg-purple-100 text-purple-600 rounded-xl text-xl">🏁</span>
+        <div>
+          <h3 class="text-lg font-bold text-gray-800 leading-tight">Órdenes para cobrar</h3>
+          <p class="text-xs text-gray-400">Tickets de mesas que ya han sido servidas</p>
+        </div>
+        <span class="ml-auto px-3 py-1 bg-purple-600 text-white rounded-full text-xs font-black shadow-sm">
+          {{ ordenesMostradas.length }} pendientes
         </span>
-      </button>
+      </div>
     </div>
 
     <!-- Grid de tickets -->
@@ -31,12 +23,13 @@
         @updated="handleUpdated"
       />
 
-      <div v-if="ordenesMostradas.length === 0" class="col-span-full text-center py-12">
-        <span class="text-4xl block mb-3">
-          {{ type === 'open' ? '🎉' : '📋' }}
+      <!-- Empty state -->
+      <div v-if="ordenesMostradas.length === 0" class="col-span-full text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+        <span class="text-5xl block mb-4">
+          {{ type === 'open' ? '✨' : '📋' }}
         </span>
-        <p class="text-sm text-gray-400 italic">
-          {{ type === 'open' ? 'No hay órdenes pendientes de cobro' : 'No hay tickets cerrados hoy' }}
+        <p class="text-gray-500 font-medium italic">
+          {{ type === 'open' ? '¡Excelente! No hay cuentas pendientes por cobrar' : 'No hay tickets cerrados hoy' }}
         </p>
       </div>
     </div>
@@ -44,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import CajaTicketCard from './cajatiketcard.vue'
 
 const props = defineProps({
@@ -58,48 +51,26 @@ const props = defineProps({
 
 const emit = defineEmits(['refresh', 'order-paid'])
 
-// Estado
-const subTab = ref('ENTREGADA')
-
-// Configuración de sub-tabs
-const subTabs = [
-  { key: 'ENTREGADA',      label: 'Para cobrar',       icon: '🏁', color: '#8b5cf6' },
-  { key: 'LISTA',          label: 'Ya preparadas',     icon: '✅', color: '#10b981' },
-  { key: 'EN_PREPARACION', label: 'En cocina/barra',   icon: '🔥', color: '#f97316' },
-  { key: 'POR_PREPARAR',   label: 'Por preparar',      icon: '🟡', color: '#f59e0b' },
-  { key: 'ABIERTA',        label: 'Nuevas',            icon: '📝', color: '#fcd34d' },
-]
-
-// Contar órdenes por estado
-const contarPorEstado = (estado) => {
-  return props.orders.filter(o => o.estado === estado).length
-}
-
-// Órdenes a mostrar según tipo y filtro
+// Órdenes a mostrar según tipo
 const ordenesMostradas = computed(() => {
   if (props.type === 'closed') {
     // Para cerradas: mostrar todas ordenadas por más reciente
     return [...props.orders].sort((a, b) => b.id - a.id)
   }
   
-  // Para abiertas: solo las del sub-tab activo
+  // Para abiertas: SOLO las que están en estado ENTREGADA (listas para cobrar)
   return props.orders
-    .filter(o => o.estado === subTab.value)
+    .filter(o => o.estado === 'ENTREGADA')
     .sort((a, b) => b.id - a.id)
 })
 
 // Manejar actualización de pago
 const handleUpdated = (paymentData) => {
-  // Emitir evento con los datos del pago
   emit('order-paid', paymentData)
-  // Emitir refresh para recargar la lista
   emit('refresh')
 }
 </script>
 
 <style scoped>
-/* Transiciones suaves */
-button {
-  transition: all 0.2s ease;
-}
+/* Estilos opcionales */
 </style>

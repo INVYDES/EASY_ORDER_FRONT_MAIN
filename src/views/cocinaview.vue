@@ -343,10 +343,11 @@ const abrirModalIngredientes = async (orden, nuevoEstado) => {
   }
 
   try {
-    // Por cada producto de la orden, pedir sus ingredientes
-    const detalles = orden.detalles ?? []
+    // Filtrar para que el modal de COCINA solo muestre comida
+    const detallesCocina = (orden.detalles ?? []).filter(d => !esBebida(d))
+    
     const resultados = await Promise.all(
-      detalles.map(d =>
+      detallesCocina.map(d =>
         fetch(`${API_URL}/ingredientes/producto/${d.producto_id}`, { headers: getHeaders() })
           .then(r => r.json())
           .then(data => ({ detalle: d, ingredientes: data.success ? data.data : [] }))
@@ -355,7 +356,7 @@ const abrirModalIngredientes = async (orden, nuevoEstado) => {
     )
 
     modalIngredientes.value.items = resultados
-      .filter(r => r.ingredientes.length > 0)  // solo productos con receta
+      .filter(r => r.ingredientes.length > 0)
       .map(({ detalle, ingredientes }) => ({
         producto_id:     detalle.producto_id,
         producto_nombre: detalle.producto_nombre ?? detalle.producto?.nombre ?? `Producto #${detalle.producto_id}`,

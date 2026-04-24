@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 sm:p-6 space-y-5">
+  <div class="p-4 sm:p-6 space-y-5 min-h-screen bg-slate-50/50">
 
     <!-- ══ TOASTS ══ -->
     <div class="fixed top-4 right-4 z-50 space-y-2">
@@ -14,536 +14,580 @@
       </div>
     </div>
 
-    <!-- ══ CAJA CERRADA — BLOQUEO ══ -->
-    <div v-if="!loadingCaja && !cajaAbierta"
+    <!-- ══ CARGANDO CAJA ══ -->
+    <div v-if="loadingCaja" class="flex flex-col items-center justify-center min-h-[70vh] gap-3">
+      <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p class="text-gray-400 text-sm font-medium">Sincronizando con el sistema...</p>
+    </div>
+
+    <!-- ══ CAJA CERRADA ══ -->
+    <div v-else-if="!cajaAbierta"
       class="flex flex-col items-center justify-center min-h-[70vh] text-center gap-5">
-      <div class="w-24 h-24 rounded-3xl bg-red-50 flex items-center justify-center text-5xl shadow-sm">
-        🔒
-      </div>
+      <div class="w-24 h-24 rounded-3xl bg-red-50 flex items-center justify-center text-5xl shadow-sm">🔒</div>
       <div>
         <h2 class="text-2xl font-bold text-gray-800">Caja cerrada</h2>
-        <p class="text-gray-400 text-sm mt-2 max-w-xs">
-          No se pueden registrar órdenes mientras la caja esté cerrada.
-          Pide al cajero que abra la caja para comenzar.
-        </p>
+        <p class="text-gray-400 text-sm mt-2 max-w-xs">No se pueden registrar órdenes mientras la caja esté cerrada.</p>
       </div>
-      <button @click="verificarCaja"
-        class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
-        🔄 Verificar estado
-      </button>
+      <button @click="verificarCaja" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">🔄 Verificar estado</button>
     </div>
 
-    <!-- ══ CARGANDO CAJA ══ -->
-    <div v-else-if="loadingCaja" class="flex items-center justify-center min-h-[70vh] gap-3">
-      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      <p class="text-gray-400 text-sm">Verificando caja...</p>
-    </div>
-
-    <!-- ══ CONTENIDO NORMAL (caja abierta) ══ -->
+    <!-- ══ CONTENIDO PRINCIPAL ══ -->
     <template v-else>
-
-      <!-- Encabezado -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Órdenes del día</h1>
-          <p class="text-gray-400 text-sm mt-0.5">{{ fechaHoy }}</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
         </div>
         <div class="flex items-center gap-3">
-          <!-- Badge caja abierta -->
-          <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700">
-            🟢 Caja abierta
-          </span>
-          <button
-            @click="vistaActual = 'nueva'"
-            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm"
-          >
-            <span class="text-base leading-none">＋</span>
-            Nueva Orden
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[10px] font-black uppercase">Caja abierta</span>
+          </div>
+          <button @click="vistaActual = 'nueva'" class="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95">
+            <span class="text-lg leading-none">＋</span> Nueva Orden
           </button>
         </div>
       </div>
 
-      <!-- ══ VISTA ÓRDENES ══ -->
+      <!-- ══ VISTA LISTADO DE ÓRDENES ══ -->
       <div v-if="vistaActual === 'ordenes'">
-
-        <!-- Pills de estado -->
-        <div class="flex gap-2 flex-wrap">
+        <!-- Tabs Superiores -->
+        <div class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
           <button v-for="tab in tabs" :key="tab.key" @click="tabActivo = tab.key"
-            :class="['flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition border',
-              tabActivo === tab.key
-                ? 'text-white border-transparent shadow-sm'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300']"
+            :class="['flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all border shrink-0',
+              tabActivo === tab.key ? 'text-white border-transparent shadow-md scale-105' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 shadow-sm']"
             :style="tabActivo === tab.key ? { backgroundColor: tab.color } : {}">
-            <span>{{ tab.icon }}</span>
-            {{ tab.label }}
-            <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-              :class="tabActivo === tab.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'">
+            <span>{{ tab.icon }}</span> {{ tab.label.toUpperCase() }}
+            <span class="px-1.5 py-0.5 rounded-lg text-[10px]" :class="tabActivo === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'">
               {{ contarOrdenes(tab.key) }}
             </span>
           </button>
         </div>
 
-        <!-- Cargando órdenes -->
-        <div v-if="loading" class="flex items-center justify-center py-16 gap-3">
-          <div class="w-7 h-7 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p class="text-gray-400 text-sm">Cargando órdenes...</p>
+        <div v-if="loading" class="flex flex-col items-center justify-center py-32 gap-3">
+          <div class="w-8 h-8 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p class="text-slate-400 text-sm">Actualizando órdenes...</p>
         </div>
 
-        <!-- Sin órdenes -->
-        <div v-else-if="ordenesFiltradas.length === 0"
-          class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <span class="text-5xl block mb-3">{{ tabActual?.icon }}</span>
-          <p class="text-gray-500 font-medium">Sin órdenes {{ tabActual?.label?.toLowerCase() }}</p>
-          <p class="text-gray-400 text-sm mt-1">Las órdenes aparecerán aquí cuando cambien de estado</p>
+        <div v-else-if="subOrdenesFiltradas.length === 0" class="text-center py-24 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <span class="text-6xl block mb-4 opacity-20">{{ tabActual?.icon }}</span>
+          <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Sin órdenes en {{ tabActual?.label }}</p>
         </div>
 
-        <!-- Grid de órdenes -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          <div v-for="orden in ordenesFiltradas" :key="orden.id"
-            class="bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col"
-            :class="borderColor(orden.estado)">
+        <!-- Grid de Tarjetas -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-in">
+          <div v-for="sub in subOrdenesFiltradas" :key="sub.uid"
+            class="bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
+            :class="borderColor(sub.estado_estacion)">
 
             <!-- Header tarjeta -->
-            <div class="px-4 py-3 flex items-center justify-between" :class="bgEstado(orden.estado)">
-              <div class="flex items-center gap-2">
-                <span class="text-lg">{{ iconEstado(orden.estado) }}</span>
+            <div class="px-5 py-4 flex items-center justify-between" :class="bgEstado(sub.estado_estacion)">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center text-xl shadow-sm group-hover:rotate-12 transition-transform">
+                  {{ iconEstado(sub.estado_estacion) }}
+                </div>
                 <div>
-                  <p class="text-xs font-bold text-gray-600">{{ orden.folio || 'Orden #'+orden.id }}</p>
-                  <p class="text-[10px] text-gray-400">{{ formatHora(orden.created_at) }}</p>
+                  <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">Orden</p>
+                  <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
                 </div>
               </div>
-              <span class="text-[10px] font-bold px-2.5 py-1 rounded-full" :class="badgeEstado(orden.estado)">
-                {{ labelEstado(orden.estado) }}
+              <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
+                {{ ['ABIERTA', 'ENTREGADA', 'CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
               </span>
             </div>
 
             <!-- Contenido -->
-            <div class="px-4 py-3 flex-1 space-y-2">
-              <div class="flex items-center gap-2 text-sm text-gray-600">
-                <span class="text-base">👤</span>
-                <span class="font-medium">{{ nombreOrden(orden) }}</span>
-              </div>
-              <div v-if="orden.mesa" class="flex items-center gap-2 text-sm text-gray-500">
-                <span class="text-base">🪑</span>
-                <span>Mesa {{ orden.mesa }}</span>
-              </div>
-              <div class="space-y-1 mt-2">
-                <div v-for="detalle in (orden.detalles || []).slice(0, 3)" :key="detalle.id"
-                  class="flex items-center justify-between text-xs text-gray-600">
-                  <span class="truncate flex-1">{{ detalle.cantidad }}× {{ detalle.producto_nombre || detalle.producto?.nombre }}</span>
-                  <span class="font-semibold ml-2 shrink-0">{{ detalle.subtotal_formateado }}</span>
+            <div class="px-5 py-5 flex-1 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="text-lg">👤</span>
+                  <span class="font-black text-indigo-700 truncate text-sm">{{ getNombreMostrable(sub) }}</span>
                 </div>
-                <p v-if="(orden.detalles || []).length > 3" class="text-[10px] text-gray-400 italic">
-                  +{{ (orden.detalles || []).length - 3 }} más...
-                </p>
+                <div v-if="sub.mesa" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black">
+                  MESA {{ sub.mesa }}
+                </div>
               </div>
-              <div class="flex justify-between items-center pt-2 border-t border-gray-50">
-                <span class="text-xs text-gray-500">Total</span>
-                <span class="font-bold text-indigo-600">
-                  {{ orden.total_formateado || '$'+Number(orden.total||0).toFixed(2) }}
-                </span>
+
+              <!-- Lista de productos en la orden -->
+              <div class="space-y-1.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                <div v-for="detalle in sub.detalles_estacion" :key="detalle.id"
+                  class="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span class="truncate flex-1">{{ detalle.cantidad }}× {{ (detalle.producto_nombre || detalle.producto?.nombre || 'Producto').toUpperCase() }}</span>
+                  <span v-if="detalle.estado_preparacion === 'LISTO'" class="text-[9px] font-black text-white bg-emerald-500 px-2 py-0.5 rounded-lg ml-2 shadow-sm">LISTO</span>
+                  <span v-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 ml-2">●</span>
+                </div>
               </div>
             </div>
 
-            <!-- Acciones -->
-            <div class="px-4 pb-4">
-              <button v-if="siguienteEstado(orden.estado)"
-                @click="cambiarEstado(orden.id, siguienteEstado(orden.estado))"
-                :disabled="cambiando === orden.id"
-                class="w-full py-2.5 text-sm font-semibold rounded-xl transition disabled:opacity-50"
-                :class="btnEstado(orden.estado)">
-                {{ cambiando === orden.id ? 'Actualizando...' : accionEstado(orden.estado) }}
+            <!-- Footer con acciones -->
+            <div class="px-5 pb-5">
+              <button v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
+                @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
+                :disabled="cambiando === sub.uid"
+                class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
+                :class="btnEstado(sub.estado_estacion)">
+                {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
               </button>
-              <div v-else class="w-full py-2.5 text-sm font-medium text-center rounded-xl bg-gray-50 text-gray-400">
-                {{ ['POR_PREPARAR', 'EN_PREPARACION'].includes(orden.estado) ? 'En manos de estación' : orden.estado === 'ENTREGADA' ? 'Esperando cobro' : orden.estado === 'CERRADA' ? '✅ Orden cerrada' : '—' }}
+              <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
+                {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : (sub.estado_estacion === 'CERRADA' ? '🔒 Archivada' : 'En proceso') }}
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
 
-      <!-- ══ NUEVA ORDEN ══ -->
-      <div v-else-if="vistaActual === 'nueva'">
-
-        <div class="flex items-center gap-3 mb-5">
-          <button @click="vistaActual = 'ordenes'"
-            class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-600">
-            ←
-          </button>
-          <h2 class="text-lg font-bold text-gray-800">Nueva Orden</h2>
+      <!-- ══ VISTA CREAR NUEVA ORDEN ══ -->
+      <div v-else-if="vistaActual === 'nueva'" class="animate-fade-in">
+        <div class="flex items-center gap-3 mb-6">
+          <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
+          <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-          <!-- Productos -->
-          <div class="lg:col-span-2 space-y-4">
-
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
-                Cliente <span class="text-gray-400 font-normal text-xs">(opcional)</span>
-              </label>
-              <select v-model="nuevaOrden.clienteId"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-                <option :value="null">— Sin cliente —</option>
-                <option v-for="c in clientes" :key="c.value" :value="c.value">{{ c.label }}</option>
-              </select>
-              <label class="block text-sm font-semibold text-gray-700 mt-3 mb-2">Mesa</label>
-              <input v-model="nuevaOrden.mesa" type="number" min="1" placeholder="Número de mesa (opcional)"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            </div>
-
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-gray-800">Productos</h3>
-                <input v-model="busqueda" type="text" placeholder="Buscar..."
-                  class="pl-3 pr-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-36" />
-              </div>
-              <div v-if="loadingProductos" class="text-center py-8 text-gray-400 text-sm">Cargando...</div>
-              <div v-else class="space-y-1">
-                <button v-for="p in productosFiltrados" :key="p.id"
-                  @click="agregarAlCarrito(p)"
-                  class="w-full flex items-center gap-3 p-3 rounded-xl transition text-left group hover:bg-indigo-50">
-                  <div class="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
-                    <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" :alt="p.nombre" class="w-full h-full object-cover" />
-                    <span v-else class="text-xl">🍽️</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-medium text-gray-800 text-sm">{{ p.nombre }}</p>
-                    <p class="text-xs text-gray-400">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <span class="font-semibold text-sm">${{ Number(p.precio).toFixed(2) }}</span>
-                    <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold group-hover:bg-indigo-600 group-hover:text-white transition">+</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Carrito -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-4 h-fit">
-            <h3 class="font-semibold text-gray-800 mb-4">Resumen</h3>
-
-            <div v-if="carrito.length === 0" class="text-center py-10 text-gray-400 text-sm italic">
-              <span class="text-3xl block mb-2">🛒</span>
-              Agrega productos
-            </div>
-
-            <div v-else class="space-y-2 mb-4 max-h-72 overflow-y-auto">
-              <div v-for="item in carrito" :key="item.id"
-                class="p-2.5 bg-gray-50 rounded-xl space-y-1.5">
-              <div class="flex items-center gap-2.5">
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs font-semibold text-gray-800 truncate">{{ item.nombre }}</p>
-                  <div class="flex items-center gap-1.5 mt-1">
-                    <button @click="decrementar(item.id)"
-                      class="w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold hover:bg-gray-300">−</button>
-                    <span class="text-xs font-bold w-4 text-center">{{ item.cantidad }}</span>
-                    <button @click="incrementar(item.id)"
-                      class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-xs flex items-center justify-center font-bold hover:bg-indigo-200">+</button>
-                  </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Formulario y Catálogo -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Datos Básicos -->
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cliente (Opcional)</label>
+                  <select v-model="nuevaOrden.clienteId" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold">
+                    <option :value="null">— Sin cliente registrado —</option>
+                    <option v-for="c in clientes" :key="c.value" :value="c.value">{{ c.label }}</option>
+                  </select>
                 </div>
-                <div class="text-right shrink-0">
-                  <p class="text-xs font-bold">${{ Number(item.precio * item.cantidad).toFixed(2) }}</p>
-                  <button @click="eliminarDelCarrito(item.id)" class="text-gray-300 hover:text-red-400 text-xs">✕</button>
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Número de Mesa</label>
+                  
+                  <!-- Si es mesero y tiene mesas asignadas, mostrar Select -->
+                  <select v-if="esMesero && mesasAsignadas.length > 0" v-model="nuevaOrden.mesa" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold">
+                    <option :value="null">Selecciona una mesa</option>
+                    <option v-for="m in mesasAsignadas" :key="m" :value="m">Mesa {{ m }}</option>
+                  </select>
+                  
+                  <!-- Si no es mesero o no tiene asignación, mostrar Input tradicional -->
+                  <input v-else v-model="nuevaOrden.mesa" type="number" min="1" placeholder="Ej: 5" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold" />
                 </div>
               </div>
-              <!-- Nota por producto -->
-              <input v-model="item.nota" type="text" placeholder="📝 Nota (sin cebolla, extra salsa...)"
-                class="w-full text-[11px] px-2 py-1 border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-indigo-400 focus:outline-none text-gray-600 placeholder-gray-400" />
             </div>
-            </div>
+            
+            <!-- Catálogo Separado por Pestañas -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+              <div class="p-6 border-b border-slate-50">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                  <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
+                    <button @click="subTabActiva = 'productos'" 
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest', subTabActiva === 'productos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍽️ PRODUCTOS
+                    </button>
+                    <button @click="subTabActiva = 'paquetes'" 
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest', subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🎁 PAQUETES
+                    </button>
+                  </div>
+                  <div class="relative flex-1 max-w-xs">
+                    <input v-model="busqueda" type="text" :placeholder="'Buscar en ' + (subTabActiva === 'productos' ? 'productos...' : 'paquetes...')" 
+                      class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+                  </div>
+                </div>
+              </div>
 
-            <div v-if="carrito.length > 0" class="border-t border-gray-100 pt-3 mb-4">
-              <div class="flex justify-between font-bold">
-                <span>Total</span>
-                <span class="text-indigo-600">${{ Number(totalCarrito).toFixed(2) }}</span>
+              <div class="p-4 min-h-[450px]">
+                <div v-if="loadingProductos" class="flex flex-col items-center justify-center py-24 text-slate-300 italic">
+                  <div class="w-10 h-10 border-4 border-slate-50 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                  <p class="text-sm font-bold uppercase tracking-widest">Sincronizando menú...</p>
+                </div>
+                
+                <!-- Catálogo: Productos -->
+                <div v-else-if="subTabActiva === 'productos'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                  <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
+                    <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
+                  </div>
+                  <button v-for="p in productosFiltrados" :key="'p-'+p.id" @click="agregarAlCarrito(p, 'producto')" 
+                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-slate-50 border border-transparent hover:border-slate-100 bg-white">
+                    <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
+                      <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
+                      <span v-else class="text-2xl">🍽️</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-black text-slate-800 text-sm truncate leading-tight">{{ p.nombre.toUpperCase() }}</p>
+                      <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-black text-sm text-slate-900">${{ Number(p.precio).toFixed(2) }}</p>
+                      <span class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-sm">+</span>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Catálogo: Paquetes -->
+                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                  <div v-if="paquetesFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
+                    <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
+                  </div>
+                  <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')" 
+                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-indigo-50/50 border border-transparent hover:border-indigo-100 bg-white shadow-sm shadow-slate-100">
+                    <div class="w-16 h-16 rounded-2xl overflow-hidden bg-indigo-50 shrink-0 flex items-center justify-center border border-indigo-100 shadow-sm relative group-hover:rotate-2 transition-transform">
+                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover" />
+                      <span v-else class="text-3xl">🎁</span>
+                      <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm">COMBO</div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-black text-slate-800 text-sm leading-tight uppercase tracking-tight">{{ paq.nombre }}</p>
+                      <p class="text-[9px] text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-black text-sm text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</p>
+                      <span class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-lg shadow-indigo-200">+</span>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
-
-            <!-- Nota general de la orden -->
-            <div v-if="carrito.length > 0" class="mb-3">
-              <textarea v-model="notaGeneral" rows="2"
-                placeholder="📝 Nota general del pedido (alergias, preferencias...)"
-                class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none text-gray-600 placeholder-gray-400 resize-none"></textarea>
-            </div>
-
-            <div v-if="errorNuevaOrden" class="mb-3 p-2.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl">
-              {{ errorNuevaOrden }}
-            </div>
-
-            <button @click="crearOrden" :disabled="carrito.length === 0 || creando"
-              class="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-40">
-              {{ creando ? 'Creando...' : 'Confirmar Orden' }}
-            </button>
-
-            <button v-if="carrito.length > 0" @click="carrito = []"
-              class="w-full mt-2 py-1.5 text-xs text-gray-400 hover:text-red-400 transition">
-              Vaciar
-            </button>
           </div>
 
-        </div>
+          <!-- Panel de Resumen / Carrito -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden sticky top-6">
+              <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                  <h3 class="font-black text-xs tracking-widest uppercase opacity-60">Resumen</h3>
+                  <p class="text-lg font-black leading-none mt-1">PEDIDO ACTUAL</p>
+                </div>
+                <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center font-black text-sm">
+                  {{ carrito.length }}
+                </div>
+              </div>
+              
+              <div class="p-6">
+                <div v-if="carrito.length === 0" class="flex flex-col items-center justify-center py-20 text-center opacity-30">
+                  <div class="text-5xl mb-4">🛒</div>
+                  <p class="text-xs font-black uppercase tracking-widest">Carrito Vacío</p>
+                </div>
+                
+                <div v-else class="animate-fade-in">
+                  <!-- Listado de ítems en carrito -->
+                  <div class="space-y-3 mb-8 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+                    <div v-for="item in carrito" :key="item.id + item.tipo" class="p-4 bg-slate-50 border border-slate-100 rounded-3xl transition-all hover:border-indigo-200 group">
+                      <div class="flex justify-between items-start gap-3 mb-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                          <span class="text-xl bg-white w-8 h-8 rounded-xl flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
+                          <p class="text-xs font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
+                        </div>
+                        <button @click="eliminarDelCarrito(item.id, item.tipo)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 bg-white rounded-xl p-1 shadow-sm border border-slate-100">
+                          <button @click="decrementar(item.id, item.tipo)" class="w-7 h-7 flex items-center justify-center bg-slate-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
+                          <span class="text-xs font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
+                          <button @click="incrementar(item.id, item.tipo)" class="w-7 h-7 flex items-center justify-center bg-slate-50 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors font-black">+</button>
+                        </div>
+                        <span class="font-black text-sm text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
+                      </div>
+                    </div>
+                  </div>
 
+                  <!-- Cálculos Finales -->
+                  <div class="space-y-3 pt-6 border-t border-slate-100">
+                    <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <span>Subtotal</span>
+                      <span>${{ Number(totalCarrito).toFixed(2) }}</span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                      <span class="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Total Final</span>
+                      <span class="text-2xl font-black text-indigo-600 leading-none">${{ Number(totalCarrito).toFixed(2) }}</span>
+                    </div>
+                  </div>
+
+                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa" 
+                    class="w-full py-4.5 bg-indigo-600 text-white font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl shadow-indigo-100 active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
+                    <template v-if="creando">
+                      <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Enviando...
+                    </template>
+                    <template v-else>
+                      CONFIRMAR ORDEN 🚀
+                    </template>
+                  </button>
+                  <p v-if="!nuevaOrden.mesa && carrito.length > 0" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 
-// ── Estado ────────────────────────────────────────────────────────────────────
-const vistaActual      = ref('ordenes')
-const tabActivo        = ref('todas')
-const ordenes          = ref([])
-const productos        = ref([])
-const clientes         = ref([])
-const carrito          = ref([])
-const busqueda         = ref('')
-const loading          = ref(true)
-const loadingCaja      = ref(true)   // ← nuevo: estado de caja
+// --- Inicialización de Estados ---
+const vistaActual = ref('ordenes')
+const tabActivo = ref('todas')
+const subTabActiva = ref('productos')
+const ordenes = ref([])
+const productos = ref([])
+const paquetes = ref([])
+const clientes = ref([])
+const carrito = ref([])
+const busqueda = ref('')
+
+const loading = ref(true)
+const loadingCaja = ref(true)
 const loadingProductos = ref(true)
-const creando          = ref(false)
-const cambiando        = ref(null)
-const toasts           = ref([])
-const currentUser      = ref(null)
-const cajaAbierta      = ref(false)  // ← nuevo: bloqueo
+const creando = ref(false)
+const cambiando = ref(null)
+const toasts = ref([])
+const cajaAbierta = ref(false)
+const nuevaOrden = ref({ clienteId: null, mesa: null })
+const mesasAsignadas = ref([])
 
-const nuevaOrden      = ref({ clienteId: null, mesa: null })
-const errorNuevaOrden = ref('')
-const notaGeneral     = ref('')
-
-// ── Toasts ────────────────────────────────────────────────────────────────────
-const showToast = (message, type = 'info', duration = 3500) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  const restId = localStorage.getItem('restaurante_id_activo')
-  return { 
-    'Content-Type': 'application/json', 
-    'Accept': 'application/json', 
-    'Authorization': token ? `Bearer ${token}` : '',
-    'X-Restaurante-Id': restId || ''
-  }
-}
-const fechaHoy = computed(() =>
-  new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-)
-
-// Nombre: user.name > cliente.nombre > 'Sin asignar'
-const nombreOrden = (orden) => {
-  if (orden.user?.name)      return orden.user.name
-  if (orden.user?.nombre)    return orden.user.nombre
-  if (orden.usuario?.name)   return orden.usuario.name
-  if (orden.cliente?.nombre) return orden.cliente.nombre
-  if (orden.cliente?.name)   return orden.cliente.name
-  if (orden.user_id && currentUser.value?.id === orden.user_id) return currentUser.value.name
-  return 'Sin asignar'
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-const tabs = [
-  { key: 'todas',          label: 'Todas',           icon: '📋', color: '#6366f1' },
-  { key: 'ABIERTA',        label: 'Nuevas',          icon: '📝', color: '#fcd34d' },
-  { key: 'POR_PREPARAR',   label: 'Por preparar',    icon: '🟡', color: '#f59e0b' },
-  { key: 'EN_PREPARACION', label: 'En preparación',  icon: '🔥', color: '#f97316' },
-  { key: 'LISTA',          label: 'Listas',          icon: '✅', color: '#10b981' },
-  { key: 'ENTREGADA',      label: 'Entregadas',      icon: '🏁', color: '#8b5cf6' },
-]
-const tabActual        = computed(() => tabs.find(t => t.key === tabActivo.value))
-const contarOrdenes    = (key) => key === 'todas' ? ordenes.value.length : ordenes.value.filter(o => o.estado === key).length
-const ordenesFiltradas = computed(() =>
-  tabActivo.value === 'todas' ? ordenes.value : ordenes.value.filter(o => o.estado === tabActivo.value)
-)
-
-// ── Estilos ───────────────────────────────────────────────────────────────────
-const bgEstado    = (e) => ({ ABIERTA:'bg-yellow-50', POR_PREPARAR:'bg-amber-50', EN_PREPARACION:'bg-orange-50', LISTA:'bg-emerald-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-gray-50' }[e] || 'bg-gray-50')
-const borderColor = (e) => ({ ABIERTA:'border-yellow-200', POR_PREPARAR:'border-amber-200', EN_PREPARACION:'border-orange-300', LISTA:'border-emerald-300', ENTREGADA:'border-purple-300', CERRADA:'border-gray-200' }[e] || 'border-gray-200')
-const badgeEstado = (e) => ({ ABIERTA:'bg-yellow-100 text-yellow-700', POR_PREPARAR:'bg-amber-100 text-amber-700', EN_PREPARACION:'bg-orange-100 text-orange-700', LISTA:'bg-emerald-100 text-emerald-700', ENTREGADA:'bg-purple-100 text-purple-700', CERRADA:'bg-gray-100 text-gray-500' }[e] || 'bg-gray-100 text-gray-500')
-const iconEstado  = (e) => ({ ABIERTA:'📝', POR_PREPARAR:'🟡', EN_PREPARACION:'🔥', LISTA:'✅', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋')
-const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Por preparar', EN_PREPARACION:'En preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cerrada' }[e] || e)
-const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
-const accionEstado    = (e) => ({ ABIERTA:'▶️ Mandar a estación', LISTA:'🤝 Entregar a cliente' }[e] || '')
-const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-gray-100 text-gray-400')
-const formatHora      = (f) => !f ? '' : new Date(f).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-
-// ── Imágenes ──────────────────────────────────────────────────────────────────
-const resolveImageUrl = (path) => {
-  if (!path) return null
-  if (path.startsWith('http') || path.startsWith('data:')) return path
-  if (path.startsWith('/storage/')) return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}`
-  return `${STORAGE_URL}${path}`
-}
-
-// ── Carrito ───────────────────────────────────────────────────────────────────
-const productosFiltrados = computed(() => {
-  if (!busqueda.value) return productos.value
-  const t = busqueda.value.toLowerCase()
-  return productos.value.filter(p =>
-    p.nombre?.toLowerCase().includes(t) || p.categoria?.nombre?.toLowerCase().includes(t)
-  )
+// --- Usuario y Roles ---
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const userActual = JSON.parse(userRaw)
+const esMesero = computed(() => {
+  const roles = userActual.roles || []
+  return roles.some(r => r.id === 3 || r.id === '3')
 })
-const totalCarrito = computed(() => carrito.value.reduce((s, i) => s + i.precio * i.cantidad, 0))
 
-const agregarAlCarrito   = (p) => { const e = carrito.value.find(i => i.id === p.id); if (e) e.cantidad++; else carrito.value.push({ id: p.id, nombre: p.nombre, precio: Number(p.precio), cantidad: 1, nota: '' }) }
-const incrementar        = (id) => { const i = carrito.value.find(i => i.id === id); if (i) i.cantidad++ }
-const decrementar        = (id) => { const i = carrito.value.findIndex(x => x.id === id); if (i === -1) return; carrito.value[i].cantidad > 1 ? carrito.value[i].cantidad-- : carrito.value.splice(i, 1) }
-const eliminarDelCarrito = (id) => { carrito.value = carrito.value.filter(i => i.id !== id) }
+// --- Configuración Catálogo ---
+const BEBIDA_CATEGORIA_IDS = [7, 8]
+const BEBIDA_KEYWORDS = ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'bebida', 'cerveza', 'agua', 'trago', 'coctel', 'limonada', 'naranjada']
 
-// ── API ───────────────────────────────────────────────────────────────────────
-const verificarCaja = async () => {
-  loadingCaja.value = true
-  try {
-    const res  = await fetch(`${API_URL}/caja/estado`, { headers: getHeaders() })
-    const data = await res.json()
-    cajaAbierta.value = !!(data.success && data.data?.is_open)
-  } catch { cajaAbierta.value = false }
-  finally { loadingCaja.value = false }
+const tabs = [
+  { key: 'todas', label: 'Todas', icon: '📋', color: '#6366f1' },
+  { key: 'ABIERTA', label: 'Nuevas', icon: '📝', color: '#fcd34d' },
+  { key: 'POR_PREPARAR', label: 'Por preparar', icon: '🟡', color: '#f59e0b' },
+  { key: 'EN_PREPARACION', label: 'En preparación', icon: '🔥', color: '#f97316' },
+  { key: 'LISTA', label: 'Listas', icon: '✅', color: '#10b981' },
+  { key: 'ENTREGADA', label: 'Entregadas', icon: '🏁', color: '#8b5cf6' },
+]
+
+// --- Funciones de Lógica ---
+const esBebida = (detalle) => {
+  if (!detalle) return false
+  if (BEBIDA_CATEGORIA_IDS.includes(detalle.categoria_id)) return true
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  if (BEBIDA_KEYWORDS.some(k => nombre.includes(k))) return true
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').toLowerCase()
+  return cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || cat.includes('barra')
 }
 
-const cargarUser = async () => {
-  try {
-    const res  = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) currentUser.value = data.data || data
-  } catch {}
+const calcularEstadoEstacion = (detalles, estadoOrden) => {
+  if (estadoOrden === 'ABIERTA') return 'ABIERTA'
+  if (estadoOrden === 'CERRADA' || estadoOrden === 'PAGADA') return 'CERRADA'
+  if (!detalles || detalles.length === 0) return 'POR_PREPARAR'
+  
+  const total = detalles.length
+  const entregados = detalles.filter(d => d.estado_preparacion === 'ENTREGADO').length
+  const listos = detalles.filter(d => d.estado_preparacion === 'LISTO').length
+  const enPrep = detalles.filter(d => d.estado_preparacion === 'EN_PREPARACION').length
+
+  if (entregados === total) return 'ENTREGADA'
+  if (listos > 0) return 'LISTA'
+  if (enPrep > 0) return 'EN_PREPARACION'
+  return 'POR_PREPARAR'
+}
+
+const subOrdenes = computed(() => {
+  const list = []
+  if (!ordenes.value) return list
+  ordenes.value.forEach(o => {
+    const todos = o.detalles || []
+    const barra = todos.filter(d => esBebida(d))
+    const cocina = todos.filter(d => !esBebida(d))
+    if (cocina.length > 0) list.push({ ...o, uid: `${o.id}-COCINA`, detalles_estacion: cocina, estado_estacion: calcularEstadoEstacion(cocina, o.estado) })
+    if (barra.length > 0) list.push({ ...o, uid: `${o.id}-BARRA`, detalles_estacion: barra, estado_estacion: calcularEstadoEstacion(barra, o.estado) })
+  })
+  return list
+})
+
+const subOrdenesFiltradas = computed(() => {
+  if (['todas', 'ABIERTA', 'ENTREGADA'].includes(tabActivo.value)) {
+    return ordenes.value
+      .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
+      .map(o => ({ ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }))
+  }
+  return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
+})
+
+const contarOrdenes = (key) => {
+  if (key === 'todas') return ordenes.value?.length || 0
+  if (['ABIERTA', 'ENTREGADA'].includes(key)) return ordenes.value?.filter(o => o.estado === key).length || 0
+  return subOrdenes.value?.filter(s => s.estado_estacion === key).length || 0
+}
+
+const tabActual = computed(() => tabs.find(t => t.key === tabActivo.value))
+const totalCarrito = computed(() => carrito.value.reduce((s, i) => s + (i.precio * i.cantidad), 0))
+const fechaHoy = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
+
+const productosFiltrados = computed(() => {
+  const b = busqueda.value?.toLowerCase() || ''
+  return b ? productos.value.filter(p => p.nombre.toLowerCase().includes(b)) : productos.value
+})
+
+const paquetesFiltrados = computed(() => {
+  const b = busqueda.value?.toLowerCase() || ''
+  return b ? paquetes.value.filter(p => p.nombre.toLowerCase().includes(b)) : paquetes.value
+})
+
+// --- Estilos Visuales ---
+const bgEstado = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? 'bg-slate-50' : { ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50' }[e] || 'bg-slate-50'
+const borderColor = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? 'border-slate-100' : { ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200' }[e] || 'border-slate-100'
+const badgeEstado = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : { ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300' }[e] || 'bg-slate-100 text-slate-500'
+const iconEstado = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? '🕒' : { ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋'
+const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cerrada' }[e] || e)
+const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
+const accionEstado = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregar' }[e] || '')
+const btnEstado = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
+
+// --- Funciones de API ---
+const getHeaders = () => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+  const restId = localStorage.getItem('restaurante_id_activo') || ''
+  return { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}`, 'X-Restaurante-Id': restId }
 }
 
 const cargarOrdenes = async () => {
   loading.value = true
   try {
     const today = new Date().toISOString().split('T')[0]
-    const [aD, ppD, pD, lD, eD, cD] = await Promise.all([
-      fetch(`${API_URL}/meseros/mis-ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/meseros/mis-ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/meseros/mis-ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/meseros/mis-ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/meseros/mis-ordenes?estado=ENTREGADA&per_page=100`,      { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
-    ])
+    const states = ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA', 'ENTREGADA']
+    const endpoints = states.map(s => `${API_URL}/meseros/mis-ordenes?estado=${s}&per_page=100`)
+    endpoints.push(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
+    
+    const results = await Promise.all(endpoints.map(url => fetch(url, { headers: getHeaders() }).then(r => r.ok ? r.json() : { success: false })))
     const map = new Map()
-    for (const res of [aD, ppD, pD, lD, eD, cD]) {
-      if (res.success) {
-        const lista = Array.isArray(res.data) ? res.data : []
-        lista.forEach(o => map.set(o.id, o))
-      }
-    }
+    results.forEach(res => { if (res.success && res.data) res.data.forEach(o => map.set(o.id, o)) })
     ordenes.value = [...map.values()].sort((a, b) => b.id - a.id)
-  } catch (e) { console.error('Error órdenes:', e) }
-  finally { loading.value = false }
+  } catch (err) { console.error('Error órdenes:', err) } finally { loading.value = false }
+}
+
+const cargarMisMesas = async () => {
+  if (!esMesero.value) return
+  try {
+    const res = await fetch(`${API_URL}/meseros/mis-mesas`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      mesasAsignadas.value = data.data
+    }
+  } catch (err) { console.error('Error mesas:', err) }
 }
 
 const cargarProductos = async () => {
   loadingProductos.value = true
   try {
-    const res  = await fetch(`${API_URL}/productos`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) productos.value = data.data || []
-  } catch {}
-  finally { loadingProductos.value = false }
+    const [pRes, paqRes] = await Promise.all([fetch(`${API_URL}/productos`, { headers: getHeaders() }), fetch(`${API_URL}/paquetes`, { headers: getHeaders() })])
+    if (pRes.ok) { const d = await pRes.json(); if (d.success) productos.value = d.data }
+    if (paqRes.ok) { const d = await paqRes.json(); if (d.success) paquetes.value = d.data }
+  } catch (err) { console.error('Error catálogo:', err) } finally { loadingProductos.value = false }
+}
+
+const verificarCaja = async () => {
+  loadingCaja.value = true
+  try {
+    const res = await fetch(`${API_URL}/caja/estado`, { headers: getHeaders() })
+    if (res.ok) { const d = await res.json(); cajaAbierta.value = !!(d.success && d.data?.is_open) }
+  } catch (err) { console.error('Error caja:', err) } finally { loadingCaja.value = false }
 }
 
 const cargarClientes = async () => {
   try {
-    const res  = await fetch(`${API_URL}/clientes/select-list`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) clientes.value = data.data || []
+    const res = await fetch(`${API_URL}/clientes/select-list`, { headers: getHeaders() })
+    if (res.ok) { const d = await res.json(); if (d.success) clientes.value = d.data }
   } catch {}
 }
 
-// ── Cambiar estado ────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstado) => {
-  cambiando.value = id
-  try {
-    const res  = await fetch(`${API_URL}/ordenes/${id}`, {
-      method: 'PUT', headers: getHeaders(),
-      body: JSON.stringify({ estado: nuevoEstado }),
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
-      const orden = ordenes.value.find(o => o.id === id)
-      if (orden) orden.estado = nuevoEstado
-      showToast(`Orden #${id} → ${labelEstado(nuevoEstado)}`, 'success')
-    } else {
-      showToast(data.message || 'Error al cambiar estado', 'error')
-    }
-  } catch { showToast('Error de conexión', 'error') }
-  finally { cambiando.value = null }
-}
-
-// ── Crear orden ───────────────────────────────────────────────────────────────
 const crearOrden = async () => {
-  if (carrito.value.length === 0) return
-
-  // Doble verificación antes de crear
-  if (!cajaAbierta.value) {
-    showToast('La caja está cerrada. No se pueden crear órdenes.', 'error')
-    return
-  }
-
-  errorNuevaOrden.value = ''
+  if (carrito.value.length === 0 || !nuevaOrden.value.mesa) return
   creando.value = true
   try {
-    const res  = await fetch(`${API_URL}/ordenes`, {
-      method: 'POST', headers: getHeaders(),
-      body: JSON.stringify({
-        cliente_id:  nuevaOrden.value.clienteId || null,
-        mesa:        nuevaOrden.value.mesa       || null,
-        metodo_pago: null,
-        propina:     0,
-        productos:   carrito.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad })),
-      }),
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
-      carrito.value     = []
-      nuevaOrden.value  = { clienteId: null, mesa: null }
-      notaGeneral.value = ''
-      showToast('¡Orden creada correctamente!', 'success')
-      vistaActual.value = 'ordenes'
-      await cargarOrdenes()
-    } else {
-      // Si el backend dice que la caja está cerrada, actualizar estado
-      if (data.message?.toLowerCase().includes('caja')) {
-        cajaAbierta.value = false
-      }
-      errorNuevaOrden.value = data.message || 'Error al crear la orden'
+    const payload = {
+      cliente_id: nuevaOrden.value.clienteId,
+      mesa: nuevaOrden.value.mesa,
+      productos: carrito.value.map(i => {
+        const item = { cantidad: i.cantidad }
+        if (i.tipo === 'producto') item.producto_id = i.id
+        if (i.tipo === 'paquete') item.paquete_id = i.id
+        return item
+      })
     }
-  } catch { errorNuevaOrden.value = 'Error de conexión' }
-  finally { creando.value = false }
+    const res = await fetch(`${API_URL}/ordenes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) })
+    const data = await res.json()
+    if (data.success) {
+      carrito.value = []; nuevaOrden.value.mesa = null; vistaActual.value = 'ordenes'; await cargarOrdenes(); showToast('Orden confirmada 🚀', 'success')
+    } else showToast(data.message || 'Error al crear', 'error')
+  } catch { showToast('Error de conexión', 'error') } finally { creando.value = false }
 }
 
-// ── Ciclo de vida ─────────────────────────────────────────────────────────────
-let interval = null
-onMounted(async () => {
-  await Promise.all([cargarUser(), verificarCaja()])
-  if (cajaAbierta.value) {
-    await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes()])
-  }
-  // Refrescar estado de caja cada 60 seg y órdenes cada 30 seg
-  interval = setInterval(async () => {
+// --- Carrito de Compras ---
+const agregarAlCarrito = (item, tipo) => {
+  const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo)
+  if (e) e.cantidad++
+  else carrito.value.push({ id: item.id, nombre: item.nombre, precio: Number(item.precio), cantidad: 1, tipo })
+}
+const incrementar = (id, tipo) => { const i = carrito.value.find(x => x.id === id && x.tipo === tipo); if (i) i.cantidad++ }
+const decrementar = (id, tipo) => { 
+  const i = carrito.value.findIndex(x => x.id === id && x.tipo === tipo)
+  if (i !== -1) { 
+    if (carrito.value[i].cantidad > 1) carrito.value[i].cantidad--
+    else carrito.value.splice(i, 1) 
+  } 
+}
+const eliminarDelCarrito = (id, tipo) => { carrito.value = carrito.value.filter(x => !(x.id === id && x.tipo === tipo)) }
+
+// --- Helpers de Imagen y UI ---
+const resolveImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}`
+}
+const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
+const showToast = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3000) }
+const removeToast = (id) => toasts.value = toasts.value.filter(t => t.id !== id)
+
+const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
+  cambiando.value = sub.uid
+  try {
+    const res = await fetch(`${API_URL}/ordenes/${sub.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ estado: nuevoEstado }) })
+    if (res.ok) { await cargarOrdenes(); showToast('Estado actualizado', 'success') }
+  } finally { cambiando.value = null }
+}
+
+const entregarProductosSubOrden = async (sub) => {
+  const ids = sub.detalles_estacion.filter(d => d.estado_preparacion === 'LISTO').map(d => d.id)
+  if (!ids.length) return
+  cambiando.value = sub.uid
+  try {
+    const res = await fetch(`${API_URL}/ordenes/${sub.id}/station-status`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ detalles: ids, estado_preparacion: 'ENTREGADO' }) })
+    if (res.ok) { await cargarOrdenes(); showToast('Pedido entregado ✨', 'success') }
+  } finally { cambiando.value = null }
+}
+
+onMounted(async () => { 
+  try {
     await verificarCaja()
-    if (cajaAbierta.value) cargarOrdenes()
-  }, 30000)
+    if (cajaAbierta.value) { 
+      await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes()])
+      if (esMesero.value) await cargarMisMesas()
+    } 
+  } catch (err) { console.error('Error inicialización:', err) }
 })
-onUnmounted(() => { if (interval) clearInterval(interval) })
 </script>
 
 <style scoped>
-@keyframes spin { to { transform: rotate(360deg); } }
 .animate-spin { animation: spin 1s linear infinite; }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .animate-slide-in { animation: slideIn 0.3s ease-out; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>

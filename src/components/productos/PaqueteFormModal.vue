@@ -78,34 +78,45 @@
             <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">{{ form.productos.length }} productos seleccionados</span>
           </div>
 
-          <!-- Buscador para agregar -->
-          <div class="relative">
-            <input 
-              v-model="searchProd"
-              type="text"
-              placeholder="🔍 Buscar producto para añadir..."
-              class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
-            />
-            
-            <!-- Resultados búsqueda -->
-            <div v-if="searchProd && filteredProducts.length > 0" class="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-              <button 
-                v-for="p in filteredProducts" 
-                :key="p.id"
-                @click="addProduct(p)"
-                class="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center justify-between group transition-colors"
-              >
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                    <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover rounded-lg" />
-                    <span v-else>🍽️</span>
-                  </div>
-                  <span class="text-sm font-medium text-gray-700">{{ p.nombre }}</span>
+            <!-- Buscador para agregar -->
+            <div class="relative">
+              <input 
+                v-model="searchProd"
+                type="text"
+                placeholder="🔍 Buscar producto para añadir..."
+                @focus="isFocused = true"
+                @blur="setTimeout(() => isFocused = false, 200)"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
+              />
+              
+              <!-- Resultados búsqueda / Lista desplegable -->
+              <div v-if="isFocused && filteredProducts.length > 0" class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-64 overflow-y-auto animate-fade-in border-t-4 border-t-indigo-500">
+                <div class="p-2 border-b border-gray-50 bg-gray-50/50">
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Selecciona un producto</p>
                 </div>
-                <span class="text-xs text-indigo-600 font-bold opacity-0 group-hover:opacity-100">+ Añadir</span>
-              </button>
+                <button 
+                  v-for="p in filteredProducts" 
+                  :key="p.id"
+                  @click="addProduct(p)"
+                  class="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-center justify-between group transition-colors border-b border-gray-50 last:border-0"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-white">
+                      <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
+                      <span v-else class="text-lg">🍽️</span>
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</p>
+                      <p class="text-[10px] text-gray-400 font-medium">{{ p.categoria?.nombre || 'Producto' }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-gray-400 group-hover:text-indigo-500 transition-colors">${{ p.precio }}</span>
+                    <span class="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">+</span>
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
 
           <!-- Lista de productos seleccionados -->
           <div class="space-y-2">
@@ -174,6 +185,7 @@ const emit = defineEmits(['close', 'saved'])
 const isEdit = computed(() => !!props.paquete)
 const loading = ref(false)
 const searchProd = ref('')
+const isFocused = ref(false)
 const previewUrl = ref(null)
 
 const form = reactive({
@@ -198,12 +210,14 @@ onMounted(() => {
 })
 
 const filteredProducts = computed(() => {
-  if (!searchProd.value) return []
   const s = searchProd.value.toLowerCase()
-  return props.availableProducts.filter(p => 
-    p.nombre.toLowerCase().includes(s) && 
-    !form.productos.find(fp => fp.id === p.id)
-  ).slice(0, 5)
+  const available = props.availableProducts.filter(p => !form.productos.find(fp => fp.id === p.id))
+  
+  if (!s) return available.slice(0, 20) // Mostrar primeros 20 por defecto
+  
+  return available.filter(p => 
+    p.nombre.toLowerCase().includes(s)
+  ).slice(0, 20)
 })
 
 const handleFile = (e) => {

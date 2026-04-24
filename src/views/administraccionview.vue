@@ -101,6 +101,7 @@
                 <tr>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
                   <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
                 </tr>
@@ -124,6 +125,11 @@
                   <td class="px-5 py-4">
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
                       {{ getRolNombre(emp) }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                      {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
                     </span>
                   </td>
                   <td class="px-5 py-4 text-sm text-gray-500">{{ emp.username }}</td>
@@ -291,6 +297,16 @@
               <option value="6">Barra</option>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Sucursal Activa *</label>
+            <select v-model.number="empForm.restaurante_id"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+              <option :value="null">Seleccionar sucursal</option>
+              <option v-for="suc in sucursalesDueno" :key="suc.id" :value="suc.id">
+                {{ suc.nombre }} {{ suc.ciudad ? `(${suc.ciudad})` : '' }}
+              </option>
+            </select>
+          </div>
         </div>
         <div class="flex gap-3 mt-6">
           <button @click="cerrarModalEmpleado"
@@ -340,7 +356,33 @@
                 class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
           </div>
-          <div v-if="restauranteEditando" class="flex items-center gap-2 pt-1">
+
+          <!-- CAMPO DE IMAGEN -->
+          <div class="space-y-3 pt-2">
+            <label class="block text-sm font-medium text-gray-700">Logo o Foto del Restaurante</label>
+            <div class="flex items-center gap-4">
+              <div class="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                <img v-if="imgPreview || restForm.imagen_url" :src="imgPreview || getImageUrl(restForm.imagen_url)" class="w-full h-full object-cover" />
+                <span v-else class="text-gray-300 text-2xl">📸</span>
+              </div>
+              <div class="flex-1">
+                <input type="file" @change="onFileChange" accept="image/*" class="hidden" ref="fileInput" />
+                <div class="flex flex-wrap gap-2">
+                  <button @click="$refs.fileInput.click()" type="button" 
+                    class="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition uppercase tracking-wider">
+                    {{ (imgPreview || restForm.imagen_url) ? 'Cambiar imagen' : 'Seleccionar imagen' }}
+                  </button>
+                  <button v-if="imgPreview || restForm.imagen_url" @click="quitarImagen" type="button"
+                    class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition uppercase tracking-wider">
+                    Quitar
+                  </button>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 2MB.</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="restauranteEditando" class="flex items-center gap-2 pt-2">
             <input v-model="restForm.activo" type="checkbox" id="activo-check" class="accent-indigo-600 w-4 h-4" />
             <label for="activo-check" class="text-sm text-gray-700 cursor-pointer">Restaurante activo</label>
           </div>
@@ -400,10 +442,13 @@ const restauranteEditando  = ref(null)
 const dashData          = reactive({ ventas_hoy: 0, ordenes_hoy: 0, ordenes_por_estado: [] })
 const ordenesCerradasHoy = ref([])  // ← para VentasPorHoraChart y MetodoPagoChart
 
-const loading = reactive({ general: true, empleados: false, restaurantes: false, guardando: false })
+const loading = reactive({ general: true, empleados: false, restaurantes: false, guardando: false, sucursales: false })
 
-const empForm  = reactive({ nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'' })
-const restForm = reactive({ nombre:'', telefono:'', calle:'', ciudad:'', estado:'', activo:true })
+const empForm  = reactive({ nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', restaurante_id: null })
+const restForm = reactive({ nombre:'', telefono:'', calle:'', ciudad:'', estado:'', activo:true, imagen: null, imagen_url: null, eliminar_imagen: false })
+const imgPreview = ref(null)
+const fileInput  = ref(null)
+const sucursalesDueno = ref([])
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
 const mainTabs = [
@@ -507,7 +552,6 @@ const loadData = async () => {
       }
     }
 
-    // Empleados del propietario
     if (currentUser.value?.propietario_id) {
       try {
         const eRes  = await fetch(`${API_URL}/propietarios/${currentUser.value.propietario_id}`, { headers: getHeaders() })
@@ -517,16 +561,39 @@ const loadData = async () => {
             .filter(u => u.id !== currentUser.value.id)
         }
       } catch {}
+      await cargarSucursalesDueno()
     }
 
   } catch(e) { console.error('Error loadData:', e) }
   finally { loading.general = false }
 }
 
+const cargarSucursalesDueno = async () => {
+  loading.sucursales = true
+  try {
+    const res = await fetch(`${API_URL}/user/owner-restaurants`, { headers: getHeaders() })
+    const r = await res.json()
+    if (r.success) {
+      sucursalesDueno.value = r.data
+    }
+  } catch (err) {
+    console.error('Error sucursales:', err)
+  } finally {
+    loading.sucursales = false
+  }
+}
+
 // ── Modales empleado ───────────────────────────────────────────────────────────
 const abrirModalEmpleado = () => {
   empleadoEditando.value = null; formError.value = ''
-  Object.assign(empForm, { nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'' })
+  // Asegurar que guardamos solo el ID
+  const rActivo = currentUser.value?.restaurante_activo
+  const rId = (rActivo && typeof rActivo === 'object') ? Number(rActivo.id) : (rActivo ? Number(rActivo) : null)
+  
+  Object.assign(empForm, { 
+    nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', 
+    restaurante_activo: rId 
+  })
   showModalEmpleado.value = true
 }
 const editarEmpleado = (emp) => {
@@ -540,6 +607,7 @@ const editarEmpleado = (emp) => {
     password:             '',
     password_confirmation:'',
     rol:                  getRolId(emp),
+    restaurante_id:       (emp.restaurante_activo && typeof emp.restaurante_activo === 'object') ? Number(emp.restaurante_activo.id) : (emp.restaurante_activo ? Number(emp.restaurante_activo) : null)
   })
   showModalEmpleado.value = true
 }
@@ -565,16 +633,25 @@ const guardarEmpleado = async () => {
       username:       empForm.usuario,
       propietario_id: currentUser.value?.propietario_id,
       rol_id:         empForm.rol,
-      restaurante_id: currentUser.value?.restaurante_activo?.id ?? currentUser.value?.restaurante_activo,
+      restaurante_id: empForm.restaurante_id ? Number(empForm.restaurante_id) : null,
+      restaurante_activo: empForm.restaurante_id ? Number(empForm.restaurante_id) : null,
     }
     if (empForm.password) { body.password = empForm.password; body.password_confirmation = empForm.password_confirmation }
     const res = await fetch(url, { method, headers:getHeaders(), body:JSON.stringify(body) })
     const r   = await res.json()
     if (res.ok && r.success) {
-      if (isEdit) { const idx=empleados.value.findIndex(e=>e.id===empleadoEditando.value.id); if(idx!==-1) empleados.value[idx]={...empleados.value[idx],...(r.data||{})} }
+      if (isEdit) { 
+        const idx=empleados.value.findIndex(e=>e.id===empleadoEditando.value.id); 
+        if(idx!==-1) {
+            // Actualizar el objeto completo en la lista
+            empleados.value[idx] = { ...empleados.value[idx], ...(r.data || {}) }
+        } 
+      }
       else empleados.value.push(r.data || r.user)
       showToast(isEdit ? 'Empleado actualizado' : 'Empleado creado', 'success')
       cerrarModalEmpleado()
+      // Opcionalmente recargar todo para asegurar consistencia
+      loadData()
     } else { formError.value = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar' }
   } catch { formError.value = 'Error de conexión' }
   finally { loading.guardando = false }
@@ -593,15 +670,50 @@ const eliminarEmpleado = async (id) => {
 // ── Modales restaurante ────────────────────────────────────────────────────────
 const abrirModalRestaurante = () => {
   restauranteEditando.value = null; formError.value = ''
-  Object.assign(restForm, { nombre:'', telefono:'', calle:'', ciudad:'', estado:'', activo:true })
+  Object.assign(restForm, { nombre:'', telefono:'', calle:'', ciudad:'', estado:'', activo:true, imagen: null, imagen_url: null, eliminar_imagen: false })
+  imgPreview.value = null
   showModalRestaurante.value = true
 }
 const editarRestaurante = (rest) => {
   restauranteEditando.value = rest; formError.value = ''
-  Object.assign(restForm, { nombre:rest.nombre||'', telefono:rest.telefono||'', calle:rest.calle||'', ciudad:rest.ciudad||'', estado:rest.estado||'', activo:rest.es_activo!==false })
+  Object.assign(restForm, { 
+    nombre:rest.nombre||'', 
+    telefono:rest.telefono||'', 
+    calle:rest.calle||'', 
+    ciudad:rest.ciudad||'', 
+    estado:rest.estado||'', 
+    activo:rest.es_activo!==false,
+    imagen: null,
+    imagen_url: rest.imagen_url,
+    eliminar_imagen: false
+  })
+  imgPreview.value = null
   showModalRestaurante.value = true
 }
-const cerrarModalRestaurante = () => { showModalRestaurante.value=false; restauranteEditando.value=null; formError.value='' }
+const cerrarModalRestaurante = () => { 
+  showModalRestaurante.value=false; 
+  restauranteEditando.value=null; 
+  formError.value=''; 
+  imgPreview.value = null
+}
+
+const onFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  restForm.imagen = file
+  restForm.eliminar_imagen = false
+  const reader = new FileReader()
+  reader.onload = (e) => imgPreview.value = e.target.result
+  reader.readAsDataURL(file)
+}
+
+const quitarImagen = () => {
+  restForm.imagen = null
+  restForm.imagen_url = null
+  restForm.eliminar_imagen = true
+  imgPreview.value = null
+  if (fileInput.value) fileInput.value.value = ''
+}
 
 const guardarRestaurante = async () => {
   formError.value = ''
@@ -610,9 +722,25 @@ const guardarRestaurante = async () => {
   try {
     const isEdit = !!restauranteEditando.value
     const url    = isEdit ? `${API_URL}/restaurantes/${restauranteEditando.value.id}` : `${API_URL}/restaurantes`
-    const method = isEdit ? 'PUT' : 'POST'
-    const body   = { nombre:restForm.nombre, telefono:restForm.telefono||null, calle:restForm.calle||null, ciudad:restForm.ciudad||null, estado:restForm.estado||null, activo:restForm.activo }
-    const res = await fetch(url, { method, headers:getHeaders(), body:JSON.stringify(body) })
+    
+    const formData = new FormData()
+    formData.append('nombre', restForm.nombre)
+    formData.append('telefono', restForm.telefono || '')
+    formData.append('calle', restForm.calle || '')
+    formData.append('ciudad', restForm.ciudad || '')
+    formData.append('estado', restForm.estado || '')
+    formData.append('activo', restForm.activo ? '1' : '0')
+    
+    if (isEdit) {
+      formData.append('_method', 'PUT')
+    }
+    if (restForm.imagen) formData.append('imagen', restForm.imagen)
+    if (restForm.eliminar_imagen) formData.append('eliminar_imagen', '1')
+
+    const headers = { ...getHeaders() }
+    delete headers['Content-Type']
+
+    const res = await fetch(url, { method: 'POST', headers, body: formData })
     const r   = await res.json()
     if (res.ok && r.success) {
       if (isEdit) { const idx=restaurantes.value.findIndex(x=>x.id===restauranteEditando.value.id); if(idx!==-1) restaurantes.value[idx]={...restaurantes.value[idx],...(r.data||{})} }
@@ -622,6 +750,12 @@ const guardarRestaurante = async () => {
     } else { formError.value = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar' }
   } catch { formError.value = 'Error de conexión' }
   finally { loading.guardando = false }
+}
+
+const getImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${API_URL}/../storage/${path}`
 }
 
 const eliminarRestaurante = async (id) => {
