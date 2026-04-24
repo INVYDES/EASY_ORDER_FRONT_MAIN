@@ -28,9 +28,9 @@
             :key="i"
             class="inline-flex items-center shrink-0"
           >
-            <!-- IMAGEN DEL PRODUCTO O EMOJI -->
-            <div v-if="a.producto?.imagen" class="w-9 h-9 ml-5 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
-              <img :src="resolveImageUrl(a.producto.imagen)" class="w-full h-full object-cover" @error="onImageError" />
+            <!-- IMAGEN DEL PRODUCTO / COMBO O EMOJI -->
+            <div v-if="(a.producto || a.paquete)?.imagen" class="w-9 h-9 ml-5 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
+              <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" class="w-full h-full object-cover" @error="onImageError" />
             </div>
             <span v-else class="text-2xl ml-5 drop-shadow-md">{{ a.emoji || '📢' }}</span>
 

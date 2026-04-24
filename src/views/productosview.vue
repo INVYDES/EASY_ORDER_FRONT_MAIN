@@ -51,6 +51,25 @@
       </button>
     </div>
 
+    <!-- ── PAQUETES ───────────────────────────────────────── -->
+    <div v-if="activeTab === 'paquetes'">
+      <div class="flex justify-end mb-4">
+        <button
+          @click="openCreatePaquete"
+          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
+        >
+          <span class="text-base leading-none">＋</span> Nuevo Paquete
+        </button>
+      </div>
+      <PaquetesTable 
+        :paquetes="paquetes"
+        :loading="loading.paquetes"
+        @edit="openEditPaquete"
+        @delete="handleDeletePaquete"
+        @toggle-active="handleToggleActivePaquete"
+      />
+    </div>
+
     <!-- ── PRODUCTOS ──────────────────────────────────────── -->
     <div v-if="activeTab === 'productos'">
       <ProductsTable
@@ -279,6 +298,15 @@
       @saved="handleStockSaved"
     />
 
+    <!-- Paquetes -->
+    <PaqueteFormModal 
+      v-if="showPaqueteModal"
+      :paquete="selectedPaquete"
+      :available-products="allProductsForSelection"
+      @close="showPaqueteModal = false"
+      @saved="handlePaqueteSaved"
+    />
+
   </div>
 </template>
 
@@ -295,6 +323,8 @@ import ProductImportModal from '../components/productos/ProductImportModal.vue'
 import CategoriaModal from '../components/productos/CategoriaModal.vue'
 import IngredienteModal from '../components/ingredientes/IngredienteModal.vue'
 import AjusteStockModal from '../components/productos/AjustesStockModal.vue'
+import PaquetesTable from '../components/productos/PaquetesTable.vue'
+import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
 import AnunciosView from './anunciosview.vue'
 
 import { API_URL } from '@/config/api'
@@ -306,9 +336,11 @@ const activeTab = ref('productos')
 const products = ref([])
 const categories = ref([])
 const ingredientes = ref([])
+const paquetes = ref([])
 const anuncios = ref([])
 const selectedProduct = ref(null)
 const selectedCategoria = ref(null)
+const selectedPaquete = ref(null)
 const searchTerm = ref('')
 const toasts = ref([])
 
@@ -328,6 +360,7 @@ const showImport = ref(false)
 const showCategoriaModal = ref(false)
 const showIngredienteModal = ref(false)
 const showAjusteStock = ref(false)
+const showPaqueteModal = ref(false)
 
 // Refs de ingredientes
 const ingredienteEditando = ref(null)
@@ -341,12 +374,14 @@ const filtroBajoStock = ref(false)
 const loading = reactive({ 
   products: false, 
   categories: false, 
-  ingredientes: false 
+  ingredientes: false,
+  paquetes: false
 })
 
 // ── TABS ───────────────────────────────────────────────────
 const tabs = [
   { key: 'productos',    label: '📦 Productos' },
+  { key: 'paquetes',     label: '🎁 Paquetes' },
   { key: 'categorias',   label: '🏷️ Categorías' },
   { key: 'ingredientes', label: '🧄 Ingredientes' },
   { key: 'anuncios',     label: '📢 Anuncios' },
@@ -354,6 +389,7 @@ const tabs = [
 
 const getTabCount = (key) => {
   if (key === 'productos') return products.value.length
+  if (key === 'paquetes') return paquetes.value.length
   if (key === 'categorias') return categories.value.length
   if (key === 'ingredientes') return ingredientes.value.length
   if (key === 'anuncios') return anuncios.value.length
@@ -370,6 +406,8 @@ const ingredientesFiltrados = computed(() => {
   }
   return lista
 })
+
+const allProductsForSelection = ref([])
 
 // ── TOASTS ─────────────────────────────────────────────────
 const showToast = (message, type = 'info', duration = 4000) => {
@@ -450,6 +488,18 @@ const loadProducts = async (page = 1) => {
   } finally { 
     loading.products = false 
   }
+}
+
+const loadAllProductsForSelection = async () => {
+  try {
+    const res = await fetch(`${API_URL}/productos?per_page=1000`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      let lista = data.data
+      if (!Array.isArray(lista)) lista = lista?.data ?? []
+      allProductsForSelection.value = lista
+    }
+  } catch (error) { console.error('Error loading products for selection:', error) }
 }
 
 // ✅ Cambiar página
@@ -605,6 +655,60 @@ const loadAnuncios = async () => {
   } catch (error) { console.error('Error loading anuncios count:', error) }
 }
 
+// ── PAQUETES ───────────────────────────────────────────────
+const loadPaquetes = async () => {
+  loading.paquetes = true
+  try {
+    const res = await fetch(`${API_URL}/paquetes`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) paquetes.value = data.data || []
+  } catch (error) {
+    console.error('Error loading packages:', error)
+    showToast('Error al cargar paquetes', 'error')
+  } finally {
+    loading.paquetes = false
+  }
+}
+
+const openCreatePaquete = () => {
+  selectedPaquete.value = null
+  showPaqueteModal.value = true
+}
+
+const openEditPaquete = (p) => {
+  selectedPaquete.value = p
+  showPaqueteModal.value = true
+}
+
+const handlePaqueteSaved = async () => {
+  showPaqueteModal.value = false
+  await loadPaquetes()
+  showToast('Paquete guardado correctamente', 'success')
+}
+
+const handleDeletePaquete = async (id) => {
+  if (!confirm('¿Eliminar este paquete?')) return
+  try {
+    const res = await fetch(`${API_URL}/paquetes/${id}`, { method: 'DELETE', headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      showToast('Paquete eliminado', 'success')
+      await loadPaquetes()
+    }
+  } catch (error) { showToast('Error al eliminar paquete', 'error') }
+}
+
+const handleToggleActivePaquete = async (id) => {
+  try {
+    const res = await fetch(`${API_URL}/paquetes/${id}/toggle-active`, { method: 'PATCH', headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      showToast('Estado actualizado', 'success')
+      await loadPaquetes()
+    }
+  } catch (error) { showToast('Error al cambiar estado', 'error') }
+}
+
 const handleDeleteIngrediente = async (id) => {
   if (!confirm('¿Eliminar este ingrediente?')) return
   try {
@@ -628,6 +732,8 @@ onMounted(() => {
   loadCategories()
   loadIngredientes()
   loadAnuncios()
+  loadPaquetes()
+  loadAllProductsForSelection()
 })
 </script>
 

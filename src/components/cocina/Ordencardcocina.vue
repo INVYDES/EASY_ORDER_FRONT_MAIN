@@ -78,27 +78,24 @@ defineEmits(['accion'])
 // CATEGORÍAS Y FILTRO DE BEBIDAS (copiado del padre para mantener consistencia)
 // ═══════════════════════════════════════════════════════════════════════════════
 const CATEGORIAS_BEBIDA = [
-  'Bebidas', 'Bebidas alcoholicas', 'Refrescos', 'Jugos', 'Cervezas',
+  'Bebida', 'Bebidas', 'Bebidas alcoholicas', 'Refrescos', 'Jugos', 'Cervezas',
   'Vinos', 'Cocteles', 'Aguas', 'Licores', 'Bebidas calientes',
-  'Cafes', 'Tés', 'Bebidas Preparadas', 'Bebidas Naturales', 'Bebidas Especiales'
-]
-
-const CATEGORIAS_COMIDA = [
-  'Comida del dia', 'Platillos', 'Entradas', 'Sopas', 'Ensaladas', 'Postres',
-  'Antojitos', 'Tacos', 'Tortas', 'Hamburguesas', 'Pizzas', 'Pastas',
-  'Carnes', 'Pescados', 'Mariscos', 'Desayunos', 'Cena', 'Comida corrida', 'Especialidades'
+  'Cafes', 'Tés', 'Bebidas Preparadas', 'Bebidas Naturales', 'Bebidas Especiales',
+  'Refresco', 'Malteada', 'Soda', 'Cerveza'
 ]
 
 const esProductoComida = (detalle) => {
   if (!detalle) return false
   
-  const categoria = detalle.categoria || ''
-  const categoriaLower = categoria.toLowerCase()
+  const categoria = (detalle.categoria || '').toLowerCase()
   const productoNombre = (detalle.producto_nombre || '').toLowerCase()
   
+  // Si el ID de categoría es 7 (Bebidas en tu sistema) o similar
+  if (detalle.categoria_id === 7 || [7, 8].includes(detalle.categoria_id)) return false
+
   // Excluir si está en categorías de bebida
   for (const catBebida of CATEGORIAS_BEBIDA) {
-    if (categoriaLower.includes(catBebida.toLowerCase()) || categoria === catBebida) {
+    if (categoria.includes(catBebida.toLowerCase())) {
       return false
     }
   }
@@ -107,18 +104,11 @@ const esProductoComida = (detalle) => {
   const palabrasBebida = ['cerveza', 'vino', 'tequila', 'whisky', 'whiskey', 'ron', 'vodka', 
                           'gin', 'copa', 'cocktail', 'coctel', 'refresco', 'soda', 'agua', 
                           'jugo', 'licor', 'brandy', 'champagne', 'sidra', 'pulque', 'mezcal',
-                          'margarita', 'mojito', 'piña colada', 'daiquiri']
+                          'margarita', 'mojito', 'piña colada', 'daiquiri', 'coca', 'fanta', 'sprite']
   
   for (const palabra of palabrasBebida) {
     if (productoNombre.includes(palabra)) {
       return false
-    }
-  }
-  
-  // Si tiene categoría de comida, incluir
-  for (const catComida of CATEGORIAS_COMIDA) {
-    if (categoriaLower.includes(catComida.toLowerCase()) || categoria === catComida) {
-      return true
     }
   }
   

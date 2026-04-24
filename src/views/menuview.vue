@@ -75,6 +75,55 @@
         class="border-y border-white/5"
       />
 
+      <!-- ══ PAQUETES / COMBOS ══ -->
+      <div v-if="paquetes.length > 0" class="bg-indigo-900/20 border-b border-white/10 backdrop-blur-sm">
+        <div class="px-5 py-3">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-white text-sm font-bold">🎁 Combos Especiales</span>
+          </div>
+          
+          <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            <button 
+              v-for="pkg in paquetes" 
+              :key="pkg.id"
+              @click="agregarPaqueteAlPedido(pkg)"
+              class="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden flex-shrink-0 w-72 hover:shadow-xl transition-all group text-left flex flex-col"
+            >
+              <div class="relative h-32 bg-indigo-50">
+                <img 
+                  v-if="pkg.imagen_url" 
+                  :src="getImageUrl(pkg.imagen_url)" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  @error="onImageError"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-4xl bg-indigo-50 text-indigo-200">🎁</div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <div class="absolute bottom-3 left-3 right-3">
+                  <h4 class="text-white font-black text-lg drop-shadow-md leading-tight">{{ pkg.nombre }}</h4>
+                </div>
+              </div>
+              
+              <div class="p-3 flex-1 flex flex-col justify-between">
+                <div>
+                  <div class="flex flex-wrap gap-1 mb-2">
+                    <span v-for="p in pkg.productos" :key="p.id" class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold">
+                      {{ p.pivot.cantidad }}x {{ p.nombre }}
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-gray-400 line-clamp-1 mb-3">{{ pkg.descripcion }}</p>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-indigo-600 font-black text-xl">${{ Number(pkg.precio).toFixed(2) }}</span>
+                  <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
+                    <span class="text-xl font-bold">+</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Filtros de categoría -->
       <div class="flex gap-2 px-5 py-3 overflow-x-auto scrollbar-hide bg-white shadow-sm border-b border-gray-100">
         <button @click="categoriaActiva = null"
@@ -286,6 +335,7 @@ const debugMsg                = ref('')
 const showCheckout            = ref(false)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
+const paquetes                = ref([])
 
 // Datos del usuario logueado (Empleado con rol MENU)
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
@@ -435,6 +485,18 @@ const cargarOfertas = async (restauranteId) => {
   }
 }
 
+const cargarPaquetes = async (restauranteId) => {
+  try {
+    const res = await fetch(`${API_URL}/paquetes?restaurante_id=${restauranteId}`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      paquetes.value = (data.data || []).filter(p => p.activo)
+    }
+  } catch (error) {
+    console.error('Error cargando paquetes:', error)
+  }
+}
+
 // ── CARRITO ────────────────────────────────────────────────
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" no está disponible`); return }
@@ -471,6 +533,23 @@ const agregarOfertaAlPedido = (oferta) => {
   }
 }
 
+const agregarPaqueteAlPedido = (pkg) => {
+  const existe = pedido.value.find(i => i.paquete_id === pkg.id)
+  if (existe) {
+    existe.cantidad++
+  } else {
+    pedido.value.push({
+      id:          `pkg_${pkg.id}`, // ID temporal para el carrito
+      paquete_id:  pkg.id,
+      nombre:      pkg.nombre,
+      precio:      parseFloat(pkg.precio),
+      imagen:      pkg.imagen_url ? getImageUrl(pkg.imagen_url) : null,
+      cantidad:    1,
+      es_paquete:  true
+    })
+  }
+}
+
 const incrementar = (id) => {
   const item = pedido.value.find(i => i.id === id)
   if (!item) return
@@ -498,7 +577,11 @@ const handleCheckout = async (checkoutData) => {
   try {
     const body = {
       restaurante_id: restauranteSeleccionado.value.id,
-      productos:      pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad })),
+      productos:      pedido.value.map(i => ({ 
+        producto_id: i.es_paquete ? null : i.id, 
+        paquete_id:  i.es_paquete ? i.paquete_id : null,
+        cantidad:    i.cantidad 
+      })),
       metodo_pago:    'efectivo',     // Default, el mesero lo puede cobrar
       tipo_entrega:   'comer_aqui',   // Default en restaurante
       notas:          checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
@@ -529,7 +612,8 @@ onMounted(async () => {
   if (restId) {
     await Promise.all([
       cargarProductos(restId),
-      cargarOfertas(restId)
+      cargarOfertas(restId),
+      cargarPaquetes(restId)
     ])
   } else {
     mostrarError("Tu usuario no tiene un restaurante asignado.")

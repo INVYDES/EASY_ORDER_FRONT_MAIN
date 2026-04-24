@@ -104,16 +104,19 @@
           <h4 class="font-black text-gray-900 text-lg leading-tight mb-1">{{ a.titulo }}</h4>
           <p v-if="a.contenido" class="text-sm text-gray-500 line-clamp-2 font-medium">{{ a.contenido }}</p>
           
-          <div v-if="a.producto" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 group-hover:bg-indigo-50/50 transition-colors">
+          <div v-if="a.producto || a.paquete" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 group-hover:bg-indigo-50/50 transition-colors">
             <div class="w-12 h-12 rounded-xl overflow-hidden bg-white shrink-0 border border-gray-100 shadow-sm">
-               <img v-if="a.producto.imagen_url" :src="resolveImageUrl(a.producto.imagen_url)" class="w-full h-full object-cover" />
+               <img v-if="(a.producto || a.paquete).imagen_url" :src="resolveImageUrl((a.producto || a.paquete).imagen_url)" class="w-full h-full object-cover" />
                <span v-else class="flex h-full items-center justify-center text-xl">🍽️</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-black text-gray-800 truncate uppercase tracking-tighter">{{ a.producto.nombre }}</p>
+              <div class="flex items-center gap-1.5 mb-0.5">
+                <span class="text-[8px] font-black px-1 py-0.5 rounded bg-gray-200 text-gray-600">{{ a.paquete ? 'COMBO' : 'PLATO' }}</span>
+                <p class="text-xs font-black text-gray-800 truncate uppercase tracking-tighter">{{ (a.producto || a.paquete).nombre }}</p>
+              </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded" v-if="a.precio_promo">${{ Number(a.precio_promo).toFixed(2) }}</span>
-                <span class="text-[10px] text-gray-400 line-through">antes {{ a.producto.precio_formateado }}</span>
+                <span class="text-[10px] text-gray-400 line-through">antes {{ (a.producto || a.paquete).precio_formateado || '$' + (a.producto || a.paquete).precio }}</span>
               </div>
             </div>
           </div>
@@ -203,22 +206,25 @@
             <section class="p-5 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 rounded-[28px] border-2 border-indigo-100/50">
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">🍕</span>
-                <label class="text-[11px] font-black text-indigo-700 uppercase tracking-widest">Vincular a un platillo</label>
+                <label class="text-[11px] font-black text-indigo-700 uppercase tracking-widest">Vincular a un platillo / combo</label>
               </div>
               
               <div class="relative product-selector">
                 <button type="button" @click="dropdownOpen = !dropdownOpen"
                   class="w-full px-4 py-4 text-left border-2 border-white rounded-[20px] bg-white flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                   <div class="flex items-center gap-3 overflow-hidden">
-                    <template v-if="selectedProduct">
-                      <img v-if="selectedProduct.imagen_url" :src="resolveImageUrl(selectedProduct.imagen_url)" class="w-8 h-8 rounded-lg object-cover ring-1 ring-gray-100" />
+                    <template v-if="selectedItem">
+                      <img v-if="selectedItem.imagen_url" :src="resolveImageUrl(selectedItem.imagen_url)" class="w-8 h-8 rounded-lg object-cover ring-1 ring-gray-100" />
                       <span v-else class="text-xl">🍽️</span>
                       <div class="min-w-0">
-                        <p class="font-black text-gray-800 text-sm truncate uppercase tracking-tighter">{{ selectedProduct.nombre }}</p>
-                        <p class="text-[10px] text-indigo-500 font-bold">{{ selectedProduct.precio_formateado }}</p>
+                        <p class="font-black text-gray-800 text-sm truncate uppercase tracking-tighter">
+                          <span class="text-[8px] px-1 bg-gray-100 rounded mr-1">{{ selectedItem.es_paquete ? 'COMBO' : 'PLATO' }}</span>
+                          {{ selectedItem.nombre }}
+                        </p>
+                        <p class="text-[10px] text-indigo-500 font-bold">{{ selectedItem.precio_formateado || '$' + selectedItem.precio }}</p>
                       </div>
                     </template>
-                    <span v-else class="text-gray-400 font-medium text-sm px-2">¿Quieres asociar un producto?</span>
+                    <span v-else class="text-gray-400 font-medium text-sm px-2">¿Quieres asociar un producto o combo?</span>
                   </div>
                   <span class="text-indigo-300 mr-2">{{ dropdownOpen ? '▲' : '▼' }}</span>
                 </button>
@@ -229,23 +235,28 @@
                       class="w-full px-4 py-2.5 text-sm border-2 border-transparent bg-white rounded-xl outline-none focus:border-indigo-300 font-medium" @click.stop />
                   </div>
                   <div class="overflow-y-auto flex-1 custom-scrollbar">
-                    <div v-for="p in productosFiltrados" :key="p.id" @click="seleccionarProducto(p)"
+                    <div v-for="p in itemsFiltrados" :key="p.uid" @click="seleccionarItem(p)"
                       class="p-4 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors">
                       <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-10 h-10 rounded-xl object-cover border border-gray-100 bg-gray-100" />
                       <div class="flex-1 min-w-0">
-                        <p class="text-sm font-black text-gray-800 truncate uppercase">{{ p.nombre }}</p>
-                        <p class="text-[10px] text-indigo-500 font-bold tracking-widest">{{ p.precio_formateado }}</p>
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                          <span :class="['text-[8px] font-black px-1 py-0.5 rounded', p.es_paquete ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700']">
+                            {{ p.es_paquete ? 'COMBO' : 'PLATO' }}
+                          </span>
+                          <p class="text-sm font-black text-gray-800 truncate uppercase">{{ p.nombre }}</p>
+                        </div>
+                        <p class="text-[10px] text-indigo-500 font-bold tracking-widest">{{ p.precio_formateado || '$' + p.precio }}</p>
                       </div>
                     </div>
                   </div>
-                  <button v-if="form.producto_id" @click="form.producto_id=null; dropdownOpen=false" class="w-full py-3 bg-red-50 text-red-600 text-[10px] font-black hover:bg-red-100 tracking-[0.2em]">QUITAR VÍNCULO</button>
+                  <button v-if="form.producto_id || form.paquete_id" @click="form.producto_id=null; form.paquete_id=null; dropdownOpen=false" class="w-full py-3 bg-red-50 text-red-600 text-[10px] font-black hover:bg-red-100 tracking-[0.2em]">QUITAR VÍNCULO</button>
                 </div>
               </div>
               
-              <div v-if="form.producto_id" class="mt-5 animate-slide-up">
+              <div v-if="form.producto_id || form.paquete_id" class="mt-5 animate-slide-up">
                 <label class="block text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-3 ml-1">Nuevo Precio Promocional</label>
                 <div class="flex items-center gap-4 bg-white p-4 rounded-[20px] shadow-inner border-2 border-emerald-50">
-                  <span class="text-gray-300 line-through font-bold text-lg leading-none">{{ selectedProduct?.precio_formateado }}</span>
+                  <span class="text-gray-300 line-through font-bold text-lg leading-none">{{ selectedItem?.precio_formateado || '$' + selectedItem?.precio }}</span>
                   <div class="flex-1 relative">
                     <span class="absolute left-0 top-1/2 -translate-y-1/2 text-emerald-500 font-black text-xl">$</span>
                     <input v-model="form.precio_promo" type="number" step="0.01" 
@@ -317,6 +328,7 @@ const resolveImageUrl = (path) => {
 // --- ESTADO ---
 const anuncios = ref([])
 const productos = ref([])
+const paquetes = ref([])
 const loading = ref(false)
 const guardando = ref(false)
 const toasts = ref([])
@@ -347,6 +359,7 @@ const checkRestaurante = setInterval(() => {
     restauranteId.value = currentId
     cargar()
     cargarProductos()
+    cargarPaquetes()
   }
 }, 1000)
 
@@ -392,21 +405,25 @@ const defaultForm = () => ({
   titulo: '', contenido: '', tipo: 'info', emoji: '📢', color: 'indigo',
   mostrar_cliente: true, mostrar_interno: false,
   fecha_inicio: '', fecha_fin: '', orden: 0,
-  producto_id: null, precio_promo: null, activo: true
+  producto_id: null, paquete_id: null, precio_promo: null, activo: true
 })
 const form = ref(defaultForm())
 
 // --- COMPUTED ---
-const selectedProduct = computed(() => {
-  if (!form.value.producto_id) return null
-  return productos.value.find(p => p.id === form.value.producto_id)
+const selectedItem = computed(() => {
+  if (form.value.producto_id) return productos.value.find(p => p.id === form.value.producto_id)
+  if (form.value.paquete_id) return paquetes.value.find(p => p.id === form.value.paquete_id)
+  return null
 })
 
-const productosFiltrados = computed(() => {
+const itemsFiltrados = computed(() => {
   const term = searchTerm.value.toLowerCase()
-  return productos.value.filter(p => 
-    p.nombre.toLowerCase().includes(term) ||
-    (p.categoria?.nombre || '').toLowerCase().includes(term)
+  const pList = productos.value.map(p => ({ ...p, es_paquete: false, uid: `p-${p.id}` }))
+  const qList = paquetes.value.map(q => ({ ...q, es_paquete: true, uid: `q-${q.id}` }))
+  
+  return [...pList, ...qList].filter(i => 
+    i.nombre.toLowerCase().includes(term) ||
+    (i.categoria?.nombre || '').toLowerCase().includes(term)
   ).slice(0, 15)
 })
 
@@ -439,11 +456,25 @@ const removeToast = (id) => {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
 
-const seleccionarProducto = (producto) => {
-  form.value.producto_id = producto.id
-  form.value.precio_promo = producto.precio
+const seleccionarItem = (item) => {
+  if (item.es_paquete) {
+    form.value.paquete_id = item.id
+    form.value.producto_id = null
+  } else {
+    form.value.producto_id = item.id
+    form.value.paquete_id = null
+  }
+  form.value.precio_promo = item.precio
   dropdownOpen.value = false
   searchTerm.value = ''
+}
+
+const cargarPaquetes = async () => {
+  try {
+    const res = await fetch(`${API_URL}/paquetes`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) paquetes.value = data.data
+  } catch (err) { console.error('Error paquetes:', err) }
 }
 
 const cargarProductos = async () => {
@@ -560,6 +591,7 @@ const handleClickOutside = (e) => {
 onMounted(() => {
   cargar()
   cargarProductos()
+  cargarPaquetes()
   document.addEventListener('click', handleClickOutside)
 })
 
