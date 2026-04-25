@@ -465,6 +465,13 @@ const logout = async () => {
     localStorage.clear()
     sessionStorage.clear()
     
+    // Limpiar Cookies para evitar el error de "Header size too large"
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
     // Redirigir al login
     router.push('/')
   }
