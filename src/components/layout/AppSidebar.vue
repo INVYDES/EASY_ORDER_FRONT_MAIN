@@ -346,11 +346,13 @@ const userInitials = computed(() => {
 // Verificar si es administrador o propietario
 const isAdminOrOwner = computed(() => {
   if (!user.value?.roles) return false
-  return user.value.roles.some(r => 
-    r.nombre === 'PROPIETARIO' || 
-    r.nombre === 'ADMIN' ||
-    r.nombre === 'ADMINISTRADOR'
-  )
+  return user.value.roles.some(r => {
+    const name = (r.nombre || '').toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
 })
 
 const userRole = computed(() => {
@@ -380,35 +382,31 @@ const getHeaders = () => {
   }
 }
 
-// Verificar permisos (simplificado - ajusta según tu lógica)
+// Verificar permisos (mejorado para leer de la base de datos)
 const hasPermission = (permission) => {
-  // Si es admin o propietario, tiene todos los permisos
+  // 1. Si es admin o propietario, tiene acceso total
   if (isAdminOrOwner.value) return true
   
-  // Si no hay usuario, false
-  if (!user.value) return false
+  // 2. Verificar en la lista de permisos del usuario (si viene del Backend)
+  if (user.value?.permissions) {
+    const tienePermiso = user.value.permissions.some(p => 
+      (p.nombre === permission) || (p.slug === permission)
+    )
+    if (tienePermiso) return true
+  }
   
-  // Verificar permisos específicos del usuario
-  // Aquí puedes implementar tu lógica de permisos según los roles
-  const role = user.value.roles?.[0]?.nombre
+  // 3. Respaldo por nombre de rol (para estaciones fijas)
+  if (!user.value?.roles?.length) return false
+  const role = user.value.roles[0].nombre.toUpperCase()
   
   switch (permission) {
-    case 'VER_PANEL':
-      return true // Todos pueden ver el panel básico
-    case 'VER_CLIENTE':
-      return role === 'CLIENTE' || role === 'MESERO' || isAdminOrOwner.value
-    case 'VER_MESERO':
-      return role === 'MESERO' || isAdminOrOwner.value
-    case 'VER_COCINA':
-      return role === 'COCINA' || isAdminOrOwner.value
-    case 'VER_BARRA':
-      return role === 'BARRA' || isAdminOrOwner.value
-    case 'VER_POSTRES':
-      return role === 'POSTRES' || isAdminOrOwner.value
-    case 'VER_CAJA':
-      return role === 'MESERO' || isAdminOrOwner.value
-    default:
-      return false
+    case 'VER_PANEL':   return true
+    case 'VER_MESERO':  return role === 'MESERO'
+    case 'VER_COCINA':  return role === 'COCINA'
+    case 'VER_BARRA':   return role === 'BARRA'
+    case 'VER_POSTRES': return role === 'POSTRES'
+    case 'VER_CAJA':    return role === 'ADMIN' || role === 'PROPIETARIO'
+    default: return false
   }
 }
 
