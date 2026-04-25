@@ -370,11 +370,18 @@ const tabs = [
 // --- Funciones de Lógica ---
 const esBebida = (detalle) => {
   if (!detalle) return false
-  if (BEBIDA_CATEGORIA_IDS.includes(detalle.categoria_id)) return true
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
   const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  if (BEBIDA_KEYWORDS.some(k => nombre.includes(k))) return true
-  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').toLowerCase()
-  return cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || cat.includes('barra')
+  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
+         BEBIDA_KEYWORDS.some(k => nombre.includes(k))
+}
+
+const esPostre = (detalle) => {
+  if (!detalle) return false
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel') || 
+         nombre.includes('pastel') || nombre.includes('postre') || nombre.includes('helado')
 }
 
 const calcularEstadoEstacion = (detalles, estadoOrden) => {
@@ -398,10 +405,14 @@ const subOrdenes = computed(() => {
   if (!ordenes.value) return list
   ordenes.value.forEach(o => {
     const todos = o.detalles || []
+    
     const barra = todos.filter(d => esBebida(d))
-    const cocina = todos.filter(d => !esBebida(d))
+    const postres = todos.filter(d => esPostre(d) && !esBebida(d))
+    const cocina = todos.filter(d => !esBebida(d) && !esPostre(d))
+
     if (cocina.length > 0) list.push({ ...o, uid: `${o.id}-COCINA`, detalles_estacion: cocina, estado_estacion: calcularEstadoEstacion(cocina, o.estado) })
     if (barra.length > 0) list.push({ ...o, uid: `${o.id}-BARRA`, detalles_estacion: barra, estado_estacion: calcularEstadoEstacion(barra, o.estado) })
+    if (postres.length > 0) list.push({ ...o, uid: `${o.id}-POSTRES`, detalles_estacion: postres, estado_estacion: calcularEstadoEstacion(postres, o.estado) })
   })
   return list
 })

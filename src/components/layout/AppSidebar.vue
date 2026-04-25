@@ -17,14 +17,14 @@
     <!-- Logo / Título con toggle -->
     <div class="h-16 flex items-center justify-between px-4 border-b border-gray-100">
       <div class="flex items-center gap-2 overflow-hidden">
-        <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-md">
           <span class="text-white text-lg font-bold">E</span>
         </div>
         <h1 
           v-show="!isCollapsed || isMobile" 
-          class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap"
+          class="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent whitespace-nowrap"
         >
-          Easy Order
+          E-ORDER 2026
         </h1>
       </div>
       

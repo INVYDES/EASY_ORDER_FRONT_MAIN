@@ -21,6 +21,7 @@ const rolePermissions = {
   cocina:    ['PROPIETARIO', 'ADMIN', 'COCINA'],
   productos: ['PROPIETARIO', 'ADMIN', 'CAJA', 'MESERO'],
   barra:        ['PROPIETARIO', 'ADMIN', 'BARRA'],
+  postres:      ['PROPIETARIO', 'ADMIN', 'COCINA'],
   ingredientes: ['PROPIETARIO', 'ADMIN'],
   anuncios:     ['PROPIETARIO', 'ADMIN'],
   gastos:       ['PROPIETARIO', 'ADMIN'],
@@ -54,7 +55,8 @@ const navItems = computed(() => [
   { key: 'caja',      to: '/panel/caja',      label: 'Caja',           icon: 'fa-cash-register' },
   { key: 'cocina',    to: '/panel/cocina',    label: 'Cocina',         icon: 'fa-fire-burner' },
   { key: 'productos', to: '/panel/productos', label: 'Productos',      icon: 'fa-box' },
-  { key: 'barra',        to: '/panel/barra',        label: 'Barra',          icon: 'fa-martini-glass' },
+  { key: 'barra',        to: '/panel/barra',        label: 'Barra',            icon: 'fa-martini-glass' },
+  { key: 'postres',      to: '/panel/postres',      label: 'Postres',          icon: 'fa-cake-candles' },
 
 ].filter(item => canView(item.key)))
 

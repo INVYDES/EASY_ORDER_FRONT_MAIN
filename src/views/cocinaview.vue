@@ -256,8 +256,20 @@ const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
 )
 
+const esBebida = (detalle) => {
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
+         ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
+}
+
+const esPostre = (detalle) => {
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
+}
+
 const esCocina = (detalle) => {
-  return (detalle.categoria || '').toLowerCase() === 'cocina'
+  return !esBebida(detalle) && !esPostre(detalle)
 }
 
 const isCocinaOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
@@ -303,24 +315,16 @@ const loadOrders = async () => {
   if (!token) { router.push('/'); return }
   loading.value = true
   try {
-    const [aD, pD, lD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
-    ])
-    const map = new Map()
-    for (const res of [aD, pD, lD]) {
-      if (res.success) {
-        const lista = Array.isArray(res.data) ? res.data : []
-        lista.forEach(o => map.set(o.id, o))
-      }
+    const res = await fetch(`${API_URL}/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      const lista = Array.isArray(data.data) ? data.data : (data.data?.data || [])
+      orders.value = lista
+        .filter(o => isCocinaOrder(o))
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
     }
-    orders.value = [...map.values()].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-  } catch (e) {
-    console.error('Error cargando órdenes cocina:', e)
-  } finally {
-    loading.value = false
-  }
+  } catch (e) { console.error('Error cocina:', e) }
+  finally { loading.value = false }
 }
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
@@ -394,25 +398,17 @@ const confirmarYCambiarEstado = async () => {
 const cambiarEstado = async (id, nuevoEstadoDetalle) => {
   procesando.value = id
   try {
-    const orden = orders.value.find(o => o.id === id)
-    if (!orden) return
-
-    const detallesCocina = getDetallesCocina(orden).map(d => d.id)
-
-    const res  = await fetch(`${API_URL}/ordenes/${id}/station-status`, {
-      method: 'PUT',
+    const res  = await fetch(`${API_URL}/ordenes/${id}/actualizar-estado-estacion`, {
+      method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ detalles: detallesCocina, estado_preparacion: nuevoEstadoDetalle }),
+      body: JSON.stringify({ 
+        estacion: 'cocina',
+        estado: nuevoEstadoDetalle 
+      }),
     })
     const data = await res.json()
     if (res.ok && data.success) {
-      orden.detalles.forEach(d => {
-        if (detallesCocina.includes(d.id)) {
-          d.estado_preparacion = nuevoEstadoDetalle
-        }
-      })
-      orden.estado = data.data.nuevo_estado_orden
-      
+      await loadOrders()
       const labels = { EN_PREPARACION:'En preparación 🔥', LISTO:'Listos ✅' }
       showToast(`Platillos de Orden #${id} → ${labels[nuevoEstadoDetalle] || nuevoEstadoDetalle}`, 'success')
     } else {

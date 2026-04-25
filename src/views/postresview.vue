@@ -53,7 +53,7 @@
     </div>
 
     <!-- ══ KANBAN ══ -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <!-- Pendientes -->
       <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
@@ -104,37 +104,11 @@
             accion-label="✅ Marcar como listo"
             accion-class="bg-rose-500 hover:bg-rose-400 text-white"
             :procesando="procesando === order.id"
-            @accion="cambiarEstado(order.id, 'LISTA')"
+            @accion="cambiarEstado(order.id, 'LISTO')"
           />
         </div>
       </div>
 
-      <!-- Listos -->
-      <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
-        <div class="px-4 py-3 bg-rose-500/10 border-b border-rose-500/20 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span>✅</span>
-            <h2 class="font-bold text-rose-300 text-sm">Listos para entregar</h2>
-          </div>
-          <span class="text-xs font-bold bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full">
-            {{ readyOrders.length }}
-          </span>
-        </div>
-        <div class="p-3 space-y-3 min-h-72 max-h-[calc(100vh-320px)] overflow-y-auto">
-          <p v-if="readyOrders.length === 0 && !loading"
-            class="text-center py-12 text-gray-700 text-sm italic">
-            Sin postres listos
-          </p>
-          <OrdenCardPostres
-            v-for="order in readyOrders" :key="order.id"
-            :order="order"
-            accion-label="🫡 Entregado a mesero"
-            accion-class="bg-gray-700 hover:bg-gray-600 text-white"
-            :procesando="procesando === order.id"
-            @accion="marcarEntregada(order.id)"
-          />
-        </div>
-      </div>
     </div>
 
     <!-- ══ MODAL INGREDIENTES ══ -->
@@ -283,7 +257,8 @@ const fechaHoy = computed(() =>
 )
 
 const esPostre = (detalle) => {
-  return (detalle.categoria || '').toLowerCase() === 'postres'
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
 }
 
 const isPostreOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
@@ -326,25 +301,16 @@ const loadOrders = async () => {
   if (!token) { router.push('/'); return }
   loading.value = true
   try {
-    const [aD, pD, lD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
-    ])
-    const map = new Map()
-    for (const res of [aD, pD, lD]) {
-      if (res.success) {
-        const lista = Array.isArray(res.data) ? res.data : []
-        lista.forEach(o => map.set(o.id, o))
-      }
+    const res = await fetch(`${API_URL}/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      const lista = Array.isArray(data.data) ? data.data : (data.data?.data || [])
+      orders.value = lista
+        .filter(o => isPostreOrder(o))
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
     }
-    orders.value = [...map.values()]
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-  } catch (e) {
-    console.error('Error cargando órdenes postres:', e)
-  } finally {
-    loading.value = false
-  }
+  } catch (e) { console.error('Error postres:', e) }
+  finally { loading.value = false }
 }
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
@@ -415,17 +381,20 @@ const confirmarYCambiarEstado = async () => {
 const cambiarEstado = async (id, nuevoEstado) => {
   procesando.value = id
   try {
-    const res  = await fetch(`${API_URL}/ordenes/${id}`, {
-      method: 'PUT',
+    const res  = await fetch(`${API_URL}/ordenes/${id}/actualizar-estado-estacion`, {
+      method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ estado: nuevoEstado }),
+      body: JSON.stringify({ 
+        estacion: 'postres',
+        estado: nuevoEstado 
+      }),
     })
     const data = await res.json()
     if (res.ok && data.success) {
-      const o = orders.value.find(o => o.id === id)
-      if (o) o.estado = nuevoEstado
-      const labels = { EN_PREPARACION:'En preparación 🍰', LISTA:'Listo ✅' }
-      showToast(`Orden #${id} → ${labels[nuevoEstado] || nuevoEstado}`, 'success')
+      // Recargar órdenes para ver el cambio reflejado por estado_preparacion
+      await loadOrders()
+      const labels = { EN_PREPARACION:'En preparación 🍰', LISTO:'Listo ✅' }
+      showToast(`Postres de Orden #${id} → ${labels[nuevoEstado] || nuevoEstado}`, 'success')
     } else {
       showToast(data.message || 'Error al actualizar', 'error')
     }

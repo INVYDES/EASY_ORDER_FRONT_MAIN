@@ -34,7 +34,7 @@
         <p class="text-xs text-blue-400/60 mt-1.5 font-medium uppercase tracking-wider">Preparando</p>
       </div>
       <div class="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-purple-400 leading-none">{{ totalBebidas }}</p>
+        <p class="text-3xl font-black text-purple-400 leading-none">{{ totalBarra }}</p>
         <p class="text-xs text-purple-400/60 mt-1.5 font-medium uppercase tracking-wider">Bebidas totales</p>
       </div>
     </div>
@@ -245,7 +245,10 @@ const fechaHoy = computed(() =>
 )
 
 const esBarra = (detalle) => {
-  return (detalle.categoria || '').toLowerCase() === 'barra'
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
+         ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
 }
 const tieneBarra = (orden) => (orden.detalles || []).some(esBarra)
 
@@ -298,29 +301,23 @@ const loadOrders = async () => {
   if (!token) { router.push('/'); return }
   loading.value = true
   try {
-    const [aD, pD, lD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
-      fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
-    ])
-    const map = new Map()
-    for (const res of [aD, pD, lD]) {
-      if (res.success) {
-        const lista = Array.isArray(res.data) ? res.data : []
-        lista.forEach(o => map.set(o.id, o))
-      }
+    const res = await fetch(`${API_URL}/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100`, { headers: getHeaders() })
+    const data = await res.json()
+    if (data.success) {
+      // El endpoint /ordenes devuelve la lista en data.data debido a la paginación
+      const lista = Array.isArray(data.data) ? data.data : (data.data?.data || [])
+      orders.value = lista
+        .filter(tieneBarra)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
     }
-    orders.value = [...map.values()]
-      .filter(tieneBebidas)
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
   } catch (e) { console.error('Error barra:', e) }
   finally { loading.value = false }
 }
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
 const abrirModalIngredientes = async (orden, nuevoEstado) => {
-  // Solo los detalles que son bebidas
-  const detallesBebida = (orden.detalles ?? []).filter(esBebida)
+  // Solo los detalles que son bebidas (barra)
+  const detallesBebida = (orden.detalles ?? []).filter(esBarra)
 
   modalIngredientes.value = {
     visible:        true,
@@ -385,25 +382,17 @@ const confirmarYCambiarEstado = async () => {
 const cambiarEstado = async (id, nuevoEstadoDetalle) => {
   procesando.value = id
   try {
-    const orden = orders.value.find(o => o.id === id)
-    if (!orden) return
-
-    const detallesBarra = getDetallesBarra(orden).map(d => d.id)
-
-    const res  = await fetch(`${API_URL}/ordenes/${id}/station-status`, {
-      method: 'PUT',
+    const res  = await fetch(`${API_URL}/ordenes/${id}/actualizar-estado-estacion`, {
+      method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ detalles: detallesBarra, estado_preparacion: nuevoEstadoDetalle }),
+      body: JSON.stringify({ 
+        estacion: 'barra',
+        estado: nuevoEstadoDetalle 
+      }),
     })
     const data = await res.json()
     if (res.ok && data.success) {
-      orden.detalles.forEach(d => {
-        if (detallesBarra.includes(d.id)) {
-          d.estado_preparacion = nuevoEstadoDetalle
-        }
-      })
-      orden.estado = data.data.nuevo_estado_orden
-      
+      await loadOrders()
       const labels = { EN_PREPARACION:'Preparando 🍹', LISTO:'Listas ✅' }
       showToast(`Bebidas de Orden #${id} → ${labels[nuevoEstadoDetalle] || nuevoEstadoDetalle}`, 'success')
     } else {
