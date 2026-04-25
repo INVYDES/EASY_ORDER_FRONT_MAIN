@@ -161,7 +161,7 @@
 
       <!-- Postres -->
       <RouterLink
-        v-if="hasPermission('VER_POSTRES')"
+        v-if="true || hasPermission('VER_POSTRES')"
         to="/panel/postres"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
         :class="{ 
@@ -351,6 +351,7 @@ const isAdminOrOwner = computed(() => {
     return name.includes('PROPIETARIO') || 
            name.includes('ADMIN') || 
            name.includes('ADMINISTRADOR') ||
+           name.includes('ADMINISTRACION') ||
            name.includes('DUEÑO')
   })
 })
