@@ -68,7 +68,6 @@
 
     <!-- Navegación principal -->
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      
       <!-- Panel Inicial -->
       <RouterLink
         v-if="hasPermission('VER_PANEL')"
@@ -153,15 +152,15 @@
         @click="handleMobileClose"
       >
         <i class="fa-solid fa-martini-glass text-lg w-5"></i>
-        <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
+        <span v-show="!isCollapsed || isMobile" class="text-sm">Barra_T</span>
         <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
-          Barra
+          Barra_T
         </div>
       </RouterLink>
 
-      <!-- Postres -->
+      <!-- Postres (PRUEBA) -->
       <RouterLink
-        v-if="true || hasPermission('VER_POSTRES')"
+        v-if="true"
         to="/panel/postres"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
         :class="{ 
@@ -171,11 +170,12 @@
         @click="handleMobileClose"
       >
         <i class="fa-solid fa-cake-candles text-lg w-5"></i>
-        <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
+        <span v-show="!isCollapsed || isMobile" class="text-sm font-bold">Postres</span>
         <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
           Postres
         </div>
       </RouterLink>
+
 
       <!-- Caja -->
       <RouterLink
