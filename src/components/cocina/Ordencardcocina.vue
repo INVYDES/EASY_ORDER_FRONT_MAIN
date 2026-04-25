@@ -105,33 +105,14 @@ const tiempoClass = computed(() => {
 })
 const urgente = computed(() => minutosTranscurridos.value > 20)
 
-// --- Lógica de filtrado de comida ---
-const CATEGORIAS_BEBIDA = [
-  'Bebida', 'Bebidas', 'Refrescos', 'Jugos', 'Cervezas', 'Vinos', 'Cocteles', 'Aguas', 
-  'Cafes', 'Tés', 'Soda', 'Malteada'
-]
-
-const esProductoComida = (detalle) => {
-  if (!detalle) return false
-  const categoria = (detalle.categoria || '').toLowerCase()
-  const productoNombre = (detalle.producto_nombre || '').toLowerCase()
-  
-  if (detalle.categoria_id === 7 || [7, 8].includes(detalle.categoria_id)) return false
-
-  for (const catBebida of CATEGORIAS_BEBIDA) {
-    if (categoria.includes(catBebida.toLowerCase())) return false
-  }
-  
-  const palabrasBebida = ['cerveza', 'vino', 'tequila', 'refresco', 'soda', 'agua', 'jugo', 'coca', 'fanta', 'sprite']
-  for (const palabra of palabrasBebida) {
-    if (productoNombre.includes(palabra)) return false
-  }
-  return true
+// --- Lógica de filtrado de cocina ---
+const esProductoCocina = (detalle) => {
+  return (detalle.categoria || '').toLowerCase() === 'cocina'
 }
 
 const detallesComida = computed(() => {
   if (!props.order.detalles) return []
-  return props.order.detalles.filter(d => esProductoComida(d))
+  return props.order.detalles.filter(d => esProductoCocina(d))
 })
 </script>
 

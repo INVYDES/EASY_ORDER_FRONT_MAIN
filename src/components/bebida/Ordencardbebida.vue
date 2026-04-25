@@ -78,19 +78,13 @@ const props = defineProps({
 })
 defineEmits(['accion'])
 
-// ✅ Lógica de filtrado: categoria_id === 7 OR nombre contiene "bebida"
-const esBebida = (detalle) => {
-  if (BEBIDA_CATEGORIA_IDS.includes(detalle.categoria_id)) return true
-  const cat = (detalle.categoria || '').toLowerCase()
-  const nom = (detalle.producto_nombre || '').toLowerCase()
-  return cat.includes('bebida') || cat.includes('refresc') || cat.includes('coctel') ||
-         cat.includes('jugo')   || cat.includes('agua')    || cat.includes('café')   ||
-         nom.includes('bebida') || nom.includes('refresc') || nom.includes('coctel') ||
-         nom.includes('jugo')   || nom.includes('agua')
+// ✅ Lógica de filtrado: solo categoría 'Barra'
+const esBarra = (detalle) => {
+  return (detalle.categoria || '').toLowerCase() === 'barra'
 }
 
 const bebidasFiltradas = computed(() =>
-  (props.order.detalles || []).filter(esBebida)
+  (props.order.detalles || []).filter(esBarra)
 )
 
 // ¿La orden tiene también productos de otras categorías? (orden mixta)

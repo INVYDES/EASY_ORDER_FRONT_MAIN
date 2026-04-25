@@ -159,6 +159,24 @@
         </div>
       </RouterLink>
 
+      <!-- Postres -->
+      <RouterLink
+        v-if="hasPermission('VER_POSTRES')"
+        to="/panel/postres"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
+        :class="{ 
+          'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/postres',
+          'justify-center': isCollapsed && !isMobile
+        }"
+        @click="handleMobileClose"
+      >
+        <i class="fa-solid fa-cake-candles text-lg w-5"></i>
+        <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
+        <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
+          Postres
+        </div>
+      </RouterLink>
+
       <!-- Caja -->
       <RouterLink
         v-if="hasPermission('VER_CAJA')"
@@ -344,6 +362,7 @@ const userRole = computed(() => {
       'MESERO': '🍽️ Mesero',
       'COCINA': '👨‍🍳 Cocina',
       'BARRA': '🍸 Barra',
+      'POSTRES': '🍰 Postres',
       'CLIENTE': '👤 Cliente'
     }
     return roleLabels[role] || role
@@ -384,6 +403,8 @@ const hasPermission = (permission) => {
       return role === 'COCINA' || isAdminOrOwner.value
     case 'VER_BARRA':
       return role === 'BARRA' || isAdminOrOwner.value
+    case 'VER_POSTRES':
+      return role === 'POSTRES' || isAdminOrOwner.value
     case 'VER_CAJA':
       return role === 'MESERO' || isAdminOrOwner.value
     default:

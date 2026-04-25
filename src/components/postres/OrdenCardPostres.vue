@@ -74,45 +74,9 @@ const props = defineProps({
 
 defineEmits(['accion'])
 
-// ID de categoría de postres (ajustar según tu BD)
-const POSTRES_CATEGORIA_IDS = [8] // ← Ajusta este ID según tu base de datos
-
-const CATEGORIAS_POSTRES = [
-  'Postres', 'Desserts', 'Reposteria', 'Pasteles', 'Helados',
-  'Gelatos', 'Pay', 'Tarta', 'Mousse', 'Flan', 'Natillas',
-  'Arroz con leche', 'Churros', 'Brownies', 'Galletas', 'Donas'
-]
-
+// ✅ Lógica de filtrado: solo categoría 'Postres'
 const esProductoPostre = (detalle) => {
-  if (!detalle) return false
-
-  // Verificar por categoria_id
-  if (POSTRES_CATEGORIA_IDS.includes(detalle.categoria_id)) return true
-
-  const categoria = detalle.categoria || ''
-  const categoriaLower = categoria.toLowerCase()
-  const productoNombre = (detalle.producto_nombre || '').toLowerCase()
-
-  // Verificar por nombre de categoría
-  for (const catPostre of CATEGORIAS_POSTRES) {
-    if (categoriaLower.includes(catPostre.toLowerCase()) || categoria === catPostre) {
-      return true
-    }
-  }
-
-  // Verificar por palabras clave en el nombre del producto
-  const palabrasPostre = ['postre', 'pastel', 'tarta', 'pay', 'helado', 'gelato',
-                         'mousse', 'flan', 'natilla', 'churro', 'brownie',
-                         'galleta', 'dona', 'cupcake', 'cheesecake', 'tiramisu',
-                         'crepa', 'waffle', 'panque', 'budin', 'torta']
-
-  for (const palabra of palabrasPostre) {
-    if (productoNombre.includes(palabra)) {
-      return true
-    }
-  }
-
-  return false
+  return (detalle.categoria || '').toLowerCase() === 'postres'
 }
 
 // Filtrar SOLO productos de postres

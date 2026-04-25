@@ -244,19 +244,13 @@ const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
 )
 
-const esBebida = (detalle) => {
-  if (BEBIDA_CATEGORIA_IDS.includes(detalle.producto?.categoria_id)) return true
-  const cat = (detalle.producto?.categoria?.nombre || '').toLowerCase()
-  const nom = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  return cat.includes('bebida') || cat.includes('refresc') || cat.includes('coctel') ||
-         cat.includes('jugo')   || cat.includes('agua')    || cat.includes('café')   ||
-         nom.includes('bebida') || nom.includes('refresc') || nom.includes('coctel') ||
-         nom.includes('jugo')   || nom.includes('agua')
+const esBarra = (detalle) => {
+  return (detalle.categoria || '').toLowerCase() === 'barra'
 }
-const tieneBebidas = (orden) => (orden.detalles || []).some(esBebida)
+const tieneBarra = (orden) => (orden.detalles || []).some(esBarra)
 
 const isBarraOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
-const getDetallesBarra = (o) => (o.detalles || []).filter(esBebida)
+const getDetallesBarra = (o) => (o.detalles || []).filter(esBarra)
 
 const pendingOrders = computed(() => {
   return orders.value.filter(o => {
@@ -285,9 +279,9 @@ const readyOrders = computed(() => {
   })
 })
 
-const totalBebidas    = computed(() =>
+const totalBarra    = computed(() =>
   [...pendingOrders.value, ...preparingOrders.value]
-    .flatMap(o => (o.detalles || []).filter(esBebida))
+    .flatMap(o => (o.detalles || []).filter(esBarra))
     .reduce((s, d) => s + Number(d.cantidad || 1), 0)
 )
 

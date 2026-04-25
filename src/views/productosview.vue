@@ -84,44 +84,7 @@
       />
     </div>
 
-    <!-- ── CATEGORÍAS ─────────────────────────────────────── -->
-    <div v-else-if="activeTab === 'categorias'">
-      <div class="flex justify-end mb-4">
-        <button
-          @click="openCreateCategoria"
-          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
-        >
-          <span class="text-base leading-none">＋</span> Nueva Categoría
-        </button>
-      </div>
-      <div v-if="loading.categories" class="text-center py-10 text-gray-400 text-sm">Cargando categorías...</div>
-      <div v-else-if="categories.length === 0" class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <span class="text-4xl block mb-3">📂</span>
-        <p class="text-gray-500 text-sm">No hay categorías registradas</p>
-      </div>
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <div
-          v-for="cat in categories"
-          :key="cat.id"
-          class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md transition-shadow"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center bg-gray-100 shrink-0">
-              <img v-if="cat.imagen" :src="getImageUrl(cat.imagen)" class="w-full h-full object-cover" @error="onImageError" />
-              <span v-else class="text-xl">{{ cat.icono || '📦' }}</span>
-            </div>
-            <div>
-              <p class="font-semibold text-gray-800 text-sm">{{ cat.nombre }}</p>
-              <p class="text-xs text-gray-400 line-clamp-1">{{ cat.descripcion || 'Sin descripción' }}</p>
-            </div>
-          </div>
-          <div class="flex gap-2 mt-2">
-            <button @click="openEditCategoria(cat)" class="flex-1 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">Editar</button>
-            <button @click="handleDeleteCategoria(cat.id)" class="flex-1 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition">Eliminar</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- ── CATEGORÍAS (ELIMINADO POR PETICIÓN: AHORA SON FIJAS) ── -->
 
     <!-- ── INGREDIENTES ───────────────────────────────────── -->
     <div v-else-if="activeTab === 'ingredientes'">
@@ -382,7 +345,6 @@ const loading = reactive({
 const tabs = [
   { key: 'productos',    label: '📦 Productos' },
   { key: 'paquetes',     label: '🎁 Paquetes' },
-  { key: 'categorias',   label: '🏷️ Categorías' },
   { key: 'ingredientes', label: '🧄 Ingredientes' },
   { key: 'anuncios',     label: '📢 Anuncios' },
 ]
@@ -564,7 +526,12 @@ const loadCategories = async () => {
   try {
     const res = await fetch(`${API_URL}/categorias`, { headers: getHeaders() })
     const data = await res.json()
-    if (data.success) categories.value = data.data || []
+    if (data.success) {
+      const baseNames = ['cocina', 'barra', 'postres']
+      categories.value = (data.data || []).filter(c => 
+        baseNames.includes((c.nombre || '').toLowerCase())
+      )
+    }
   } catch (error) {
     console.error('Error loading categories:', error)
     showToast('Error al cargar categorías', 'error')

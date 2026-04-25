@@ -254,9 +254,6 @@ import { API_URL } from '@/config/api'
 const POLL_INTERVAL = 15000
 const router        = useRouter()
 
-// ID de categoría de postres (ajustar según tu BD)
-const POSTRES_CATEGORIA_IDS = [8] // ← Ajusta este ID según tu base de datos
-
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const orders     = ref([])
 const loading    = ref(false)
@@ -285,47 +282,36 @@ const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
 )
 
-// Categorías y palabras clave para identificar postres
-const CATEGORIAS_POSTRES = [
-  'Postres', 'Desserts', 'Reposteria', 'Pasteles', 'Helados',
-  'Gelatos', 'Pay', 'Tarta', 'Mousse', 'Flan', 'Natillas',
-  'Arroz con leche', 'Churros', 'Brownies', 'Galletas', 'Donas'
-]
-
 const esPostre = (detalle) => {
-  // Verificar por categoria_id
-  if (POSTRES_CATEGORIA_IDS.includes(detalle.categoria_id)) return true
-
-  const categoria = (detalle.categoria || '').toLowerCase()
-  const nom = (detalle.producto_nombre || '').toLowerCase()
-
-  // Verificar por nombre de categoría
-  for (const catPostre of CATEGORIAS_POSTRES) {
-    if (categoria.includes(catPostre.toLowerCase())) {
-      return true
-    }
-  }
-
-  // Verificar por palabras clave en el nombre del producto
-  const palabrasPostre = ['postre', 'pastel', 'tarta', 'pay', 'helado', 'gelato',
-                         'mousse', 'flan', 'natilla', 'churro', 'brownie',
-                         'galleta', 'dona', 'cupcake', 'cheesecake', 'tiramisu',
-                         'crepa', 'waffle', 'panque', 'budin', 'torta']
-
-  for (const palabra of palabrasPostre) {
-    if (nom.includes(palabra)) {
-      return true
-    }
-  }
-
-  return false
+  return (detalle.categoria || '').toLowerCase() === 'postres'
 }
 
-const tienePostres = (orden) => (orden.detalles || []).some(esPostre)
+const isPostreOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
+const getDetallesPostres = (o) => (o.detalles || []).filter(esPostre)
 
-const pendingOrders   = computed(() => orders.value.filter(o => o.estado === 'ABIERTA'        && tienePostres(o)))
-const preparingOrders = computed(() => orders.value.filter(o => o.estado === 'EN_PREPARACION' && tienePostres(o)))
-const readyOrders     = computed(() => orders.value.filter(o => o.estado === 'LISTA'          && tienePostres(o)))
+const pendingOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isPostreOrder(o)) return false
+    const detalles = getDetallesPostres(o)
+    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+  })
+})
+
+const preparingOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isPostreOrder(o)) return false
+    const detalles = getDetallesPostres(o)
+    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'EN_PREPARACION') && !detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+  })
+})
+
+const readyOrders = computed(() => {
+  return orders.value.filter(o => {
+    if (!isPostreOrder(o)) return false
+    const detalles = getDetallesPostres(o)
+    return detalles.length > 0 && detalles.every(d => d.estado_preparacion === 'LISTO')
+  })
+})
 
 const showToast = (message, type = 'info', duration = 3500) => {
   const id = Date.now()
@@ -341,7 +327,7 @@ const loadOrders = async () => {
   loading.value = true
   try {
     const [aD, pD, lD] = await Promise.all([
-      fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`,        { headers: getHeaders() }).then(r=>r.json()),
+      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`,   { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }).then(r=>r.json()),
       fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`,          { headers: getHeaders() }).then(r=>r.json()),
     ])
@@ -353,7 +339,6 @@ const loadOrders = async () => {
       }
     }
     orders.value = [...map.values()]
-      .filter(tienePostres)
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
   } catch (e) {
     console.error('Error cargando órdenes postres:', e)

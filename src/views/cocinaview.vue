@@ -256,19 +256,12 @@ const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
 )
 
-const BEBIDA_CATEGORIA_IDS = [7]
-const esBebida = (detalle) => {
-  if (BEBIDA_CATEGORIA_IDS.includes(detalle.producto?.categoria_id)) return true
-  const cat = (detalle.producto?.categoria?.nombre || '').toLowerCase()
-  const nom = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  return cat.includes('bebida') || cat.includes('refresc') || cat.includes('coctel') ||
-         cat.includes('jugo')   || cat.includes('agua')    || cat.includes('café')   ||
-         nom.includes('bebida') || nom.includes('refresc') || nom.includes('coctel') ||
-         nom.includes('jugo')   || nom.includes('agua')
+const esCocina = (detalle) => {
+  return (detalle.categoria || '').toLowerCase() === 'cocina'
 }
 
 const isCocinaOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
-const getDetallesCocina = (o) => (o.detalles || []).filter(d => !esBebida(d))
+const getDetallesCocina = (o) => (o.detalles || []).filter(esCocina)
 
 const pendingOrders = computed(() => {
   return orders.value.filter(o => {
@@ -343,8 +336,8 @@ const abrirModalIngredientes = async (orden, nuevoEstado) => {
   }
 
   try {
-    // Filtrar para que el modal de COCINA solo muestre comida
-    const detallesCocina = (orden.detalles ?? []).filter(d => !esBebida(d))
+    // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina)
+    const detallesCocina = (orden.detalles ?? []).filter(esCocina)
     
     const resultados = await Promise.all(
       detallesCocina.map(d =>
