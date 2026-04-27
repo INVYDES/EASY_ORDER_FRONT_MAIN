@@ -316,24 +316,33 @@ onUnmounted(() => {
 
       <!-- ── SELECTOR DE RESTAURANTE ── -->
       <div class="px-4 py-3 border-b border-gray-100 shrink-0" id="restaurante-menu-area">
+
+        <!-- Etiqueta (solo cuando expandido) -->
         <p v-show="!isCollapsed || isMobile" class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
           <i class="fa-solid fa-store mr-1"></i> Restaurante
         </p>
 
-        <p v-if="userRestaurantes.length === 0 && (!isCollapsed || isMobile)" class="text-gray-400 text-sm italic px-1">
+        <!-- Sin restaurante asignado -->
+        <p v-if="userRestaurantes.length === 0" class="text-gray-400 text-sm italic px-1" v-show="!isCollapsed || isMobile">
           Sin restaurante asignado
         </p>
 
-        <div v-else class="relative">
+        <!-- Con restaurantes — siempre clickeable -->
+        <div v-if="userRestaurantes.length > 0" class="relative">
           <button
             @click="showRestauranteMenu = !showRestauranteMenu"
             class="w-full flex items-center gap-2.5 px-3 py-2.5 bg-gray-50 hover:bg-indigo-50 rounded-xl transition-all border border-gray-100"
             :class="{ 'justify-center': isCollapsed && !isMobile }"
           >
+            <!-- Icono siempre visible -->
             <i class="fa-solid fa-circle-check text-emerald-500 text-xs shrink-0"></i>
+
+            <!-- Nombre solo cuando expandido -->
             <p v-show="!isCollapsed || isMobile" class="text-gray-700 text-sm font-medium truncate flex-1 text-left">
               {{ restauranteActivoNombre }}
             </p>
+
+            <!-- Chevron solo cuando expandido -->
             <i
               v-show="!isCollapsed || isMobile"
               class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform duration-200 shrink-0"
@@ -341,6 +350,7 @@ onUnmounted(() => {
             ></i>
           </button>
 
+          <!-- Dropdown — siempre disponible (se posiciona fixed cuando colapsado) -->
           <transition
             enter-active-class="transition duration-150 ease-out"
             enter-from-class="opacity-0 -translate-y-1"
@@ -349,7 +359,15 @@ onUnmounted(() => {
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-1"
           >
-            <div v-if="showRestauranteMenu && (!isCollapsed || isMobile)" class="mt-1 rounded-xl bg-gray-50 overflow-hidden border border-gray-100">
+            <div
+              v-if="showRestauranteMenu"
+              :class="[
+                'rounded-xl bg-white overflow-hidden border border-gray-100 shadow-lg z-50',
+                isCollapsed && !isMobile
+                  ? 'fixed left-20 w-52'
+                  : 'mt-1 w-full'
+              ]"
+            >
               <button
                 v-for="rest in userRestaurantes"
                 :key="rest.id"
@@ -358,7 +376,7 @@ onUnmounted(() => {
                 :class="rest.id === restauranteActivo ? 'text-indigo-600 font-semibold' : 'text-gray-600'"
               >
                 <i
-                  class="fa-solid text-xs w-3"
+                  class="fa-solid text-xs w-3 shrink-0"
                   :class="rest.id === restauranteActivo ? 'fa-circle-check text-emerald-500' : 'fa-circle text-gray-300'"
                 ></i>
                 <span class="truncate">{{ rest.nombre }}</span>
@@ -366,6 +384,7 @@ onUnmounted(() => {
             </div>
           </transition>
         </div>
+
       </div>
 
       <!-- ── NAVEGACIÓN ── -->
