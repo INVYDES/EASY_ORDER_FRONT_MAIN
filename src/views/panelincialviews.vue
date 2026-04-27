@@ -15,7 +15,7 @@ const showRestauranteMenu = ref(false)
 
 const rolePermissions = {
   mesero:    ['PROPIETARIO', 'ADMIN', 'MESERO'],
-  cliente:      ['CLIENTE'],                          // ← solo rol CLIENTE ve el menú
+  cliente:      ['CLIENTE'],                            
   admin:     ['PROPIETARIO', 'ADMIN'],
   caja:      ['PROPIETARIO', 'ADMIN', 'CAJA'],
   cocina:    ['PROPIETARIO', 'ADMIN', 'COCINA'],

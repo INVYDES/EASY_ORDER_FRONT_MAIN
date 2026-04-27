@@ -15,6 +15,7 @@ import Panelincialviews from "../views/panelincialviews.vue";
 import Meserosview        from "../views/meserosview.vue";
 import Clienteview        from "../views/clienteview.vue";
 import Administraccionview from "../views/administraccionview.vue";
+import Analisisview from "../views/Analisisview.vue";
 import Cajaviews          from "../views/cajaviews.vue";
 import Cocinaview         from "../views/cocinaview.vue";
 import Postresview        from "../views/postresview.vue";
@@ -74,8 +75,8 @@ const routes = [
       },
 
       {
-        path: "admin",
-        name: "admin",
+        path: "Gestion",
+        name: "Gestion",
         component: Administraccionview,
         meta: { roles: ["ADMIN", "PROPIETARIO"] }
       },
@@ -86,6 +87,12 @@ const routes = [
         component: Cajaviews,
         meta: { roles: ["CAJA", "ADMIN", "PROPIETARIO"] }
       },
+      {
+  path: "analisis",
+  name:"analisis",
+  component:Analisisview,
+  meta: { roles:["ADMIN"] }
+},
 
       {
         path: "cocina",

@@ -29,7 +29,6 @@
       </div>
       
       <div class="flex items-center gap-1">
-        <!-- Botón colapsar (solo desktop) -->
         <button 
           v-if="!isMobile"
           class="hidden lg:flex text-gray-400 hover:text-gray-600 transition p-1 rounded-lg hover:bg-gray-100"
@@ -37,8 +36,6 @@
         >
           <i :class="isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'" class="text-sm"></i>
         </button>
-        
-        <!-- Botón cerrar móvil -->
         <button 
           v-if="isMobile && isOpen"
           class="lg:hidden text-gray-400 hover:text-gray-600 transition p-1"
@@ -58,7 +55,6 @@
           </div>
           <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
         </div>
-        
         <div v-show="!isCollapsed || isMobile" class="flex-1 min-w-0">
           <p class="text-sm font-semibold text-gray-800 truncate">{{ userName }}</p>
           <p class="text-xs text-gray-500 truncate">{{ userRole }}</p>
@@ -68,7 +64,8 @@
 
     <!-- Navegación principal -->
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      <!-- Panel Inicial -->
+
+      <!-- Dashboard -->
       <RouterLink
         v-if="hasPermission('VER_PANEL')"
         to="/panel/panelinicial"
@@ -85,6 +82,12 @@
           Dashboard
         </div>
       </RouterLink>
+
+      <!-- ── Sección: Operaciones ── -->
+      <div v-show="!isCollapsed || isMobile" class="pt-3 pb-1 px-3">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Operaciones</p>
+      </div>
+      <div v-if="isCollapsed && !isMobile" class="border-t border-gray-100 my-2"></div>
 
       <!-- Cliente -->
       <RouterLink
@@ -122,6 +125,30 @@
         </div>
       </RouterLink>
 
+      <!-- Caja -->
+      <RouterLink
+        v-if="hasPermission('VER_CAJA')"
+        to="/panel/caja"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
+        :class="{ 
+          'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/caja',
+          'justify-center': isCollapsed && !isMobile
+        }"
+        @click="handleMobileClose"
+      >
+        <i class="fa-solid fa-cash-register text-lg w-5"></i>
+        <span v-show="!isCollapsed || isMobile" class="text-sm">Caja</span>
+        <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
+          Caja
+        </div>
+      </RouterLink>
+
+      <!-- ── Sección: Estaciones ── -->
+      <div v-show="!isCollapsed || isMobile" class="pt-3 pb-1 px-3">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Estaciones</p>
+      </div>
+      <div v-if="isCollapsed && !isMobile" class="border-t border-gray-100 my-2"></div>
+
       <!-- Cocina -->
       <RouterLink
         v-if="hasPermission('VER_COCINA')"
@@ -158,9 +185,8 @@
         </div>
       </RouterLink>
 
-      <!-- Postres (PRUEBA) -->
+      <!-- Postres -->
       <RouterLink
-        v-if="true"
         to="/panel/postres"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
         :class="{ 
@@ -170,37 +196,21 @@
         @click="handleMobileClose"
       >
         <i class="fa-solid fa-cake-candles text-lg w-5"></i>
-        <span v-show="!isCollapsed || isMobile" class="text-sm font-bold">Postres</span>
+        <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
         <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
           Postres
         </div>
       </RouterLink>
 
-
-      <!-- Caja -->
-      <RouterLink
-        v-if="hasPermission('VER_CAJA')"
-        to="/panel/caja"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
-        :class="{ 
-          'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/caja',
-          'justify-center': isCollapsed && !isMobile
-        }"
-        @click="handleMobileClose"
-      >
-        <i class="fa-solid fa-cash-register text-lg w-5"></i>
-        <span v-show="!isCollapsed || isMobile" class="text-sm">Caja</span>
-        <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
-          Caja
-        </div>
-      </RouterLink>
-
-      <div class="border-t border-gray-100 my-3"></div>
-
-      <!-- Módulos de Administración (solo admin/propietario) -->
+      <!-- ── Sección: Administración (solo admin/propietario) ── -->
       <template v-if="isAdminOrOwner">
-        
-        <!-- Administración -->
+
+        <div v-show="!isCollapsed || isMobile" class="pt-3 pb-1 px-3">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administración</p>
+        </div>
+        <div v-if="isCollapsed && !isMobile" class="border-t border-gray-100 my-2"></div>
+
+        <!-- Gestión (antes AdminView) -->
         <RouterLink
           to="/panel/admin"
           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
@@ -211,9 +221,26 @@
           @click="handleMobileClose"
         >
           <i class="fa-solid fa-gear text-lg w-5"></i>
-          <span v-show="!isCollapsed || isMobile" class="text-sm">Administración</span>
+          <span v-show="!isCollapsed || isMobile" class="text-sm">Gestión</span>
           <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
-            Administración
+            Gestión
+          </div>
+        </RouterLink>
+
+        <!-- Métricas (antes AnalisisView) -->
+        <RouterLink
+          to="/panel/analisis"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
+          :class="{ 
+            'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/analisis',
+            'justify-center': isCollapsed && !isMobile
+          }"
+          @click="handleMobileClose"
+        >
+          <i class="fa-solid fa-magnifying-glass-chart text-lg w-5"></i>
+          <span v-show="!isCollapsed || isMobile" class="text-sm">Métricas</span>
+          <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
+            Métricas
           </div>
         </RouterLink>
 
@@ -231,57 +258,6 @@
           <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
           <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
             Productos
-          </div>
-        </RouterLink>
-
-        <!-- Ingredientes -->
-        <RouterLink
-          to="/panel/ingredientes"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
-          :class="{ 
-            'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/ingredientes',
-            'justify-center': isCollapsed && !isMobile
-          }"
-          @click="handleMobileClose"
-        >
-          <i class="fa-solid fa-carrot text-lg w-5"></i>
-          <span v-show="!isCollapsed || isMobile" class="text-sm">Ingredientes</span>
-          <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
-            Ingredientes
-          </div>
-        </RouterLink>
-
-        <!-- Gastos -->
-        <RouterLink
-          to="/panel/gastos"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
-          :class="{ 
-            'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/gastos',
-            'justify-center': isCollapsed && !isMobile
-          }"
-          @click="handleMobileClose"
-        >
-          <i class="fa-solid fa-receipt text-lg w-5"></i>
-          <span v-show="!isCollapsed || isMobile" class="text-sm">Gastos</span>
-          <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
-            Gastos
-          </div>
-        </RouterLink>
-
-        <!-- Reportes / ROI -->
-        <RouterLink
-          to="/panel/roi"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200 group"
-          :class="{ 
-            'bg-indigo-50 text-indigo-600 font-medium': $route.path === '/panel/roi',
-            'justify-center': isCollapsed && !isMobile
-          }"
-          @click="handleMobileClose"
-        >
-          <i class="fa-solid fa-chart-simple text-lg w-5"></i>
-          <span v-show="!isCollapsed || isMobile" class="text-sm">ROI / Reportes</span>
-          <div v-if="isCollapsed && !isMobile" class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">
-            ROI / Reportes
           </div>
         </RouterLink>
 
@@ -306,7 +282,6 @@
 
   </aside>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'

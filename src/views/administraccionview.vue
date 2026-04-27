@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <!-- Tabs principales -->
+    <!-- Tabs -->
     <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
       <button v-for="t in mainTabs" :key="t.key" @click="mainTab = t.key"
         :class="['px-5 py-2 text-sm font-medium rounded-lg transition',
@@ -45,15 +45,12 @@
 
     <!-- ══ TAB RESUMEN ══ -->
     <template v-if="mainTab === 'resumen'">
-
-      <!-- Loading inicial -->
       <div v-if="loading.general" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p class="text-gray-400">Cargando dashboard...</p>
       </div>
 
       <template v-else>
-        <!-- KPI Cards -->
         <DashboardKpis
           :empleados="empleados"
           :restaurantes="restaurantes"
@@ -62,19 +59,16 @@
           :ordenes-por-estado="dashData.ordenes_por_estado"
         />
 
-        <!-- Fila 1: Ventas por hora + Método de pago -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
           <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
         </div>
 
-        <!-- Fila 2: Tendencia + Top productos -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <VentasSemanaChart :api-url="API_URL" :get-headers="getHeaders" />
           <TopProductosChart :api-url="API_URL" :get-headers="getHeaders" />
         </div>
 
-        <!-- Fila 3: Pedidos por estado + Empleados por rol -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
           <EmpleadosRolChart  :empleados="empleados" />
@@ -108,7 +102,7 @@
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <tr v-if="empleados.length===0">
-                  <td colspan="4" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados</td>
+                  <td colspan="5" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados</td>
                 </tr>
                 <tr v-for="emp in empleados" :key="emp.id" class="hover:bg-gray-50">
                   <td class="px-5 py-4">
@@ -202,27 +196,12 @@
       </template>
     </template>
 
-    <!-- ══ TAB KPIs VENTAS ══ -->
-    <template v-if="mainTab === 'kpis'">
-      <KpiVentas :api-url="API_URL" :get-headers="getHeaders" />
-    </template>
-
-    <!-- ══ TAB KPIs PRODUCTOS ══ -->
-    <template v-if="mainTab === 'productos'">
-      <KpiProductos :api-url="API_URL" :get-headers="getHeaders" />
-    </template>
-
-    <!-- ══ TAB ROI ══ -->
-    <template v-if="mainTab === 'roi'">
-      <RoiChart :api-url="API_URL" :get-headers="getHeaders" />
-    </template>
-
     <!-- ══ TAB INGREDIENTES ══ -->
     <template v-if="mainTab === 'ingredientes'">
       <IngredientesView />
     </template>
 
-    <!-- ══ TAB MARQUESITA ══ -->
+    <!-- ══ TAB MARQUESINA ══ -->
     <template v-if="mainTab === 'anuncios'">
       <AnunciosView />
     </template>
@@ -356,8 +335,6 @@
                 class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
           </div>
-
-          <!-- CAMPO DE IMAGEN -->
           <div class="space-y-3 pt-2">
             <label class="block text-sm font-medium text-gray-700">Logo o Foto del Restaurante</label>
             <div class="flex items-center gap-4">
@@ -368,7 +345,7 @@
               <div class="flex-1">
                 <input type="file" @change="onFileChange" accept="image/*" class="hidden" ref="fileInput" />
                 <div class="flex flex-wrap gap-2">
-                  <button @click="$refs.fileInput.click()" type="button" 
+                  <button @click="$refs.fileInput.click()" type="button"
                     class="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition uppercase tracking-wider">
                     {{ (imgPreview || restForm.imagen_url) ? 'Cambiar imagen' : 'Seleccionar imagen' }}
                   </button>
@@ -381,7 +358,6 @@
               </div>
             </div>
           </div>
-
           <div v-if="restauranteEditando" class="flex items-center gap-2 pt-2">
             <input v-model="restForm.activo" type="checkbox" id="activo-check" class="accent-indigo-600 w-4 h-4" />
             <label for="activo-check" class="text-sm text-gray-700 cursor-pointer">Restaurante activo</label>
@@ -402,11 +378,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import SucursalBadge from '../components/SucursalBadge.vue'
-
-// ── Componentes de dashboard ───────────────────────────────────────────────────
+import SucursalBadge       from '../components/SucursalBadge.vue'
 import DashboardKpis       from '../components/administraccion/DashboardKpis.vue'
 import VentasPorHoraChart  from '../components/administraccion/Ventasxhorachart.vue'
 import MetodoPagoChart     from '../components/administraccion/MetodoPagoChart.vue'
@@ -414,15 +388,13 @@ import VentasSemanaChart   from '../components/administraccion/VentasSemanaChart
 import TopProductosChart   from '../components/administraccion/TopProductosChart.vue'
 import PedidosEstadoChart  from '../components/administraccion/PedidosEstadoChart.vue'
 import EmpleadosRolChart   from '../components/administraccion/EmpleadosRolChart.vue'
-import KpiVentas           from '../components/administraccion/KpiVentas.vue'
-import KpiProductos        from '../components/administraccion/KpiProductos.vue'
-import RoiChart            from '../components/RoiChart.vue'
 import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
 import GastoView           from './GastoView.vue'
 import MeserosManager      from '../components/administraccion/MeserosManager.vue'
 import { API_URL } from '@/config/api'
-const router  = useRouter()
+
+const router = useRouter()
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const mainTab   = ref('resumen')
@@ -438,10 +410,8 @@ const showModalRestaurante = ref(false)
 const empleadoEditando     = ref(null)
 const restauranteEditando  = ref(null)
 
-// Datos del dashboard
-const dashData          = reactive({ ventas_hoy: 0, ordenes_hoy: 0, ordenes_por_estado: [] })
-const ordenesCerradasHoy = ref([])  // ← para VentasPorHoraChart y MetodoPagoChart
-
+const dashData           = reactive({ ventas_hoy: 0, ordenes_hoy: 0, ordenes_por_estado: [] })
+const ordenesCerradasHoy = ref([])
 const loading = reactive({ general: true, empleados: false, restaurantes: false, guardando: false, sucursales: false })
 
 const empForm  = reactive({ nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', restaurante_id: null })
@@ -452,14 +422,11 @@ const sucursalesDueno = ref([])
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
 const mainTabs = [
-  { key:'resumen',      label:'📋 Resumen'        },
-  { key:'kpis',         label:'📊 KPIs Ventas'    },
-  { key:'productos',    label:'📦 KPIs Productos' },
-  { key:'roi',          label:'📈 ROI'             },
-  { key:'ingredientes', label:'🧄 Ingredientes'    },
-  { key:'anuncios',     label:'📢 Marquesina'      },
-  { key:'meseros',      label:'👥 Meseros'         },
-  { key:'gastos',       label:'🧾 Gastos'          },
+  { key:'resumen',      label:'📋 Resumen'      },
+  { key:'meseros',      label:'👥 Meseros'       },
+  { key:'ingredientes', label:'🧄 Ingredientes'  },
+  { key:'anuncios',     label:'📢 Marquesina'    },
+  { key:'gastos',       label:'🧾 Gastos'        },
 ]
 
 const crudTabs = computed(() => [
@@ -509,49 +476,33 @@ const loadData = async () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   if (!token) { router.push('/'); return }
   loading.general = true
-
   try {
     const today = new Date().toISOString().split('T')[0]
     const [uRes, rRes, dRes, cRes] = await Promise.all([
       fetch(`${API_URL}/me`,                  { headers: getHeaders() }),
       fetch(`${API_URL}/restaurantes`,        { headers: getHeaders() }),
       fetch(`${API_URL}/reportes/dashboard`,  { headers: getHeaders() }),
-      // Órdenes cerradas de hoy para gráficas de hora y método de pago
       fetch(`${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }),
     ])
-
     if (uRes.status === 401) { localStorage.removeItem('token'); router.push('/'); return }
-
     const [uData, rData, dData, cData] = await Promise.all([uRes.json(), rRes.json(), dRes.json(), cRes.json()])
-
     if (uData.success) currentUser.value = uData.data || uData
     if (rData.success) restaurantes.value = rData.data?.restaurantes || []
     if (cData.success) ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
-
     if (dData.success) {
       dashData.ventas_hoy         = dData.data?.ventas_hoy         || 0
       dashData.ordenes_por_estado = dData.data?.ordenes_por_estado || []
       dashData.ordenes_hoy        = dData.data?.ordenes_hoy
         ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
     }
-
-    // Fallback: si el dashboard no tiene datos de hoy, usar estadisticas del restaurante activo
-    // que vienen en /restaurantes (estadisticas.ordenes_hoy y estadisticas.ventas_hoy)
     if (rData.success) {
-      const raId     = currentUser.value?.restaurante_activo?.id
-                    ?? currentUser.value?.restaurante_activo
-                    ?? null
-      const restActivo = (rData.data?.restaurantes || [])
-        .find(r => r.id === raId)
+      const raId = currentUser.value?.restaurante_activo?.id ?? currentUser.value?.restaurante_activo ?? null
+      const restActivo = (rData.data?.restaurantes || []).find(r => r.id === raId)
       if (restActivo?.estadisticas) {
-        // Solo sobreescribir si el endpoint de dashboard devolvió 0
-        if (!dashData.ordenes_hoy && restActivo.estadisticas.ordenes_hoy)
-          dashData.ordenes_hoy = restActivo.estadisticas.ordenes_hoy
-        if (!dashData.ventas_hoy && restActivo.estadisticas.ventas_hoy)
-          dashData.ventas_hoy  = restActivo.estadisticas.ventas_hoy
+        if (!dashData.ordenes_hoy && restActivo.estadisticas.ordenes_hoy) dashData.ordenes_hoy = restActivo.estadisticas.ordenes_hoy
+        if (!dashData.ventas_hoy  && restActivo.estadisticas.ventas_hoy)  dashData.ventas_hoy  = restActivo.estadisticas.ventas_hoy
       }
     }
-
     if (currentUser.value?.propietario_id) {
       try {
         const eRes  = await fetch(`${API_URL}/propietarios/${currentUser.value.propietario_id}`, { headers: getHeaders() })
@@ -563,7 +514,6 @@ const loadData = async () => {
       } catch {}
       await cargarSucursalesDueno()
     }
-
   } catch(e) { console.error('Error loadData:', e) }
   finally { loading.general = false }
 }
@@ -571,43 +521,31 @@ const loadData = async () => {
 const cargarSucursalesDueno = async () => {
   loading.sucursales = true
   try {
-    const res = await fetch(`${API_URL}/user/owner-restaurants`, { headers: getHeaders() })
-    const r = await res.json()
-    if (r.success) {
-      sucursalesDueno.value = r.data
-    }
-  } catch (err) {
-    console.error('Error sucursales:', err)
-  } finally {
-    loading.sucursales = false
-  }
+    const res  = await fetch(`${API_URL}/user/owner-restaurants`, { headers: getHeaders() })
+    const r    = await res.json()
+    if (r.success) sucursalesDueno.value = r.data
+  } catch(err) { console.error('Error sucursales:', err) }
+  finally { loading.sucursales = false }
 }
 
 // ── Modales empleado ───────────────────────────────────────────────────────────
 const abrirModalEmpleado = () => {
   empleadoEditando.value = null; formError.value = ''
-  // Asegurar que guardamos solo el ID
   const rActivo = currentUser.value?.restaurante_activo
   const rId = (rActivo && typeof rActivo === 'object') ? Number(rActivo.id) : (rActivo ? Number(rActivo) : null)
-  
-  Object.assign(empForm, { 
-    nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', 
-    restaurante_activo: rId 
-  })
+  Object.assign(empForm, { nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', restaurante_activo: rId })
   showModalEmpleado.value = true
 }
 const editarEmpleado = (emp) => {
   empleadoEditando.value = emp; formError.value = ''
   const parts = (emp.name || '').split(' ')
   Object.assign(empForm, {
-    nombre:               parts[0] || '',
-    apellidos:            parts.slice(1).join(' ') || '',
-    email:                emp.email    || '',
-    usuario:              emp.username || '',
-    password:             '',
-    password_confirmation:'',
-    rol:                  getRolId(emp),
-    restaurante_id:       (emp.restaurante_activo && typeof emp.restaurante_activo === 'object') ? Number(emp.restaurante_activo.id) : (emp.restaurante_activo ? Number(emp.restaurante_activo) : null)
+    nombre: parts[0] || '', apellidos: parts.slice(1).join(' ') || '',
+    email: emp.email || '', usuario: emp.username || '',
+    password: '', password_confirmation: '',
+    rol: getRolId(emp),
+    restaurante_id: (emp.restaurante_activo && typeof emp.restaurante_activo === 'object')
+      ? Number(emp.restaurante_activo.id) : (emp.restaurante_activo ? Number(emp.restaurante_activo) : null)
   })
   showModalEmpleado.value = true
 }
@@ -615,7 +553,6 @@ const cerrarModalEmpleado = () => {
   showModalEmpleado.value = false; empleadoEditando.value = null
   formError.value = ''; empForm.password = ''; empForm.password_confirmation = ''
 }
-
 const guardarEmpleado = async () => {
   formError.value = ''
   if (!empForm.nombre || !empForm.email || !empForm.usuario) { formError.value='Nombre, correo y usuario son obligatorios'; return }
@@ -628,11 +565,10 @@ const guardarEmpleado = async () => {
     const url    = isEdit ? `${API_URL}/users/${empleadoEditando.value.id}` : `${API_URL}/register-empleado`
     const method = isEdit ? 'PUT' : 'POST'
     const body   = {
-      name:           `${empForm.nombre} ${empForm.apellidos}`.trim(),
-      email:          empForm.email,
-      username:       empForm.usuario,
+      name: `${empForm.nombre} ${empForm.apellidos}`.trim(),
+      email: empForm.email, username: empForm.usuario,
       propietario_id: currentUser.value?.propietario_id,
-      rol_id:         empForm.rol,
+      rol_id: empForm.rol,
       restaurante_id: empForm.restaurante_id ? Number(empForm.restaurante_id) : null,
       restaurante_activo: empForm.restaurante_id ? Number(empForm.restaurante_id) : null,
     }
@@ -640,23 +576,15 @@ const guardarEmpleado = async () => {
     const res = await fetch(url, { method, headers:getHeaders(), body:JSON.stringify(body) })
     const r   = await res.json()
     if (res.ok && r.success) {
-      if (isEdit) { 
-        const idx=empleados.value.findIndex(e=>e.id===empleadoEditando.value.id); 
-        if(idx!==-1) {
-            // Actualizar el objeto completo en la lista
-            empleados.value[idx] = { ...empleados.value[idx], ...(r.data || {}) }
-        } 
-      }
+      if (isEdit) { const idx=empleados.value.findIndex(e=>e.id===empleadoEditando.value.id); if(idx!==-1) empleados.value[idx]={...empleados.value[idx],...(r.data||{})} }
       else empleados.value.push(r.data || r.user)
       showToast(isEdit ? 'Empleado actualizado' : 'Empleado creado', 'success')
       cerrarModalEmpleado()
-      // Opcionalmente recargar todo para asegurar consistencia
       loadData()
     } else { formError.value = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar' }
   } catch { formError.value = 'Error de conexión' }
   finally { loading.guardando = false }
 }
-
 const eliminarEmpleado = async (id) => {
   if (!confirm('¿Eliminar empleado?')) return
   try {
@@ -676,45 +604,30 @@ const abrirModalRestaurante = () => {
 }
 const editarRestaurante = (rest) => {
   restauranteEditando.value = rest; formError.value = ''
-  Object.assign(restForm, { 
-    nombre:rest.nombre||'', 
-    telefono:rest.telefono||'', 
-    calle:rest.calle||'', 
-    ciudad:rest.ciudad||'', 
-    estado:rest.estado||'', 
-    activo:rest.es_activo!==false,
-    imagen: null,
-    imagen_url: rest.imagen_url,
-    eliminar_imagen: false
+  Object.assign(restForm, {
+    nombre:rest.nombre||'', telefono:rest.telefono||'', calle:rest.calle||'',
+    ciudad:rest.ciudad||'', estado:rest.estado||'', activo:rest.es_activo!==false,
+    imagen: null, imagen_url: rest.imagen_url, eliminar_imagen: false
   })
   imgPreview.value = null
   showModalRestaurante.value = true
 }
-const cerrarModalRestaurante = () => { 
-  showModalRestaurante.value=false; 
-  restauranteEditando.value=null; 
-  formError.value=''; 
-  imgPreview.value = null
+const cerrarModalRestaurante = () => {
+  showModalRestaurante.value=false; restauranteEditando.value=null
+  formError.value=''; imgPreview.value = null
 }
-
 const onFileChange = (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-  restForm.imagen = file
-  restForm.eliminar_imagen = false
+  const file = e.target.files[0]; if (!file) return
+  restForm.imagen = file; restForm.eliminar_imagen = false
   const reader = new FileReader()
   reader.onload = (e) => imgPreview.value = e.target.result
   reader.readAsDataURL(file)
 }
-
 const quitarImagen = () => {
-  restForm.imagen = null
-  restForm.imagen_url = null
-  restForm.eliminar_imagen = true
-  imgPreview.value = null
+  restForm.imagen = null; restForm.imagen_url = null
+  restForm.eliminar_imagen = true; imgPreview.value = null
   if (fileInput.value) fileInput.value.value = ''
 }
-
 const guardarRestaurante = async () => {
   formError.value = ''
   if (!restForm.nombre) { formError.value='El nombre es obligatorio'; return }
@@ -722,7 +635,6 @@ const guardarRestaurante = async () => {
   try {
     const isEdit = !!restauranteEditando.value
     const url    = isEdit ? `${API_URL}/restaurantes/${restauranteEditando.value.id}` : `${API_URL}/restaurantes`
-    
     const formData = new FormData()
     formData.append('nombre', restForm.nombre)
     formData.append('telefono', restForm.telefono || '')
@@ -730,16 +642,10 @@ const guardarRestaurante = async () => {
     formData.append('ciudad', restForm.ciudad || '')
     formData.append('estado', restForm.estado || '')
     formData.append('activo', restForm.activo ? '1' : '0')
-    
-    if (isEdit) {
-      formData.append('_method', 'PUT')
-    }
+    if (isEdit) formData.append('_method', 'PUT')
     if (restForm.imagen) formData.append('imagen', restForm.imagen)
     if (restForm.eliminar_imagen) formData.append('eliminar_imagen', '1')
-
-    const headers = { ...getHeaders() }
-    delete headers['Content-Type']
-
+    const headers = { ...getHeaders() }; delete headers['Content-Type']
     const res = await fetch(url, { method: 'POST', headers, body: formData })
     const r   = await res.json()
     if (res.ok && r.success) {
@@ -751,13 +657,11 @@ const guardarRestaurante = async () => {
   } catch { formError.value = 'Error de conexión' }
   finally { loading.guardando = false }
 }
-
 const getImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http')) return path
   return `${API_URL}/../storage/${path}`
 }
-
 const eliminarRestaurante = async (id) => {
   if (!confirm('¿Eliminar restaurante?')) return
   try {
