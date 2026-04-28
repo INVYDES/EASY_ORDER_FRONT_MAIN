@@ -137,15 +137,16 @@ const errorMessage = ref('')
 
 const redirectByRole = (rol: string) => {
   const routes: Record<string, string> = {
-    ADMIN:       '/panel/admin',
-    PROPIETARIO: '/panel/admin',
+    ADMIN:       '/panel/Gestion',
+    PROPIETARIO: '/panel/Gestion',
     MESERO:      '/panel/mesero',
     COCINA:      '/panel/cocina',
     CAJA:        '/panel/caja',
     BARRA:       '/panel/barra',
     CLIENTE:     '/panel/cliente',
+    MENU:        '/menu',
   }
-  router.replace(routes[rol] ?? '/panel/admin')
+  router.replace(routes[rol] ?? '/panel/Gestion')
 }
 
 const handleSubmit = async () => {
