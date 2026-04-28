@@ -134,18 +134,75 @@
           class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
           Cancelar
         </button>
-        <button @click="processPayment" :disabled="!canPay"
+        <button @click="processPayment" :disabled="!canPay || processing"
           class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
-          Confirmar pago{{ propina > 0 ? ` ($${formatMoney(totalConPropina)})` : '' }}
+          <span v-if="processing">Procesando...</span>
+          <span v-else>Confirmar pago{{ propina > 0 ? ` ($${formatMoney(totalConPropina)})` : '' }}</span>
         </button>
       </div>
 
     </div>
+
+    <!-- ══ TICKET PARA PDF / IMPRESIÓN (OCULTO) ══ -->
+    <div id="ticket-printable" class="hidden">
+      <div style="width: 80mm; padding: 5mm; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff;">
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5mm; margin-bottom: 5mm;">
+          <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">{{ nombreSucursal }}</h2>
+          <p style="margin: 5px 0; font-size: 12px;">Comprobante de Pago</p>
+          <p style="margin: 0; font-size: 11px;">{{ new Date().toLocaleString('es-MX') }}</p>
+        </div>
+
+        <div style="font-size: 12px; margin-bottom: 5mm;">
+          <p style="margin: 2px 0;"><strong>Mesa:</strong> {{ ticket.mesa || 'N/A' }}</p>
+          <p style="margin: 2px 0;"><strong>Atendió:</strong> {{ userName }}</p>
+        </div>
+
+        <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 5mm;">
+          <thead>
+            <tr style="border-bottom: 1px dashed #000;">
+              <th style="text-align: left; padding: 2mm 0;">CANT</th>
+              <th style="text-align: left; padding: 2mm 0;">PRODUCTO</th>
+              <th style="text-align: right; padding: 2mm 0;">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in normalizedItems" :key="item.id">
+              <td style="padding: 1mm 0;">{{ item.cantidad }}</td>
+              <td style="padding: 1mm 0;">{{ item.nombre }}</td>
+              <td style="text-align: right; padding: 1mm 0;">${{ formatMoney(item.subtotal) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="border-top: 1px dashed #000; padding-top: 3mm; font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
+            <span>Consumo Real:</span>
+            <span>${{ formatMoney(total) }}</span>
+          </div>
+          <div v-if="propina > 0" style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
+            <span>Propina:</span>
+            <span>${{ formatMoney(propina) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 2mm; border-top: 1px solid #000; padding-top: 2mm;">
+            <span>TOTAL:</span>
+            <span>${{ formatMoney(totalConPropina) }}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 8mm; text-align: center; border-top: 1px dashed #000; padding-top: 5mm;">
+          <p style="margin: 0; font-size: 10px; color: #444;">Folio:</p>
+          <p style="margin: 2px 0; font-size: 12px; font-weight: bold; letter-spacing: 1px;">{{ uniqueIdentifier }}</p>
+          <p style="margin-top: 5mm; font-size: 11px; font-style: italic;">¡Gracias por su visita!</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { API_URL } from '@/config/api'
 
 const props = defineProps({
   ticket: { type: Object, required: true },
@@ -158,6 +215,72 @@ const propina        = ref(0)
 const folio          = ref('')
 const errorMsg       = ref('')
 const fieldError     = ref('')
+const processing     = ref(false)
+const nombreSucursal = ref('RESTAURANTE E-ORDER')
+const detectedRestId = ref(null)
+
+// --- Datos del Usuario ---
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const userName = computed(() => user.name || 'Personal')
+
+// BUSCADOR DE ID INFALIBLE
+const restauranteId = computed(() => {
+  // 1. Prioridad: Lo que detectamos por API o por productos
+  if (detectedRestId.value) return detectedRestId.value
+  
+  // 2. Revisar si algún producto trae el restaurante_id (Muy común)
+  const items = props.ticket.detalles || props.ticket.items || []
+  const itemWithId = items.find(i => i.restaurante_id || (i.producto && i.producto.restaurante_id))
+  if (itemWithId) {
+    const id = itemWithId.restaurante_id || itemWithId.producto.restaurante_id
+    if (id) return id
+  }
+
+  // 3. Revisar en la orden directamente
+  const rid = props.ticket.restaurante_id || props.ticket.id_restaurante
+  if (rid && rid !== 'undefined' && rid !== 'null') return rid
+
+  return ''
+})
+
+// Identificador Único: restaurante_id + orden_id
+const uniqueIdentifier = computed(() => `${restauranteId.value}${props.ticket.id}`)
+
+// --- SINCRONIZACIÓN PROFUNDA ---
+const syncIdentity = async () => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+
+  try {
+    // A) Preguntar a la API por la orden completa (Para asegurar el ID)
+    const resO = await fetch(`${API_URL}/ordenes/${props.ticket.id}`, { headers })
+    if (resO.ok) {
+      const dataO = await resO.json()
+      const realOrder = dataO.data || dataO
+      if (realOrder.restaurante_id) {
+        detectedRestId.value = realOrder.restaurante_id
+      }
+    }
+
+    await nextTick()
+
+    // B) Con el ID, pedir el nombre
+    const rid = restauranteId.value
+    if (rid) {
+      const resR = await fetch(`${API_URL}/restaurantes/${rid}`, { headers })
+      if (resR.ok) {
+        const dataR = await resR.json()
+        const nombre = dataR.data?.nombre || dataR.nombre
+        if (nombre) {
+          nombreSucursal.value = nombre.toUpperCase()
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error en syncIdentity:', err)
+  }
+}
 
 const metodos = [
   { value: 'efectivo',      label: 'Efectivo',      icon: '💵' },
@@ -168,19 +291,29 @@ const metodos = [
 const total           = computed(() => Number(props.ticket.total || 0))
 const totalConPropina = computed(() => total.value + Number(propina.value || 0))
 
-// ✅ Cambio se calcula sobre totalConPropina, no sobre total
+const normalizedItems = computed(() => {
+  const items = props.ticket.detalles || props.ticket.items || []
+  return items.map(item => {
+    const cantidad = item.cantidad ?? item.quantity ?? 0
+    const precio = item.precio_unitario ?? item.price ?? 0
+    return {
+      id: item.id,
+      cantidad,
+      nombre: item.producto?.nombre ?? item.producto_nombre ?? item.name ?? item.nombre ?? 'Producto',
+      subtotal: item.subtotal ?? (cantidad * precio)
+    }
+  })
+})
+
 const cambio = computed(() => {
   if (paymentMethod.value !== 'efectivo') return 0
   return Math.max(0, amountReceived.value - totalConPropina.value)
 })
 
-// ✅ canPay también valida contra totalConPropina y requiere folio para tarjeta/transferencia
 const canPay = computed(() => {
-  // Validar monto recibido para efectivo
   if (paymentMethod.value === 'efectivo') {
     if (amountReceived.value < totalConPropina.value) return false
   }
-  // Validar folio/referencia obligatorio para tarjeta y transferencia
   if (['tarjeta', 'transferencia'].includes(paymentMethod.value)) {
     if (!folio.value || folio.value.trim() === '') return false
   }
@@ -189,25 +322,49 @@ const canPay = computed(() => {
 
 const formatMoney = (v) => v === undefined || v === null ? '0.00' : Number(v).toFixed(2)
 
-const processPayment = () => {
-  errorMsg.value = ''
-  fieldError.value = ''
+const imprimirTicket = () => {
+  const el = document.getElementById('ticket-printable')
+  if (!el) return
+  
+  const win = window.open('', '_blank', 'width=400,height=600')
+  win.document.write(`
+    <html>
+      <head>
+        <title>Ticket_${uniqueIdentifier.value}</title>
+        <style>
+          @page { margin: 0; }
+          body { margin: 0; padding: 0; }
+        </style>
+      </head>
+      <body>
+        ${el.innerHTML}
+      </body>
+    </html>
+  `)
+  win.document.close()
+  win.focus()
+  setTimeout(() => {
+    win.print()
+    win.close()
+  }, 500)
+}
 
-  // Validar monto para efectivo
+const processPayment = async () => {
+  if (processing.value) return
+  errorMsg.value = ''
+  
   if (paymentMethod.value === 'efectivo' && amountReceived.value < totalConPropina.value) {
-    errorMsg.value = `El monto recibido ($${formatMoney(amountReceived.value)}) es menor al total con propina ($${formatMoney(totalConPropina.value)})`
+    errorMsg.value = `Monto insuficiente`
     return
   }
 
-  // Validar folio/referencia obligatorio para tarjeta y transferencia
-  if (['tarjeta', 'transferencia'].includes(paymentMethod.value)) {
-    if (!folio.value || folio.value.trim() === '') {
-      fieldError.value = paymentMethod.value === 'tarjeta'
-        ? 'El número de referencia del voucher es obligatorio'
-        : 'La referencia de la transferencia es obligatoria'
-      return
-    }
-  }
+  processing.value = true
+  
+  // ASEGURAR IDENTIDAD JUSTO ANTES DE IMPRIMIR
+  await syncIdentity()
+  await nextTick()
+
+  imprimirTicket()
 
   emit('payment-processed', {
     metodo_pago:  paymentMethod.value,
@@ -217,5 +374,11 @@ const processPayment = () => {
     cambio:       cambio.value,
     folio:        folio.value.trim() || null,
   })
+  
+  processing.value = false
 }
+
+onMounted(() => {
+  syncIdentity()
+})
 </script>

@@ -139,7 +139,7 @@ const routes = [
       // Redirección por defecto al entrar a /panel
       {
         path: "",
-        redirect: "/panel/admin"
+        redirect: "/panel/Gestion"
       }
 
     ]
@@ -178,11 +178,11 @@ const defaultRouteForRole = (role?: string): string => {
     CAJA:        "/panel/caja",
     BARRA:       "/panel/barra",
     MENU:        "/menu",
-    ADMIN:       "/panel/admin",
-    PROPIETARIO: "/panel/admin",
+    ADMIN:       "/panel/Gestion",
+    PROPIETARIO: "/panel/Gestion",
     CLIENTE:     "/panel/cliente",   // ← directo al menú
   };
-  return map[role ?? ""] ?? "/panel/admin";
+  return map[role ?? ""] ?? "/panel/Gestion";
 };
 
 const PUBLIC_PATHS = [
@@ -225,9 +225,14 @@ router.beforeEach((to, _from, next) => {
   // 4. Verificar rol
   if (to.meta.roles) {
     const allowed = to.meta.roles as string[];
-    if (!role || !allowed.includes(role)) {
+    // Obtener todos los nombres de roles del usuario
+    const userRoles = user?.roles?.map((r: any) => r.nombre) || [];
+    
+    // Verificar si alguno de los roles del usuario está permitido
+    const hasPermission = userRoles.some((r: string) => allowed.includes(r));
+
+    if (!hasPermission) {
       const fallback = defaultRouteForRole(role);
-      // Solo redirigir si es diferente a la ruta actual
       if (fallback !== to.path) return next(fallback);
     }
   }

@@ -48,7 +48,6 @@ import KpiVentas       from '../components/administraccion/KpiVentas.vue'
 import KpiProductos    from '../components/administraccion/KpiProductos.vue'
 import RoiChart        from '../components/RoiChart.vue'
 import MetricasMeseros from '../components/administraccion/MetricasMeseros.vue'
-
 import { API_URL } from '@/config/api'
 
 const activeTab = ref('kpis')

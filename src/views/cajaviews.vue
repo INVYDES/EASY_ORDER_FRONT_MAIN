@@ -253,10 +253,18 @@ const loadOrders = async () => {
     const results = await Promise.all(fetches)
     const jsonResults = await Promise.all(results.map(r => r.json()))
     const map = new Map()
+    
+    // Obtener el ID del restaurante actual para sellar las órdenes
+    const rid = restauranteActivo.value?.id || localStorage.getItem('restaurante_id_activo')
+
     jsonResults.forEach(r => {
       if (r.success) {
         const items = Array.isArray(r.data) ? r.data : (r.data?.data || [])
-        items.forEach(o => map.set(o.id, o))
+        items.forEach(o => {
+          // SELLO: Inyectamos el ID del restaurante si no lo tiene
+          if (!o.restaurante_id && rid) o.restaurante_id = rid
+          map.set(o.id, o)
+        })
       }
     })
     orders.value = [...map.values()].sort((a, b) => b.id - a.id)

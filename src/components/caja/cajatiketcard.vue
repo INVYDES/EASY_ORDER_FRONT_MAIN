@@ -202,6 +202,7 @@ const normalizeItem = (item) => {
     id: item.id,
     cantidad,
     nombre:
+      item.producto?.nombre ??
       item.producto_nombre ??
       item.name ??
       item.nombre ??

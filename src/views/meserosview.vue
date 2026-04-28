@@ -64,72 +64,86 @@
           </button>
         </div>
 
-        <div v-if="loading" class="flex flex-col items-center justify-center py-32 gap-3">
-          <div class="w-8 h-8 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p class="text-slate-400 text-sm">Actualizando órdenes...</p>
+        <!-- ══ SECCIÓN DE COBRO PARA MESEROS ══ -->
+        <div v-if="tabActivo === 'cobrar'" class="animate-fade-in space-y-4">
+           <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 min-h-[500px]">
+              <CajaTicketGrid 
+                type="open" 
+                :orders="ordenesParaCobrar" 
+                @order-paid="handleOrderPaid" 
+                @refresh="cargarOrdenes" 
+              />
+           </div>
         </div>
 
-        <div v-else-if="subOrdenesFiltradas.length === 0" class="text-center py-24 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
-          <span class="text-6xl block mb-4 opacity-20">{{ tabActual?.icon }}</span>
-          <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Sin órdenes en {{ tabActual?.label }}</p>
-        </div>
+        <div v-else>
+          <div v-if="loading" class="flex flex-col items-center justify-center py-32 gap-3">
+            <div class="w-8 h-8 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
+            <p class="text-slate-400 text-sm">Actualizando órdenes...</p>
+          </div>
 
-        <!-- Grid de Tarjetas -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-in">
-          <div v-for="sub in subOrdenesFiltradas" :key="sub.uid"
-            class="bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
-            :class="borderColor(sub.estado_estacion)">
+          <div v-else-if="subOrdenesFiltradas.length === 0" class="text-center py-24 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <span class="text-6xl block mb-4 opacity-20">{{ tabActual?.icon }}</span>
+            <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Sin órdenes en {{ tabActual?.label }}</p>
+          </div>
 
-            <!-- Header tarjeta -->
-            <div class="px-5 py-4 flex items-center justify-between" :class="bgEstado(sub.estado_estacion)">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center text-xl shadow-sm group-hover:rotate-12 transition-transform">
-                  {{ iconEstado(sub.estado_estacion) }}
-                </div>
-                <div>
-                  <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">Orden</p>
-                  <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
-                </div>
-              </div>
-              <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
-                {{ ['ABIERTA', 'ENTREGADA', 'CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
-              </span>
-            </div>
+          <!-- Grid de Tarjetas -->
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-in">
+            <div v-for="sub in subOrdenesFiltradas" :key="sub.uid"
+              class="bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
+              :class="borderColor(sub.estado_estacion)">
 
-            <!-- Contenido -->
-            <div class="px-5 py-5 flex-1 space-y-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="text-lg">👤</span>
-                  <span class="font-black text-indigo-700 truncate text-sm">{{ getNombreMostrable(sub) }}</span>
+              <!-- Header tarjeta -->
+              <div class="px-5 py-4 flex items-center justify-between" :class="bgEstado(sub.estado_estacion)">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center text-xl shadow-sm group-hover:rotate-12 transition-transform">
+                    {{ iconEstado(sub.estado_estacion) }}
+                  </div>
+                  <div>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">Orden</p>
+                    <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
+                  </div>
                 </div>
-                <div v-if="sub.mesa" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black">
-                  MESA {{ sub.mesa }}
-                </div>
+                <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
+                  {{ ['ABIERTA', 'ENTREGADA', 'CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
+                </span>
               </div>
 
-              <!-- Lista de productos en la orden -->
-              <div class="space-y-1.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                <div v-for="detalle in sub.detalles_estacion" :key="detalle.id"
-                  class="flex items-center justify-between text-xs font-bold text-slate-700">
-                  <span class="truncate flex-1">{{ detalle.cantidad }}× {{ (detalle.producto_nombre || detalle.producto?.nombre || 'Producto').toUpperCase() }}</span>
-                  <span v-if="detalle.estado_preparacion === 'LISTO'" class="text-[9px] font-black text-white bg-emerald-500 px-2 py-0.5 rounded-lg ml-2 shadow-sm">LISTO</span>
-                  <span v-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 ml-2">●</span>
+              <!-- Contenido -->
+              <div class="px-5 py-5 flex-1 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-lg">👤</span>
+                    <span class="font-black text-indigo-700 truncate text-sm">{{ getNombreMostrable(sub) }}</span>
+                  </div>
+                  <div v-if="sub.mesa" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black">
+                    MESA {{ sub.mesa }}
+                  </div>
+                </div>
+
+                <!-- Lista de productos en la orden -->
+                <div class="space-y-1.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                  <div v-for="detalle in sub.detalles_estacion" :key="detalle.id"
+                    class="flex items-center justify-between text-xs font-bold text-slate-700">
+                    <span class="truncate flex-1">{{ detalle.cantidad }}× {{ (detalle.producto_nombre || detalle.producto?.nombre || 'Producto').toUpperCase() }}</span>
+                    <span v-if="detalle.estado_preparacion === 'LISTO'" class="text-[9px] font-black text-white bg-emerald-500 px-2 py-0.5 rounded-lg ml-2 shadow-sm">LISTO</span>
+                    <span v-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 ml-2">●</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Footer con acciones -->
-            <div class="px-5 pb-5">
-              <button v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
-                @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
-                :disabled="cambiando === sub.uid"
-                class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
-                :class="btnEstado(sub.estado_estacion)">
-                {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
-              </button>
-              <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
-                {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : (sub.estado_estacion === 'CERRADA' ? '🔒 Archivada' : 'En proceso') }}
+              <!-- Footer con acciones -->
+              <div class="px-5 pb-5">
+                <button v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
+                  @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
+                  :disabled="cambiando === sub.uid"
+                  class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
+                  :class="btnEstado(sub.estado_estacion)">
+                  {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
+                </button>
+                <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
+                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : (sub.estado_estacion === 'CERRADA' ? '🔒 Archivada' : 'En proceso') }}
+                </div>
               </div>
             </div>
           </div>
@@ -324,6 +338,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
+import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
 
 // --- Inicialización de Estados ---
 const vistaActual = ref('ordenes')
@@ -355,7 +370,6 @@ const esMesero = computed(() => {
 })
 
 // --- Configuración Catálogo ---
-const BEBIDA_CATEGORIA_IDS = [7, 8]
 const BEBIDA_KEYWORDS = ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'bebida', 'cerveza', 'agua', 'trago', 'coctel', 'limonada', 'naranjada']
 
 const tabs = [
@@ -365,6 +379,7 @@ const tabs = [
   { key: 'EN_PREPARACION', label: 'En preparación', icon: '🔥', color: '#f97316' },
   { key: 'LISTA', label: 'Listas', icon: '✅', color: '#10b981' },
   { key: 'ENTREGADA', label: 'Entregadas', icon: '🏁', color: '#8b5cf6' },
+  { key: 'cobrar', label: 'Cobrar', icon: '💵', color: '#10b981' },
 ]
 
 // --- Funciones de Lógica ---
@@ -388,12 +403,10 @@ const calcularEstadoEstacion = (detalles, estadoOrden) => {
   if (estadoOrden === 'ABIERTA') return 'ABIERTA'
   if (estadoOrden === 'CERRADA' || estadoOrden === 'PAGADA') return 'CERRADA'
   if (!detalles || detalles.length === 0) return 'POR_PREPARAR'
-  
   const total = detalles.length
   const entregados = detalles.filter(d => d.estado_preparacion === 'ENTREGADO').length
   const listos = detalles.filter(d => d.estado_preparacion === 'LISTO').length
   const enPrep = detalles.filter(d => d.estado_preparacion === 'EN_PREPARACION').length
-
   if (entregados === total) return 'ENTREGADA'
   if (listos > 0) return 'LISTA'
   if (enPrep > 0) return 'EN_PREPARACION'
@@ -405,11 +418,9 @@ const subOrdenes = computed(() => {
   if (!ordenes.value) return list
   ordenes.value.forEach(o => {
     const todos = o.detalles || []
-    
     const barra = todos.filter(d => esBebida(d))
     const postres = todos.filter(d => esPostre(d) && !esBebida(d))
     const cocina = todos.filter(d => !esBebida(d) && !esPostre(d))
-
     if (cocina.length > 0) list.push({ ...o, uid: `${o.id}-COCINA`, detalles_estacion: cocina, estado_estacion: calcularEstadoEstacion(cocina, o.estado) })
     if (barra.length > 0) list.push({ ...o, uid: `${o.id}-BARRA`, detalles_estacion: barra, estado_estacion: calcularEstadoEstacion(barra, o.estado) })
     if (postres.length > 0) list.push({ ...o, uid: `${o.id}-POSTRES`, detalles_estacion: postres, estado_estacion: calcularEstadoEstacion(postres, o.estado) })
@@ -418,6 +429,7 @@ const subOrdenes = computed(() => {
 })
 
 const subOrdenesFiltradas = computed(() => {
+  if (tabActivo.value === 'cobrar') return []
   if (['todas', 'ABIERTA', 'ENTREGADA'].includes(tabActivo.value)) {
     return ordenes.value
       .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
@@ -426,7 +438,12 @@ const subOrdenesFiltradas = computed(() => {
   return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
 })
 
+const ordenesParaCobrar = computed(() => {
+  return ordenes.value.filter(o => o.estado === 'ENTREGADA' || o.estado_estacion === 'ENTREGADA')
+})
+
 const contarOrdenes = (key) => {
+  if (key === 'cobrar') return ordenesParaCobrar.value.length
   if (key === 'todas') return ordenes.value?.length || 0
   if (['ABIERTA', 'ENTREGADA'].includes(key)) return ordenes.value?.filter(o => o.estado === key).length || 0
   return subOrdenes.value?.filter(s => s.estado_estacion === key).length || 0
@@ -470,7 +487,6 @@ const cargarOrdenes = async () => {
     const states = ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA', 'ENTREGADA']
     const endpoints = states.map(s => `${API_URL}/meseros/mis-ordenes?estado=${s}&per_page=100`)
     endpoints.push(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
-    
     const results = await Promise.all(endpoints.map(url => fetch(url, { headers: getHeaders() }).then(r => r.ok ? r.json() : { success: false })))
     const map = new Map()
     results.forEach(res => { if (res.success && res.data) res.data.forEach(o => map.set(o.id, o)) })
@@ -483,9 +499,7 @@ const cargarMisMesas = async () => {
   try {
     const res = await fetch(`${API_URL}/meseros/mis-mesas`, { headers: getHeaders() })
     const data = await res.json()
-    if (data.success) {
-      mesasAsignadas.value = data.data
-    }
+    if (data.success) mesasAsignadas.value = data.data
   } catch (err) { console.error('Error mesas:', err) }
 }
 
@@ -533,6 +547,12 @@ const crearOrden = async () => {
       carrito.value = []; nuevaOrden.value.mesa = null; vistaActual.value = 'ordenes'; await cargarOrdenes(); showToast('Orden confirmada 🚀', 'success')
     } else showToast(data.message || 'Error al crear', 'error')
   } catch { showToast('Error de conexión', 'error') } finally { creando.value = false }
+}
+
+const handleOrderPaid = async (paymentData) => {
+  showToast(`Orden ${paymentData.folio} cobrada con éxito ✅`, 'success')
+  await cargarOrdenes()
+  tabActivo.value = 'todas'
 }
 
 // --- Carrito de Compras ---
