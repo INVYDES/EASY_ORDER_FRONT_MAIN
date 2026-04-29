@@ -37,8 +37,12 @@
         :class="{ 'justify-center': isCollapsed && !isMobile }"
       >
         <div class="relative">
-          <div class="w-12 h-12 bg-[#7c3aed] rounded-full flex items-center justify-center text-white font-bold text-lg">
-            {{ userInitials }}
+          <div 
+            class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden border-2 border-gray-100 shadow-sm"
+            :class="!activeRestImage ? 'bg-[#7c3aed]' : 'bg-white'"
+          >
+            <img v-if="activeRestImage" :src="activeRestImage" class="w-full h-full object-cover" />
+            <span v-else>{{ userInitials }}</span>
           </div>
           <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#10b981] border-2 border-white rounded-full"></div>
         </div>
@@ -48,7 +52,7 @@
             <span class="text-amber-500">👑</span> {{ userRoleLabel }}
           </p>
         </div>
-        <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+        <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 text-[10px]" :class="{'rotate-180': showUserMenu}"></i>
       </div>
 
       <!-- Menú Flotante Perfil -->
@@ -67,15 +71,7 @@
     <!-- Navegación -->
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-4">
 
-      <!-- Dashboard -->
-      <div>
-        <RouterLink to="/panel/panelinicial" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/panelinicial', 'justify-center': isCollapsed && !isMobile }">
-          <i class="fa-solid fa-chart-line text-lg w-6"></i>
-          <span v-show="!isCollapsed || isMobile" class="text-sm">Dashboard</span>
-        </RouterLink>
-      </div>
-
-      <!-- SELECTOR DE SUCURSAL (Añadido sin romper distribución) -->
+      <!-- SELECTOR DE SUCURSAL -->
       <div v-if="restaurantes && restaurantes.length > 1">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-1">
           <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sucursal</p>
@@ -96,15 +92,11 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-show="hasPermission('VER_CLIENTE')" to="/panel/cliente" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cliente', 'justify-center': isCollapsed && !isMobile }">
-            <i class="fa-solid fa-user text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Cliente</span>
-          </RouterLink>
-          <RouterLink v-show="hasPermission('VER_MESERO')" to="/panel/mesero" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-users text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Mesero</span>
           </RouterLink>
-          <RouterLink v-show="hasPermission('VER_CAJA')" to="/panel/caja" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/caja', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink v-if="hasPermission('VER_CAJA')" to="/panel/caja" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/caja', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cash-register text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Caja</span>
           </RouterLink>
@@ -117,15 +109,15 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-show="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-utensils text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Cocina</span>
           </RouterLink>
-          <RouterLink v-show="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
           </RouterLink>
-          <RouterLink to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cake-candles text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
           </RouterLink>
@@ -133,20 +125,20 @@
       </div>
 
       <!-- SECCIÓN: ADMINISTRACIÓN -->
-      <div>
+      <div v-if="isAdminOrOwner">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Administración</p>
         </div>
         <div class="space-y-1">
-          <RouterLink to="/panel/admin" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/admin', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink to="/panel/Gestion" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/Gestion', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-gear text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Gestión</span>
           </RouterLink>
-          <RouterLink to="/panel/analisis" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/analisis', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink to="/panel/analisis" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/analisis', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-magnifying-glass-chart text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Métricas</span>
           </RouterLink>
-          <RouterLink to="/panel/productos" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/productos', 'justify-center': isCollapsed && !isMobile }">
+          <RouterLink to="/panel/productos" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/productos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-box text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
           </RouterLink>
@@ -191,20 +183,58 @@ const userRoleLabel = computed(() => {
   return map[role] || role || 'Usuario'
 })
 
+const activeRestImage = computed(() => {
+  const rest = props.restaurantes.find(r => r.id === props.restauranteActivo)
+  if (!rest || !rest.imagen) return null
+  
+  if (rest.imagen.startsWith('http')) return rest.imagen
+  
+  // Limpiamos la URL para quitar /api y /index.php si existen
+  const baseUrl = API_URL.replace('/api', '').replace('/index.php', '')
+  return `${baseUrl}/storage/${rest.imagen}`
+})
+
 const activeRestName = computed(() => {
   return props.restaurantes.find(r => r.id === props.restauranteActivo)?.nombre || 'Seleccionar...'
 })
 
+// Verificar si es administrador o propietario
+const isAdminOrOwner = computed(() => {
+  if (!props.user?.roles) return false
+  return props.user.roles.some(r => {
+    const name = (r.nombre || '').toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
 // Métodos
 const hasPermission = (permission) => {
-  if (!props.user?.roles) return true
-  const role = props.user.roles[0]?.nombre
-  if (['PROPIETARIO', 'ADMIN'].includes(role)) return true
-  if (permission === 'VER_MESERO') return role === 'MESERO'
-  if (permission === 'VER_COCINA') return role === 'COCINA'
-  if (permission === 'VER_CAJA')   return role === 'CAJA'
-  if (permission === 'VER_BARRA')  return role === 'BARRA'
-  return true
+  // 1. Si es admin o propietario, tiene acceso total
+  if (isAdminOrOwner.value) return true
+  
+  // 2. Verificar en la lista de permisos del usuario
+  if (props.user?.permissions) {
+    const tienePermiso = props.user.permissions.some(p => 
+      (p.nombre === permission) || (p.slug === permission)
+    )
+    if (tienePermiso) return true
+  }
+  
+  // 3. Respaldo por nombre de rol
+  const roles = props.user?.roles?.map((r) => r.nombre) || []
+  
+  switch (permission) {
+    case 'VER_PANEL':   return true
+    case 'VER_MESERO':  return roles.includes('MESERO')
+    case 'VER_COCINA':  return roles.includes('COCINA')
+    case 'VER_BARRA':   return roles.includes('BARRA')
+    case 'VER_POSTRES': return roles.includes('POSTRES')
+    case 'VER_CAJA':    return roles.includes('CAJA')
+    default: return false
+  }
 }
 
 const navigate = (to) => {
@@ -273,4 +303,5 @@ onUnmounted(() => {
 nav::-webkit-scrollbar { width: 4px; }
 nav::-webkit-scrollbar-track { background: transparent; }
 nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+.router-link-active { background-color: #eef2ff; color: #4f46e5; font-weight: 600; }
 </style>

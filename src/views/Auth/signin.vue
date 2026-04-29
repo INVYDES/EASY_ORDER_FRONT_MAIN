@@ -4,85 +4,44 @@
     <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 px-6 py-12">
       <div class="w-full max-w-md">
 
-        <!-- Tabs -->
-        <div class="flex mb-8 bg-gray-200 p-1 rounded-xl">
-          <button 
-            @click="activeTab = 'admin'"
-            :class="[activeTab === 'admin' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']"
-            class="flex-1 py-2 text-sm font-medium rounded-lg transition-all"
-          >
-            Administración
-          </button>
-          <button 
-            @click="activeTab = 'empleado'"
-            :class="[activeTab === 'empleado' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']"
-            class="flex-1 py-2 text-sm font-medium rounded-lg transition-all"
-          >
-            Empleado
-          </button>
-          <button 
-            @click="activeTab = 'client'"
-            :class="[activeTab === 'client' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']"
-            class="flex-1 py-2 text-sm font-medium rounded-lg transition-all"
-          >
-            Cliente
-          </button>
-        </div>
-
-        <h1 class="text-3xl font-semibold text-gray-800 mb-2">
-          {{ titles[activeTab] }}
+        <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">
+          Easy Order
         </h1>
-        <p class="text-gray-500 mb-6">
-          {{ subtitles[activeTab] }}
+        <p class="text-gray-500 mb-8 text-center text-sm">
+          Ingresa tus credenciales para acceder al sistema
         </p>
 
         <!-- Error -->
-        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
-          {{ errorMessage }}
+        <div v-if="errorMessage" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
+          <span class="font-medium">{{ errorMessage }}</span>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-5">
+        <form @submit.prevent="handleSubmit" class="space-y-6">
 
-          <!-- ADMIN / CLIENTE: email -->
-          <template v-if="activeTab !== 'empleado'">
-            <div>
-              <label class="block mb-1 text-sm font-medium text-gray-700">Correo electrónico</label>
+          <!-- Identificador Único -->
+          <div>
+            <label class="block mb-2 text-sm font-semibold text-gray-700 uppercase tracking-wider">Usuario, Correo o Código</label>
+            <div class="relative">
               <input
-                v-model="email"
-                type="email"
-                required
-                autocomplete="username"
-                placeholder="info@gmail.com"
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              />
-            </div>
-          </template>
-
-          <!-- EMPLEADO: cadena -->
-          <template v-else>
-            <div>
-              <label class="block mb-1 text-sm font-medium text-gray-700">Código de acceso</label>
-              <input
-                v-model="cadenaEmpleado"
+                v-model="loginIdentifier"
                 type="text"
                 required
-                placeholder="ej. 3-1-2"
-                pattern="^\d+-\d+-\d+$"
-                autocomplete="off"
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono tracking-widest text-center text-lg"
+                placeholder="ej: nombre@mail.com o 3-1-2"
+                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition-all placeholder-gray-300 shadow-sm text-sm"
               />
-              <p class="text-xs text-gray-400 mt-1">Tu jefe te proporcionó este código al registrarte</p>
             </div>
-          </template>
+            <p class="text-[10px] text-gray-400 mt-2 px-1">
+              Empleados: usen el código proporcionado por su sucursal.
+            </p>
+          </div>
 
-          <!-- Contraseña (todos) -->
+          <!-- Contraseña -->
           <div>
-            <div class="flex justify-between mb-1">
-              <label class="text-sm font-medium text-gray-700">Contraseña</label>
+            <div class="flex justify-between mb-2">
+              <label class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Contraseña</label>
               <router-link
-                v-if="activeTab !== 'empleado'"
                 to="/recuperar-contrasena"
-                class="text-sm text-indigo-600 hover:underline"
+                class="text-xs text-indigo-600 font-bold hover:text-indigo-800 transition"
               >
                 ¿Olvidaste tu contraseña?
               </router-link>
@@ -92,14 +51,13 @@
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
                 required
-                autocomplete="current-password"
-                placeholder="Introduce tu contraseña"
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-20"
+                placeholder="••••••••"
+                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition-all shadow-sm text-sm"
               />
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-3 text-sm text-gray-500 hover:text-gray-700 transition"
+                class="absolute right-3 top-3 px-2 py-1 text-[10px] font-bold text-gray-400 hover:text-indigo-600 transition uppercase tracking-widest"
               >
                 {{ showPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
@@ -107,41 +65,50 @@
           </div>
 
           <!-- Mantener sesión -->
-          <div class="flex items-center text-sm">
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" v-model="keepLoggedIn" class="accent-indigo-600" />
-              Mantenme conectado
+          <div class="flex items-center justify-between py-1">
+            <label class="flex items-center gap-2 cursor-pointer select-none group">
+              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm" />
+              <span class="text-xs text-gray-500 group-hover:text-gray-700 transition">Recordarme en este equipo</span>
             </label>
           </div>
 
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-3 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 font-medium"
+            class="w-full py-4 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 font-bold shadow-md flex items-center justify-center gap-2"
           >
-            {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+            <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            {{ loading ? 'VERIFICANDO...' : 'ENTRAR AL SISTEMA' }}
           </button>
         </form>
 
-        <p class="mt-6 text-center text-sm text-gray-500">
-          ¿No tienes cuenta?
-          <router-link
-            :to="activeTab === 'admin' ? '/registro/dueno' : '/registro/cliente'"
-            class="text-indigo-600 font-medium hover:underline"
-          >
-            Crear cuenta
-          </router-link>
-        </p>
+        <div class="mt-12 pt-8 border-t border-gray-100 flex flex-col items-center gap-4">
+          <p class="text-sm text-gray-500">
+            ¿Eres dueño y no tienes cuenta?
+            <router-link to="/registro/dueno" class="text-indigo-600 font-bold hover:underline ml-1">Regístrate aquí</router-link>
+          </p>
+          <div class="flex gap-4">
+            <router-link to="/registro/cliente" class="text-xs text-gray-400 hover:text-indigo-600 transition font-medium italic">Acceso Clientes</router-link>
+          </div>
+        </div>
 
       </div>
     </div>
 
     <!-- Panel derecho -->
-    <div class="hidden lg:flex w-1/2 bg-indigo-900 relative items-center justify-center">
-      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] [background-size:40px_40px]"></div>
-      <div class="relative z-10 text-center text-white px-10">
-        <h2 class="text-4xl font-bold mb-4">Easy Order</h2>
-        <p class="text-indigo-200">{{ panelText[activeTab] }}</p>
+    <div class="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden font-outfit">
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] [background-size:32px_32px]"></div>
+      
+      <div class="relative z-10 text-center text-white px-16 max-w-lg">
+        <div class="inline-block px-4 py-1.5 bg-slate-800 rounded-full border border-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
+          Plataforma Gastronómica
+        </div>
+        <h2 class="text-5xl font-extrabold mb-6 leading-tight tracking-tight">
+          La gestión de tu restaurante, elevada.
+        </h2>
+        <p class="text-slate-400 leading-relaxed text-lg font-light">
+          Control de mesas, personal y cocina en una sola interfaz inteligente diseñada para crecer contigo.
+        </p>
       </div>
     </div>
 
@@ -149,116 +116,79 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_URL } from '../../config/api'
 
 const router = useRouter()
 
-const activeTab      = ref<'admin' | 'empleado' | 'client'>('admin')
-const email          = ref('')
-const cadenaEmpleado = ref('')
-const password       = ref('')
-const showPassword   = ref(false)
-const keepLoggedIn   = ref(false)
-const loading        = ref(false)
-const errorMessage   = ref('')
-
-// Limpiar campos al cambiar de tab
-watch(activeTab, () => {
-  email.value          = ''
-  cadenaEmpleado.value = ''
-  password.value       = ''
-  errorMessage.value   = ''
-})
-
-const titles = {
-  admin:    'Iniciar sesión',
-  empleado: 'Acceso Empleados',
-  client:   'Acceso Clientes',
-}
-
-const subtitles = {
-  admin:    'Accede a tu panel de administración',
-  empleado: 'Ingresa tu código y contraseña',
-  client:   'Pide comida de tus lugares favoritos',
-}
-
-const panelText = {
-  admin:    'Sistema de gestión para restaurantes',
-  empleado: 'Bienvenido al equipo',
-  client:   'La mejor comida a un click de distancia',
-}
-
-const redirectByRole = (rol: string) => {
-  const routes: Record<string, string> = {
-    ADMIN:       '/panel/Gestion',
-    PROPIETARIO: '/panel/Gestion',
-    MESERO:      '/panel/mesero',
-    COCINA:      '/panel/cocina',
-    CAJA:        '/panel/caja',
-    BARRA:       '/panel/barra',
-    CLIENTE:     '/panel/cliente',
-    MENU:        '/menu',
-  }
-  router.replace(routes[rol] ?? '/panel/Gestion')
-}
+const loginIdentifier = ref('')
+const password        = ref('')
+const showPassword    = ref(false)
+const keepLoggedIn    = ref(false)
+const loading         = ref(false)
+const errorMessage    = ref('')
 
 const handleSubmit = async () => {
+  if (loading.value) return
   loading.value      = true
   errorMessage.value = ''
 
   try {
-    // Endpoint y body según el tab activo
-    const isEmpleado = activeTab.value === 'empleado'
-
-    const endpoint = isEmpleado
-      ? `${API_URL}/empleado/login`
-      : `${API_URL}/login`
-
-    const body = isEmpleado
-      ? { login: cadenaEmpleado.value, password: password.value }
-      : { login: email.value,          password: password.value }
-
-    const res = await fetch(endpoint, {
+    const isEmployeeLogin = /^\d+-\d+-\d+$/.test(loginIdentifier.value.trim())
+    const endpoint = isEmployeeLogin ? '/login-empleado' : '/login'
+    
+    const res = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept':       'application/json',
-      },
-      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        login:    loginIdentifier.value.trim(),
+        password: password.value
+      })
     })
 
     const data = await res.json()
-    if (!res.ok) throw new Error(data.message || 'Credenciales incorrectas')
 
-    const { token, user } = data
+    if (res.ok && data.success) {
+      const storage = keepLoggedIn.value ? localStorage : sessionStorage
+      storage.setItem('token', data.token)
+      storage.setItem('user',  JSON.stringify(data.user))
 
-    if (!user?.roles?.length) {
-      throw new Error('No se pudo obtener el rol del usuario')
+      const user = data.user
+      const rol  = user.roles?.[0]?.nombre || user.rol || ''
+      
+      const routesMap: Record<string, string> = {
+        'PROPIETARIO': '/panel/Gestion',
+        'ADMIN':       '/panel/Gestion',
+        'MESERO':      '/panel/mesero',
+        'COCINA':      '/panel/cocina',
+        'CAJA':        '/panel/caja',
+        'BARRA':       '/panel/barra',
+        'CLIENTE':     '/panel/cliente'
+      }
+
+      const destination = routesMap[rol.toUpperCase()] || '/panel/Gestion'
+      router.push(destination)
+    } else {
+      errorMessage.value = data.message || 'Error al iniciar sesión'
     }
-
-    // Guardar sesión
-    const storage = keepLoggedIn.value ? localStorage : sessionStorage
-    storage.setItem('token', token)
-    storage.setItem('user', JSON.stringify({
-      id:    user.id,
-      name:  user.name,
-      email: user.email,
-      roles: user.roles,
-    }))
-
-    if (user.restaurante_activo) {
-      storage.setItem('restaurante_activo', JSON.stringify(user.restaurante_activo))
-    }
-
-    await nextTick()
-    redirectByRole(user.roles[0]?.nombre)
-
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Error al iniciar sesión'
+  } catch (err) {
+    errorMessage.value = 'Error de conexión con el servidor'
   } finally {
     loading.value = false
   }
 }
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+.font-outfit { font-family: 'Outfit', sans-serif; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.animate-shake { animation: shake 0.3s ease-in-out; }
+</style>

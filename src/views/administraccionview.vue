@@ -43,39 +43,22 @@
       </button>
     </div>
 
-    <!-- ══ TAB RESUMEN ══ -->
+    <!-- ══ TAB RESUMEN (Limpiado: KPIs y Gráficas movidos a Métricas) ══ -->
     <template v-if="mainTab === 'resumen'">
       <div v-if="loading.general" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400">Cargando dashboard...</p>
+        <p class="text-gray-400">Cargando...</p>
       </div>
 
       <template v-else>
-        <DashboardKpis
-          :empleados="empleados"
-          :restaurantes="restaurantes"
-          :ordenes-hoy="dashData.ordenes_hoy"
-          :ventas-hoy="dashData.ventas_hoy"
-          :ordenes-por-estado="dashData.ordenes_por_estado"
-        />
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
-          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
-        </div>
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <VentasSemanaChart :api-url="API_URL" :get-headers="getHeaders" />
-          <TopProductosChart :api-url="API_URL" :get-headers="getHeaders" />
-        </div>
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
-          <EmpleadosRolChart  :empleados="empleados" />
+        <!-- Título de sección operativa -->
+        <div class="mb-6">
+          <h3 class="text-lg font-bold text-gray-800">Control Operativo</h3>
+          <p class="text-xs text-gray-500">Gestión de personal y sucursales activas</p>
         </div>
 
         <!-- Tabs CRUD -->
-        <div class="border-b border-gray-200">
+        <div class="border-b border-gray-200 mb-6">
           <nav class="-mb-px flex space-x-6">
             <button v-for="tab in crudTabs" :key="tab.key" @click="activeTab = tab.key"
               :class="['py-4 px-1 border-b-2 font-medium text-sm transition',
@@ -87,7 +70,8 @@
         </div>
 
         <!-- Tabla empleados -->
-        <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+          <!-- ... (Contenido de tabla empleados se mantiene igual) ... -->
           <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando empleados...</div>
           <div v-else class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-100">
@@ -110,9 +94,9 @@
                       <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
                         {{ getInitials(emp.name) }}
                       </div>
-                      <div>
-                        <p class="text-sm font-medium text-gray-900">{{ emp.name }}</p>
-                        <p class="text-xs text-gray-500">{{ emp.email }}</p>
+                      <div class="flex flex-col">
+                        <span class="font-bold text-gray-900 text-sm">{{ emp.name }}</span>
+                        <!-- <span class="text-[10px] text-gray-400">{{ emp.email }}</span> -->
                       </div>
                     </div>
                   </td>
@@ -196,10 +180,6 @@
       </template>
     </template>
 
-    <!-- ══ TAB INGREDIENTES ══ -->
-    <template v-if="mainTab === 'ingredientes'">
-      <IngredientesView />
-    </template>
 
     <!-- ══ TAB MARQUESINA ══ -->
     <template v-if="mainTab === 'anuncios'">
@@ -216,85 +196,20 @@
       <MeserosManager />
     </template>
 
-    <!-- ══ MODAL EMPLEADO ══ -->
+    <!-- ══ MODAL EMPLEADO (Componente Nuevo) ══ -->
     <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalEmpleado">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-lg font-semibold text-gray-800">{{ empleadoEditando ? 'Editar Empleado' : 'Nuevo Empleado' }}</h3>
-          <button @click="cerrarModalEmpleado" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-        </div>
-        <div v-if="formError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{{ formError }}</div>
-        <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-              <input v-model="empForm.nombre" type="text" placeholder="Juan"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
-              <input v-model="empForm.apellidos" type="text" placeholder="Pérez"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Correo *</label>
-            <input v-model="empForm.email" type="email"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Usuario *</label>
-            <input v-model="empForm.usuario" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {{ empleadoEditando ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña *' }}
-            </label>
-            <input v-model="empForm.password" type="password"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-          </div>
-          <div v-if="empForm.password">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña *</label>
-            <input v-model="empForm.password_confirmation" type="password"
-              :class="['w-full px-3 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none',
-                empForm.password && empForm.password_confirmation && empForm.password !== empForm.password_confirmation
-                  ? 'border-red-400' : 'border-gray-200']" />
-            <p v-if="empForm.password && empForm.password_confirmation && empForm.password !== empForm.password_confirmation"
-              class="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
-            <select v-model="empForm.rol"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-              <option value="">Seleccionar rol</option>
-              <option value="2">Administrador</option>
-              <option value="3">Mesero</option>
-              <option value="4">Cocina</option>
-              <option value="5">Caja</option>
-              <option value="6">Barra</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Sucursal Activa *</label>
-            <select v-model.number="empForm.restaurante_id"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-              <option :value="null">Seleccionar sucursal</option>
-              <option v-for="suc in sucursalesDueno" :key="suc.id" :value="suc.id">
-                {{ suc.nombre }} {{ suc.ciudad ? `(${suc.ciudad})` : '' }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="flex gap-3 mt-6">
-          <button @click="cerrarModalEmpleado"
-            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancelar</button>
-          <button @click="guardarEmpleado" :disabled="loading.guardando"
-            class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
-            {{ loading.guardando ? 'Guardando...' : (empleadoEditando ? 'Guardar cambios' : 'Crear empleado') }}
-          </button>
-        </div>
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+        <!-- Botón cerrar X -->
+        <button @click="cerrarModalEmpleado" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl z-10">✕</button>
+        
+        <FormularioTrabajador 
+          ref="formEmpleadoRef"
+          :empleado="empleadoEditando"
+          :restaurantes="restaurantes"
+          @guardar="handleGuardarEmpleado"
+          @cancelar="cerrarModalEmpleado"
+        />
       </div>
     </div>
 
@@ -354,7 +269,11 @@
                     Quitar
                   </button>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 2MB.</p>
+                <div v-if="errorMsg" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
+                  <i class="fa-solid fa-circle-exclamation text-red-400"></i>
+                  <span class="font-medium">{{ typeof errorMsg === 'object' ? Object.values(errorMsg)[0][0] : errorMsg }}</span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 5MB.</p>
               </div>
             </div>
           </div>
@@ -381,17 +300,11 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import SucursalBadge       from '../components/SucursalBadge.vue'
-import DashboardKpis       from '../components/administraccion/DashboardKpis.vue'
-import VentasPorHoraChart  from '../components/administraccion/Ventasxhorachart.vue'
-import MetodoPagoChart     from '../components/administraccion/MetodoPagoChart.vue'
-import VentasSemanaChart   from '../components/administraccion/VentasSemanaChart.vue'
-import TopProductosChart   from '../components/administraccion/TopProductosChart.vue'
-import PedidosEstadoChart  from '../components/administraccion/PedidosEstadoChart.vue'
-import EmpleadosRolChart   from '../components/administraccion/EmpleadosRolChart.vue'
 import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
 import GastoView           from './GastoView.vue'
 import MeserosManager      from '../components/administraccion/MeserosManager.vue'
+import FormularioTrabajador   from '../components/administraccion/FormularioTrabajador.vue'
 import { API_URL } from '@/config/api'
 
 const router = useRouter()
@@ -422,9 +335,8 @@ const sucursalesDueno = ref([])
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
 const mainTabs = [
-  { key:'resumen',      label:'📋 Resumen'      },
+  { key:'resumen',      label:'🏢 Sucursales y Personal' },
   { key:'meseros',      label:'👥 Meseros'       },
-  { key:'ingredientes', label:'🧄 Ingredientes'  },
   { key:'anuncios',     label:'📢 Marquesina'    },
   { key:'gastos',       label:'🧾 Gastos'        },
 ]
@@ -553,38 +465,51 @@ const cerrarModalEmpleado = () => {
   showModalEmpleado.value = false; empleadoEditando.value = null
   formError.value = ''; empForm.password = ''; empForm.password_confirmation = ''
 }
-const guardarEmpleado = async () => {
-  formError.value = ''
-  if (!empForm.nombre || !empForm.email || !empForm.usuario) { formError.value='Nombre, correo y usuario son obligatorios'; return }
-  if (!empForm.rol) { formError.value='El rol es obligatorio'; return }
-  if (!empleadoEditando.value && !empForm.password) { formError.value='La contraseña es obligatoria'; return }
-  if (empForm.password && empForm.password !== empForm.password_confirmation) { formError.value='Las contraseñas no coinciden'; return }
+const formEmpleadoRef = ref(null)
+const handleGuardarEmpleado = async (payload) => {
   loading.guardando = true
   try {
     const isEdit = !!empleadoEditando.value
     const url    = isEdit ? `${API_URL}/users/${empleadoEditando.value.id}` : `${API_URL}/register-empleado`
     const method = isEdit ? 'PUT' : 'POST'
-    const body   = {
-      name: `${empForm.nombre} ${empForm.apellidos}`.trim(),
-      email: empForm.email, username: empForm.usuario,
-      propietario_id: currentUser.value?.propietario_id,
-      rol_id: empForm.rol,
-      restaurante_id: empForm.restaurante_id ? Number(empForm.restaurante_id) : null,
-      restaurante_activo: empForm.restaurante_id ? Number(empForm.restaurante_id) : null,
+    
+    // Añadimos el restaurante activo actual si no viene en el payload
+    if (!payload.restaurante_id) {
+      payload.restaurante_id = restauranteActivoId.value
     }
-    if (empForm.password) { body.password = empForm.password; body.password_confirmation = empForm.password_confirmation }
-    const res = await fetch(url, { method, headers:getHeaders(), body:JSON.stringify(body) })
+    payload.propietario_id = currentUser.value?.propietario_id
+
+    const res = await fetch(url, { method, headers:getHeaders(), body:JSON.stringify(payload) })
     const r   = await res.json()
+    
     if (res.ok && r.success) {
-      if (isEdit) { const idx=empleados.value.findIndex(e=>e.id===empleadoEditando.value.id); if(idx!==-1) empleados.value[idx]={...empleados.value[idx],...(r.data||{})} }
-      else empleados.value.push(r.data || r.user)
       showToast(isEdit ? 'Empleado actualizado' : 'Empleado creado', 'success')
-      cerrarModalEmpleado()
+      
+      // Si el backend devolvió una cadena de acceso, se la pasamos al componente
+      if (r.cadena_acceso) {
+        formEmpleadoRef.value?.setCadena(r.cadena_acceso)
+      } else if (!isEdit) {
+        // Si no hay cadena y es nuevo, cerramos (pero normalmente el backend la mandará ahora)
+        cerrarModalEmpleado()
+      } else {
+        cerrarModalEmpleado()
+      }
       loadData()
-    } else { formError.value = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar' }
-  } catch { formError.value = 'Error de conexión' }
-  finally { loading.guardando = false }
+    } else {
+      const msg = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar'
+      formEmpleadoRef.value?.setError(msg)
+    }
+  } catch (err) {
+    formEmpleadoRef.value?.setError('Error de conexión con el servidor')
+  } finally {
+    loading.guardando = false
+  }
 }
+
+const restauranteActivoId = computed(() => {
+  const r = currentUser.value?.restaurante_activo
+  return (r && typeof r === 'object') ? Number(r.id) : (r ? Number(r) : null)
+})
 const eliminarEmpleado = async (id) => {
   if (!confirm('¿Eliminar empleado?')) return
   try {
