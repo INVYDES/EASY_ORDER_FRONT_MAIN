@@ -117,7 +117,7 @@
                         class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
                         ✏️ Editar
                       </button>
-                      <button @click="eliminarEmpleado(emp.id)"
+                      <button @click="eliminarEmpleado(emp)"
                         class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
                         🗑️ Eliminar
                       </button>
@@ -291,6 +291,32 @@
           </button>
         </div>
       </div>
+    <!-- ══ MODAL CONFIRMACIÓN ELIMINAR (Nuevo Estético) ══ -->
+    <div v-if="showConfirmDelete" class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm animate-fade-in"
+      @click.self="cancelarEliminacion">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up">
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce-subtle">
+            <i class="fa-solid fa-user-slash"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">¿Eliminar usuario?</h3>
+          <p class="text-gray-500 text-sm leading-relaxed mb-6">
+            Estás a punto de eliminar permanentemente a <span class="font-bold text-gray-800">{{ nameToDelete }}</span>. 
+            Esta acción es definitiva y no se puede deshacer.
+          </p>
+          
+          <div class="flex flex-col gap-3">
+            <button @click="handleConfirmDelete" :disabled="loading.guardando"
+              class="w-full py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition shadow-lg shadow-red-200 disabled:opacity-50">
+              {{ loading.guardando ? 'Eliminando...' : 'Sí, Eliminar' }}
+            </button>
+            <button @click="cancelarEliminacion"
+              class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-2xl hover:bg-gray-100 transition">
+              No, Mantener
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -320,6 +346,9 @@ const formError    = ref('')
 
 const showModalEmpleado    = ref(false)
 const showModalRestaurante = ref(false)
+const showConfirmDelete    = ref(false)
+const idToDelete           = ref(null)
+const nameToDelete         = ref(null)
 const empleadoEditando     = ref(null)
 const restauranteEditando  = ref(null)
 
@@ -510,14 +539,36 @@ const restauranteActivoId = computed(() => {
   const r = currentUser.value?.restaurante_activo
   return (r && typeof r === 'object') ? Number(r.id) : (r ? Number(r) : null)
 })
-const eliminarEmpleado = async (id) => {
-  if (!confirm('¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE a este empleado? Esta acción no se puede deshacer y borrará todos sus datos de la base de datos.')) return
+const eliminarEmpleado = (emp) => {
+  idToDelete.value = emp.id
+  nameToDelete.value = emp.name
+  showConfirmDelete.value = true
+}
+
+const cancelarEliminacion = () => {
+  showConfirmDelete.value = false
+  idToDelete.value = null
+  nameToDelete.value = null
+}
+
+const handleConfirmDelete = async () => {
+  if (!idToDelete.value) return
+  loading.guardando = true
   try {
-    const res = await fetch(`${API_URL}/users/${id}`, { method:'DELETE', headers:getHeaders() })
+    const res = await fetch(`${API_URL}/users/${idToDelete.value}`, { method:'DELETE', headers:getHeaders() })
     const r   = await res.json()
-    if (res.ok && r.success) { empleados.value=empleados.value.filter(e=>e.id!==id); showToast('Empleado eliminado','success') }
-    else showToast(r.message||'Error al eliminar','error')
-  } catch { showToast('Error de conexión','error') }
+    if (res.ok && r.success) { 
+      empleados.value = empleados.value.filter(e => e.id !== idToDelete.value)
+      showToast('Empleado eliminado permanentemente', 'success') 
+      cancelarEliminacion()
+    } else { 
+      showToast(r.message || 'Error al eliminar', 'error') 
+    }
+  } catch { 
+    showToast('Error de conexión', 'error') 
+  } finally { 
+    loading.guardando = false
+  }
 }
 
 // ── Modales restaurante ────────────────────────────────────────────────────────
@@ -606,4 +657,10 @@ onMounted(loadData)
 .animate-slide-in { animation: slideIn 0.3s ease-out; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .animate-spin { animation: spin 1s linear infinite; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+@keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes bounceSubtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.animate-bounce-subtle { animation: bounceSubtle 2s infinite ease-in-out; }
 </style>
