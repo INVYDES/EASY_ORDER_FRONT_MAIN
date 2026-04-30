@@ -291,6 +291,8 @@
           </button>
         </div>
       </div>
+    </div>
+
     <!-- ══ MODAL CONFIRMACIÓN ELIMINAR (Nuevo Estético) ══ -->
     <div v-if="showConfirmDelete" class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm animate-fade-in"
       @click.self="cancelarEliminacion">
