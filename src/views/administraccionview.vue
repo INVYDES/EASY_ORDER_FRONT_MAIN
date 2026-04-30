@@ -511,7 +511,7 @@ const restauranteActivoId = computed(() => {
   return (r && typeof r === 'object') ? Number(r.id) : (r ? Number(r) : null)
 })
 const eliminarEmpleado = async (id) => {
-  if (!confirm('¿Eliminar empleado?')) return
+  if (!confirm('¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE a este empleado? Esta acción no se puede deshacer y borrará todos sus datos de la base de datos.')) return
   try {
     const res = await fetch(`${API_URL}/users/${id}`, { method:'DELETE', headers:getHeaders() })
     const r   = await res.json()
