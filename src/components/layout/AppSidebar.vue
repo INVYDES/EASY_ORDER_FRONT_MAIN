@@ -17,11 +17,17 @@
     <!-- Logo / Título -->
     <div class="h-16 flex items-center justify-between px-4 border-b border-gray-100">
       <div class="flex items-center gap-2 overflow-hidden cursor-pointer" @click="$router.push('/panel/panelinicial')">
-        <div class="w-8 h-8 bg-[#0085d1] rounded-lg flex items-center justify-center shadow-sm">
-          <i class="fa-solid fa-bowl-food text-white text-sm"></i>
-        </div>
-        <h1 v-show="!isCollapsed || isMobile" class="text-xl font-bold text-[#0085d1] whitespace-nowrap">
-          E-ORDER 2026
+        <img 
+          src="@/assets/imaguenes/Logo.jpg" 
+          class="w-10 h-10 object-contain rounded-lg" 
+          alt="Logo"
+        />
+        <h1 
+          v-show="!isCollapsed || isMobile" 
+          class="text-xl font-extrabold text-[#0056b3] italic tracking-tight whitespace-nowrap"
+          style="font-family: 'Inter', sans-serif;"
+        >
+          Easy Order
         </h1>
       </div>
       <button v-if="!isMobile" class="hidden lg:flex text-gray-400 hover:text-gray-600 transition" @click="toggleCollapse">

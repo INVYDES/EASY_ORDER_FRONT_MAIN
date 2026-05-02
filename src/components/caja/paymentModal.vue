@@ -145,54 +145,76 @@
 
     <!-- ══ TICKET PARA PDF / IMPRESIÓN (OCULTO) ══ -->
     <div id="ticket-printable" class="hidden">
-      <div style="width: 80mm; padding: 5mm; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff;">
-        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5mm; margin-bottom: 5mm;">
-          <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">{{ nombreSucursal }}</h2>
-          <p style="margin: 5px 0; font-size: 12px;">Comprobante de Pago</p>
-          <p style="margin: 0; font-size: 11px;">{{ new Date().toLocaleString('es-MX') }}</p>
+      <div style="width: 80mm; padding: 2mm; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff;">
+        
+        <!-- ENCABEZADO -->
+        <div style="text-align: center; margin-bottom: 4mm;">
+          <h2 style="margin: 0; font-size: 16px; font-weight: bold; text-transform: uppercase;">{{ nombreSucursal }}</h2>
+          <p v-if="datosSucursal.direccion && datosSucursal.direccion.trim().length > 2" style="margin: 2px 0; font-size: 10px; line-height: 1.2;">{{ datosSucursal.direccion }}</p>
+          <p v-if="datosSucursal.telefono" style="margin: 2px 0; font-size: 10px;">TEL: {{ datosSucursal.telefono }}</p>
+          <div style="border-bottom: 1px dashed #000; margin-top: 3mm; margin-bottom: 3mm;"></div>
+          <p style="margin: 0; font-size: 12px; font-weight: bold;">Comprobante de Pago</p>
+          <p style="margin: 2px 0; font-size: 10px;">{{ new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' }) }}</p>
         </div>
 
-        <div style="font-size: 12px; margin-bottom: 5mm;">
-          <p style="margin: 2px 0;"><strong>Mesa:</strong> {{ ticket.mesa || 'N/A' }}</p>
+        <!-- INFO ORDEN -->
+        <div style="font-size: 11px; margin-bottom: 3mm;">
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong>Mesa:</strong> {{ ticket.mesa || 'N/A' }}</span>
+            <span><strong>Folio:</strong> {{ uniqueIdentifier }}</span>
+          </div>
           <p style="margin: 2px 0;"><strong>Atendió:</strong> {{ userName }}</p>
+          <p style="margin: 2px 0;"><strong>Pago:</strong> {{ paymentMethod.toUpperCase() }}</p>
         </div>
 
-        <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 5mm;">
+        <!-- TABLA DE PRODUCTOS -->
+        <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 4mm;">
           <thead>
-            <tr style="border-bottom: 1px dashed #000;">
-              <th style="text-align: left; padding: 2mm 0;">CANT</th>
-              <th style="text-align: left; padding: 2mm 0;">PRODUCTO</th>
-              <th style="text-align: right; padding: 2mm 0;">TOTAL</th>
+            <tr style="border-top: 1px dashed #000; border-bottom: 1px dashed #000;">
+              <th style="text-align: left; padding: 1.5mm 0; width: 10%;">CANT</th>
+              <th style="text-align: left; padding: 1.5mm 0; width: 60%;">DESCRIPCION</th>
+              <th style="text-align: right; padding: 1.5mm 0; width: 30%;">IMPORTE</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="item in normalizedItems" :key="item.id">
-              <td style="padding: 1mm 0;">{{ item.cantidad }}</td>
-              <td style="padding: 1mm 0;">{{ item.nombre }}</td>
-              <td style="text-align: right; padding: 1mm 0;">${{ formatMoney(item.subtotal) }}</td>
+              <td style="padding: 1mm 0; vertical-align: top;">{{ item.cantidad }}</td>
+              <td style="padding: 1mm 0; text-transform: uppercase;">{{ item.nombre }}</td>
+              <td style="text-align: right; padding: 1mm 0; vertical-align: top;">${{ formatMoney(item.subtotal) }}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style="border-top: 1px dashed #000; padding-top: 3mm; font-size: 12px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
-            <span>Consumo Real:</span>
-            <span>${{ formatMoney(total) }}</span>
+        <!-- TOTALES -->
+        <div style="font-size: 11px; text-align: right;">
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 1mm;">
+            <span style="width: 30%;">SUBTOTAL:</span>
+            <span style="width: 30%; font-weight: bold;">${{ formatMoney(total) }}</span>
           </div>
-          <div v-if="propina > 0" style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
-            <span>Propina:</span>
-            <span>${{ formatMoney(propina) }}</span>
+          
+          <div style="display: flex; justify-content: flex-end; font-size: 14px; margin-top: 2mm; border-top: 1.5px solid #000; padding-top: 2mm;">
+            <span style="width: 30%; font-weight: bold;">TOTAL:</span>
+            <span style="width: 30%; font-weight: bold;">${{ formatMoney(total) }}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 2mm; border-top: 1px solid #000; padding-top: 2mm;">
-            <span>TOTAL:</span>
-            <span>${{ formatMoney(totalConPropina) }}</span>
+
+          <div v-if="propina > 0" style="display: flex; justify-content: flex-end; margin-top: 2mm; color: #444;">
+            <span style="width: 30%;">PROPINA:</span>
+            <span style="width: 30%;">${{ formatMoney(propina) }}</span>
           </div>
         </div>
 
-        <div style="margin-top: 8mm; text-align: center; border-top: 1px dashed #000; padding-top: 5mm;">
-          <p style="margin: 0; font-size: 10px; color: #444;">Folio:</p>
-          <p style="margin: 2px 0; font-size: 12px; font-weight: bold; letter-spacing: 1px;">{{ uniqueIdentifier }}</p>
+        <!-- PIE DE PAGINA -->
+        <div style="margin-top: 8mm; text-align: center; border-top: 1px dashed #000; padding-top: 4mm;">
+          <p style="margin: 4px 0; font-size: 9px; font-weight: bold;">ESTE NO ES UN COMPROBANTE FISCAL</p>
+          <p style="margin: 2px 0; font-size: 9px; font-weight: bold;">PROPINA NO INCLUIDA EN EL TOTAL</p>
+          
+          <div style="margin-top: 5mm;">
+            <p style="margin: 0; font-size: 9px; color: #444;">Código de Rastreo:</p>
+            <p style="margin: 2px 0; font-size: 11px; font-weight: bold; letter-spacing: 1px;">* {{ uniqueIdentifier }} *</p>
+          </div>
+          
           <p style="margin-top: 5mm; font-size: 11px; font-style: italic;">¡Gracias por su visita!</p>
+          <p style="margin-top: 2mm; font-size: 8px; color: #666;">*** EASY ORDER SYSTEM ***</p>
         </div>
       </div>
     </div>
@@ -218,6 +240,7 @@ const fieldError     = ref('')
 const processing     = ref(false)
 const nombreSucursal = ref('RESTAURANTE E-ORDER')
 const detectedRestId = ref(null)
+const datosSucursal  = ref({ direccion: '', telefono: '', propietario_id: '' })
 
 // --- Datos del Usuario ---
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
@@ -226,26 +249,24 @@ const userName = computed(() => user.name || 'Personal')
 
 // BUSCADOR DE ID INFALIBLE
 const restauranteId = computed(() => {
-  // 1. Prioridad: Lo que detectamos por API o por productos
   if (detectedRestId.value) return detectedRestId.value
-  
-  // 2. Revisar si algún producto trae el restaurante_id (Muy común)
   const items = props.ticket.detalles || props.ticket.items || []
   const itemWithId = items.find(i => i.restaurante_id || (i.producto && i.producto.restaurante_id))
   if (itemWithId) {
     const id = itemWithId.restaurante_id || itemWithId.producto.restaurante_id
     if (id) return id
   }
-
-  // 3. Revisar en la orden directamente
   const rid = props.ticket.restaurante_id || props.ticket.id_restaurante
   if (rid && rid !== 'undefined' && rid !== 'null') return rid
-
   return ''
 })
 
-// Identificador Único: restaurante_id + orden_id
-const uniqueIdentifier = computed(() => `${restauranteId.value}${props.ticket.id}`)
+// Identificador Único: propietario_id + restaurante_id + orden_id (como pidió el usuario)
+const uniqueIdentifier = computed(() => {
+  const pId = datosSucursal.value.propietario_id || user.propietario_id || ''
+  const rId = restauranteId.value || ''
+  return `${pId}${rId}${props.ticket.id}`
+})
 
 // --- SINCRONIZACIÓN PROFUNDA ---
 const syncIdentity = async () => {
@@ -253,27 +274,31 @@ const syncIdentity = async () => {
   const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
 
   try {
-    // A) Preguntar a la API por la orden completa (Para asegurar el ID)
     const resO = await fetch(`${API_URL}/ordenes/${props.ticket.id}`, { headers })
     if (resO.ok) {
       const dataO = await resO.json()
       const realOrder = dataO.data || dataO
-      if (realOrder.restaurante_id) {
-        detectedRestId.value = realOrder.restaurante_id
-      }
+      if (realOrder.restaurante_id) detectedRestId.value = realOrder.restaurante_id
     }
 
     await nextTick()
 
-    // B) Con el ID, pedir el nombre
     const rid = restauranteId.value
     if (rid) {
       const resR = await fetch(`${API_URL}/restaurantes/${rid}`, { headers })
       if (resR.ok) {
         const dataR = await resR.json()
-        const nombre = dataR.data?.nombre || dataR.nombre
-        if (nombre) {
-          nombreSucursal.value = nombre.toUpperCase()
+        const r = dataR.data || dataR
+        nombreSucursal.value = (r.nombre || 'RESTAURANTE').toUpperCase()
+        
+        // El JSON muestra que la dirección es un objeto
+        const d = r.direccion || {}
+        const partes = [d.calle, d.ciudad, d.estado].filter(p => p && p.trim().length > 0)
+        
+        datosSucursal.value = {
+          direccion: partes.join(', '),
+          telefono: r.telefono || '',
+          propietario_id: r.propietario_id || ''
         }
       }
     }

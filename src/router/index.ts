@@ -88,11 +88,11 @@ const routes = [
         meta: { roles: ["CAJA", "ADMIN", "PROPIETARIO"] }
       },
       {
-  path: "analisis",
-  name:"analisis",
-  component:Analisisview,
-  meta: { roles:["ADMIN"] }
-},
+        path: "analisis",
+        name: "analisis",
+        component: Analisisview,
+        meta: { roles: ["ADMIN", "PROPIETARIO"] }
+      },
 
       {
         path: "cocina",
