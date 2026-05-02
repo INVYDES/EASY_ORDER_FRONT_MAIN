@@ -249,15 +249,24 @@ const userName = computed(() => user.name || 'Personal')
 
 // BUSCADOR DE ID INFALIBLE
 const restauranteId = computed(() => {
+  // 1. Prioridad: Lo que detectamos por API o por productos
   if (detectedRestId.value) return detectedRestId.value
+  
+  // 2. Revisar en la orden directamente
+  const rid = props.ticket.restaurante_id || props.ticket.id_restaurante
+  if (rid && rid !== 'undefined' && rid !== 'null') return rid
+
+  // 3. Revisar si algún producto trae el restaurante_id
   const items = props.ticket.detalles || props.ticket.items || []
   const itemWithId = items.find(i => i.restaurante_id || (i.producto && i.producto.restaurante_id))
   if (itemWithId) {
     const id = itemWithId.restaurante_id || itemWithId.producto.restaurante_id
     if (id) return id
   }
-  const rid = props.ticket.restaurante_id || props.ticket.id_restaurante
-  if (rid && rid !== 'undefined' && rid !== 'null') return rid
+
+  // 4. ÚLTIMO RECURSO: Usar el restaurante_activo del usuario logueado
+  if (user.restaurante_activo) return user.restaurante_activo
+
   return ''
 })
 
@@ -274,6 +283,7 @@ const syncIdentity = async () => {
   const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
 
   try {
+    // Intentar obtener la orden completa para asegurar el restaurante_id
     const resO = await fetch(`${API_URL}/ordenes/${props.ticket.id}`, { headers })
     if (resO.ok) {
       const dataO = await resO.json()
@@ -291,7 +301,7 @@ const syncIdentity = async () => {
         const r = dataR.data || dataR
         nombreSucursal.value = (r.nombre || 'RESTAURANTE').toUpperCase()
         
-        // El JSON muestra que la dirección es un objeto
+        // Formatear dirección sin comas sueltas
         const d = r.direccion || {}
         const partes = [d.calle, d.ciudad, d.estado].filter(p => p && p.trim().length > 0)
         
