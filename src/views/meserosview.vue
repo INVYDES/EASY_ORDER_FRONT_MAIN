@@ -7,10 +7,54 @@
         :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[280px] max-w-sm animate-slide-in',
           toast.type==='success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' :
           toast.type==='error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800'             :
+          toast.type==='warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800'       :
           'bg-blue-50 border-l-4 border-blue-500 text-blue-800']">
-        <span>{{ toast.type==='success' ? '✅' : toast.type==='error' ? '❌' : 'ℹ️' }}</span>
+        <span>{{ toast.type==='success' ? '✅' : toast.type==='error' ? '❌' : toast.type==='warning' ? '⚠️' : 'ℹ️' }}</span>
         <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
         <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600">×</button>
+      </div>
+    </div>
+
+    <!-- ══ MODAL: Orden existente encontrada ══ -->
+    <div v-if="ordenExistente" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-slide-in">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-2xl">🔔</div>
+          <div>
+            <h3 class="font-black text-slate-800">Mesa {{ nuevaOrden.mesa }} tiene orden abierta</h3>
+            <p class="text-xs text-slate-400 font-medium">{{ ordenExistente.folio }} · {{ ordenExistente.detalles?.length || 0 }} producto(s)</p>
+          </div>
+        </div>
+
+        <!-- Productos ya en la orden -->
+        <div class="bg-slate-50 rounded-xl p-4 mb-5 space-y-1.5 max-h-40 overflow-y-auto">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Productos actuales</p>
+          <div v-for="d in ordenExistente.detalles" :key="d.id" class="flex justify-between text-xs font-bold text-slate-600">
+            <span>{{ d.cantidad }}× {{ d.producto_nombre || d.producto?.nombre }}</span>
+            <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <!-- Productos nuevos a agregar -->
+        <div class="bg-indigo-50 rounded-xl p-4 mb-5 space-y-1.5">
+          <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2">Productos a agregar</p>
+          <div v-for="item in carrito" :key="item.id + item.tipo" class="flex justify-between text-xs font-bold text-indigo-700">
+            <span>{{ item.cantidad }}× {{ item.nombre }}</span>
+            <span>${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button @click="ordenExistente = null"
+            class="flex-1 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">
+            Cancelar
+          </button>
+          <button @click="confirmarAgregarAOrden"
+            :disabled="creando"
+            class="flex-1 py-2.5 text-sm font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
+            {{ creando ? 'Agregando...' : '➕ Agregar al ticket' }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -21,8 +65,7 @@
     </div>
 
     <!-- ══ CAJA CERRADA ══ -->
-    <div v-else-if="!cajaAbierta"
-      class="flex flex-col items-center justify-center min-h-[70vh] text-center gap-5">
+    <div v-else-if="!cajaAbierta" class="flex flex-col items-center justify-center min-h-[70vh] text-center gap-5">
       <div class="w-24 h-24 rounded-3xl bg-red-50 flex items-center justify-center text-5xl shadow-sm">🔒</div>
       <div>
         <h2 class="text-2xl font-bold text-gray-800">Caja cerrada</h2>
@@ -49,31 +92,31 @@
         </div>
       </div>
 
-      <!-- ══ VISTA LISTADO DE ÓRDENES ══ -->
+      <!-- ══ VISTA LISTADO ══ -->
       <div v-if="vistaActual === 'ordenes'">
-        <!-- Tabs Superiores -->
         <div class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
           <button v-for="tab in tabs" :key="tab.key" @click="tabActivo = tab.key"
             :class="['flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all border shrink-0',
               tabActivo === tab.key ? 'text-white border-transparent shadow-md scale-105' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 shadow-sm']"
             :style="tabActivo === tab.key ? { backgroundColor: tab.color } : {}">
             <span>{{ tab.icon }}</span> {{ tab.label.toUpperCase() }}
-            <span class="px-1.5 py-0.5 rounded-lg text-[10px]" :class="tabActivo === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'">
+            <span class="px-1.5 py-0.5 rounded-lg text-[10px]"
+              :class="tabActivo === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'">
               {{ contarOrdenes(tab.key) }}
             </span>
           </button>
         </div>
 
-        <!-- ══ SECCIÓN DE COBRO PARA MESEROS ══ -->
+        <!-- Tab Cobrar -->
         <div v-if="tabActivo === 'cobrar'" class="animate-fade-in space-y-4">
-           <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 min-h-[500px]">
-              <CajaTicketGrid 
-                type="open" 
-                :orders="ordenesParaCobrar" 
-                @order-paid="handleOrderPaid" 
-                @refresh="cargarOrdenes" 
-              />
-           </div>
+          <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 min-h-[500px]">
+            <CajaTicketGrid
+              type="open"
+              :orders="ordenesParaCobrar"
+              @order-paid="handleOrderPaid"
+              @refresh="cargarOrdenes"
+            />
+          </div>
         </div>
 
         <div v-else>
@@ -87,13 +130,11 @@
             <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Sin órdenes en {{ tabActual?.label }}</p>
           </div>
 
-          <!-- Grid de Tarjetas -->
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-in">
             <div v-for="sub in subOrdenesFiltradas" :key="sub.uid"
               class="bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
               :class="borderColor(sub.estado_estacion)">
 
-              <!-- Header tarjeta -->
               <div class="px-5 py-4 flex items-center justify-between" :class="bgEstado(sub.estado_estacion)">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center text-xl shadow-sm group-hover:rotate-12 transition-transform">
@@ -105,11 +146,10 @@
                   </div>
                 </div>
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
-                  {{ ['ABIERTA', 'ENTREGADA', 'CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
+                  {{ ['ABIERTA','ENTREGADA','CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
                 </span>
               </div>
 
-              <!-- Contenido -->
               <div class="px-5 py-5 flex-1 space-y-4">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2 min-w-0">
@@ -120,8 +160,6 @@
                     MESA {{ sub.mesa }}
                   </div>
                 </div>
-
-                <!-- Lista de productos en la orden -->
                 <div class="space-y-1.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
                   <div v-for="detalle in sub.detalles_estacion" :key="detalle.id"
                     class="flex items-center justify-between text-xs font-bold text-slate-700">
@@ -132,9 +170,9 @@
                 </div>
               </div>
 
-              <!-- Footer con acciones -->
               <div class="px-5 pb-5">
-                <button v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
+                <button
+                  v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
                   @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
                   :disabled="cambiando === sub.uid"
                   class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
@@ -142,7 +180,7 @@
                   {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
                 </button>
                 <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
-                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : (sub.estado_estacion === 'CERRADA' ? '🔒 Archivada' : 'En proceso') }}
+                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Archivada' : 'En proceso' }}
                 </div>
               </div>
             </div>
@@ -150,17 +188,16 @@
         </div>
       </div>
 
-      <!-- ══ VISTA CREAR NUEVA ORDEN ══ -->
+      <!-- ══ VISTA NUEVA ORDEN ══ -->
       <div v-else-if="vistaActual === 'nueva'" class="animate-fade-in">
         <div class="flex items-center gap-3 mb-6">
           <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
           <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
         </div>
-        
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Formulario y Catálogo -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Datos Básicos -->
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -171,36 +208,56 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Número de Mesa</label>
-                  
-                  <!-- Si es mesero y tiene mesas asignadas, mostrar Select -->
-                  <select v-if="esMesero && mesasAsignadas.length > 0" v-model="nuevaOrden.mesa" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold">
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                    Número de Mesa
+                    <!-- Indicador: mesa tiene orden abierta -->
+                    <span v-if="mesaTieneOrdenAbierta" class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-lg text-[9px] normal-case font-black">
+                      ⚠️ Tiene orden abierta
+                    </span>
+                  </label>
+                  <select v-if="esMesero && mesasAsignadas.length > 0" v-model="nuevaOrden.mesa"
+                    class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
+                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : ''">
                     <option :value="null">Selecciona una mesa</option>
-                    <option v-for="m in mesasAsignadas" :key="m" :value="m">Mesa {{ m }}</option>
+                    <option v-for="m in mesasAsignadas" :key="m" :value="m">
+                      Mesa {{ m }}{{ mesaConOrden(m) ? ' ⚠️ orden abierta' : '' }}
+                    </option>
                   </select>
-                  
-                  <!-- Si no es mesero o no tiene asignación, mostrar Input tradicional -->
-                  <input v-else v-model="nuevaOrden.mesa" type="number" min="1" placeholder="Ej: 5" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold" />
+                  <input v-else v-model="nuevaOrden.mesa" type="number" min="1" placeholder="Ej: 5"
+                    class="w-full px-4 py-3.5 border rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
+                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : 'border-slate-100'" />
+
+                  <!-- Aviso inline si la mesa tiene orden abierta -->
+                  <div v-if="mesaTieneOrdenAbierta" class="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <span class="text-amber-500 text-sm mt-0.5">ℹ️</span>
+                    <p class="text-xs text-amber-700 font-bold">
+                      La mesa {{ nuevaOrden.mesa }} ya tiene una orden abierta ({{ ordenAbiertaMesa?.folio }}).
+                      Al confirmar, los productos se <strong>agregarán al ticket existente</strong>.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <!-- Catálogo Separado por Pestañas -->
+
+            <!-- Catálogo -->
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
               <div class="p-6 border-b border-slate-50">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                   <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
-                    <button @click="subTabActiva = 'productos'" 
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest', subTabActiva === 'productos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                    <button @click="subTabActiva = 'productos'"
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest',
+                        subTabActiva === 'productos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🍽️ PRODUCTOS
                     </button>
-                    <button @click="subTabActiva = 'paquetes'" 
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest', subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                    <button @click="subTabActiva = 'paquetes'"
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest',
+                        subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🎁 PAQUETES
                     </button>
                   </div>
                   <div class="relative flex-1 max-w-xs">
-                    <input v-model="busqueda" type="text" :placeholder="'Buscar en ' + (subTabActiva === 'productos' ? 'productos...' : 'paquetes...')" 
+                    <input v-model="busqueda" type="text"
+                      :placeholder="'Buscar en ' + (subTabActiva === 'productos' ? 'productos...' : 'paquetes...')"
                       class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                   </div>
@@ -212,13 +269,12 @@
                   <div class="w-10 h-10 border-4 border-slate-50 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
                   <p class="text-sm font-bold uppercase tracking-widest">Sincronizando menú...</p>
                 </div>
-                
-                <!-- Catálogo: Productos -->
+
                 <div v-else-if="subTabActiva === 'productos'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
                   <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
                     <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
                   </div>
-                  <button v-for="p in productosFiltrados" :key="'p-'+p.id" @click="agregarAlCarrito(p, 'producto')" 
+                  <button v-for="p in productosFiltrados" :key="'p-'+p.id" @click="agregarAlCarrito(p, 'producto')"
                     class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-slate-50 border border-transparent hover:border-slate-100 bg-white">
                     <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
                       <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
@@ -235,12 +291,11 @@
                   </button>
                 </div>
 
-                <!-- Catálogo: Paquetes -->
                 <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
                   <div v-if="paquetesFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
                     <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
                   </div>
-                  <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')" 
+                  <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')"
                     class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-indigo-50/50 border border-transparent hover:border-indigo-100 bg-white shadow-sm shadow-slate-100">
                     <div class="w-16 h-16 rounded-2xl overflow-hidden bg-indigo-50 shrink-0 flex items-center justify-center border border-indigo-100 shadow-sm relative group-hover:rotate-2 transition-transform">
                       <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover" />
@@ -261,7 +316,7 @@
             </div>
           </div>
 
-          <!-- Panel de Resumen / Carrito -->
+          <!-- Carrito -->
           <div class="lg:col-span-1">
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden sticky top-6">
               <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
@@ -273,17 +328,25 @@
                   {{ carrito.length }}
                 </div>
               </div>
-              
+
+              <!-- Banner: se agregará a orden existente -->
+              <div v-if="mesaTieneOrdenAbierta" class="px-6 pt-4">
+                <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <span class="text-amber-500">⚡</span>
+                  <p class="text-xs font-black text-amber-700">Se añadirán a {{ ordenAbiertaMesa?.folio }}</p>
+                </div>
+              </div>
+
               <div class="p-6">
                 <div v-if="carrito.length === 0" class="flex flex-col items-center justify-center py-20 text-center opacity-30">
                   <div class="text-5xl mb-4">🛒</div>
                   <p class="text-xs font-black uppercase tracking-widest">Carrito Vacío</p>
                 </div>
-                
+
                 <div v-else class="animate-fade-in">
-                  <!-- Listado de ítems en carrito -->
                   <div class="space-y-3 mb-8 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
-                    <div v-for="item in carrito" :key="item.id + item.tipo" class="p-4 bg-slate-50 border border-slate-100 rounded-3xl transition-all hover:border-indigo-200 group">
+                    <div v-for="item in carrito" :key="item.id + item.tipo"
+                      class="p-4 bg-slate-50 border border-slate-100 rounded-3xl transition-all hover:border-indigo-200 group">
                       <div class="flex justify-between items-start gap-3 mb-3">
                         <div class="flex items-center gap-3 min-w-0">
                           <span class="text-xl bg-white w-8 h-8 rounded-xl flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
@@ -302,7 +365,6 @@
                     </div>
                   </div>
 
-                  <!-- Cálculos Finales -->
                   <div class="space-y-3 pt-6 border-t border-slate-100">
                     <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
                       <span>Subtotal</span>
@@ -314,14 +376,15 @@
                     </div>
                   </div>
 
-                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa" 
-                    class="w-full py-4.5 bg-indigo-600 text-white font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl shadow-indigo-100 active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
+                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa"
+                    class="w-full py-4 font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs text-white"
+                    :class="mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'">
                     <template v-if="creando">
                       <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Enviando...
                     </template>
                     <template v-else>
-                      CONFIRMAR ORDEN 🚀
+                      {{ mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀' }}
                     </template>
                   </button>
                   <p v-if="!nuevaOrden.mesa && carrito.length > 0" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
@@ -336,77 +399,89 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
 
-// --- Inicialización de Estados ---
-const vistaActual = ref('ordenes')
-const tabActivo = ref('todas')
+const vistaActual  = ref('ordenes')
+const tabActivo    = ref('todas')
 const subTabActiva = ref('productos')
-const ordenes = ref([])
-const productos = ref([])
-const paquetes = ref([])
-const clientes = ref([])
-const carrito = ref([])
-const busqueda = ref('')
+const ordenes      = ref([])
+const productos    = ref([])
+const paquetes     = ref([])
+const clientes     = ref([])
+const carrito      = ref([])
+const busqueda     = ref('')
 
-const loading = ref(true)
-const loadingCaja = ref(true)
+const loading         = ref(true)
+const loadingCaja     = ref(true)
 const loadingProductos = ref(true)
-const creando = ref(false)
-const cambiando = ref(null)
-const toasts = ref([])
-const cajaAbierta = ref(false)
-const nuevaOrden = ref({ clienteId: null, mesa: null })
-const mesasAsignadas = ref([])
+const creando         = ref(false)
+const cambiando       = ref(null)
+const toasts          = ref([])
+const cajaAbierta     = ref(false)
+const nuevaOrden      = ref({ clienteId: null, mesa: null })
+const mesasAsignadas  = ref([])
 
-// --- Usuario y Roles ---
-const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+// ── NUEVO: estado para orden existente de la mesa ──────────────────────────
+const ordenExistente = ref(null)   // se muestra el modal de confirmación
+
+const userRaw    = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const userActual = JSON.parse(userRaw)
-const esMesero = computed(() => {
+const esMesero   = computed(() => {
   const roles = userActual.roles || []
   return roles.some(r => r.id === 3 || r.id === '3')
 })
 
-// --- Configuración Catálogo ---
-const BEBIDA_KEYWORDS = ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'bebida', 'cerveza', 'agua', 'trago', 'coctel', 'limonada', 'naranjada']
+const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebida','cerveza','agua','trago','coctel','limonada','naranjada']
 
 const tabs = [
-  { key: 'todas', label: 'Todas', icon: '📋', color: '#6366f1' },
-  { key: 'ABIERTA', label: 'Nuevas', icon: '📝', color: '#fcd34d' },
-  { key: 'POR_PREPARAR', label: 'Por preparar', icon: '🟡', color: '#f59e0b' },
-  { key: 'EN_PREPARACION', label: 'En preparación', icon: '🔥', color: '#f97316' },
-  { key: 'LISTA', label: 'Listas', icon: '✅', color: '#10b981' },
-  { key: 'ENTREGADA', label: 'Entregadas', icon: '🏁', color: '#8b5cf6' },
-  { key: 'cobrar', label: 'Cobrar', icon: '💵', color: '#10b981' },
+  { key: 'todas',          label: 'Todas',          icon: '📋', color: '#6366f1' },
+  { key: 'ABIERTA',        label: 'Nuevas',          icon: '📝', color: '#fcd34d' },
+  { key: 'POR_PREPARAR',   label: 'Por preparar',    icon: '🟡', color: '#f59e0b' },
+  { key: 'EN_PREPARACION', label: 'En preparación',  icon: '🔥', color: '#f97316' },
+  { key: 'LISTA',          label: 'Listas',          icon: '✅', color: '#10b981' },
+  { key: 'ENTREGADA',      label: 'Entregadas',      icon: '🏁', color: '#8b5cf6' },
+  { key: 'cobrar',         label: 'Cobrar',          icon: '💵', color: '#10b981' },
 ]
 
-// --- Funciones de Lógica ---
-const esBebida = (detalle) => {
-  if (!detalle) return false
-  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
-  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
-         BEBIDA_KEYWORDS.some(k => nombre.includes(k))
-}
+// ── Computed: detectar si la mesa seleccionada ya tiene orden abierta ──────
+const ordenAbiertaMesa = computed(() => {
+  if (!nuevaOrden.value.mesa) return null
+  return ordenes.value.find(o =>
+    Number(o.mesa) === Number(nuevaOrden.value.mesa) &&
+    !['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)
+  ) || null
+})
 
-const esPostre = (detalle) => {
-  if (!detalle) return false
-  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
-  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel') || 
-         nombre.includes('pastel') || nombre.includes('postre') || nombre.includes('helado')
-}
+const mesaTieneOrdenAbierta = computed(() => !!ordenAbiertaMesa.value)
 
+// Qué mesas de la lista ya tienen orden abierta
+const mesaConOrden = (m) => ordenes.value.some(o =>
+  Number(o.mesa) === Number(m) && !['CERRADA','CANCELADA','PAGADA'].includes(o.estado)
+)
+
+// ── Lógica de sub-órdenes (sin cambios) ────────────────────────────────────
+const esBebida = (d) => {
+  if (!d) return false
+  const cat    = (d.producto?.categoria?.nombre || d.categoria || '').toLowerCase()
+  const nombre = (d.producto_nombre || d.producto?.nombre || '').toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida') || BEBIDA_KEYWORDS.some(k => nombre.includes(k))
+}
+const esPostre = (d) => {
+  if (!d) return false
+  const cat    = (d.producto?.categoria?.nombre || d.categoria || '').toLowerCase()
+  const nombre = (d.producto_nombre || d.producto?.nombre || '').toLowerCase()
+  return cat.includes('postre') || nombre.includes('postre') || nombre.includes('helado') || nombre.includes('pastel')
+}
 const calcularEstadoEstacion = (detalles, estadoOrden) => {
   if (estadoOrden === 'ABIERTA') return 'ABIERTA'
-  if (estadoOrden === 'CERRADA' || estadoOrden === 'PAGADA') return 'CERRADA'
-  if (!detalles || detalles.length === 0) return 'POR_PREPARAR'
-  const total = detalles.length
+  if (['CERRADA','PAGADA'].includes(estadoOrden)) return 'CERRADA'
+  if (!detalles?.length) return 'POR_PREPARAR'
+  const total      = detalles.length
   const entregados = detalles.filter(d => d.estado_preparacion === 'ENTREGADO').length
-  const listos = detalles.filter(d => d.estado_preparacion === 'LISTO').length
-  const enPrep = detalles.filter(d => d.estado_preparacion === 'EN_PREPARACION').length
+  const listos     = detalles.filter(d => d.estado_preparacion === 'LISTO').length
+  const enPrep     = detalles.filter(d => d.estado_preparacion === 'EN_PREPARACION').length
   if (entregados === total) return 'ENTREGADA'
   if (listos > 0) return 'LISTA'
   if (enPrep > 0) return 'EN_PREPARACION'
@@ -415,22 +490,21 @@ const calcularEstadoEstacion = (detalles, estadoOrden) => {
 
 const subOrdenes = computed(() => {
   const list = []
-  if (!ordenes.value) return list
   ordenes.value.forEach(o => {
-    const todos = o.detalles || []
-    const barra = todos.filter(d => esBebida(d))
+    const todos   = o.detalles || []
+    const barra   = todos.filter(d => esBebida(d))
     const postres = todos.filter(d => esPostre(d) && !esBebida(d))
-    const cocina = todos.filter(d => !esBebida(d) && !esPostre(d))
-    if (cocina.length > 0) list.push({ ...o, uid: `${o.id}-COCINA`, detalles_estacion: cocina, estado_estacion: calcularEstadoEstacion(cocina, o.estado) })
-    if (barra.length > 0) list.push({ ...o, uid: `${o.id}-BARRA`, detalles_estacion: barra, estado_estacion: calcularEstadoEstacion(barra, o.estado) })
-    if (postres.length > 0) list.push({ ...o, uid: `${o.id}-POSTRES`, detalles_estacion: postres, estado_estacion: calcularEstadoEstacion(postres, o.estado) })
+    const cocina  = todos.filter(d => !esBebida(d) && !esPostre(d))
+    if (cocina.length)   list.push({ ...o, uid: `${o.id}-COCINA`,  detalles_estacion: cocina,  estado_estacion: calcularEstadoEstacion(cocina, o.estado) })
+    if (barra.length)    list.push({ ...o, uid: `${o.id}-BARRA`,   detalles_estacion: barra,   estado_estacion: calcularEstadoEstacion(barra, o.estado) })
+    if (postres.length)  list.push({ ...o, uid: `${o.id}-POSTRES`, detalles_estacion: postres, estado_estacion: calcularEstadoEstacion(postres, o.estado) })
   })
   return list
 })
 
 const subOrdenesFiltradas = computed(() => {
   if (tabActivo.value === 'cobrar') return []
-  if (['todas', 'ABIERTA', 'ENTREGADA'].includes(tabActivo.value)) {
+  if (['todas','ABIERTA','ENTREGADA'].includes(tabActivo.value)) {
     return ordenes.value
       .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
       .map(o => ({ ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }))
@@ -438,78 +512,81 @@ const subOrdenesFiltradas = computed(() => {
   return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
 })
 
-const ordenesParaCobrar = computed(() => {
-  return ordenes.value.filter(o => o.estado === 'ENTREGADA' || o.estado_estacion === 'ENTREGADA')
-})
+const ordenesParaCobrar = computed(() =>
+  ordenes.value.filter(o => o.estado === 'ENTREGADA')
+)
 
 const contarOrdenes = (key) => {
-  if (key === 'cobrar') return ordenesParaCobrar.value.length
-  if (key === 'todas') return ordenes.value?.length || 0
-  if (['ABIERTA', 'ENTREGADA'].includes(key)) return ordenes.value?.filter(o => o.estado === key).length || 0
-  return subOrdenes.value?.filter(s => s.estado_estacion === key).length || 0
+  if (key === 'cobrar')   return ordenesParaCobrar.value.length
+  if (key === 'todas')    return ordenes.value.length
+  if (['ABIERTA','ENTREGADA'].includes(key)) return ordenes.value.filter(o => o.estado === key).length
+  return subOrdenes.value.filter(s => s.estado_estacion === key).length
 }
 
-const tabActual = computed(() => tabs.find(t => t.key === tabActivo.value))
-const totalCarrito = computed(() => carrito.value.reduce((s, i) => s + (i.precio * i.cantidad), 0))
-const fechaHoy = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
-
+const tabActual      = computed(() => tabs.find(t => t.key === tabActivo.value))
+const totalCarrito   = computed(() => carrito.value.reduce((s, i) => s + (i.precio * i.cantidad), 0))
+const fechaHoy       = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 const productosFiltrados = computed(() => {
   const b = busqueda.value?.toLowerCase() || ''
   return b ? productos.value.filter(p => p.nombre.toLowerCase().includes(b)) : productos.value
 })
-
 const paquetesFiltrados = computed(() => {
   const b = busqueda.value?.toLowerCase() || ''
   return b ? paquetes.value.filter(p => p.nombre.toLowerCase().includes(b)) : paquetes.value
 })
 
-// --- Estilos Visuales ---
-const bgEstado = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? 'bg-slate-50' : { ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50' }[e] || 'bg-slate-50'
-const borderColor = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? 'border-slate-100' : { ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200' }[e] || 'border-slate-100'
-const badgeEstado = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : { ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300' }[e] || 'bg-slate-100 text-slate-500'
-const iconEstado = (e) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(e) ? '🕒' : { ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋'
+// ── Estilos ────────────────────────────────────────────────────────────────
+const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50' }[e] || 'bg-slate-50')
+const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200' }[e] || 'border-slate-100')
+const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300' }[e] || 'bg-slate-100 text-slate-500')
+const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋')
 const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cerrada' }[e] || e)
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
-const accionEstado = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregar' }[e] || '')
-const btnEstado = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
+const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregar' }[e] || '')
+const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
 
-// --- Funciones de API ---
+// ── API ────────────────────────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+  const token  = localStorage.getItem('token') || sessionStorage.getItem('token') || ''
   const restId = localStorage.getItem('restaurante_id_activo') || ''
-  return { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}`, 'X-Restaurante-Id': restId }
+  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${token}`, 'X-Restaurante-Id': restId }
 }
 
 const cargarOrdenes = async () => {
   loading.value = true
   try {
-    const today = new Date().toISOString().split('T')[0]
-    const states = ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA', 'ENTREGADA']
-    const endpoints = states.map(s => `${API_URL}/meseros/mis-ordenes?estado=${s}&per_page=100`)
-    endpoints.push(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
-    const results = await Promise.all(endpoints.map(url => fetch(url, { headers: getHeaders() }).then(r => r.ok ? r.json() : { success: false })))
+    const today  = new Date().toISOString().split('T')[0]
+    const states = ['ABIERTA','POR_PREPARAR','EN_PREPARACION','LISTA','ENTREGADA']
+    const urls   = states.map(s => `${API_URL}/meseros/mis-ordenes?estado=${s}&per_page=100`)
+    urls.push(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
+    const results = await Promise.all(urls.map(url => fetch(url, { headers: getHeaders() }).then(r => r.ok ? r.json() : { success: false })))
     const map = new Map()
     results.forEach(res => { if (res.success && res.data) res.data.forEach(o => map.set(o.id, o)) })
     ordenes.value = [...map.values()].sort((a, b) => b.id - a.id)
-  } catch (err) { console.error('Error órdenes:', err) } finally { loading.value = false }
+  } catch (err) { console.error('Error órdenes:', err) }
+  finally { loading.value = false }
 }
 
 const cargarMisMesas = async () => {
   if (!esMesero.value) return
   try {
-    const res = await fetch(`${API_URL}/meseros/mis-mesas`, { headers: getHeaders() })
+    const res  = await fetch(`${API_URL}/meseros/mis-mesas`, { headers: getHeaders() })
     const data = await res.json()
     if (data.success) mesasAsignadas.value = data.data
-  } catch (err) { console.error('Error mesas:', err) }
+  } catch {}
 }
 
 const cargarProductos = async () => {
   loadingProductos.value = true
   try {
-    const [pRes, paqRes] = await Promise.all([fetch(`${API_URL}/productos`, { headers: getHeaders() }), fetch(`${API_URL}/paquetes`, { headers: getHeaders() })])
-    if (pRes.ok) { const d = await pRes.json(); if (d.success) productos.value = d.data }
-    if (paqRes.ok) { const d = await paqRes.json(); if (d.success) paquetes.value = d.data }
-  } catch (err) { console.error('Error catálogo:', err) } finally { loadingProductos.value = false }
+    const [pRes, paqRes] = await Promise.all([
+      fetch(`${API_URL}/productos`, { headers: getHeaders() }),
+      fetch(`${API_URL}/paquetes`,  { headers: getHeaders() }),
+    ])
+    if (pRes.ok)   { const d = await pRes.json();   if (d.success) productos.value = d.data }
+    if (paqRes.ok) { const d = await paqRes.json(); if (d.success) paquetes.value  = d.data }
+  } catch {}
+  finally { loadingProductos.value = false }
 }
 
 const verificarCaja = async () => {
@@ -517,7 +594,8 @@ const verificarCaja = async () => {
   try {
     const res = await fetch(`${API_URL}/caja/estado`, { headers: getHeaders() })
     if (res.ok) { const d = await res.json(); cajaAbierta.value = !!(d.success && d.data?.is_open) }
-  } catch (err) { console.error('Error caja:', err) } finally { loadingCaja.value = false }
+  } catch {}
+  finally { loadingCaja.value = false }
 }
 
 const cargarClientes = async () => {
@@ -527,60 +605,79 @@ const cargarClientes = async () => {
   } catch {}
 }
 
+// ── Crear / Agregar orden ──────────────────────────────────────────────────
+const buildPayload = () => ({
+  cliente_id: nuevaOrden.value.clienteId,
+  mesa:       nuevaOrden.value.mesa,
+  productos:  carrito.value.map(i => {
+    const item = { cantidad: i.cantidad }
+    if (i.tipo === 'producto') item.producto_id = i.id
+    if (i.tipo === 'paquete')  item.paquete_id  = i.id
+    return item
+  }),
+})
+
 const crearOrden = async () => {
-  if (carrito.value.length === 0 || !nuevaOrden.value.mesa) return
-  creando.value = true
-  try {
-    const payload = {
-      cliente_id: nuevaOrden.value.clienteId,
-      mesa: nuevaOrden.value.mesa,
-      productos: carrito.value.map(i => {
-        const item = { cantidad: i.cantidad }
-        if (i.tipo === 'producto') item.producto_id = i.id
-        if (i.tipo === 'paquete') item.paquete_id = i.id
-        return item
-      })
-    }
-    const res = await fetch(`${API_URL}/ordenes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) })
-    const data = await res.json()
-    if (data.success) {
-      carrito.value = []; nuevaOrden.value.mesa = null; vistaActual.value = 'ordenes'; await cargarOrdenes(); showToast('Orden confirmada 🚀', 'success')
-    } else showToast(data.message || 'Error al crear', 'error')
-  } catch { showToast('Error de conexión', 'error') } finally { creando.value = false }
+  if (!carrito.value.length || !nuevaOrden.value.mesa) return
+
+  // Si la mesa ya tiene orden abierta, mostrar modal de confirmación
+  if (mesaTieneOrdenAbierta.value) {
+    ordenExistente.value = ordenAbiertaMesa.value
+    return
+  }
+
+  await enviarOrden()
 }
 
-const handleOrderPaid = async (paymentData) => {
-  showToast(`Orden ${paymentData.folio} cobrada con éxito ✅`, 'success')
+// Confirmó desde el modal
+const confirmarAgregarAOrden = async () => {
+  ordenExistente.value = null
+  await enviarOrden()
+}
+
+const enviarOrden = async () => {
+  creando.value = true
+  try {
+    const res  = await fetch(`${API_URL}/ordenes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(buildPayload()) })
+    const data = await res.json()
+    if (data.success) {
+      carrito.value           = []
+      nuevaOrden.value.mesa   = null
+      vistaActual.value       = 'ordenes'
+      await cargarOrdenes()
+      // El backend indica si fue nueva o se anexó
+      if (data.es_nueva === false) {
+        showToast(`Productos agregados al ticket ${data.data?.folio || ''} 📋`, 'warning')
+      } else {
+        showToast('Orden confirmada 🚀', 'success')
+      }
+    } else {
+      showToast(data.message || 'Error al crear', 'error')
+    }
+  } catch {
+    showToast('Error de conexión', 'error')
+  } finally {
+    creando.value = false
+  }
+}
+
+const handleOrderPaid = async () => {
+  showToast('Orden cobrada con éxito ✅', 'success')
   await cargarOrdenes()
   tabActivo.value = 'todas'
 }
 
-// --- Carrito de Compras ---
+// ── Carrito ────────────────────────────────────────────────────────────────
 const agregarAlCarrito = (item, tipo) => {
   const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo)
   if (e) e.cantidad++
-  else carrito.value.push({ id: item.id, nombre: item.nombre, precio: Number(item.precio), cantidad: 1, tipo })
+  else   carrito.value.push({ id: item.id, nombre: item.nombre, precio: Number(item.precio), cantidad: 1, tipo })
 }
-const incrementar = (id, tipo) => { const i = carrito.value.find(x => x.id === id && x.tipo === tipo); if (i) i.cantidad++ }
-const decrementar = (id, tipo) => { 
-  const i = carrito.value.findIndex(x => x.id === id && x.tipo === tipo)
-  if (i !== -1) { 
-    if (carrito.value[i].cantidad > 1) carrito.value[i].cantidad--
-    else carrito.value.splice(i, 1) 
-  } 
-}
+const incrementar        = (id, tipo) => { const i = carrito.value.find(x => x.id === id && x.tipo === tipo); if (i) i.cantidad++ }
+const decrementar        = (id, tipo) => { const idx = carrito.value.findIndex(x => x.id === id && x.tipo === tipo); if (idx !== -1) { if (carrito.value[idx].cantidad > 1) carrito.value[idx].cantidad--; else carrito.value.splice(idx, 1) } }
 const eliminarDelCarrito = (id, tipo) => { carrito.value = carrito.value.filter(x => !(x.id === id && x.tipo === tipo)) }
 
-// --- Helpers de Imagen y UI ---
-const resolveImageUrl = (path) => {
-  if (!path) return null
-  if (path.startsWith('http')) return path
-  return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}`
-}
-const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
-const showToast = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3000) }
-const removeToast = (id) => toasts.value = toasts.value.filter(t => t.id !== id)
-
+// ── Acciones de órdenes ────────────────────────────────────────────────────
 const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   cambiando.value = sub.uid
   try {
@@ -599,14 +696,18 @@ const entregarProductosSubOrden = async (sub) => {
   } finally { cambiando.value = null }
 }
 
-onMounted(async () => { 
-  try {
-    await verificarCaja()
-    if (cajaAbierta.value) { 
-      await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes()])
-      if (esMesero.value) await cargarMisMesas()
-    } 
-  } catch (err) { console.error('Error inicialización:', err) }
+// ── Helpers ────────────────────────────────────────────────────────────────
+const resolveImageUrl  = (path) => { if (!path) return null; if (path.startsWith('http')) return path; return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}` }
+const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
+const showToast        = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3500) }
+const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
+
+onMounted(async () => {
+  await verificarCaja()
+  if (cajaAbierta.value) {
+    await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes()])
+    if (esMesero.value) await cargarMisMesas()
+  }
 })
 </script>
 
