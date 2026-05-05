@@ -203,39 +203,73 @@
 
       <!-- Carrito lateral (Escritorio) -->
       <div class="w-96 shrink-0 bg-white border-l border-slate-100 flex flex-col shadow-2xl z-10 hidden sm:flex">
-        <div class="px-6 py-6 border-b border-slate-50 bg-slate-50/50">
+        <div class="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
           <div class="flex justify-between items-center mb-1">
             <h3 class="font-black text-slate-900 text-xl tracking-tight">Tu Pedido</h3>
             <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{{ totalItems }} items</span>
           </div>
-          <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Restaurant Kiosk System</p>
+          <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Restaurant Kiosk System</p>
+          
+          <div class="flex items-center justify-between bg-white rounded-xl p-2 border border-slate-100 shadow-sm">
+            <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
+            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
+          </div>
         </div>
         
-        <div class="flex-1 overflow-y-auto px-5 py-5 space-y-4 bg-white custom-scrollbar">
+        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-white custom-scrollbar">
           <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center h-full text-center opacity-20 py-20">
             <span class="text-7xl mb-6">🍽️</span>
             <p class="text-slate-900 font-black text-xl uppercase tracking-widest">Orden Vacía</p>
             <p class="text-sm text-slate-500 mt-2 font-medium">Toca los platos para agregarlos</p>
           </div>
           
-          <div v-else v-for="item in pedido" :key="item.id"
-            class="flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 rounded-[1.5rem] transition-all hover:border-indigo-100 hover:bg-indigo-50/10">
-            <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shrink-0 flex items-center justify-center shadow-sm border border-slate-100">
-              <img v-if="item.imagen" :src="item.imagen" class="w-full h-full object-cover" />
-              <span v-else class="text-2xl">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-black text-slate-800 uppercase tracking-tighter truncate leading-none mb-2">{{ item.nombre }}</p>
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-100 shadow-sm">
-                  <button @click="decrementar(item.id)" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
-                  <span class="text-xs font-black w-5 text-center text-slate-700">{{ item.cantidad }}</span>
-                  <button @click="incrementar(item.id)" class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors">+</button>
+          <div v-else class="space-y-4">
+            <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
+                 class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
+                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+              
+              <!-- Box Header -->
+              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                <div class="flex items-center gap-2">
+                   <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
+                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
                 </div>
-                <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+                <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
+              </div>
+
+              <!-- Box Items -->
+              <div class="p-3 space-y-3 bg-white">
+                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
+                  Caja Vacía
+                </div>
+                
+                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" 
+                  class="p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:border-indigo-200 group transition-all">
+                  <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 flex items-center justify-center shadow-sm border border-slate-100">
+                      <img v-if="item.imagen" :src="item.imagen" class="w-full h-full object-cover" />
+                      <span v-else class="text-lg">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
+                    </div>
+                    <div class="flex-1 min-w-0 flex justify-between items-start">
+                      <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }}</p>
+                      <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
+                    </div>
+                  </div>
+                  <div class="mb-2">
+                    <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
+                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
+                      <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
+                      <button @click="incrementar(item.cartId)" class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors">+</button>
+                    </div>
+                    <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <button @click="eliminarDelPedido(item.id)" class="text-slate-300 hover:text-red-500 transition-all p-1">✕</button>
           </div>
         </div>
 
@@ -294,7 +328,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarquesitaWidget from '../components/Marquesitawidget.vue'
 import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
@@ -317,6 +351,34 @@ const showCheckout            = ref(false)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const paquetes                = ref([])
+
+// --- ESTADO COMENSALES ---
+const numeroComensales    = ref(1)
+const comensalesNombres   = ref(['Comensal 1'])
+const comensalActivoIndex = ref(0)
+
+watch(numeroComensales, (newVal) => {
+  if (!newVal || newVal < 1) {
+    numeroComensales.value = 1
+    newVal = 1
+  }
+  const diff = newVal - comensalesNombres.value.length
+  if (diff > 0) {
+    for (let i = 0; i < diff; i++) {
+      comensalesNombres.value.push(`Comensal ${comensalesNombres.value.length + 1}`)
+    }
+  } else if (diff < 0) {
+    comensalesNombres.value.splice(newVal)
+    pedido.value.forEach(item => {
+      if (item.comensalIndex >= newVal) item.comensalIndex = 0
+    })
+  }
+  if (comensalActivoIndex.value >= newVal) {
+    comensalActivoIndex.value = newVal - 1
+  }
+})
+
+const getItemsForComensal = (cIdx) => pedido.value.filter(i => i.comensalIndex === cIdx)
 
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
@@ -443,41 +505,74 @@ const cargarPaquetes = async (restauranteId) => {
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
-  const existe = pedido.value.find(i => i.id === p.id)
-  if (existe) { existe.cantidad++ } 
-  else { pedido.value.push({ id:p.id, nombre:p.nombre, precio:parseFloat(p.precio), imagen:p.imagen_url?getImageUrl(p.imagen_url):null, cantidad:1, stock_maximo:p.stock }) }
+  const cIdx = comensalActivoIndex.value
+  const existe = pedido.value.find(i => i.id === p.id && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
+  if (existe) { 
+    existe.cantidad++ 
+  } else { 
+    pedido.value.push({ 
+      cartId: Date.now() + Math.random(),
+      id: p.id, 
+      nombre: p.nombre, 
+      precio: parseFloat(p.precio), 
+      imagen: p.imagen_url ? getImageUrl(p.imagen_url) : null, 
+      cantidad: 1, 
+      stock_maximo: p.stock,
+      notas: '',
+      comensalIndex: cIdx
+    }) 
+  }
 }
 
 const agregarOfertaAlPedido = (oferta) => {
-  const existe = pedido.value.find(i => i.id === oferta.producto_id)
-  if (existe) { existe.cantidad++; existe.precio = oferta.precio_oferta } 
-  else {
+  const cIdx = comensalActivoIndex.value
+  const existe = pedido.value.find(i => i.id === oferta.producto_id && i.comensalIndex === cIdx && !i.notas && i.es_oferta)
+  if (existe) { 
+    existe.cantidad++; 
+    existe.precio = oferta.precio_oferta 
+  } else {
     pedido.value.push({
-      id: oferta.producto_id, nombre: oferta.nombre, precio: oferta.precio_oferta,
+      cartId: Date.now() + Math.random(),
+      id: oferta.producto_id, 
+      nombre: oferta.nombre, 
+      precio: oferta.precio_oferta,
       imagen: oferta.imagen_url ? getImageUrl(oferta.imagen_url) : null,
-      cantidad: 1, es_oferta: true, oferta_id: oferta.id
+      cantidad: 1, 
+      es_oferta: true, 
+      oferta_id: oferta.id,
+      notas: '',
+      comensalIndex: cIdx
     })
   }
 }
 
 const agregarPaqueteAlPedido = (pkg) => {
-  const existe = pedido.value.find(i => i.paquete_id === pkg.id)
-  if (existe) { existe.cantidad++ } 
-  else {
+  const cIdx = comensalActivoIndex.value
+  const existe = pedido.value.find(i => i.paquete_id === pkg.id && i.comensalIndex === cIdx && !i.notas)
+  if (existe) { 
+    existe.cantidad++ 
+  } else {
     pedido.value.push({
-      id: `pkg_${pkg.id}`, paquete_id: pkg.id, nombre: pkg.nombre,
-      precio: parseFloat(pkg.precio), imagen: pkg.imagen_url ? getImageUrl(pkg.imagen_url) : null,
-      cantidad: 1, es_paquete: true
+      cartId: Date.now() + Math.random(),
+      id: `pkg_${pkg.id}`, 
+      paquete_id: pkg.id, 
+      nombre: pkg.nombre,
+      precio: parseFloat(pkg.precio), 
+      imagen: pkg.imagen_url ? getImageUrl(pkg.imagen_url) : null,
+      cantidad: 1, 
+      es_paquete: true,
+      notas: '',
+      comensalIndex: cIdx
     })
   }
 }
 
-const incrementar = (id) => { const item = pedido.value.find(i => i.id === id); if (item) item.cantidad++ }
-const decrementar = (id) => {
-  const idx = pedido.value.findIndex(i => i.id === id)
+const incrementar = (cartId) => { const item = pedido.value.find(i => i.cartId === cartId); if (item) item.cantidad++ }
+const decrementar = (cartId) => {
+  const idx = pedido.value.findIndex(i => i.cartId === cartId)
   if (idx !== -1) { pedido.value[idx].cantidad > 1 ? pedido.value[idx].cantidad-- : pedido.value.splice(idx, 1) }
 }
-const eliminarDelPedido = (id) => { pedido.value = pedido.value.filter(i => i.id !== id) }
+const eliminarDelPedido = (cartId) => { pedido.value = pedido.value.filter(i => i.cartId !== cartId) }
 const vaciarPedido = () => { if (confirm('¿Vaciar todo el pedido?')) pedido.value = [] }
 
 const handleCheckout = async (checkoutData) => {
@@ -487,7 +582,9 @@ const handleCheckout = async (checkoutData) => {
       productos: pedido.value.map(i => ({ 
         producto_id: i.es_paquete ? null : (i.es_oferta ? i.id : i.id), 
         paquete_id: i.es_paquete ? i.paquete_id : null,
-        cantidad: i.cantidad 
+        cantidad: i.cantidad,
+        notas: i.notas,
+        nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General'
       })),
       metodo_pago: 'efectivo', tipo_entrega: 'comer_aqui',
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
@@ -495,7 +592,14 @@ const handleCheckout = async (checkoutData) => {
     }
     const res = await fetch(`${API_URL}/ordenes`, { method:'POST', headers:getHeaders(), body:JSON.stringify(body) })
     const data = await res.json()
-    if (res.ok && data.success) { showCheckout.value = false; pedido.value = []; mostrarExito() } 
+    if (res.ok && data.success) { 
+      showCheckout.value = false; 
+      pedido.value = []; 
+      numeroComensales.value = 1;
+      comensalesNombres.value = ['Comensal 1'];
+      comensalActivoIndex.value = 0;
+      mostrarExito() 
+    } 
     else { checkoutRef.value?.setError(data.message || 'Error al enviar') }
   } catch { checkoutRef.value?.setError('Error de conexión') }
 }

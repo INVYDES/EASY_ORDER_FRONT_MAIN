@@ -160,12 +160,60 @@
                     MESA {{ sub.mesa }}
                   </div>
                 </div>
-                <div class="space-y-1.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                  <div v-for="detalle in sub.detalles_estacion" :key="detalle.id"
-                    class="flex items-center justify-between text-xs font-bold text-slate-700">
-                    <span class="truncate flex-1">{{ detalle.cantidad }}× {{ (detalle.producto_nombre || detalle.producto?.nombre || 'Producto').toUpperCase() }}</span>
-                    <span v-if="detalle.estado_preparacion === 'LISTO'" class="text-[9px] font-black text-white bg-emerald-500 px-2 py-0.5 rounded-lg ml-2 shadow-sm">LISTO</span>
-                    <span v-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 ml-2">●</span>
+                <div class="space-y-4">
+                  <div v-for="(detalles, nomComensal) in agruparPorComensal(sub.detalles_estacion)" :key="nomComensal"
+                    class="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
+                    
+                    <!-- Encabezado del Comensal -->
+                    <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-100">
+                      <span class="text-[10px]">👤</span>
+                      <span class="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{{ nomComensal }}</span>
+                    </div>
+
+                    <!-- Lista de Productos -->
+                    <div class="space-y-2">
+                      <div v-for="detalle in detalles" :key="detalle.id"
+                        class="flex flex-col gap-1.5 p-2 bg-white rounded-xl border border-slate-50 shadow-sm group/item">
+                        
+                        <div class="flex items-center justify-between gap-2">
+                          <div class="min-w-0 flex-1">
+                            <p class="text-[11px] font-black text-slate-700 leading-tight uppercase truncate">
+                              {{ detalle.cantidad }}× {{ (detalle.producto_nombre || detalle.producto?.nombre || 'Producto') }}
+                            </p>
+                            <!-- Notas del producto -->
+                            <p v-if="detalle.notas" class="text-[9px] text-amber-600 font-bold italic mt-0.5">
+                              "{{ detalle.notas }}"
+                            </p>
+                          </div>
+
+                          <!-- Acciones rápidas (Solo en órdenes ABIERTAS) -->
+                          <div v-if="sub.estado_estacion === 'ABIERTA'" class="flex items-center gap-2">
+                            <button @click="abrirEditorNotas(detalle, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100 active:scale-90 transition-all">
+                              <span class="text-base">📝</span>
+                            </button>
+                            <button @click="eliminarProductoDeOrden(detalle.id, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 shadow-sm border border-red-100 active:scale-90 transition-all">
+                              <span class="text-base">🗑️</span>
+                            </button>
+                          </div>
+
+                          <!-- Badge de estado -->
+                          <div v-else class="flex items-center">
+                            <span v-if="detalle.estado_preparacion === 'LISTO'" class="text-[10px] font-black text-white bg-emerald-500 px-3 py-1 rounded-xl shadow-sm">LISTO</span>
+                            <span v-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 text-sm">●</span>
+                          </div>
+                        </div>
+
+                        <!-- Controles de Cantidad (Solo en ABIERTAS) -->
+                        <div v-if="sub.estado_estacion === 'ABIERTA'" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
+                          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-auto">Cantidad:</span>
+                          <div class="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                            <button @click="actualizarCantidadItem(detalle, sub.id, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-red-500 font-black text-base shadow-sm active:scale-90 transition-all">−</button>
+                            <span class="text-sm font-black text-slate-800 min-w-[20px] text-center">{{ detalle.cantidad }}</span>
+                            <button @click="actualizarCantidadItem(detalle, sub.id, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-indigo-600 font-black text-base shadow-sm active:scale-90 transition-all">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -199,13 +247,17 @@
           <!-- Formulario y Catálogo -->
           <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cliente (Opcional)</label>
                   <select v-model="nuevaOrden.clienteId" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold">
                     <option :value="null">— Sin cliente registrado —</option>
                     <option v-for="c in clientes" :key="c.value" :value="c.value">{{ c.label }}</option>
                   </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
+                  <input v-model="numeroComensales" type="number" min="1" max="50" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold" />
                 </div>
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
@@ -344,23 +396,46 @@
                 </div>
 
                 <div v-else class="animate-fade-in">
-                  <div class="space-y-3 mb-8 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
-                    <div v-for="item in carrito" :key="item.id + item.tipo"
-                      class="p-4 bg-slate-50 border border-slate-100 rounded-3xl transition-all hover:border-indigo-200 group">
-                      <div class="flex justify-between items-start gap-3 mb-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                          <span class="text-xl bg-white w-8 h-8 rounded-xl flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
-                          <p class="text-xs font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
+                  <div class="space-y-4 mb-8 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
+                    <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
+                         class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
+                         :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                      
+                      <!-- Box Header -->
+                      <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                        <div class="flex items-center gap-2">
+                           <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
+                           <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
                         </div>
-                        <button @click="eliminarDelCarrito(item.id, item.tipo)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
+                        <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+                        <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
                       </div>
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3 bg-white rounded-xl p-1 shadow-sm border border-slate-100">
-                          <button @click="decrementar(item.id, item.tipo)" class="w-7 h-7 flex items-center justify-center bg-slate-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
-                          <span class="text-xs font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                          <button @click="incrementar(item.id, item.tipo)" class="w-7 h-7 flex items-center justify-center bg-slate-50 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors font-black">+</button>
+
+                      <!-- Box Items -->
+                      <div class="p-3 space-y-3 bg-white">
+                        <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-2xl">
+                          Caja Vacía
                         </div>
-                        <span class="font-black text-sm text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
+                        <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:border-indigo-200 group transition-all">
+                          <div class="flex justify-between items-start gap-3 mb-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="text-lg bg-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
+                              <p class="text-[11px] font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
+                            </div>
+                            <button @click="eliminarDelCarrito(item.cartId)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
+                          </div>
+                          <div class="mb-3">
+                            <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                          </div>
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-100">
+                              <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
+                              <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
+                              <button @click="incrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black">+</button>
+                            </div>
+                            <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -395,6 +470,37 @@
         </div>
       </div>
     </template>
+
+    <!-- ══ MODAL: EDITAR NOTAS ══ -->
+    <div v-if="editorNotas.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in border border-slate-100">
+        <div class="p-6 bg-slate-50 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📝</span>
+            <div>
+              <h3 class="font-black text-slate-800 text-sm">Editar notas</h3>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ editorNotas.detalle?.producto_nombre || 'Producto' }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-6">
+          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Instrucciones especiales</label>
+          <textarea v-model="editorNotas.nota" rows="3" 
+            class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
+            placeholder="Ej: Sin cebolla, extra picante..."></textarea>
+        </div>
+        <div class="p-6 bg-slate-50 flex gap-3">
+          <button @click="editorNotas.visible = false" 
+            class="flex-1 py-3 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
+            Cancelar
+          </button>
+          <button @click="guardarNota" 
+            class="flex-1 py-3 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 uppercase tracking-widest">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -425,6 +531,34 @@ const mesasAsignadas  = ref([])
 
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
 const ordenExistente = ref(null)   // se muestra el modal de confirmación
+
+// ── ESTADO DE COMENSALES ───────────────────────────────────────────────────
+const numeroComensales    = ref(1)
+const comensalesNombres   = ref(['Comensal 1'])
+const comensalActivoIndex = ref(0)
+
+watch(numeroComensales, (newVal) => {
+  if (!newVal || newVal < 1) {
+    numeroComensales.value = 1
+    newVal = 1
+  }
+  const diff = newVal - comensalesNombres.value.length
+  if (diff > 0) {
+    for (let i = 0; i < diff; i++) {
+      comensalesNombres.value.push(`Comensal ${comensalesNombres.value.length + 1}`)
+    }
+  } else if (diff < 0) {
+    comensalesNombres.value.splice(newVal)
+    carrito.value.forEach(item => {
+      if (item.comensalIndex >= newVal) item.comensalIndex = 0
+    })
+  }
+  if (comensalActivoIndex.value >= newVal) {
+    comensalActivoIndex.value = newVal - 1
+  }
+})
+
+const getItemsForComensal = (cIdx) => carrito.value.filter(i => i.comensalIndex === cIdx)
 
 const userRaw    = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const userActual = JSON.parse(userRaw)
@@ -610,7 +744,11 @@ const buildPayload = () => ({
   cliente_id: nuevaOrden.value.clienteId,
   mesa:       nuevaOrden.value.mesa,
   productos:  carrito.value.map(i => {
-    const item = { cantidad: i.cantidad }
+    const item = { 
+      cantidad: i.cantidad, 
+      notas: i.notas, 
+      nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General' 
+    }
     if (i.tipo === 'producto') item.producto_id = i.id
     if (i.tipo === 'paquete')  item.paquete_id  = i.id
     return item
@@ -641,9 +779,12 @@ const enviarOrden = async () => {
     const res  = await fetch(`${API_URL}/ordenes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(buildPayload()) })
     const data = await res.json()
     if (data.success) {
-      carrito.value           = []
-      nuevaOrden.value.mesa   = null
-      vistaActual.value       = 'ordenes'
+      carrito.value             = []
+      nuevaOrden.value.mesa     = null
+      numeroComensales.value    = 1
+      comensalesNombres.value   = ['Comensal 1']
+      comensalActivoIndex.value = 0
+      vistaActual.value         = 'ordenes'
       await cargarOrdenes()
       // El backend indica si fue nueva o se anexó
       if (data.es_nueva === false) {
@@ -669,13 +810,26 @@ const handleOrderPaid = async () => {
 
 // ── Carrito ────────────────────────────────────────────────────────────────
 const agregarAlCarrito = (item, tipo) => {
-  const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo)
-  if (e) e.cantidad++
-  else   carrito.value.push({ id: item.id, nombre: item.nombre, precio: Number(item.precio), cantidad: 1, tipo })
+  const cIdx = comensalActivoIndex.value
+  const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.comensalIndex === cIdx && !i.notas)
+  if (e) {
+    e.cantidad++
+  } else {
+    carrito.value.push({ 
+      cartId: Date.now() + Math.random(),
+      id: item.id, 
+      nombre: item.nombre, 
+      precio: Number(item.precio), 
+      cantidad: 1, 
+      tipo, 
+      notas: '', 
+      comensalIndex: cIdx 
+    })
+  }
 }
-const incrementar        = (id, tipo) => { const i = carrito.value.find(x => x.id === id && x.tipo === tipo); if (i) i.cantidad++ }
-const decrementar        = (id, tipo) => { const idx = carrito.value.findIndex(x => x.id === id && x.tipo === tipo); if (idx !== -1) { if (carrito.value[idx].cantidad > 1) carrito.value[idx].cantidad--; else carrito.value.splice(idx, 1) } }
-const eliminarDelCarrito = (id, tipo) => { carrito.value = carrito.value.filter(x => !(x.id === id && x.tipo === tipo)) }
+const incrementar        = (cartId) => { const i = carrito.value.find(x => x.cartId === cartId); if (i) i.cantidad++ }
+const decrementar        = (cartId) => { const idx = carrito.value.findIndex(x => x.cartId === cartId); if (idx !== -1) { if (carrito.value[idx].cantidad > 1) carrito.value[idx].cantidad--; else carrito.value.splice(idx, 1) } }
+const eliminarDelCarrito = (cartId) => { carrito.value = carrito.value.filter(x => x.cartId !== cartId) }
 
 // ── Acciones de órdenes ────────────────────────────────────────────────────
 const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
@@ -684,6 +838,85 @@ const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
     const res = await fetch(`${API_URL}/ordenes/${sub.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ estado: nuevoEstado }) })
     if (res.ok) { await cargarOrdenes(); showToast('Estado actualizado', 'success') }
   } finally { cambiando.value = null }
+}
+
+// ── Agrupación por comensal ────────────────────────────────────────────────
+const agruparPorComensal = (detalles) => {
+  const grupos = {}
+  detalles.forEach(d => {
+    const comensal = d.nom_comensal || 'General'
+    if (!grupos[comensal]) grupos[comensal] = []
+    grupos[comensal].push(d)
+  })
+  return grupos
+}
+
+const eliminarProductoDeOrden = async (detalleId, ordenId) => {
+  if (!confirm('¿Seguro que quieres eliminar este producto de la orden?')) return
+  try {
+    const res = await fetch(`${API_URL}/ordenes/${ordenId}/detalles/${detalleId}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    })
+    const data = await res.json()
+    if (data.success) {
+      showToast('Producto eliminado', 'success')
+      await cargarOrdenes()
+    } else {
+      showToast(data.message || 'Error al eliminar', 'error')
+    }
+  } catch (e) {
+    showToast('Error de conexión', 'error')
+  }
+}
+
+const editorNotas = ref({ visible: false, detalle: null, ordenId: null, nota: '' })
+
+const abrirEditorNotas = (detalle, ordenId) => {
+  editorNotas.value = {
+    visible: true,
+    detalle,
+    ordenId,
+    nota: detalle.notas || ''
+  }
+}
+
+const guardarNota = async () => {
+  const { detalle, ordenId, nota } = editorNotas.value
+  try {
+    const res = await fetch(`${API_URL}/ordenes/${ordenId}/detalles/${detalle.id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ cantidad: detalle.cantidad, notas: nota })
+    })
+    if (res.ok) {
+      showToast('Nota actualizada', 'success')
+      editorNotas.value.visible = false
+      await cargarOrdenes()
+    }
+  } catch (e) {
+    showToast('Error al guardar nota', 'error')
+  }
+}
+
+const actualizarCantidadItem = async (detalle, ordenId, delta) => {
+  const nuevaCantidad = detalle.cantidad + delta
+  if (nuevaCantidad < 1) {
+    return eliminarProductoDeOrden(detalle.id, ordenId)
+  }
+  
+  try {
+    const res = await fetch(`${API_URL}/ordenes/${ordenId}/detalles/${detalle.id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ cantidad: nuevaCantidad, notas: detalle.notas })
+    })
+    if (res.ok) {
+      await cargarOrdenes()
+    }
+  } catch (e) {
+    showToast('Error al actualizar cantidad', 'error')
+  }
 }
 
 const entregarProductosSubOrden = async (sub) => {

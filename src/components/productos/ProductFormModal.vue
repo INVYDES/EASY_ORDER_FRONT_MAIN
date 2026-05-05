@@ -107,9 +107,10 @@
             <p v-if="errors.precio" class="text-xs text-red-500 mt-1">{{ errors.precio }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-            <input v-model.number="form.stock" type="number" min="0" placeholder="0"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">Stock (Calculado por receta)</label>
+            <input v-model.number="form.stock" type="number" readonly placeholder="0"
+              class="w-full px-4 py-2.5 border border-gray-100 bg-gray-50 text-gray-500 rounded-xl focus:outline-none text-sm cursor-not-allowed font-bold" />
+            <p v-if="receta.length" class="text-[10px] text-indigo-500 mt-1">✓ Sincronizado con ingredientes</p>
           </div>
         </div>
 
@@ -300,27 +301,39 @@
             </div>
           </div>
 
-          <!-- Agregar ingrediente -->
-          <div class="border border-dashed border-gray-200 rounded-xl p-4">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-              {{ receta.length ? 'Agregar ingrediente' : 'Sin ingredientes — agrega el primero' }}
-            </p>
-            <div class="relative">
-              <input v-model="busquedaIngrediente" type="text" placeholder="🔍 Buscar ingrediente..."
-                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                @input="buscarIngredientes"
-                @focus="showDropdown = true" />
-              <div v-if="showDropdown && ingredientesBusqueda.length"
-                class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                <button v-for="ing in ingredientesBusqueda" :key="ing.id"
-                  @click="seleccionarIngrediente(ing)" type="button"
-                  class="w-full flex items-center gap-3 px-3 py-2 hover:bg-indigo-50 text-left transition">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-800 truncate">{{ ing.nombre }}</p>
-                    <p class="text-xs text-gray-400">Stock: {{ ing.stock_actual }} {{ ing.unidad }} · ${{ Number(ing.costo_unitario).toFixed(4) }}</p>
-                  </div>
-                  <span v-if="yaEnReceta(ing.id)" class="text-xs text-indigo-500 font-semibold shrink-0">Ya agregado</span>
+          <!-- Lista de selección de ingredientes -->
+          <div class="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
+            <div class="p-3 bg-white border-b border-gray-200">
+              <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                {{ receta.length ? 'Agregar más ingredientes' : 'Catálogo de ingredientes' }}
+              </p>
+              <div class="relative">
+                <input v-model="busquedaIngrediente" type="text" placeholder="🔍 Filtrar ingredientes..."
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  @input="buscarIngredientes" />
+              </div>
+            </div>
+            
+            <div class="max-h-60 overflow-y-auto p-2 space-y-1">
+              <div v-if="!ingredientesBusqueda.length && busquedaIngrediente" class="py-10 text-center">
+                <p class="text-xs text-gray-400 italic">No se encontraron ingredientes con "{{ busquedaIngrediente }}"</p>
+              </div>
+              <div v-else-if="!todosIngredientes.length" class="py-10 text-center">
+                <p class="text-xs text-gray-400 italic">No hay ingredientes registrados en el sistema.</p>
+              </div>
+              <div v-else v-for="ing in (busquedaIngrediente ? ingredientesBusqueda : todosIngredientes)" :key="ing.id"
+                class="flex items-center justify-between gap-3 p-2 bg-white rounded-lg border border-transparent hover:border-indigo-100 hover:shadow-sm transition group">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ ing.nombre }}</p>
+                  <p class="text-[10px] text-gray-400">Stock: {{ ing.stock_actual }} {{ ing.unidad }} · ${{ Number(ing.costo_unitario).toFixed(2) }}</p>
+                </div>
+                <button v-if="!yaEnReceta(ing.id)" @click="seleccionarIngrediente(ing)" type="button"
+                  class="px-3 py-1.5 text-[11px] font-bold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition uppercase">
+                  + Agregar
                 </button>
+                <span v-else class="px-3 py-1.5 text-[11px] font-bold text-emerald-500 bg-emerald-50 rounded-lg uppercase">
+                  ✓ Agregado
+                </span>
               </div>
             </div>
           </div>
@@ -384,6 +397,7 @@ const form = reactive({
   nombre: '', descripcion: '', precio: 0, stock: 0,
   stock_minimo: 5, categoria_id: null as number | null,
   activo: true, eliminar_imagen: false,
+  minutos_produccion: 0, nomina_diaria: 0
 })
 
 const errors = reactive({ nombre: '', precio: '', categoria_id: '' })
@@ -399,9 +413,17 @@ const ingredientesBusqueda = ref<any[]>([])
 const todosIngredientes    = ref<any[]>([])
 const showDropdown         = ref(false)
 
+
+
 // ── Estado Precio Sugerido ────────────────────────────────────────────────────
-const minutosProduccion = ref(0)
-const nominaDiaria      = ref(0)
+const minutosProduccion = computed({
+  get: () => form.minutos_produccion,
+  set: (val) => form.minutos_produccion = val
+})
+const nominaDiaria = computed({
+  get: () => form.nomina_diaria,
+  set: (val) => form.nomina_diaria = val
+})
 const minutosTurno      = ref(480) // 8 horas por defecto
 
 // ── Computed: Costos y precio sugerido ───────────────────────────────────────
@@ -452,6 +474,13 @@ const porcionesDisponibles = computed<number | null>(() => {
   return min === Infinity ? 0 : min
 })
 
+// ── Link de Stock Automático (Ahora en el orden correcto) ────────────────────
+watch(porcionesDisponibles, (newVal) => {
+  if (newVal !== null && receta.value.length > 0) {
+    form.stock = newVal
+  }
+})
+
 const margenEstimado = computed(() => {
   const precio = Number(form.precio) || 0
   return precio - costoTotalReceta.value
@@ -497,17 +526,18 @@ const loadTodosIngredientes = async () => {
  * - NO activa recetaModificada al cargar datos existentes.
  */
 const cargarReceta = async () => {
-  if (!props.product?.id) {
-    receta.value = []
-    return
-  }
-
   loadingReceta.value = true
   receta.value = []
   recetaModificada.value = false  // reset — cargar datos no es una modificación
 
   try {
+    // Primero cargamos el catálogo de ingredientes (necesario para la búsqueda)
     await loadTodosIngredientes()
+
+    if (!props.product?.id) {
+      loadingReceta.value = false
+      return
+    }
 
     const res  = await fetch(`${API_URL}/ingredientes/producto/${props.product.id}`, { headers: getHeaders() })
     const data = await res.json()
@@ -632,9 +662,11 @@ const resetForm = () => {
   form.categoria_id    = p?.categoria_id ?? null
   form.activo          = p?.activo       ?? true
   form.eliminar_imagen = false
-  imagePreview.value   = p?.imagen_url   ?? null
-  newImageFile.value   = null
-  errors.nombre        = ''
+  imagePreview.value     = p?.imagen_url   ?? null
+  newImageFile.value     = null
+  form.minutos_produccion = p?.minutos_produccion ?? 0
+  form.nomina_diaria     = p?.nomina_diaria ?? 0
+  errors.nombre          = ''
   errors.precio        = ''
   errors.categoria_id  = ''
   errorMessage.value   = ''
@@ -673,8 +705,10 @@ const save = async () => {
       fd.append('stock',        String(form.stock))
       fd.append('stock_minimo', String(form.stock_minimo))
       if (form.categoria_id) fd.append('categoria_id', String(form.categoria_id))
-      fd.append('activo',       form.activo ? '1' : '0')
-      fd.append('imagen',       newImageFile.value)
+      fd.append('activo',             form.activo ? '1' : '0')
+      fd.append('minutos_produccion', String(form.minutos_produccion))
+      fd.append('nomina_diaria',      String(form.nomina_diaria))
+      fd.append('imagen',             newImageFile.value)
       if (props.product) fd.append('_method', 'PUT')
 
       res = await fetch(url, {
@@ -695,8 +729,10 @@ const save = async () => {
           stock:           form.stock,
           stock_minimo:    form.stock_minimo,
           categoria_id:    form.categoria_id,
-          activo:          form.activo,
-          eliminar_imagen: form.eliminar_imagen,
+          activo:             form.activo,
+          eliminar_imagen:    form.eliminar_imagen,
+          minutos_produccion: form.minutos_produccion,
+          nomina_diaria:      form.nomina_diaria,
         }),
       })
     }
