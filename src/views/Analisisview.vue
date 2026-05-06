@@ -18,7 +18,7 @@
       </button>
     </div>
 
-    <!-- ══ TAB RESUMEN (Movido de Gestión) ══ -->
+    <!-- ══ TAB RESUMEN ══ -->
     <template v-if="activeTab === 'resumen'">
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -28,8 +28,6 @@
       <template v-else>
         <!-- KPIs -->
         <DashboardKpis
-          :empleados="empleados"
-          :restaurantes="restaurantes"
           :ordenes-hoy="dashData.ordenes_hoy"
           :ventas-hoy="dashData.ventas_hoy"
           :ordenes-por-estado="dashData.ordenes_por_estado"
@@ -48,11 +46,24 @@
         </div>
 
         <!-- Gráficas de Operación -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6">
           <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
-          <EmpleadosRolChart  :empleados="empleados" />
         </div>
       </template>
+    </template>
+
+    <!-- ══ TAB ANÁLISIS FINANCIERO ══ -->
+    <template v-if="activeTab === 'financiero'">
+      <div class="space-y-8">
+        <FinancialMetricsGrid :metrics="financialData" />
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <CanalVentasChart :data="salesChannels" />
+          <TopMarginList :products="financialProducts" />
+        </div>
+
+        <BundleStrategyCard :products="financialProducts" />
+      </div>
     </template>
 
     <!-- ══ TAB KPIs VENTAS ══ -->
@@ -72,6 +83,10 @@
 
     <!-- ══ TAB MÉTRICAS MESEROS ══ -->
     <template v-if="activeTab === 'meseros'">
+      <!-- Distribución de Equipo — estrella del tab -->
+      <div class="mb-6">
+        <EmpleadosRolChart :empleados="empleados" />
+      </div>
       <MetricasMeseros :api-url="API_URL" :get-headers="getHeaders" />
     </template>
 
@@ -92,6 +107,10 @@ import KpiVentas           from '../components/administraccion/KpiVentas.vue'
 import KpiProductos        from '../components/administraccion/KpiProductos.vue'
 import RoiChart            from '../components/RoiChart.vue'
 import MetricasMeseros     from '../components/administraccion/MetricasMeseros.vue'
+import FinancialMetricsGrid from '../components/administraccion/FinancialMetricsGrid.vue'
+import CanalVentasChart     from '../components/administraccion/CanalVentasChart.vue'
+import TopMarginList       from '../components/administraccion/TopMarginList.vue'
+import BundleStrategyCard  from '../components/administraccion/BundleStrategyCard.vue'
 import { API_URL } from '@/config/api'
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
@@ -102,8 +121,45 @@ const restaurantes = ref([])
 const ordenesCerradasHoy = ref([])
 const dashData = reactive({ ventas_hoy: 0, ordenes_hoy: 0, ordenes_por_estado: [] })
 
+const financialData = reactive({
+  utilidadObjetivo: 5000,
+  utilidadReal: 4200,
+  inversionInicial: 25000,
+  ventasMensuales: 15000,
+  gastosVariables: 4000,
+  gastosOperativos: 3000,
+  gananciaNeta: 8000,
+  puntoEquilibrio: 7000,
+  roiGeneral: 32,
+  roiProducto: 15,
+  margenContribucion: 11000,
+  porcentajeUtilidad: 53.3,
+  kpiEmpleados: 88
+})
+
+const salesChannels = reactive({
+  Local: 120,
+  Pickup: 45,
+  Delivery: 85
+})
+
+const financialProducts = ref([
+  { id: 1, nombre: 'Hamburguesa Gourmet', precio: 15, costo: 5, ventas: 100, margen: 10, categoria: 'Cocina' },
+  { id: 2, nombre: 'Taco Especial', precio: 10, costo: 3, ventas: 150, margen: 7, categoria: 'Cocina' },
+  { id: 3, nombre: 'Ensalada César', precio: 12, costo: 4, ventas: 30, margen: 8, categoria: 'Cocina' },
+  { id: 4, nombre: 'Sopa del Día', precio: 8, costo: 2, ventas: 20, margen: 6, categoria: 'Cocina' },
+  { id: 5, nombre: 'Pizza Margarita', precio: 14, costo: 6, ventas: 80, margen: 8, categoria: 'Cocina' },
+  { id: 6, nombre: 'Refresco Cola', precio: 3, costo: 1, ventas: 300, margen: 2, categoria: 'Bebida' },
+  { id: 7, nombre: 'Jugo Natural', precio: 5, costo: 2, ventas: 120, margen: 3, categoria: 'Bebida' },
+  { id: 8, nombre: 'Café Latte', precio: 4, costo: 1, ventas: 200, margen: 3, categoria: 'Bebida' },
+  { id: 9, nombre: 'Cheesecake', precio: 7, costo: 3, ventas: 10, margen: 4, categoria: 'Postre' },
+  { id: 10, nombre: 'Tiramisú', precio: 8, costo: 4, ventas: 15, margen: 4, categoria: 'Postre' },
+  { id: 11, nombre: 'Brownie', precio: 6, costo: 2, ventas: 5, margen: 4, categoria: 'Postre' },
+])
+
 const tabs = [
   { key: 'resumen',   label: '📋 Resumen General'  },
+  { key: 'financiero', label: '💰 Análisis Financiero' },
   { key: 'kpis',      label: '📊 KPIs Ventas'    },
   { key: 'productos', label: '📦 KPIs Productos'  },
   { key: 'roi',       label: '📈 ROI'              },
@@ -127,14 +183,45 @@ const loadData = async () => {
     ])
 
     const [uData, rData, dData, cData] = await Promise.all([uRes.json(), rRes.json(), dRes.json(), cRes.json()])
-    
+
     if (rData.success) restaurantes.value = rData.data?.restaurantes || []
     if (cData.success) ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
-    
+
     if (dData.success) {
       dashData.ventas_hoy         = dData.data?.ventas_hoy         || 0
       dashData.ordenes_por_estado = dData.data?.ordenes_por_estado || []
       dashData.ordenes_hoy        = dData.data?.ordenes_hoy ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
+
+      // Actualizar Canales de Venta desde el dashboard si existen
+      if (dData.data?.canales_ventas) {
+        Object.assign(salesChannels, dData.data.canales_ventas)
+      }
+    }
+
+    // Cargar datos financieros adicionales
+    try {
+      const fRes = await fetch(`${API_URL}/reportes/financiero`, { headers: getHeaders() })
+      const fData = await fRes.json()
+      if (fData.success && fData.data) {
+        Object.assign(financialData, fData.data)
+      }
+    } catch (e) {
+      console.error('Error al cargar datos financieros:', e)
+    }
+
+    // Cargar productos reales para márgenes y bundles
+    try {
+      const pRes = await fetch(`${API_URL}/productos`, { headers: getHeaders() })
+      const pData = await pRes.json()
+      if (pData.success && Array.isArray(pData.data)) {
+        financialProducts.value = pData.data.map(p => ({
+          ...p,
+          margen: p.precio - (p.costo || 0),
+          ventas: p.ventas_totales || 0 // Asumiendo que el API provee ventas totales
+        }))
+      }
+    } catch (e) {
+      console.error('Error al cargar productos:', e)
     }
 
     // Cargar empleados si tenemos propietario_id

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div v-for="card in cards" :key="card.label"
       class="bg-white rounded-xl shadow-sm p-5 border-l-4 relative overflow-hidden"
       :class="card.border">
@@ -50,22 +50,6 @@ const cards = computed(() => [
     border: 'border-amber-500',
     sub:    enCurso.value > 0 ? `${enCurso.value} en curso` : 'Sin pedidos activos',
     subColor: enCurso.value > 0 ? 'text-amber-500 font-medium' : 'text-gray-400',
-  },
-  {
-    label:  'Empleados',
-    value:  String(props.empleados.length),
-    icon:   '👥',
-    border: 'border-emerald-500',
-    sub:    props.empleados.length > 0 ? `${props.empleados.length} registrados` : 'Sin empleados',
-    subColor: 'text-emerald-500 font-medium',
-  },
-  {
-    label:  'Restaurantes',
-    value:  String(props.restaurantes.filter(r => r.es_activo !== false).length) + ' / ' + props.restaurantes.length,
-    icon:   '🏪',
-    border: 'border-rose-500',
-    sub:    'activos / total',
-    subColor: 'text-gray-400',
   },
 ])
 </script>

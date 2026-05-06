@@ -66,12 +66,19 @@
         </div>
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sucursal *</label>
-          <select v-model="form.restaurante_id" required
+           <select v-model="form.restaurante_id" required
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
             <option :value="null">Elegir sucursal</option>
             <option v-for="r in restaurantes" :key="r.id" :value="r.id">{{ r.nombre }}</option>
           </select>
         </div>
+      </div>
+
+      <!-- Estado Activo -->
+      <div v-if="modoEdicion" class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+        <input v-model="form.es_activo" type="checkbox" id="emp-activo" class="w-4 h-4 accent-indigo-600 rounded" />
+        <label for="emp-activo" class="text-sm font-semibold text-gray-700 cursor-pointer">Empleado Activo</label>
+        <p class="text-[10px] text-gray-400 ml-auto">(Influye en cálculos de nómina)</p>
       </div>
 
       <!-- Error -->
@@ -118,7 +125,8 @@ const getInitialForm = () => ({
   password:              '',
   password_confirmation: '',
   rol_id:                '',
-  restaurante_id:        null
+  restaurante_id:        null,
+  es_activo:             true
 })
 
 const form = ref(getInitialForm())
@@ -144,7 +152,8 @@ watch(() => props.empleado, (newVal) => {
       password:              '',
       password_confirmation: '',
       rol_id:                rolId ? String(rolId) : '',
-      restaurante_id:        restId ? Number(restId) : null
+      restaurante_id:        restId ? Number(restId) : null,
+      es_activo:             newVal.es_activo !== false
     }
   } else {
     form.value = getInitialForm()
@@ -171,6 +180,7 @@ const handleSubmit = () => {
     name:           `${form.value.nombre} ${form.value.apellidos}`.trim(),
     rol_id:         form.value.rol_id,
     restaurante_id: form.value.restaurante_id,
+    es_activo:      form.value.es_activo,
     // email y username se envían como null para que el backend los genere
     email:          null,
     username:       null

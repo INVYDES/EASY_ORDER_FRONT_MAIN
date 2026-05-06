@@ -80,13 +80,14 @@
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
                   <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <tr v-if="empleados.length===0">
-                  <td colspan="5" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados</td>
+                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados</td>
                 </tr>
                 <tr v-for="emp in empleados" :key="emp.id" class="hover:bg-gray-50">
                   <td class="px-5 py-4">
@@ -109,6 +110,17 @@
                     <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
                       {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
                     </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-2">
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" :checked="emp.es_activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                      </label>
+                      <span :class="['text-[10px] font-bold uppercase w-12', emp.es_activo !== false ? 'text-emerald-600' : 'text-rose-500']">
+                        {{ emp.es_activo !== false ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </div>
                   </td>
                   <td class="px-5 py-4 text-sm text-gray-500">{{ emp.username }}</td>
                   <td class="px-5 py-4 text-right">
@@ -570,6 +582,26 @@ const handleConfirmDelete = async () => {
     showToast('Error de conexión', 'error') 
   } finally { 
     loading.guardando = false
+  }
+}
+
+const toggleEstadoEmpleado = async (emp) => {
+  const nuevoEstado = emp.es_activo === false ? true : false
+  try {
+    const res = await fetch(`${API_URL}/users/${emp.id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ es_activo: nuevoEstado })
+    })
+    const r = await res.json()
+    if (res.ok && r.success) {
+      emp.es_activo = nuevoEstado
+      showToast(`Empleado ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success')
+    } else {
+      showToast(r.message || 'Error al cambiar estado', 'error')
+    }
+  } catch (err) {
+    showToast('Error de conexión', 'error')
   }
 }
 

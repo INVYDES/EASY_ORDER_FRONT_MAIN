@@ -51,6 +51,7 @@
           <thead class="bg-gray-50/50">
             <tr>
               <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Mesero</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
               <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Mesas Asignadas</th>
               <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
@@ -66,6 +67,17 @@
                     <p class="text-sm font-bold text-gray-900">{{ mesero.name }}</p>
                     <p class="text-xs text-gray-500">@{{ mesero.username }}</p>
                   </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" :checked="mesero.es_activo !== false" @change="toggleEstadoEmpleado(mesero)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                  <span :class="['text-[10px] font-bold uppercase w-12', mesero.es_activo !== false ? 'text-emerald-600' : 'text-rose-500']">
+                    {{ mesero.es_activo !== false ? 'Activo' : 'Inactivo' }}
+                  </span>
                 </div>
               </td>
               <td class="px-6 py-4">
@@ -283,6 +295,26 @@ const saveAssignments = async () => {
     showNotify('Error de conexión', 'error')
   } finally {
     loading.saving = false
+  }
+}
+
+const toggleEstadoEmpleado = async (emp) => {
+  const nuevoEstado = emp.es_activo === false ? true : false
+  try {
+    const res = await fetch(`${API_URL}/users/${emp.id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ es_activo: nuevoEstado })
+    })
+    const r = await res.json()
+    if (res.ok && r.success) {
+      emp.es_activo = nuevoEstado
+      showNotify(`Mesero ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success')
+    } else {
+      showNotify(r.message || 'Error al cambiar estado', 'error')
+    }
+  } catch (err) {
+    showNotify('Error de conexión', 'error')
   }
 }
 
