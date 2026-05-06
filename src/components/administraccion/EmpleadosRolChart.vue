@@ -1,137 +1,186 @@
 <template>
-  <div class="bg-gray-50 rounded-2xl p-6">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h3 class="font-bold text-gray-800 text-lg">👥 Distribución de Equipo</h3>
-        <p class="text-sm text-gray-500">Gestión de personal por departamentos</p>
-      </div>
-      <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">
-        {{ empleados.length }} Total
-      </span>
-    </div>
-
-    <div v-if="Object.keys(rolesCount).length === 0" 
-         class="h-48 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl text-gray-400">
-      <span class="text-4xl mb-2">🧊</span>
-      <p class="text-sm">No hay datos para mostrar</p>
-    </div>
-
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-for="(count, rol, index) in rolesCount" :key="rol"
-           class="group relative overflow-hidden bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+  <div class="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-100/50 border border-slate-100 relative overflow-hidden">
+    
+    <!-- Decoración de fondo -->
+    <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full opacity-50 blur-3xl"></div>
+    
+    <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
+      
+      <!-- Lado Izquierdo: Texto e Información -->
+      <div class="flex-1 space-y-6 text-center md:text-left">
+        <div>
+          <h3 class="text-2xl font-black text-slate-800 leading-tight">FUERZA DE TRABAJO</h3>
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">Distribución Operativa</p>
+        </div>
         
-        <div :style="{ backgroundColor: COLORS[index % COLORS.length] }" 
-             class="absolute left-0 top-0 h-full w-1 opacity-80"></div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">{{ rol }}</p>
-            <h4 class="text-2xl font-bold text-gray-800 mt-1">
-              <AnimatedNumber :value="count" />
-            </h4>
-          </div>
-          
-          <div :style="{ color: COLORS[index % COLORS.length], backgroundColor: `${COLORS[index % COLORS.length]}15` }"
-               class="p-2 rounded-lg transition-colors group-hover:bg-opacity-25">
-             <component :is="getIcon(rol)" class="w-6 h-6" />
+        <div class="bg-slate-50 rounded-[2rem] p-6 border border-slate-100">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Estado del Equipo</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+              <span class="block text-3xl font-black text-indigo-600 leading-none">{{ empleados.length }}</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase">Total</span>
+            </div>
+            <div class="text-center border-l border-slate-200">
+              <span class="block text-3xl font-black text-emerald-500 leading-none">{{ activosCount }}</span>
+              <span class="text-[9px] font-bold text-slate-400 uppercase">Activos</span>
+            </div>
           </div>
         </div>
 
-        <div class="mt-3 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-          <div :style="{ 
-                 width: `${(count / empleados.length) * 100}%`,
-                 backgroundColor: COLORS[index % COLORS.length] 
-               }" 
-               class="h-full rounded-full transition-all duration-1000 ease-out">
-          </div>
+        <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto md:mx-0">
+          Análisis balanceado de los 5 pilares operativos para asegurar la eficiencia del servicio.
+        </p>
+      </div>
+
+      <!-- Lado Derecho: El Pentágono -->
+      <div class="relative w-full max-w-[400px] aspect-square flex items-center justify-center">
+        <!-- Overlay de carga o error -->
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-20">
+          <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
+        
+        <canvas ref="canvasEl" class="relative z-10"></canvas>
+      </div>
+
+    </div>
+
+    <!-- Leyenda Inferior (Bucket) -->
+    <div class="mt-10 pt-8 border-t border-slate-50 grid grid-cols-2 sm:grid-cols-5 gap-4">
+      <div v-for="cat in PENTAGONO_LABELS" :key="cat" class="flex flex-col items-center group">
+        <div class="w-2 h-2 rounded-full bg-indigo-500 mb-2 group-hover:scale-150 transition-transform shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+        <span class="text-[10px] font-black text-slate-800 uppercase tracking-tighter">{{ cat }}</span>
+        <span class="text-lg font-black text-slate-300 mt-1">{{ rolesCount[cat] || 0 }}</span>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import Chart from 'chart.js/auto'
 
 const props = defineProps({
   empleados: { type: Array, default: () => [] },
 })
 
-const ROLES_MAP = { 1:'Super Admin', 2:'Administrador', 3:'Mesero', 4:'Cocina', 5:'Caja', 6:'Barra', 7:'Cliente' }
-const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#06b6d4']
+const canvasEl = ref(null)
+const loading = ref(false)
+let chartInstance = null
 
-// Procesar los datos para el contador
+// Los 5 ejes solicitados en el pentágono
+const PENTAGONO_LABELS = ['COCINA', 'BARRA', 'POSTRES', 'CAJA', 'MESEROS']
+
+const activosCount = computed(() => 
+  props.empleados.filter(e => e.es_activo !== false).length
+)
+
+// Mapeo inteligente de roles a los 5 ejes del pentágono
 const rolesCount = computed(() => {
-  const counts = {}
+  const counts = { 'COCINA': 0, 'BARRA': 0, 'POSTRES': 0, 'CAJA': 0, 'MESEROS': 0 }
+  
   props.empleados.forEach(e => {
-    const r = getRolNombre(e)
-    counts[r] = (counts[r] || 0) + 1
+    const rol = getRolNombre(e).toUpperCase()
+    
+    if (rol.includes('COCINA')) counts['COCINA']++
+    else if (rol.includes('BARRA')) counts['BARRA']++
+    else if (rol.includes('POSTRE')) counts['POSTRES']++
+    else if (rol.includes('CAJA')) counts['CAJA']++
+    else if (rol.includes('MESERO')) counts['MESEROS']++
+    // Los administradores se cuentan en CAJA por ser parte operativa admin
+    else if (rol.includes('ADMIN')) counts['CAJA']++
   })
+  
   return counts
 })
 
 const getRolNombre = (emp) => {
+  const ROLES_MAP = { 1:'Admin', 2:'Admin', 3:'Mesero', 4:'Cocina', 5:'Caja', 6:'Barra' }
   if (emp.roles?.length) {
     const r = emp.roles[0]
-    if (r?.nombre || r?.name) return r.nombre || r.name
-    if (typeof r === 'number') return ROLES_MAP[r] || `Rol ${r}`
+    return r?.nombre || r?.name || (typeof r === 'number' ? ROLES_MAP[r] : 'Otro')
   }
-  if (emp.rol) return ROLES_MAP[emp.rol] || emp.rol
-  if (emp.rol_id) return ROLES_MAP[emp.rol_id] || `Rol ${emp.rol_id}`
-  return 'Personal'
+  return ROLES_MAP[emp.rol_id] || emp.rol || 'Otro'
 }
 
-// Lógica para asignar iconos simples basados en texto (Emoji para simplicidad, puedes usar Lucide-vue)
-const getIcon = (rol) => {
-  const icons = {
-    'Administrador': '🛡️',
-    'Super Admin': '👑',
-    'Mesero': '🍽️',
-    'Cocina': '👨‍🍳',
-    'Caja': '💰',
-    'Barra': '🍷',
-    'Cliente': '👤'
-  }
-  return {
-    template: `<span>${icons[rol] || '👥'}</span>`
-  }
-}
+const initChart = async () => {
+  if (!canvasEl.value) return
+  if (chartInstance) chartInstance.destroy()
 
-/**
- * Sub-componente interno para la animación del número
- */
-const AnimatedNumber = {
-  props: ['value'],
-  setup(props) {
-    const displayValue = ref(0)
-    
-    const animate = () => {
-      let start = displayValue.value
-      const end = props.value
-      const duration = 800
-      const startTime = performance.now()
+  const dataValues = PENTAGONO_LABELS.map(label => rolesCount.value[label] || 0)
+  
+  // Encontrar el valor máximo para escalar la gráfica decentemente
+  const maxVal = Math.max(...dataValues, 5)
 
-      const step = (now) => {
-        const progress = Math.min((now - startTime) / duration, 1)
-        displayValue.value = Math.floor(progress * (end - start) + start)
-        if (progress < 1) requestAnimationFrame(step)
+  chartInstance = new Chart(canvasEl.value, {
+    type: 'radar',
+    data: {
+      labels: PENTAGONO_LABELS,
+      datasets: [{
+        label: ' Fuerza de Trabajo',
+        data: dataValues,
+        fill: true,
+        backgroundColor: 'rgba(99, 102, 241, 0.15)', // Light blue/indigo fill
+        borderColor: '#ef4444', // Red border as in the image
+        borderWidth: 3,
+        pointBackgroundColor: '#ef4444',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#ef4444',
+        pointRadius: 4,
+        tension: 0.1 // Un poco de suavizado
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        r: {
+          angleLines: { 
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)' 
+          },
+          grid: { 
+            color: 'rgba(0, 0, 0, 0.05)',
+            circular: false // Forzado a forma de pentágono
+          },
+          pointLabels: {
+            color: '#64748b',
+            font: { 
+              size: 11, 
+              weight: '900',
+              family: 'Inter'
+            },
+            padding: 15
+          },
+          ticks: {
+            display: false,
+            stepSize: Math.ceil(maxVal / 4)
+          },
+          suggestedMin: 0,
+          suggestedMax: maxVal + 1
+        }
       }
-      requestAnimationFrame(step)
     }
-
-    watch(() => props.value, animate)
-    onMounted(animate)
-
-    return () => displayValue.value
-  }
+  })
 }
+
+onMounted(async () => {
+  loading.value = true
+  await nextTick()
+  initChart()
+  loading.value = false
+})
+
+watch(() => props.empleados, () => {
+  initChart()
+}, { deep: true })
 </script>
 
 <style scoped>
-/* Transición suave para las barras */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 500ms;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
 </style>
