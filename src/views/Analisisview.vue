@@ -30,6 +30,7 @@
         <DashboardKpis
           :ordenes-hoy="dashData.ordenes_hoy"
           :ventas-hoy="dashData.ventas_hoy"
+          :utilidad-hoy="dashData.utilidad_hoy"
           :ordenes-por-estado="dashData.ordenes_por_estado"
         />
 
@@ -46,8 +47,15 @@
         </div>
 
         <!-- Gráficas de Operación -->
-        <div class="grid grid-cols-1 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
+          <!-- Radar Chart de Distribución de Fuerza de Trabajo (PDF Page 2) -->
+          <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-4">Distribución de la Fuerza de Trabajo</h3>
+            <div class="h-64 flex items-center justify-center text-gray-300 italic">
+              <p>Radar Chart — Cocina, Barra, Postres, Caja, Meseros</p>
+            </div>
+          </div>
         </div>
       </template>
     </template>
@@ -119,7 +127,7 @@ const loading   = ref(true)
 const empleados    = ref([])
 const restaurantes = ref([])
 const ordenesCerradasHoy = ref([])
-const dashData = reactive({ ventas_hoy: 0, ordenes_hoy: 0, ordenes_por_estado: [] })
+const dashData = reactive({ ventas_hoy: 0, ordenes_hoy: 0, utilidad_hoy: 0, ordenes_por_estado: [] })
 
 const financialData = reactive({
   utilidadObjetivo: 5000,
@@ -195,6 +203,19 @@ const loadData = async () => {
       // Actualizar Canales de Venta desde el dashboard si existen
       if (dData.data?.canales_ventas) {
         Object.assign(salesChannels, dData.data.canales_ventas)
+      }
+      
+      // Intentar obtener utilidad hoy del endpoint específico o del dashboard
+      try {
+        const uRes = await fetch(`${API_URL}/reportes/utilidad-dia`, { headers: getHeaders() })
+        const uData = await uRes.json()
+        if (uData.success) {
+          dashData.utilidad_hoy = uData.data?.utilidad_acumulada || 0
+        } else {
+          dashData.utilidad_hoy = dData.data?.utilidad_hoy || 0
+        }
+      } catch {
+        dashData.utilidad_hoy = dData.data?.utilidad_hoy || 0
       }
     }
 

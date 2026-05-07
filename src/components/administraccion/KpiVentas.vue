@@ -333,18 +333,25 @@ const loadKpis = async () => {
       }
     } catch { /* fallback desde dashboard */ }
 
-    // Cargar finanzas del día (inversión, MO, utilidad, propinas)
+    // Cargar finanzas (inversión, utilidad)
     try {
-      const today = fmtDate(new Date())
-      const fRes = await fetch(`${props.apiUrl}/reportes/finanzas-dia?fecha=${today}`, { headers })
+      const fRes = await fetch(`${props.apiUrl}/reportes/inversion-utilidad${params}`, { headers })
       const fData = await fRes.json()
       if (fData.success && fData.data) {
-        finanzasDia.value.inversionProducto  = fData.data.inversion_producto  || 0
-        finanzasDia.value.inversionManoObra  = fData.data.inversion_mano_obra || 0
-        finanzasDia.value.utilidadTotal      = fData.data.utilidad_total      || 0
-        finanzasDia.value.propinasDigitales  = fData.data.propinas_digitales  || 0
+        finanzasDia.value.inversionProducto = fData.data.inversion_producto || 0
+        finanzasDia.value.inversionManoObra = fData.data.inversion_mano_obra || 0
+        finanzasDia.value.utilidadTotal     = fData.data.utilidad_total     || 0
       }
-    } catch { /* endpoint no disponible aún */ }
+    } catch { /* fallback */ }
+
+    // Cargar propinas
+    try {
+      const pTipRes = await fetch(`${props.apiUrl}/reportes/propinas${params}`, { headers })
+      const pTipData = await pTipRes.json()
+      if (pTipData.success) {
+        finanzasDia.value.propinasDigitales = pTipData.data?.total_propinas || 0
+      }
+    } catch { /* fallback */ }
 
     if (mostrarComparacion.value && kpiFechaInicio.value) {
       const d1 = new Date(kpiFechaInicio.value); const d2 = new Date(kpiFechaFin.value)

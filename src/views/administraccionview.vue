@@ -114,11 +114,11 @@
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-2">
                       <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" :checked="emp.es_activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
+                        <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                       </label>
-                      <span :class="['text-[10px] font-bold uppercase w-12', emp.es_activo !== false ? 'text-emerald-600' : 'text-rose-500']">
-                        {{ emp.es_activo !== false ? 'Activo' : 'Inactivo' }}
+                      <span :class="['text-[10px] font-bold uppercase w-12', emp.activo !== false ? 'text-emerald-600' : 'text-rose-500']">
+                        {{ emp.activo !== false ? 'Activo' : 'Inactivo' }}
                       </span>
                     </div>
                   </td>

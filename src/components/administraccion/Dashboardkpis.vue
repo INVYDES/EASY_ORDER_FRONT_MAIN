@@ -22,6 +22,7 @@ const props = defineProps({
   restaurantes:  { type: Array,  default: () => [] },
   ordenesHoy:    { type: Number, default: 0 },
   ventasHoy:     { type: Number, default: 0 },
+  utilidadHoy:   { type: Number, default: 0 },
   ordenesPorEstado: { type: Array, default: () => [] },
 })
 
@@ -50,6 +51,22 @@ const cards = computed(() => [
     border: 'border-amber-500',
     sub:    enCurso.value > 0 ? `${enCurso.value} en curso` : 'Sin pedidos activos',
     subColor: enCurso.value > 0 ? 'text-amber-500 font-medium' : 'text-gray-400',
+  },
+  {
+    label:  'Ticket Promedio',
+    value:  '$' + fm(props.ventasHoy / (props.ordenesHoy || 1)),
+    icon:   '📈',
+    border: 'border-emerald-500',
+    sub:    'Promedio por orden hoy',
+    subColor: 'text-emerald-500 font-medium',
+  },
+  {
+    label:  'Utilidad del día acumulada',
+    value:  '$' + fm(props.utilidadHoy),
+    icon:   '⭐',
+    border: 'border-violet-500',
+    sub:    'Ventas - Insumos - Nómina',
+    subColor: 'text-violet-500 font-medium',
   },
 ])
 </script>
