@@ -217,9 +217,6 @@
                 <div v-else class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   <div v-for="(item, idx) in receta" :key="item.id"
                     class="group flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 hover:border-indigo-300 transition-all">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm" :class="item.bajo_stock ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-400'">
-                      {{ item.bajo_stock ? 'Stock Bajo' : 'Item' }}
-                    </div>
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-bold text-gray-800 truncate">{{ item.nombre }}</p>
                       <p class="text-[10px] text-gray-400 font-medium">Stock: {{ item.stock_actual }} {{ item.unidad }}</p>
