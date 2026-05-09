@@ -253,19 +253,28 @@
                   <div class="h-px bg-gray-200 flex-1"></div>
                 </div>
 
-                <!-- Selector Desplegable -->
-                <div>
-                  <select @change="(e) => {
-                    const id = (e.target as HTMLSelectElement).value;
-                    const ing = todosIngredientes.find(i => i.id == id);
-                    if (ing) seleccionarIngrediente(ing);
-                    (e.target as HTMLSelectElement).value = '';
-                  }" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition cursor-pointer">
-                    <option value="">-- Elige un ingrediente --</option>
-                    <option v-for="ing in todosIngredientes" :key="ing.id" :value="ing.id" :disabled="yaEnReceta(ing.id)">
-                      {{ ing.nombre }} ({{ ing.unidad }}) {{ yaEnReceta(ing.id) ? '[Ya en receta]' : '' }}
-                    </option>
-                  </select>
+                <!-- Selector Desplegable Personalizado -->
+                <div class="relative">
+                  <button @click="showDropdown = !showDropdown" type="button"
+                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-left text-sm text-gray-700 flex items-center justify-between hover:border-indigo-300 transition shadow-sm">
+                    <span>-- Selecciona del catálogo --</span>
+                    <span class="text-gray-400 transition-transform" :class="showDropdown ? 'rotate-180' : ''">▼</span>
+                  </button>
+
+                  <div v-if="showDropdown" 
+                    class="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
+                    <div v-for="ing in todosIngredientes" :key="ing.id"
+                      @click="seleccionarIngrediente(ing); showDropdown = false"
+                      class="px-4 py-3 text-sm hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-none flex items-center justify-between group"
+                      :class="yaEnReceta(ing.id) ? 'opacity-50 pointer-events-none bg-gray-50' : ''">
+                      <div class="flex-1">
+                        <span class="font-bold text-gray-700">{{ ing.nombre }}</span>
+                        <span class="text-[10px] text-gray-400 ml-2">({{ ing.unidad }})</span>
+                      </div>
+                      <span v-if="yaEnReceta(ing.id)" class="text-[10px] font-black text-emerald-600 uppercase">En receta</span>
+                      <span v-else class="text-indigo-400 opacity-0 group-hover:opacity-100 font-bold">+ Agregar</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div v-if="busquedaIngrediente" class="mt-4 space-y-1 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
