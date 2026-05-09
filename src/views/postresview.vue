@@ -224,7 +224,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SucursalBadge from '../components/SucursalBadge.vue'
 import OrdenCardPostres from '../components/postres/OrdenCardPostres.vue'
-import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 const POLL_INTERVAL = 15000
 const router        = useRouter()

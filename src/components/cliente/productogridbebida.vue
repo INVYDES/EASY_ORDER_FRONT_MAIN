@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import ProductoGrid from './productogrid.vue'
 import Sumaorden from './sumaorden.vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 const router = useRouter()
 
 const productos = ref([])
@@ -41,17 +42,7 @@ const cargarProductos = async () => {
 
   try {
 
-    const response = await fetch(`${API_URL}/productos`, {
-      headers: getHeaders()
-    })
-
-    if (response.status === 401) {
-      localStorage.removeItem('token')
-      router.push('/')
-      return
-    }
-
-    const data = await response.json()
+    const data = await apiClient.get('/productos')
 
     if (data.success) {
       productos.value = data.data || []

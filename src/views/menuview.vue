@@ -336,6 +336,7 @@ import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
 const router = useRouter()
 const API_URL     = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const STORAGE_URL = (import.meta.env.VITE_API_URL || '').replace('/api', '/storage/') || 'http://localhost:8000/storage/'
+import { apiClient } from '@/utils/apiClient'
 
 // --- Estado ---
 const restauranteSeleccionado = ref(null)
@@ -445,9 +446,8 @@ const normalizar = (p) => ({
 // --- API ---
 const cargarRestauranteActivo = async () => {
   try {
-    const res = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get('/me')
+    if (data?.success) {
       const user = data.data || data
       const ra = user?.restaurante_activo
       if (ra && typeof ra === 'object') { restauranteSeleccionado.value = ra; return ra.id }
@@ -459,14 +459,12 @@ const cargarRestauranteActivo = async () => {
 const cargarProductos = async (restauranteId) => {
   loading.value.productos = true
   try {
-    const resDisp = await fetch(`${API_URL}/productos/disponibles?restaurante_id=${restauranteId}`, { headers: getHeaders() })
-    const dispData = await resDisp.json()
-    if (dispData.success && Array.isArray(dispData.data) && dispData.data.length > 0) {
+    const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
+    if (dispData?.success && Array.isArray(dispData.data) && dispData.data.length > 0) {
       productos.value = dispData.data.map(normalizar); return
     }
-    const resTodos = await fetch(`${API_URL}/productos?restaurante_id=${restauranteId}&per_page=100`, { headers: getHeaders() })
-    const todosData = await resTodos.json()
-    if (todosData.success) {
+    const todosData = await apiClient.get(`/productos?restaurante_id=${restauranteId}&per_page=100`)
+    if (todosData?.success) {
       let lista = todosData.data; if (!Array.isArray(lista)) lista = lista?.data ?? []
       productos.value = lista.map(normalizar)
     }
@@ -475,9 +473,8 @@ const cargarProductos = async (restauranteId) => {
 
 const cargarOfertas = async (restauranteId) => {
   try {
-    const res = await fetch(`${API_URL}/ofertas/activas?restaurante_id=${restauranteId}`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get(`/ofertas/activas?restaurante_id=${restauranteId}`)
+    if (data?.success) {
       ofertasProductos.value = data.data
         .filter(oferta => oferta.producto?.restaurante_id === restauranteId)
         .map(oferta => ({
@@ -496,9 +493,8 @@ const cargarOfertas = async (restauranteId) => {
 
 const cargarPaquetes = async (restauranteId) => {
   try {
-    const res = await fetch(`${API_URL}/paquetes?restaurante_id=${restauranteId}`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) { paquetes.value = (data.data || []).filter(p => p.activo) }
+    const data = await apiClient.get(`/paquetes?restaurante_id=${restauranteId}`)
+    if (data?.success) { paquetes.value = (data.data || []).filter(p => p.activo) }
   } catch {}
 }
 
@@ -590,9 +586,8 @@ const handleCheckout = async (checkoutData) => {
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
       estado: 'ABIERTA', mesa: checkoutData.numero_mesa, usuario_id: empleadoId,
     }
-    const res = await fetch(`${API_URL}/ordenes`, { method:'POST', headers:getHeaders(), body:JSON.stringify(body) })
-    const data = await res.json()
-    if (res.ok && data.success) { 
+    const data = await apiClient.post('/ordenes', body)
+    if (data?.success) { 
       showCheckout.value = false; 
       pedido.value = []; 
       numeroComensales.value = 1;

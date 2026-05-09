@@ -253,6 +253,7 @@
 </style>
 <script setup>
 import { reactive, ref } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
 
@@ -273,15 +274,13 @@ const guardar = async () => {
   if (!form.concepto.trim()) { error.value = 'El concepto es obligatorio'; return }
   loading.value = true
   try {
-    const res  = await fetch(`${API_URL}/caja/movimientos`, {
-      method: 'POST', headers: getHeaders(),
-      body: JSON.stringify({ tipo: form.tipo, monto: Number(form.monto), descripcion: form.concepto.trim(), referencia: 'MOV-MANUAL' }),
+    const data = await apiClient.post('/caja/movimientos', {
+      tipo: form.tipo, monto: Number(form.monto), descripcion: form.concepto.trim(), referencia: 'MOV-MANUAL'
     })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    if (data?.success) {
       emit('saved', { tipo: form.tipo, monto: Number(form.monto) })
     } else {
-      error.value = data.message || 'Error al registrar'
+      error.value = data?.message || 'Error al registrar'
     }
   } catch { error.value = 'Error de conexión' }
   finally { loading.value = false }

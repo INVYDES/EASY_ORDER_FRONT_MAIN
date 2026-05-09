@@ -85,6 +85,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   ingrediente: { type: Object, default: null },
@@ -154,14 +155,10 @@ const guardar = async () => {
       stock_minimo: form.value.stock_minimo ? parseFloat(form.value.stock_minimo) : 0,
     }
 
-    const res = await fetch(url, {
-      method,
-      headers: getHeaders(),
-      body: JSON.stringify(payload)
-    })
+    const apiMethod = method === 'POST' ? apiClient.post : method === 'PUT' ? apiClient.put : apiClient.delete
+    const data = await apiMethod(url.replace(API_URL, ''), payload)
 
-    const data = await res.json()
-    if (data.success) {
+    if (data?.success) {
       emit('saved') // Notificamos al padre para que refresque la lista
     } else {
       formError.value = data.message || 'Error al procesar la solicitud'

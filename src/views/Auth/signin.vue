@@ -114,7 +114,6 @@
 
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -137,43 +136,69 @@ const handleSubmit = async () => {
   try {
     const isEmployeeLogin = /^\d+-\d+-\d+$/.test(loginIdentifier.value.trim())
     const endpoint = isEmployeeLogin ? '/empleado/login' : '/login'
-    
+
     const data = await apiClient.post(endpoint, {
       login:    loginIdentifier.value.trim(),
       password: password.value
     })
 
-    // New structure: { data: { user, token } }
-    if (data.data && data.data.token && data.data.user) {
+    console.log('✅ data completa:', JSON.stringify(data))
+    console.log('✅ data.data:', data?.data)
+    console.log('✅ token:', data?.data?.token)
+    console.log('✅ user:', data?.data?.user)
+    console.log('✅ Condición if:', !!(data?.data && data?.data?.token && data?.data?.user))
+
+    if (data?.data && data?.data?.token && data?.data?.user) {
       const storage = keepLoggedIn.value ? localStorage : sessionStorage
+
       storage.setItem('token', data.data.token)
       storage.setItem('user',  JSON.stringify(data.data.user))
+      storage.setItem('restaurante_activo', String(data.data.user.restaurante_activo ?? ''))
+
+      console.log('✅ Storage guardado:', {
+        token: data.data.token,
+        user:  data.data.user,
+        restaurante_activo: data.data.user.restaurante_activo
+      })
 
       const user = data.data.user
-      // New roles structure: Array of strings ["MESERO"]
-      const rol  = (Array.isArray(user.roles) ? user.roles[0] : user.rol) || ''
-      
+
+      const rol: string = (Array.isArray(user.roles)
+        ? user.roles[0]?.nombre
+        : user.rol) || ''
+
+      console.log('✅ rol detectado:', rol)
+
       const routesMap: Record<string, string> = {
-        'PROPIETARIO': '/panel/Gestion',
-        'ADMIN':       '/panel/Gestion',
-        'MESERO':      '/panel/mesero',
-        'COCINA':      '/panel/cocina',
-        'CAJA':        '/panel/caja',
-        'BARRA':       '/panel/barra',
-        'CLIENTE':     '/panel/cliente'
+        PROPIETARIO: '/panel/Gestion',
+        ADMIN:       '/panel/Gestion',
+        MESERO:      '/panel/mesero',
+        COCINA:      '/panel/cocina',
+        CAJA:        '/panel/caja',
+        BARRA:       '/panel/barra',
+        CLIENTE:     '/panel/cliente',
+        MENU:        '/menu',
       }
 
-      const destination = routesMap[rol.toUpperCase()] || '/panel/Gestion'
-      router.push(destination)
+      const destination = routesMap[rol.toUpperCase()] ?? '/panel/Gestion'
+      console.log('✅ Redirigiendo a:', destination)
+
+      await router.push(destination)
+
     } else {
-      errorMessage.value = data.message || 'Error al iniciar sesión'
+      console.warn('⚠️ Condición if falló:', data)
+      errorMessage.value = data?.message || 'Error al iniciar sesión'
     }
+
   } catch (err: any) {
+    console.error('❌ Error tipo:', err.constructor?.name)
+    console.error('❌ Error mensaje:', err.message)
+    console.error('❌ Error stack:', err.stack)
+    
     if (err.message === 'Too Many Requests') {
-        // Handled by apiClient alert
-        errorMessage.value = 'Demasiados intentos. Por favor espera.'
+      errorMessage.value = 'Demasiados intentos. Por favor espera.'
     } else {
-        errorMessage.value = 'Error de conexión con el servidor'
+      errorMessage.value = `Error: ${err.message}`
     }
   } finally {
     loading.value = false

@@ -224,7 +224,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AjustarStockModal from '../components/ingredientes/AjusteStockModal.vue'
-import { API_URL, STORAGE_URL } from '@/config/api'
+import { STORAGE_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 const router = useRouter()
 const onStockActualizado = (data) => {
   // opcional: actualizar UI sin recargar
@@ -303,14 +304,8 @@ const ingredientesFiltrados = computed(() => {
 const cargar = async () => {
   loading.value = true
   try {
-    const res = await fetch(`${API_URL}/ingredientes`, { headers: getHeaders() })
-    if (res.status === 401) {
-      localStorage.removeItem('token')
-      router.push('/')
-      return
-    }
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get('/ingredientes')
+    if (data?.success) {
       ingredientes.value = data.data || []
       stats.value = data.stats || { total: 0, bajo_stock: 0, sin_stock: 0, costo_total: 0 }
     }
@@ -355,15 +350,10 @@ const guardar = async () => {
 
   guardando.value = true
   try {
-    const url = editando.value ? `${API_URL}/ingredientes/${editando.value.id}` : `${API_URL}/ingredientes`
-    const method = editando.value ? 'PUT' : 'POST'
-    const res = await fetch(url, {
-      method,
-      headers: getHeaders(),
-      body: JSON.stringify(form.value)
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    const endpoint = editando.value ? `/ingredientes/${editando.value.id}` : '/ingredientes'
+    const apiMethod = editando.value ? apiClient.put : apiClient.post
+    const data = await apiMethod(endpoint, form.value)
+    if (data?.success) {
       showToast(editando.value ? 'Ingrediente actualizado' : 'Ingrediente creado', 'success')
       showModal.value = false
       await cargar()
@@ -390,13 +380,8 @@ const guardarAjuste = async () => {
 
   guardando.value = true
   try {
-    const res = await fetch(`${API_URL}/ingredientes/${ingredienteAjuste.value.id}/ajustar-stock`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(ajusteForm.value)
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    const data = await apiClient.post(`/ingredientes/${ingredienteAjuste.value.id}/ajustar-stock`, ajusteForm.value)
+    if (data?.success) {
       showToast('Stock actualizado', 'success')
       showAjuste.value = false
       await cargar()
@@ -415,12 +400,8 @@ const eliminar = async (id) => {
   if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return
 
   try {
-    const res = await fetch(`${API_URL}/ingredientes/${id}`, {
-      method: 'DELETE',
-      headers: getHeaders()
-    })
-    const r = await res.json()
-    if (r.success) {
+    const r = await apiClient.delete(`/ingredientes/${id}`)
+    if (r?.success) {
       showToast('Ingrediente eliminado', 'success')
       await cargar()
     } else {

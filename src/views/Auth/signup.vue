@@ -203,7 +203,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 import fondoSignUp from '../../assets/imaguenes/fondo_signup.jpg'
 
 // Types
@@ -294,22 +294,13 @@ const cargarLicencias = async (): Promise<void> => {
   cargandoLicencias.value = true
   
   try {
-    const response = await fetch(`${API_URL}/licencias/disponibles`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-
-    const data = await response.json() as ApiResponse
+    const data = await apiClient.get('/licencias/disponibles') as ApiResponse
 
     if (data.success && data.data) {
-      // Mapear y enriquecer las licencias
       licencias.value = (data.data as Licencia[]).map(lic => ({
         ...lic,
         es_prueba: lic.tipo === 'PRUEBA',
-        popular: lic.id === 1 || lic.id === 2 // Básico y Premium son populares
+        popular: lic.id === 1 || lic.id === 2
       }))
       
       console.log('✅ Licencias cargadas:', licencias.value)
@@ -467,23 +458,13 @@ const handleSubmit = async (): Promise<void> => {
 
     console.log('📤 Enviando payload:', payload)
 
-    const response = await fetch(`${API_URL}/propietarios`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'Accept': 'application/json' 
-      },
-      body: JSON.stringify(payload),
-    })
+    const data = await apiClient.post('/propietarios', payload) as ApiResponse
 
-    const data = await response.json() as ApiResponse
-
-    if (!response.ok) {
-      // Mostrar errores de validación específicos
-      if (data.errors) {
-        const errorMessages = Object.values(data.errors).flat().join(', ')
-        throw new Error(errorMessages)
-      }
+    if (data.errors) {
+      const errorMessages = Object.values(data.errors).flat().join(', ')
+      throw new Error(errorMessages)
+    }
+    if (!data.success) {
       throw new Error(data.message || 'Error al procesar el registro')
     }
 

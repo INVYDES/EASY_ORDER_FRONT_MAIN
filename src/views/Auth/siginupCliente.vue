@@ -146,7 +146,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
@@ -195,22 +195,14 @@ const handleSubmit = async () => {
   errors.value       = {}
 
   try {
-    const res  = await fetch(`${API_URL}/register-cliente`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body:    JSON.stringify(form.value),
-    })
-    const data = await res.json()
+    const data = await apiClient.post('/register-cliente', form.value)
 
-    if (!res.ok) {
-      if (data.errors) { errors.value = data.errors; return }
-      throw new Error(data.message || 'No pudimos crear tu cuenta')
-    }
+    if (data.errors) { errors.value = data.errors; return }
+    if (!data.success) throw new Error(data.message || 'No pudimos crear tu cuenta')
 
-    // Guardar sesión
     const storage = localStorage
-    storage.setItem('token', data.token)
-    storage.setItem('user',  JSON.stringify(data.user))
+    storage.setItem('token', data.token || data.data?.token)
+    storage.setItem('user',  JSON.stringify(data.user || data.data))
 
     successMessage.value = '¡Bienvenido! Explorando restaurantes...'
     setTimeout(() => router.push('/panel/cliente'), 1200)

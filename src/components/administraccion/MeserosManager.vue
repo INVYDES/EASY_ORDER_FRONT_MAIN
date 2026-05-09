@@ -170,6 +170,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // --- Props / Emits si fueran necesarios ---
 
@@ -234,13 +235,8 @@ const loadMeserosData = async () => {
 const saveTotalMesas = async () => {
   loading.savingConfig = true
   try {
-    const res = await fetch(`${API_URL}/meseros/config-mesas`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ total_mesas: totalMesas.value })
-    })
-    const r = await res.json()
-    if (r.success) {
+    const r = await apiClient.post('/meseros/config-mesas', { total_mesas: totalMesas.value })
+    if (r?.success) {
       showNotify('Capacidad del restaurante actualizada', 'success')
     } else {
       showNotify(r.message || 'Error al actualizar', 'error')
@@ -271,17 +267,12 @@ const saveAssignments = async () => {
   if (!selectedMesero.value) return
   loading.saving = true
   try {
-    const res = await fetch(`${API_URL}/meseros/asignar-mesas`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        user_id: selectedMesero.value.id,
-        rol_id: selectedMesero.value.rol_id || 3, // Fallback a 3 si no viene
-        mesas: selectedMesas.value
-      })
+    const r = await apiClient.post('/meseros/asignar-mesas', {
+      user_id: selectedMesero.value.id,
+      rol_id: selectedMesero.value.rol_id || 3,
+      mesas: selectedMesas.value
     })
-    const r = await res.json()
-    if (r.success) {
+    if (r?.success) {
       showNotify('Mesas asignadas con éxito')
       showModal.value = false
       // Actualizar localmente
@@ -300,13 +291,8 @@ const saveAssignments = async () => {
 const toggleEstadoEmpleado = async (emp) => {
   const nuevoEstado = emp.es_activo === false ? true : false
   try {
-    const res = await fetch(`${API_URL}/users/${emp.id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify({ es_activo: nuevoEstado })
-    })
-    const r = await res.json()
-    if (res.ok && r.success) {
+    const r = await apiClient.put(`/users/${emp.id}`, { es_activo: nuevoEstado })
+    if (r?.success) {
       emp.es_activo = nuevoEstado
       showNotify(`Mesero ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success')
     } else {

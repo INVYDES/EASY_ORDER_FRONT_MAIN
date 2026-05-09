@@ -196,6 +196,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   apiUrl: { type: String, default: '/api' },

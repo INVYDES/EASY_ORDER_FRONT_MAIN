@@ -405,7 +405,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
@@ -508,13 +508,8 @@ const ahorroPorcentaje = (plan) => {
 // ── API ───────────────────────────────────────────────────────────────────────
 const loadCurrentUser = async () => {
   try {
-    const res = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    if (res.status === 401) { 
-      router.push('/') 
-      return 
-    }
-    const data = await res.json()
-    if (data.success) currentUser.value = data.data || data
+    const data = await apiClient.get('/me')
+    if (data?.success) currentUser.value = data.data || data
   } catch (e) { 
     console.error(e) 
   }
@@ -523,8 +518,7 @@ const loadCurrentUser = async () => {
 const loadPlanes = async () => {
   loading.planes = true
   try {
-    const res = await fetch(`${API_URL}/licencias/disponibles`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get('/licencias/disponibles')
     if (data.success) planes.value = data.data || []
   } catch (e) { 
     console.error('Error planes:', e) 
@@ -535,10 +529,9 @@ const loadPlanes = async () => {
 
 const loadLicenciaActiva = async () => {
   try {
-    const res = await fetch(`${API_URL}/mi-licencia`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get('/mi-licencia')
     
-    if (data.success && data.data) {
+    if (data?.success && data.data) {
       licenciaActiva.value = data.data
     } else {
       licenciaActiva.value = null
@@ -555,9 +548,8 @@ const loadHistorial = async () => {
     const propId = currentUser.value?.propietario_id || currentUser.value?.id
     if (!propId) return
     
-    const res = await fetch(`${API_URL}/propietarios/${propId}/licencias-activas`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) historial.value = data.data || []
+    const data = await apiClient.get(`/propietarios/${propId}/licencias-activas`)
+    if (data?.success) historial.value = data.data || []
   } catch (e) { 
     console.error('Error historial:', e) 
   } finally { 
@@ -586,13 +578,9 @@ const comprarConPayPal = async () => {
 
   loading.adquirir = true
   try {
-    const res = await fetch(`${API_URL}/licencias/${planSeleccionado.value.id}/comprar-paypal`, {
-      method: 'POST',
-      headers: getHeaders(),
-    })
-    const data = await res.json()
+    const data = await apiClient.post(`/licencias/${planSeleccionado.value.id}/comprar-paypal`)
 
-    if (data.success && data.approval_url) {
+    if (data?.success && data.approval_url) {
       window.location.href = data.approval_url
     } else {
       showToast(data.message || 'Error al iniciar el pago', 'error')
@@ -615,13 +603,9 @@ const comprarConMercadoPago = async () => {
 
   loading.adquirir = true
   try {
-    const res = await fetch(`${API_URL}/licencias/${planSeleccionado.value.id}/comprar-mercadopago`, {
-      method: 'POST',
-      headers: getHeaders(),
-    })
-    const data = await res.json()
+    const data = await apiClient.post(`/licencias/${planSeleccionado.value.id}/comprar-mercadopago`)
 
-    if (data.success && data.init_point) {
+    if (data?.success && data.init_point) {
       window.location.href = data.init_point
     } else {
       showToast(data.message || 'Error al iniciar el pago', 'error')

@@ -20,7 +20,6 @@ import OpenCajaModal from '../components/caja/OpenCajaModal.vue'
 import CajaDetalleModal from '../components/caja/CajaDetalleModal.vue'
 
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
-import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()

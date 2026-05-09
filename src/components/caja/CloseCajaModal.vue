@@ -110,6 +110,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   opening: { type: Number, required: true },
@@ -161,17 +162,12 @@ const closeCaja = async () => {
 
   loading.value = true
   try {
-    const res  = await fetch(`${API_URL}/caja/cerrar`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        efectivo_final: Number(realCash.value),
-        observaciones:  observations.value,
-      }),
+    const data = await apiClient.post('/caja/cerrar', {
+      efectivo_final: Number(realCash.value),
+      observaciones:  observations.value,
     })
-    const data = await res.json()
 
-    if (res.ok && data.success) {
+    if (data?.success) {
       emit('confirm', {
         expected:   expectedCash.value,
         real:       Number(realCash.value),

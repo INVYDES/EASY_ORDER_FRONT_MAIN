@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const email          = ref('')
 const loading        = ref(false)
@@ -109,13 +109,8 @@ const sendRequest = async () => {
   loading.value      = true
   errorMessage.value = ''
   try {
-    const res  = await fetch(`${API_URL}/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email: email.value }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message || 'Error al enviar el correo')
+    const data = await apiClient.post('/forgot-password', { email: email.value })
+    if (!data.success) throw new Error(data.message || 'Error al enviar el correo')
     successMessage.value = data.message || `Hemos enviado un enlace a ${email.value}. Revisa tu bandeja de entrada.`
     startCooldown()
   } catch (error: any) {

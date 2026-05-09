@@ -103,165 +103,182 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import SucursalBadge       from '../components/SucursalBadge.vue'
-import DashboardKpis       from '../components/administraccion/DashboardKpis.vue'
-import VentasPorHoraChart  from '../components/administraccion/Ventasxhorachart.vue'
-import MetodoPagoChart     from '../components/administraccion/MetodoPagoChart.vue'
-import VentasSemanaChart   from '../components/administraccion/VentasSemanaChart.vue'
-import TopProductosChart   from '../components/administraccion/TopProductosChart.vue'
-import PedidosEstadoChart  from '../components/administraccion/PedidosEstadoChart.vue'
-import EmpleadosRolChart   from '../components/administraccion/EmpleadosRolChart.vue'
-import KpiVentas           from '../components/administraccion/KpiVentas.vue'
-import KpiProductos        from '../components/administraccion/KpiProductos.vue'
-import RoiChart            from '../components/RoiChart.vue'
-import MetricasMeseros     from '../components/administraccion/MetricasMeseros.vue'
+import SucursalBadge        from '../components/SucursalBadge.vue'
+import DashboardKpis        from '../components/administraccion/DashboardKpis.vue'
+import VentasPorHoraChart   from '../components/administraccion/Ventasxhorachart.vue'
+import MetodoPagoChart      from '../components/administraccion/MetodoPagoChart.vue'
+import VentasSemanaChart    from '../components/administraccion/VentasSemanaChart.vue'
+import TopProductosChart    from '../components/administraccion/TopProductosChart.vue'
+import PedidosEstadoChart   from '../components/administraccion/PedidosEstadoChart.vue'
+import EmpleadosRolChart    from '../components/administraccion/EmpleadosRolChart.vue'
+import KpiVentas            from '../components/administraccion/KpiVentas.vue'
+import KpiProductos         from '../components/administraccion/KpiProductos.vue'
+import RoiChart             from '../components/RoiChart.vue'
+import MetricasMeseros      from '../components/administraccion/MetricasMeseros.vue'
 import FinancialMetricsGrid from '../components/administraccion/FinancialMetricsGrid.vue'
 import CanalVentasChart     from '../components/administraccion/CanalVentasChart.vue'
-import TopMarginList       from '../components/administraccion/TopMarginList.vue'
-import BundleStrategyCard  from '../components/administraccion/BundleStrategyCard.vue'
-import { API_URL } from '@/config/api'
+import TopMarginList        from '../components/administraccion/TopMarginList.vue'
+import BundleStrategyCard   from '../components/administraccion/BundleStrategyCard.vue'
+import { API_URL }          from '@/config/api'
+import { apiClient }        from '@/utils/apiClient'
 
-// ── Estado ─────────────────────────────────────────────────────────────────────
-const activeTab = ref('resumen')
-const loading   = ref(true)
-const empleados    = ref([])
-const restaurantes = ref([])
+// ── Estado ────────────────────────────────────────────────────────────────────
+const activeTab          = ref('resumen')
+const loading            = ref(true)
+const empleados          = ref([])
+const restaurantes       = ref([])
 const ordenesCerradasHoy = ref([])
-const dashData = reactive({ ventas_hoy: 0, ordenes_hoy: 0, utilidad_hoy: 0, ordenes_por_estado: [] })
+const allProducts        = ref([])  // ✅ declarado
+
+const propietarioData = reactive({})  // ✅ declarado
+
+const dashData = reactive({
+  ventas_hoy: 0,
+  ordenes_hoy: 0,
+  utilidad_hoy: 0,
+  ordenes_por_estado: []
+})
 
 const financialData = reactive({
-  utilidadObjetivo: 5000,
-  utilidadReal: 4200,
-  inversionInicial: 25000,
-  ventasMensuales: 15000,
-  gastosVariables: 4000,
-  gastosOperativos: 3000,
-  gananciaNeta: 8000,
-  puntoEquilibrio: 7000,
-  roiGeneral: 32,
-  roiProducto: 15,
-  margenContribucion: 11000,
-  porcentajeUtilidad: 53.3,
-  kpiEmpleados: 88
+  utilidadObjetivo:    5000,
+  utilidadReal:        4200,
+  inversionInicial:    25000,
+  ventasMensuales:     15000,
+  gastosVariables:     4000,
+  gastosOperativos:    3000,
+  gananciaNeta:        8000,
+  puntoEquilibrio:     7000,
+  roiGeneral:          32,
+  roiProducto:         15,
+  margenContribucion:  11000,
+  porcentajeUtilidad:  53.3,
+  kpiEmpleados:        88
 })
 
 const salesChannels = reactive({
-  Local: 120,
-  Pickup: 45,
+  Local:    120,
+  Pickup:   45,
   Delivery: 85
 })
 
 const financialProducts = ref([
-  { id: 1, nombre: 'Hamburguesa Gourmet', precio: 15, costo: 5, ventas: 100, margen: 10, categoria: 'Cocina' },
-  { id: 2, nombre: 'Taco Especial', precio: 10, costo: 3, ventas: 150, margen: 7, categoria: 'Cocina' },
-  { id: 3, nombre: 'Ensalada César', precio: 12, costo: 4, ventas: 30, margen: 8, categoria: 'Cocina' },
-  { id: 4, nombre: 'Sopa del Día', precio: 8, costo: 2, ventas: 20, margen: 6, categoria: 'Cocina' },
-  { id: 5, nombre: 'Pizza Margarita', precio: 14, costo: 6, ventas: 80, margen: 8, categoria: 'Cocina' },
-  { id: 6, nombre: 'Refresco Cola', precio: 3, costo: 1, ventas: 300, margen: 2, categoria: 'Bebida' },
-  { id: 7, nombre: 'Jugo Natural', precio: 5, costo: 2, ventas: 120, margen: 3, categoria: 'Bebida' },
-  { id: 8, nombre: 'Café Latte', precio: 4, costo: 1, ventas: 200, margen: 3, categoria: 'Bebida' },
-  { id: 9, nombre: 'Cheesecake', precio: 7, costo: 3, ventas: 10, margen: 4, categoria: 'Postre' },
-  { id: 10, nombre: 'Tiramisú', precio: 8, costo: 4, ventas: 15, margen: 4, categoria: 'Postre' },
-  { id: 11, nombre: 'Brownie', precio: 6, costo: 2, ventas: 5, margen: 4, categoria: 'Postre' },
+  { id: 1,  nombre: 'Hamburguesa Gourmet', precio: 15, costo: 5,  ventas: 100, margen: 10, categoria: 'Cocina'  },
+  { id: 2,  nombre: 'Taco Especial',       precio: 10, costo: 3,  ventas: 150, margen: 7,  categoria: 'Cocina'  },
+  { id: 3,  nombre: 'Ensalada César',      precio: 12, costo: 4,  ventas: 30,  margen: 8,  categoria: 'Cocina'  },
+  { id: 4,  nombre: 'Sopa del Día',        precio: 8,  costo: 2,  ventas: 20,  margen: 6,  categoria: 'Cocina'  },
+  { id: 5,  nombre: 'Pizza Margarita',     precio: 14, costo: 6,  ventas: 80,  margen: 8,  categoria: 'Cocina'  },
+  { id: 6,  nombre: 'Refresco Cola',       precio: 3,  costo: 1,  ventas: 300, margen: 2,  categoria: 'Bebida'  },
+  { id: 7,  nombre: 'Jugo Natural',        precio: 5,  costo: 2,  ventas: 120, margen: 3,  categoria: 'Bebida'  },
+  { id: 8,  nombre: 'Café Latte',          precio: 4,  costo: 1,  ventas: 200, margen: 3,  categoria: 'Bebida'  },
+  { id: 9,  nombre: 'Cheesecake',          precio: 7,  costo: 3,  ventas: 10,  margen: 4,  categoria: 'Postre'  },
+  { id: 10, nombre: 'Tiramisú',            precio: 8,  costo: 4,  ventas: 15,  margen: 4,  categoria: 'Postre'  },
+  { id: 11, nombre: 'Brownie',             precio: 6,  costo: 2,  ventas: 5,   margen: 4,  categoria: 'Postre'  },
 ])
 
 const tabs = [
-  { key: 'resumen',   label: '📋 Resumen General'  },
-  { key: 'financiero', label: '💰 Análisis Financiero' },
-  { key: 'kpis',      label: '📊 KPIs Ventas'    },
-  { key: 'productos', label: '📦 KPIs Productos'  },
-  { key: 'roi',       label: '📈 ROI'              },
-  { key: 'meseros',   label: '👥 Métricas Meseros' },
+  { key: 'resumen',    label: '📋 Resumen General'     },
+  { key: 'financiero', label: '💰 Análisis Financiero'  },
+  { key: 'kpis',       label: '📊 KPIs Ventas'         },
+  { key: 'productos',  label: '📦 KPIs Productos'       },
+  { key: 'roi',        label: '📈 ROI'                  },
+  { key: 'meseros',    label: '👥 Métricas Meseros'     },
 ]
 
 const getHeaders = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
+  return {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Authorization: token ? `Bearer ${token}` : ''
+  }
 }
 
+// ── Carga de datos ─────────────────────────────────────────────────────────────
 const loadData = async () => {
   loading.value = true
   try {
     const today = new Date().toISOString().split('T')[0]
-    const [uRes, rRes, dRes, cRes] = await Promise.all([
-      fetch(`${API_URL}/me`,                  { headers: getHeaders() }),
-      fetch(`${API_URL}/restaurantes`,        { headers: getHeaders() }),
-      fetch(`${API_URL}/reportes/dashboard`,  { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }),
+
+    const [uData, rData, dData, cData] = await Promise.all([
+      apiClient.get('/me'),
+      apiClient.get('/restaurantes'),
+      apiClient.get('/reportes/dashboard'),
+      apiClient.get(`/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`),
     ])
 
-    const [uData, rData, dData, cData] = await Promise.all([uRes.json(), rRes.json(), dRes.json(), cRes.json()])
-
-    if (rData.success) restaurantes.value = rData.data?.restaurantes || []
-    if (cData.success) ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
+    if (rData.success)  restaurantes.value       = rData.data?.restaurantes || []
+    if (cData.success)  ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
 
     if (dData.success) {
       dashData.ventas_hoy         = dData.data?.ventas_hoy         || 0
       dashData.ordenes_por_estado = dData.data?.ordenes_por_estado || []
-      dashData.ordenes_hoy        = dData.data?.ordenes_hoy ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
+      dashData.ordenes_hoy        = dData.data?.ordenes_hoy
+        ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
 
-      // Actualizar Canales de Venta desde el dashboard si existen
       if (dData.data?.canales_ventas) {
         Object.assign(salesChannels, dData.data.canales_ventas)
       }
-      
-      // Intentar obtener utilidad hoy del endpoint específico o del dashboard
+
+      // Utilidad del día
       try {
-        const uRes = await fetch(`${API_URL}/reportes/utilidad-dia`, { headers: getHeaders() })
-        const uData = await uRes.json()
-        if (uData.success) {
-          dashData.utilidad_hoy = uData.data?.utilidad_acumulada || 0
-        } else {
-          dashData.utilidad_hoy = dData.data?.utilidad_hoy || 0
-        }
+        const uData2 = await apiClient.get('/reportes/utilidad-dia')
+        dashData.utilidad_hoy = uData2.success
+          ? (uData2.data?.utilidad_acumulada || 0)
+          : (dData.data?.utilidad_hoy || 0)
       } catch {
         dashData.utilidad_hoy = dData.data?.utilidad_hoy || 0
       }
     }
 
-    // Cargar datos financieros adicionales
+    // Datos financieros
     try {
-      const fRes = await fetch(`${API_URL}/reportes/financiero`, { headers: getHeaders() })
-      const fData = await fRes.json()
-      if (fData.success && fData.data) {
-        Object.assign(financialData, fData.data)
-      }
+      const fData = await apiClient.get('/reportes/financiero')
+      if (fData.success && fData.data) Object.assign(financialData, fData.data)
     } catch (e) {
       console.error('Error al cargar datos financieros:', e)
     }
 
-    // Cargar productos reales para márgenes y bundles
+    // Productos
     try {
-      const pRes = await fetch(`${API_URL}/productos`, { headers: getHeaders() })
-      const pData = await pRes.json()
-      if (pData.success && Array.isArray(pData.data)) {
+      const pData = await apiClient.get('/productos')
+      if (pData.success) {
+        allProducts.value       = pData.data || []
         financialProducts.value = pData.data.map(p => ({
           ...p,
           margen: p.precio - (p.costo || 0),
-          ventas: p.ventas_totales || 0 // Asumiendo que el API provee ventas totales
+          ventas: p.ventas_totales || 0
         }))
       }
     } catch (e) {
       console.error('Error al cargar productos:', e)
     }
 
-    // Cargar empleados si tenemos propietario_id
+    // Empleados del propietario
     const user = uData.data || uData
     if (user?.propietario_id) {
-      const eRes  = await fetch(`${API_URL}/propietarios/${user.propietario_id}`, { headers: getHeaders() })
-      const eData = await eRes.json()
-      if (eData.success) {
-        empleados.value = (eData.data?.usuarios || eData.data?.users || []).filter(u => u.id !== user.id)
+      try {
+        const eData = await apiClient.get(`/propietarios/${user.propietario_id}`)
+        if (eData.success) {
+          empleados.value = (eData.data?.usuarios || eData.data?.users || [])
+            .filter(u => u.id !== user.id)
+          Object.assign(propietarioData, eData.data || {})
+        }
+      } catch (e) {
+        console.error('Error al cargar propietario:', e)
       }
     }
-  } catch(e) {
+
+  } catch (e) {
     console.error('Error al cargar métricas:', e)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadData)
+// ✅ onMounted para iniciar la carga
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped>

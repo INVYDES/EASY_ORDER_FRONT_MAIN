@@ -234,6 +234,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   ingrediente: {
@@ -442,19 +443,9 @@ const handleGuardar = async () => {
       motivo: localForm.value.motivo || `Ajuste de stock por ${localForm.value.tipo}`
     }
     
-    const response = await fetch(`${API_URL}/ingredientes/${props.ingrediente.id}/ajustar-stock`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    })
+    const data = await apiClient.post(`/ingredientes/${props.ingrediente.id}/ajustar-stock`, payload)
 
-    const data = await response.json()
-
-    if (response.ok && data.success) {
+    if (data?.success) {
       emit('guardar', data.data || { 
         id: props.ingrediente.id,
         stock_actual: calcularProyeccion.value 

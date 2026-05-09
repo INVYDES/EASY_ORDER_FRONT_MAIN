@@ -13,7 +13,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Columnaventa from '../components/panel/columnaventa.vue'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 const router = useRouter()
 
 // Estado
@@ -21,16 +21,6 @@ const productos = ref([])
 const loading = ref(true)
 const fechaInicio = ref(new Date().toISOString().split('T')[0]) // Hoy
 const fechaFin = ref(new Date().toISOString().split('T')[0]) // Hoy
-
-// Headers con token
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
-  }
-}
 
 // Verificar autenticación
 const checkAuth = () => {
@@ -60,10 +50,8 @@ const loadTopProducts = async () => {
 
   loading.value = true
   try {
-    // Opción 1: Usar el endpoint de reportes (si existe)
-    let url = `${API_URL}/reportes/productos-mas-vendidos`
+    let url = '/reportes/productos-mas-vendidos'
     
-    // Agregar filtros de fecha si es necesario
     const params = new URLSearchParams()
     if (fechaInicio.value) params.append('fecha_inicio', fechaInicio.value)
     if (fechaFin.value) params.append('fecha_fin', fechaFin.value)
@@ -72,17 +60,7 @@ const loadTopProducts = async () => {
       url += '?' + params.toString()
     }
     
-    const response = await fetch(url, {
-      headers: getHeaders()
-    })
-
-    if (response.status === 401) {
-      localStorage.removeItem('token')
-      router.push('/')
-      return
-    }
-
-    const data = await response.json()
+    const data = await apiClient.get(url)
     
     if (data.success) {
       productos.value = data.data || []
@@ -102,15 +80,9 @@ const loadTopProducts = async () => {
 // Fallback: Cargar productos normales y calcular ventas
 const loadFromProducts = async () => {
   try {
-    const response = await fetch(`${API_URL}/productos`, {
-      headers: getHeaders()
-    })
-    
-    const data = await response.json()
+    const data = await apiClient.get('/productos')
     
     if (data.success) {
-      // Simular datos de ventas para demostración
-      // En producción, esto vendría del backend
       productos.value = (data.data || []).map(p => ({
         ...p,
         total_vendido: Math.floor(Math.random() * 50) + 1,

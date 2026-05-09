@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const route  = useRoute()
 const router = useRouter()
@@ -157,18 +157,13 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    const res  = await fetch(`${API_URL}/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        token:                 token.value,
-        email:                 email.value,
-        password:              password.value,
-        password_confirmation: passwordConfirm.value,
-      }),
+    const data = await apiClient.post('/reset-password', {
+      token:                 token.value,
+      email:                 email.value,
+      password:              password.value,
+      password_confirmation: passwordConfirm.value,
     })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message || 'Error al restablecer la contraseña')
+    if (data.errors) throw new Error(Object.values(data.errors).flat().join(' '))
     successMessage.value = data.message || 'Tu contraseña fue restablecida. Ya puedes iniciar sesión.'
     setTimeout(() => router.push('/'), 3000)
   } catch (error: any) {

@@ -18,7 +18,7 @@ export async function request<T = any>(
     options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
     const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
-    
+
     const defaultHeaders = getHeaders();
     const headers = {
         ...defaultHeaders,
@@ -35,13 +35,14 @@ export async function request<T = any>(
         const response = await fetch(url, {
             ...options,
             headers
+
         });
 
         const contentType = response.headers.get('content-type');
         const isJson = contentType && contentType.includes('application/json');
-        
+
         let data;
-        
+
         if (isJson) {
             const text = await response.text();
             data = text ? JSON.parse(text) : {};
@@ -67,30 +68,30 @@ export async function request<T = any>(
 }
 
 export const apiClient = {
-    get: <T = any>(endpoint: string, options?: RequestInit) => 
+    get: <T = any>(endpoint: string, options?: RequestInit) =>
         request<T>(endpoint, { ...options, method: 'GET' }),
-    
-    post: <T = any>(endpoint: string, body?: any, options?: RequestInit) => 
-        request<T>(endpoint, { 
-            ...options, 
-            method: 'POST', 
-            body: body instanceof FormData ? body : JSON.stringify(body) 
+
+    post: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+        request<T>(endpoint, {
+            ...options,
+            method: 'POST',
+            body: body instanceof FormData ? body : JSON.stringify(body)
         }),
-    
-    put: <T = any>(endpoint: string, body?: any, options?: RequestInit) => 
-        request<T>(endpoint, { 
-            ...options, 
-            method: 'PUT', 
-            body: body instanceof FormData ? body : JSON.stringify(body) 
+
+    put: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+        request<T>(endpoint, {
+            ...options,
+            method: 'PUT',
+            body: body instanceof FormData ? body : JSON.stringify(body)
         }),
-    
-    patch: <T = any>(endpoint: string, body?: any, options?: RequestInit) => 
-        request<T>(endpoint, { 
-            ...options, 
-            method: 'PATCH', 
-            body: body instanceof FormData ? body : JSON.stringify(body) 
+
+    patch: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+        request<T>(endpoint, {
+            ...options,
+            method: 'PATCH',
+            body: body instanceof FormData ? body : JSON.stringify(body)
         }),
-    
-    delete: <T = any>(endpoint: string, options?: RequestInit) => 
+
+    delete: <T = any>(endpoint: string, options?: RequestInit) =>
         request<T>(endpoint, { ...options, method: 'DELETE' }),
 };

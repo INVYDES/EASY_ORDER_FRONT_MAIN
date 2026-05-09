@@ -13,69 +13,36 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const restauranteNombre = ref('')
-
-// Intentar cargar desde localStorage primero
-const restauranteActivoData = localStorage.getItem('restaurante_activo')
-if (restauranteActivoData) {
-  try {
-    const data = JSON.parse(restauranteActivoData)
-    restauranteNombre.value = data.nombre || ''
-    console.log("✅ [SucursalBadge] Nombre cargado desde restaurante_activo:", restauranteNombre.value)
-  } catch (e) {
-    console.warn("⚠️ [SucursalBadge] Error al parsear restaurante_activo:", e)
-  }
-}
 
 const getToken = () => {
   return localStorage.getItem('token') || sessionStorage.getItem('token')
 }
 
 const fetchSucursalActual = async () => {
-  console.log("🔄 [SucursalBadge] Iniciando fetchSucursalActual...")
-  
   try {
     const token = getToken()
-    
     if (!token) {
-      console.warn("⚠️ [SucursalBadge] No hay token disponible, usando datos de localStorage")
-      if (!restauranteNombre.value) {
-        restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
-      }
+      restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
       return
     }
 
-    // ✅ Usar el endpoint /me que devuelve el usuario con restaurante_activo
-    console.log("🌐 [SucursalBadge] Fetching desde: /me")
-
     const data = await apiClient.get('/me')
-    console.log("📦 [SucursalBadge] Respuesta:", data)
-
-    // La respuesta puede estar en data.data o directamente en data
     const userData = data.data || data
-    
-    if (userData.restaurante_activo && userData.restaurante_activo.nombre) {
-      restauranteNombre.value = userData.restaurante_activo.nombre
-      console.log("✅ [SucursalBadge] Nombre desde restaurante_activo:", restauranteNombre.value)
+
+    // ✅ El nombre viene en userData.restaurante.nombre
+    if (userData.restaurante?.nombre) {
+      restauranteNombre.value = userData.restaurante.nombre
       localStorage.setItem('restaurante_nombre', restauranteNombre.value)
-    } 
-    // Fallback: si no tiene restaurante_activo pero tiene restaurantes asignados
-    else if (userData.restaurantes && userData.restaurantes.length > 0) {
-      restauranteNombre.value = userData.restaurantes[0].nombre
-      console.log("✅ [SucursalBadge] Nombre desde primer restaurante:", restauranteNombre.value)
-      localStorage.setItem('restaurante_nombre', restauranteNombre.value)
-    }
-    else {
-      console.warn("⚠️ [SucursalBadge] No se encontró restaurante activo")
+    } else {
       restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
     }
-    
+
   } catch (error) {
     console.error("❌ [SucursalBadge] Error:", error.message)
-    restauranteNombre.value = localStorage.getItem('restaurante_nombre') || restauranteNombre.value || ''
+    restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
   }
 }
 

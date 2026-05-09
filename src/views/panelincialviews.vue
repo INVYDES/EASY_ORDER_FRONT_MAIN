@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '../components/layout/AppSidebar.vue'
-import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()

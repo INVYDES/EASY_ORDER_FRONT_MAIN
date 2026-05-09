@@ -344,9 +344,9 @@ import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
 import GastoView           from './GastoView.vue'
 import MeserosManager      from '../components/administraccion/MeserosManager.vue'
-import FormularioTrabajador   from '../components/administraccion/FormularioTrabajador.vue'
-import { API_URL } from '@/config/api'
+import FormularioTrabajador from '../components/administraccion/FormularioTrabajador.vue'
 import { apiClient } from '@/utils/apiClient'
+import { STORAGE_URL } from '@/config/api'
 
 const router = useRouter()
 
@@ -379,10 +379,10 @@ const sucursalesDueno = ref([])
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
 const mainTabs = [
-  { key:'resumen',      label:'🏢 Sucursales y Personal' },
-  { key:'meseros',      label:'👥 Meseros'       },
-  { key:'anuncios',     label:'📢 Marquesina'    },
-  { key:'gastos',       label:'🧾 Gastos'        },
+  { key:'resumen',  label:'🏢 Sucursales y Personal' },
+  { key:'meseros',  label:'👥 Meseros'               },
+  { key:'anuncios', label:'📢 Marquesina'            },
+  { key:'gastos',   label:'🧾 Gastos'                },
 ]
 
 const crudTabs = computed(() => [
@@ -427,6 +427,21 @@ const showToast = (message, type='info') => {
 }
 const removeToast = (id) => { const i=toasts.value.findIndex(t=>t.id===id); if(i!==-1) toasts.value.splice(i,1) }
 
+// ── Cargar empleados desde /empleados (devuelve activo correctamente) ──────────
+const cargarEmpleados = async () => {
+  loading.empleados = true
+  try {
+    const r = await apiClient.get('/empleados')
+    if (r.success) {
+      empleados.value = r.data || []
+    }
+  } catch(e) {
+    console.error('Error cargando empleados:', e)
+  } finally {
+    loading.empleados = false
+  }
+}
+
 // ── Cargar datos ───────────────────────────────────────────────────────────────
 const loadData = async () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
@@ -434,8 +449,7 @@ const loadData = async () => {
   loading.general = true
   try {
     const today = new Date().toISOString().split('T')[0]
-    
-    // Usando apiClient (maneja errores 401 y 429 internamente)
+
     const [uData, rData, dData, cData] = await Promise.all([
       apiClient.get('/me'),
       apiClient.get('/restaurantes'),
@@ -445,25 +459,23 @@ const loadData = async () => {
 
     if (uData.success || uData.data) currentUser.value = uData.data || uData
     if (rData.success || rData.data) restaurantes.value = rData.data?.restaurantes || rData.data || []
-    
-    // Nueva estructura de paginación para ordenes
+
     ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
-    
-    // Aprovechamos statistics de ordenes si vienen, o lo del dashboard
+
     if (cData.statistics) {
-        dashData.ventas_hoy = cData.statistics.total_ventas_hoy || 0
-        dashData.ordenes_hoy = cData.statistics.total_ordenes || 0
-        dashData.ordenes_por_estado = cData.statistics.por_estado || []
+      dashData.ventas_hoy        = cData.statistics.total_ventas_hoy || 0
+      dashData.ordenes_hoy       = cData.statistics.total_ordenes    || 0
+      dashData.ordenes_por_estado = cData.statistics.por_estado      || []
     } else if (dData.success || dData.data) {
-        const dashboard = dData.data || dData;
-        dashData.ventas_hoy         = dashboard.ventas_hoy         || 0
-        dashData.ordenes_por_estado = dashboard.ordenes_por_estado || []
-        dashData.ordenes_hoy        = dashboard.ordenes_hoy
-            ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
+      const dashboard = dData.data || dData
+      dashData.ventas_hoy         = dashboard.ventas_hoy         || 0
+      dashData.ordenes_por_estado = dashboard.ordenes_por_estado || []
+      dashData.ordenes_hoy        = dashboard.ordenes_hoy
+        ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
     }
 
     if (rData.success || rData.data) {
-      const raId = currentUser.value?.restaurante_activo?.id ?? currentUser.value?.restaurante_activo ?? null
+      const raId     = currentUser.value?.restaurante_activo?.id ?? currentUser.value?.restaurante_activo ?? null
       const restList = rData.data?.restaurantes || rData.data || []
       const restActivo = restList.find(r => r.id === raId)
       if (restActivo?.estadisticas) {
@@ -472,16 +484,10 @@ const loadData = async () => {
       }
     }
 
-    if (currentUser.value?.propietario_id) {
-      try {
-        const eData = await apiClient.get(`/propietarios/${currentUser.value.propietario_id}`)
-        if (eData.success || eData.data) {
-          empleados.value = (eData.data?.usuarios || eData.data?.users || eData.data || [])
-            .filter(u => u.id !== currentUser.value.id)
-        }
-      } catch {}
-      await cargarSucursalesDueno()
-    }
+    // Cargar empleados desde /empleados para tener el campo activo correcto
+    await cargarEmpleados()
+    await cargarSucursalesDueno()
+
   } catch(e) { console.error('Error loadData:', e) }
   finally { loading.general = false }
 }
@@ -503,6 +509,7 @@ const abrirModalEmpleado = () => {
   Object.assign(empForm, { nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', restaurante_activo: rId })
   showModalEmpleado.value = true
 }
+
 const editarEmpleado = (emp) => {
   empleadoEditando.value = emp; formError.value = ''
   const parts = (emp.name || '').split(' ')
@@ -516,40 +523,33 @@ const editarEmpleado = (emp) => {
   })
   showModalEmpleado.value = true
 }
+
 const cerrarModalEmpleado = () => {
   showModalEmpleado.value = false; empleadoEditando.value = null
   formError.value = ''; empForm.password = ''; empForm.password_confirmation = ''
 }
+
 const formEmpleadoRef = ref(null)
+
 const handleGuardarEmpleado = async (payload) => {
   loading.guardando = true
   try {
-    const isEdit = !!empleadoEditando.value
-    const url    = isEdit ? `${API_URL}/users/${empleadoEditando.value.id}` : `${API_URL}/register-empleado`
-    const method = isEdit ? 'PUT' : 'POST'
-    
-    // Añadimos el restaurante activo actual si no viene en el payload
-    if (!payload.restaurante_id) {
-      payload.restaurante_id = restauranteActivoId.value
-    }
+    if (!payload.restaurante_id) payload.restaurante_id = restauranteActivoId.value
     payload.propietario_id = currentUser.value?.propietario_id
 
-    const res = await fetch(url, { method, headers:getHeaders(), body:JSON.stringify(payload) })
-    const r   = await res.json()
-    
-    if (res.ok && r.success) {
+    const isEdit = !!empleadoEditando.value
+    const r = isEdit
+      ? await apiClient.put(`/users/${empleadoEditando.value.id}`, payload)
+      : await apiClient.post('/register-empleado', payload)
+
+    if (r.success) {
       showToast(isEdit ? 'Empleado actualizado' : 'Empleado creado', 'success')
-      
-      // Si el backend devolvió una cadena de acceso, se la pasamos al componente
       if (r.cadena_acceso) {
         formEmpleadoRef.value?.setCadena(r.cadena_acceso)
-      } else if (!isEdit) {
-        // Si no hay cadena y es nuevo, cerramos (pero normalmente el backend la mandará ahora)
-        cerrarModalEmpleado()
       } else {
         cerrarModalEmpleado()
       }
-      loadData()
+      await cargarEmpleados()
     } else {
       const msg = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar'
       formEmpleadoRef.value?.setError(msg)
@@ -565,15 +565,16 @@ const restauranteActivoId = computed(() => {
   const r = currentUser.value?.restaurante_activo
   return (r && typeof r === 'object') ? Number(r.id) : (r ? Number(r) : null)
 })
+
 const eliminarEmpleado = (emp) => {
-  idToDelete.value = emp.id
+  idToDelete.value  = emp.id
   nameToDelete.value = emp.name
   showConfirmDelete.value = true
 }
 
 const cancelarEliminacion = () => {
   showConfirmDelete.value = false
-  idToDelete.value = null
+  idToDelete.value   = null
   nameToDelete.value = null
 }
 
@@ -581,38 +582,40 @@ const handleConfirmDelete = async () => {
   if (!idToDelete.value) return
   loading.guardando = true
   try {
-    const res = await fetch(`${API_URL}/users/${idToDelete.value}`, { method:'DELETE', headers:getHeaders() })
-    const r   = await res.json()
-    if (res.ok && r.success) { 
+    const r = await apiClient.delete(`/users/${idToDelete.value}`)
+    if (r.success) {
       empleados.value = empleados.value.filter(e => e.id !== idToDelete.value)
-      showToast('Empleado eliminado permanentemente', 'success') 
+      showToast('Empleado eliminado permanentemente', 'success')
       cancelarEliminacion()
-    } else { 
-      showToast(r.message || 'Error al eliminar', 'error') 
+    } else {
+      showToast(r.message || 'Error al eliminar', 'error')
     }
-  } catch { 
-    showToast('Error de conexión', 'error') 
-  } finally { 
+  } catch {
+    showToast('Error de conexión', 'error')
+  } finally {
     loading.guardando = false
   }
 }
 
+// ── Toggle activo/inactivo ─────────────────────────────────────────────────────
 const toggleEstadoEmpleado = async (emp) => {
-  const nuevoEstado = emp.es_activo === false ? true : false
+  console.log('ANTES toggle - emp.activo:', emp.activo, 'emp.id:', emp.id)
   try {
-    const res = await fetch(`${API_URL}/users/${emp.id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify({ es_activo: nuevoEstado })
-    })
-    const r = await res.json()
-    if (res.ok && r.success) {
-      emp.es_activo = nuevoEstado
-      showToast(`Empleado ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success')
+    const r = await apiClient.patch(`/empleados/${emp.id}/toggle-activo`)
+    console.log('RESPONSE toggle:', r)
+    if (r.success) {
+      const idx = empleados.value.findIndex(e => e.id === emp.id)
+      console.log('IDX encontrado:', idx, 'nuevo activo:', r.data.activo)
+      if (idx !== -1) {
+        empleados.value[idx] = { ...empleados.value[idx], activo: r.data.activo }
+        console.log('empleados[idx] después:', empleados.value[idx].activo)
+      }
+      showToast(`Empleado ${r.data.activo ? 'activado' : 'desactivado'}`, 'success')
     } else {
       showToast(r.message || 'Error al cambiar estado', 'error')
     }
   } catch (err) {
+    console.error('ERROR toggle:', err)
     showToast('Error de conexión', 'error')
   }
 }
@@ -624,80 +627,102 @@ const abrirModalRestaurante = () => {
   imgPreview.value = null
   showModalRestaurante.value = true
 }
+
 const editarRestaurante = (rest) => {
   restauranteEditando.value = rest; formError.value = ''
   Object.assign(restForm, {
-    nombre:rest.nombre||'', telefono:rest.telefono||'', calle:rest.calle||'',
-    ciudad:rest.ciudad||'', estado:rest.estado||'', activo:rest.es_activo!==false,
+    nombre: rest.nombre||'', telefono: rest.telefono||'', calle: rest.calle||'',
+    ciudad: rest.ciudad||'', estado: rest.estado||'', activo: rest.es_activo!==false,
     imagen: null, imagen_url: rest.imagen_url, eliminar_imagen: false
   })
   imgPreview.value = null
   showModalRestaurante.value = true
 }
+
 const cerrarModalRestaurante = () => {
-  showModalRestaurante.value=false; restauranteEditando.value=null
-  formError.value=''; imgPreview.value = null
+  showModalRestaurante.value = false; restauranteEditando.value = null
+  formError.value = ''; imgPreview.value = null
 }
+
 const onFileChange = (e) => {
   const file = e.target.files[0]; if (!file) return
   restForm.imagen = file; restForm.eliminar_imagen = false
   const reader = new FileReader()
-  reader.onload = (e) => imgPreview.value = e.target.result
+  reader.onload = (ev) => imgPreview.value = ev.target.result
   reader.readAsDataURL(file)
 }
+
 const quitarImagen = () => {
   restForm.imagen = null; restForm.imagen_url = null
   restForm.eliminar_imagen = true; imgPreview.value = null
   if (fileInput.value) fileInput.value.value = ''
 }
+
 const guardarRestaurante = async () => {
   formError.value = ''
-  if (!restForm.nombre) { formError.value='El nombre es obligatorio'; return }
+  if (!restForm.nombre) { formError.value = 'El nombre es obligatorio'; return }
   loading.guardando = true
   try {
-    const isEdit = !!restauranteEditando.value
-    const url    = isEdit ? `${API_URL}/restaurantes/${restauranteEditando.value.id}` : `${API_URL}/restaurantes`
+    const isEdit   = !!restauranteEditando.value
     const formData = new FormData()
-    formData.append('nombre', restForm.nombre)
+    formData.append('nombre',   restForm.nombre)
     formData.append('telefono', restForm.telefono || '')
-    formData.append('calle', restForm.calle || '')
-    formData.append('ciudad', restForm.ciudad || '')
-    formData.append('estado', restForm.estado || '')
-    formData.append('activo', restForm.activo ? '1' : '0')
+    formData.append('calle',    restForm.calle    || '')
+    formData.append('ciudad',   restForm.ciudad   || '')
+    formData.append('estado',   restForm.estado   || '')
+    formData.append('activo',   restForm.activo ? '1' : '0')
     if (isEdit) formData.append('_method', 'PUT')
-    if (restForm.imagen) formData.append('imagen', restForm.imagen)
-    if (restForm.eliminar_imagen) formData.append('eliminar_imagen', '1')
-    const headers = { ...getHeaders() }; delete headers['Content-Type']
-    const res = await fetch(url, { method: 'POST', headers, body: formData })
-    const r   = await res.json()
-    if (res.ok && r.success) {
-      if (isEdit) { const idx=restaurantes.value.findIndex(x=>x.id===restauranteEditando.value.id); if(idx!==-1) restaurantes.value[idx]={...restaurantes.value[idx],...(r.data||{})} }
-      else restaurantes.value.push(r.data)
+    if (restForm.imagen)          formData.append('imagen',           restForm.imagen)
+    if (restForm.eliminar_imagen) formData.append('eliminar_imagen',  '1')
+    
+    const r = isEdit
+      ? await apiClient.post(`/restaurantes/${restauranteEditando.value.id}`, formData)
+      : await apiClient.post('/restaurantes', formData)
+    
+    if (r.success) {
+      if (isEdit) {
+        const idx = restaurantes.value.findIndex(x => x.id === restauranteEditando.value.id)
+        if (idx !== -1) restaurantes.value[idx] = { ...restaurantes.value[idx], ...(r.data || {}) }
+      } else {
+        restaurantes.value.push(r.data)
+      }
       showToast(isEdit ? 'Restaurante actualizado' : 'Restaurante creado', 'success')
       cerrarModalRestaurante()
-    } else { formError.value = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar' }
-  } catch { formError.value = 'Error de conexión' }
-  finally { loading.guardando = false }
+    } else {
+      formError.value = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar'
+    }
+  } catch {
+    formError.value = 'Error de conexión'
+  } finally {
+    loading.guardando = false
+  }
 }
+
 const getImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http')) return path
-  return `${API_URL}/../storage/${path}`
+  return `${STORAGE_URL}${path}`
 }
+
 const eliminarRestaurante = async (id) => {
   if (!confirm('¿Eliminar restaurante?')) return
   try {
-    const res = await fetch(`${API_URL}/restaurantes/${id}`, { method:'DELETE', headers:getHeaders() })
-    const r   = await res.json()
-    if (res.ok && r.success) { restaurantes.value=restaurantes.value.filter(x=>x.id!==id); showToast('Restaurante eliminado','success') }
-    else showToast(r.message||'Error al eliminar','error')
-  } catch { showToast('Error de conexión','error') }
+    const r = await apiClient.delete(`/restaurantes/${id}`)
+    if (r.success) {
+      restaurantes.value = restaurantes.value.filter(x => x.id !== id)
+      showToast('Restaurante eliminado', 'success')
+    } else {
+      showToast(r.message || 'Error al eliminar', 'error')
+    }
+  } catch {
+    showToast('Error de conexión', 'error')
+  }
+  
 }
 
 watch(mainTab, (val) => { if (val === 'resumen') loadData() })
 onMounted(loadData)
 </script>
-
 <style scoped>
 @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
 .animate-slide-in { animation: slideIn 0.3s ease-out; }

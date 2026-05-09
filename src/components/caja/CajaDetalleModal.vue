@@ -136,6 +136,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   cajaId: { type: Number, default: null }, // null = corte del día actual
@@ -163,17 +164,16 @@ const loadDetalle = async () => {
   error.value   = ''
   try {
     // Si tiene cajaId específico usar historial, si no el corte del día
-    const url = props.cajaId
-      ? `${API_URL}/caja/historial/${props.cajaId}`
-      : `${API_URL}/caja/corte`
+    const endpoint = props.cajaId
+      ? `/caja/historial/${props.cajaId}`
+      : '/caja/corte'
 
-    const res  = await fetch(url, { headers: getHeaders() })
-    const resp = await res.json()
+    const resp = await apiClient.get(endpoint)
 
-    if (res.ok && resp.success) {
+    if (resp?.success) {
       data.value = resp.data
     } else {
-      error.value = resp.message || 'No se pudo cargar el detalle'
+      error.value = resp?.message || 'No se pudo cargar el detalle'
     }
   } catch (e) {
     error.value = 'Error de conexión'

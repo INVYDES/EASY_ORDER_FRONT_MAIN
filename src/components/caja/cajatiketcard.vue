@@ -135,6 +135,7 @@
 import { ref, computed } from 'vue'
 import PaymentModal from './paymentModal.vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   ticket: { type: Object, required: true },
@@ -268,37 +269,14 @@ const handlePaymentProcessed = async (paymentData) => {
       referencia: paymentData.folio || null,
     }
 
-    // Intentar actualizar orden directamente
-    const updateRes = await fetch(
-      `${API_URL}/ordenes/${props.ticket.id}`,
-      {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-      }
-    )
-
-    const updateData = await updateRes.json()
-
-    // Fallback si el endpoint PUT no acepta metodo_pago
-    if (!updateRes.ok || !updateData.success) {
-      const cerrarRes = await fetch(
-        `${API_URL}/ordenes/${props.ticket.id}/cerrar`,
-        {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify(payload),
-        }
-      )
-
-      const cerrarData = await cerrarRes.json()
-
-      if (!cerrarRes.ok || !cerrarData.success) {
-        throw new Error(
-          cerrarData.message ||
-          'Error al cerrar la orden'
-        )
-      }
+    let updateData
+    try {
+      updateData = await apiClient.put(`/ordenes/${props.ticket.id}`, payload)
+    } catch (e) {
+      updateData = await apiClient.post(`/ordenes/${props.ticket.id}/cerrar`, payload)
+    }
+    if (!updateData?.success) {
+      throw new Error(updateData?.message || 'Error al cerrar la orden')
     }
 
     showModal.value = false

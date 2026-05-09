@@ -230,6 +230,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // ── Helper: Resolver URLs de imágenes ───────────────────────────────────────────
 const resolveImageUrl = (path) => {
@@ -285,18 +286,16 @@ const totalItems = computed(() =>
 const cargarProductos = async () => {
   loading.value = true
   try {
-    const res  = await fetch(`${API_URL}/productos`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) productos.value = data.data || []
+    const data = await apiClient.get('/productos')
+    if (data?.success) productos.value = data.data || []
   } catch (e) { console.error('Error productos:', e) }
   finally { loading.value = false }
 }
 
 const cargarClientes = async () => {
   try {
-    const res  = await fetch(`${API_URL}/clientes/select-list`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) clientes.value = data.data || []
+    const data = await apiClient.get('/clientes/select-list')
+    if (data?.success) clientes.value = data.data || []
   } catch (e) { console.error('Error clientes:', e) }
 }
 
@@ -341,23 +340,18 @@ const crearOrden = async () => {
   creando.value = true
 
   try {
-    const res  = await fetch(`${API_URL}/ordenes`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        cliente_id:  clienteId.value,
-        productos:   carrito.value.map(item => ({ producto_id: item.id, cantidad: item.cantidad })),
-        mesa:        null,
-        metodo_pago: null,
-        propina:     0,
-      }),
+    const data = await apiClient.post('/ordenes', {
+      cliente_id:  clienteId.value,
+      productos:   carrito.value.map(item => ({ producto_id: item.id, cantidad: item.cantidad })),
+      mesa:        null,
+      metodo_pago: null,
+      propina:     0,
     })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    if (data?.success) {
       carrito.value  = []
       clienteId.value = null
     } else {
-      errorOrden.value = data.message || 'Error al crear el pedido'
+      errorOrden.value = data?.message || 'Error al crear el pedido'
     }
   } catch (e) {
     errorOrden.value = 'Error de conexión'

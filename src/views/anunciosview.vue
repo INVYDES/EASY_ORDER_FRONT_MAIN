@@ -316,6 +316,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import MarquesitaWidget from '../components/MarquesitaWidget.vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // --- Helper: Resolver URLs de imágenes ---
 const resolveImageUrl = (path) => {
@@ -471,16 +472,14 @@ const seleccionarItem = (item) => {
 
 const cargarPaquetes = async () => {
   try {
-    const res = await fetch(`${API_URL}/paquetes`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get('/paquetes')
     if (data.success) paquetes.value = data.data
   } catch (err) { console.error('Error paquetes:', err) }
 }
 
 const cargarProductos = async () => {
   try {
-    const res = await fetch(`${API_URL}/productos?per_page=150`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get('/productos?per_page=150')
     if (data.success) productos.value = data.data
   } catch (err) { console.error('Error productos:', err) }
 }
@@ -488,17 +487,14 @@ const cargarProductos = async () => {
 const cargar = async () => {
   loading.value = true
   try {
-    // Si no tenemos el ID (sucede al recargar la página), lo recuperamos de la sesión activa
     if (!restauranteId.value) {
-      const restRes = await fetch(`${API_URL}/restaurantes`, { headers: getHeaders() })
-      const restData = await restRes.json()
+      const restData = await apiClient.get('/restaurantes')
       if (restData.success && restData.data.restaurante_activo) {
         restauranteId.value = restData.data.restaurante_activo.id
       }
     }
 
-    const res = await fetch(`${API_URL}/admin/anuncios`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get('/admin/anuncios')
     if (data.success) {
       anuncios.value = data.data.map(a => ({
         ...a,
@@ -532,16 +528,12 @@ const guardar = async () => {
   
   guardando.value = true
   try {
-    const url = editando.value ? `${API_URL}/admin/anuncios/${editando.value.id}` : `${API_URL}/admin/anuncios`
+    const url = editando.value ? `/admin/anuncios/${editando.value.id}` : '/admin/anuncios'
     const method = editando.value ? 'PUT' : 'POST'
     
-    const res = await fetch(url, {
-      method,
-      headers: getHeaders(),
-      body: JSON.stringify(form.value)
-    })
-    
-    const data = await res.json()
+    const data = editando.value
+      ? await apiClient.put(url, form.value)
+      : await apiClient.post('/admin/anuncios', form.value)
     
     if (data.success) {
       showToast(editando.value ? '¡Anuncio actualizado!' : '¡Anuncio publicado correctamente!', 'success')
@@ -557,12 +549,7 @@ const guardar = async () => {
 
 const toggleActivo = async (a) => {
   try {
-    const res = await fetch(`${API_URL}/admin/anuncios/${a.id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify({ activo: !a.activo })
-    })
-    const data = await res.json()
+    const data = await apiClient.put(`/admin/anuncios/${a.id}`, { activo: !a.activo })
     if (data.success) {
       showToast(a.activo ? 'Anuncio pausado' : 'Anuncio activado con éxito')
       cargar()
@@ -573,8 +560,7 @@ const toggleActivo = async (a) => {
 const eliminar = async (id) => {
   if (!confirm('¿Seguro que deseas eliminar este anuncio? Esta acción es permanente.')) return
   try {
-    const res = await fetch(`${API_URL}/admin/anuncios/${id}`, { method: 'DELETE', headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.delete(`/admin/anuncios/${id}`)
     if (data.success) {
       showToast('Anuncio eliminado del sistema')
       cargar()

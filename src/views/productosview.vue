@@ -290,7 +290,7 @@ import PaquetesTable from '../components/productos/PaquetesTable.vue'
 import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
 import AnunciosView from './anunciosview.vue'
 
-import { API_URL } from '@/config/api'
+import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
@@ -397,7 +397,7 @@ const checkAuth = () => {
 const getImageUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http')) return path
-  return `${API_URL}/storage/${path}`
+  return `${STORAGE_URL}${path}`
 }
 
 const onImageError = (e) => { 

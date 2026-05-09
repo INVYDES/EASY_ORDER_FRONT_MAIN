@@ -204,7 +204,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 const router  = useRouter()
 
 // ── Estado ────────────────────────────────────────────────────────────────────
@@ -276,15 +276,8 @@ const formatDate = (d) => {
 const loadUser = async () => {
   loading.perfil = true
   try {
-    const res  = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    if (res.status === 401) {
-      showToast('Sesión expirada', 'error')
-      localStorage.removeItem('token'); sessionStorage.removeItem('token')
-      router.push('/')
-      return
-    }
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get('/me')
+    if (data?.success) {
       user.value     = data.data || data
       form.name      = user.value.name     || ''
       form.email     = user.value.email    || ''
@@ -308,10 +301,9 @@ const loadLicencia = async () => {
   loading.licencia = true
   try {
     const propietarioId = user.value.propietario_id || user.value.id
-    const res  = await fetch(`${API_URL}/propietarios/${propietarioId}/licencias-activas`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get(`/propietarios/${propietarioId}/licencias-activas`)
 
-    if (data.success && data.data?.length > 0) {
+    if (data?.success && data.data?.length > 0) {
       const lic = data.data[0]
       licenciaActiva.value = {
         id:               lic.id,
@@ -339,13 +331,9 @@ const loadLicencia = async () => {
 const handleGuardar = async () => {
   loading.guardar = true
   try {
-    const res  = await fetch(`${API_URL}/user/profile`, {
-      method: 'PUT', headers: getHeaders(),
-      body: JSON.stringify({ name: form.name, email: form.email, username: form.username }),
-    })
-    const data = await res.json()
+    const data = await apiClient.put('/user/profile', { name: form.name, email: form.email, username: form.username })
 
-    if (res.ok && data.success) {
+    if (data?.success) {
       showToast('Perfil actualizado correctamente', 'success')
       user.value = { ...user.value, ...form }
       // Actualizar storage
@@ -372,17 +360,13 @@ const handleCambiarPassword = async () => {
 
   loading.password = true
   try {
-    const res  = await fetch(`${API_URL}/user/password`, {
-      method: 'PUT', headers: getHeaders(),
-      body: JSON.stringify({
-        current_password:      passForm.current,
-        password:              passForm.new,
-        password_confirmation: passForm.confirm,
-      }),
+    const data = await apiClient.put('/user/password', {
+      current_password:      passForm.current,
+      password:              passForm.new,
+      password_confirmation: passForm.confirm,
     })
-    const data = await res.json()
 
-    if (res.ok && data.success) {
+    if (data?.success) {
       showToast('Contraseña actualizada correctamente', 'success')
       passForm.current = ''; passForm.new = ''; passForm.confirm = ''
     } else {

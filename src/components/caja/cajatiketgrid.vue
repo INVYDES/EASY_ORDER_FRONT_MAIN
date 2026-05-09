@@ -483,6 +483,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   orders: { type: Array, default: () => [] },
@@ -580,10 +581,9 @@ const syncIdentity = async () => {
   try {
     const rid = restauranteId.value
     if (rid) {
-      const resR = await fetch(`${API_URL}/restaurantes/${rid}`, { headers: getHeaders() })
-      if (resR.ok) {
-        const dataR = await resR.json()
-        const r = dataR.data || dataR
+      const dataR = await apiClient.get(`/restaurantes/${rid}`)
+      const r = dataR.data || dataR
+      if (r) {
         nombreSucursal.value = (r.nombre || 'RESTAURANTE').toUpperCase()
         const d = r.direccion || {}
         const partes = [d.calle, d.ciudad, d.estado].filter(p => p && p.trim().length > 0)
@@ -751,27 +751,21 @@ const cobrarOrden = async () => {
     imprimirTicket()
 
     // 1. Cerrar la orden con método de pago y propina
-    const resCerrar = await fetch(`${API_URL}/ordenes/${ordenCobrar.value.id}/cerrar`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
+    let dataCerrar
+    try {
+      dataCerrar = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/cerrar`, {
         metodo_pago: metodoPago.value,
         propina:     propinaCalculada.value,
-      }),
-    })
-    const dataCerrar = await resCerrar.json()
-    if (!resCerrar.ok || !dataCerrar.success) {
-      // Intentar con PUT si cerrar no existe como ruta independiente
-      const resUpdate = await fetch(`${API_URL}/ordenes/${ordenCobrar.value.id}`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          estado:      'CERRADA',
-          metodo_pago: metodoPago.value,
-          propina:     propinaCalculada.value,
-        }),
       })
-      if (!resUpdate.ok) throw new Error('Error al cerrar orden')
+    } catch (e) {
+      dataCerrar = await apiClient.put(`/ordenes/${ordenCobrar.value.id}`, {
+        estado:      'CERRADA',
+        metodo_pago: metodoPago.value,
+        propina:     propinaCalculada.value,
+      })
+    }
+    if (!dataCerrar?.success && !dataCerrar?.data) {
+      throw new Error('Error al cerrar orden')
     }
 
     emit('order-paid', {
@@ -945,14 +939,9 @@ const cobrarDividido = async () => {
             }
         )
 
-    const resDividir = await fetch(`${API_URL}/ordenes/${ordenCobrar.value.id}/dividir`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(payload),
-    })
-    const dataDividir = await resDividir.json()
-    if (!resDividir.ok || !dataDividir.success) {
-      errorDividir.value = dataDividir.message || 'Error al dividir cuenta'
+    const dataDividir = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/dividir`, payload)
+    if (!dataDividir?.success) {
+      errorDividir.value = dataDividir?.message || 'Error al dividir cuenta'
       return
     }
 
@@ -969,18 +958,13 @@ const cobrarDividido = async () => {
       }
     })
 
-    const resCerrar = await fetch(`${API_URL}/ordenes/${ordenCobrar.value.id}/cerrar`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ 
-        estado: 'CERRADA', 
-        pagos: detallePagos,
-        total_final: ordenCobrar.value.total
-      }),
+    const dataCerrar = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/cerrar`, {
+      estado: 'CERRADA',
+      pagos: detallePagos,
+      total_final: ordenCobrar.value.total
     })
-    const dataCerrar = await resCerrar.json()
-    if (!resCerrar.ok || !dataCerrar.success) {
-      errorDividir.value = dataCerrar.message || 'Error al cerrar la cuenta'
+    if (!dataCerrar?.success) {
+      errorDividir.value = dataCerrar?.message || 'Error al cerrar la cuenta'
       return
     }
     

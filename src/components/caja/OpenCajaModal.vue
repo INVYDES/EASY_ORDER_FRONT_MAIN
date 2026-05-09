@@ -72,6 +72,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const emit = defineEmits(['close', 'open', 'already-open'])
 
@@ -109,17 +110,12 @@ const openCaja = async () => {
 
   loading.value = true
   try {
-    const res  = await fetch(`${API_URL}/caja/abrir`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        monto_inicial: Number(initialAmount.value),
-        observaciones: observations.value,
-      }),
+    const data = await apiClient.post('/caja/abrir', {
+      monto_inicial: Number(initialAmount.value),
+      observaciones: observations.value,
     })
-    const data = await res.json()
 
-    if (res.ok && data.success) {
+    if (data?.success) {
       // Éxito: notificar al padre con el monto
       emit('open', Number(initialAmount.value))
       emit('close')
