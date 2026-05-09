@@ -225,6 +225,7 @@ import { useRouter } from 'vue-router'
 import SucursalBadge from '../components/SucursalBadge.vue'
 import OrdenCardPostres from '../components/postres/OrdenCardPostres.vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 const POLL_INTERVAL = 15000
 const router        = useRouter()
 
@@ -301,9 +302,8 @@ const loadOrders = async () => {
   if (!token) { router.push('/'); return }
   loading.value = true
   try {
-    const res = await fetch(`${API_URL}/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get('/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')
+    if (data.success || data.data) {
       const lista = Array.isArray(data.data) ? data.data : (data.data?.data || [])
       orders.value = lista
         .filter(o => isPostreOrder(o))
@@ -331,9 +331,8 @@ const abrirModalIngredientes = async (orden, nuevoEstado) => {
   try {
     const resultados = await Promise.all(
       detallesPostres.map(d =>
-        fetch(`${API_URL}/ingredientes/producto/${d.producto_id}`, { headers: getHeaders() })
-          .then(r => r.json())
-          .then(data => ({ detalle: d, ingredientes: data.success ? data.data : [] }))
+        apiClient.get(`/ingredientes/producto/${d.producto_id}`)
+          .then(data => ({ detalle: d, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
           .catch(() => ({ detalle: d, ingredientes: [] }))
       )
     )
@@ -381,16 +380,12 @@ const confirmarYCambiarEstado = async () => {
 const cambiarEstado = async (id, nuevoEstado) => {
   procesando.value = id
   try {
-    const res  = await fetch(`${API_URL}/ordenes/${id}/actualizar-estado-estacion`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ 
-        estacion: 'postres',
-        estado: nuevoEstado 
-      }),
+    const data = await apiClient.post(`/ordenes/${id}/actualizar-estado-estacion`, {
+      estacion: 'postres',
+      estado: nuevoEstado 
     })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    
+    if (data.success || data.data) {
       // Recargar órdenes para ver el cambio reflejado por estado_preparacion
       await loadOrders()
       const labels = { EN_PREPARACION:'En preparación 🍰', LISTO:'Listo ✅' }

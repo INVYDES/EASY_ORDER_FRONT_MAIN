@@ -507,6 +507,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
 
 const vistaActual  = ref('ordenes')
@@ -680,22 +681,22 @@ const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entre
 const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
 
 // ── API ────────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token  = localStorage.getItem('token') || sessionStorage.getItem('token') || ''
-  const restId = localStorage.getItem('restaurante_id_activo') || ''
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${token}`, 'X-Restaurante-Id': restId }
-}
 
 const cargarOrdenes = async () => {
   loading.value = true
   try {
     const today  = new Date().toISOString().split('T')[0]
     const states = ['ABIERTA','POR_PREPARAR','EN_PREPARACION','LISTA','ENTREGADA']
-    const urls   = states.map(s => `${API_URL}/meseros/mis-ordenes?estado=${s}&per_page=100`)
-    urls.push(`${API_URL}/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
-    const results = await Promise.all(urls.map(url => fetch(url, { headers: getHeaders() }).then(r => r.ok ? r.json() : { success: false })))
+    const urls   = states.map(s => `/meseros/mis-ordenes?estado=${s}&per_page=100`)
+    urls.push(`/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
+    const results = await Promise.all(urls.map(url => apiClient.get(url)))
     const map = new Map()
-    results.forEach(res => { if (res.success && res.data) res.data.forEach(o => map.set(o.id, o)) })
+    results.forEach(res => { 
+      if (res.success || res.data) {
+        const items = Array.isArray(res.data) ? res.data : (res.data?.data || [])
+        items.forEach(o => map.set(o.id, o))
+      }
+    })
     ordenes.value = [...map.values()].sort((a, b) => b.id - a.id)
   } catch (err) { console.error('Error órdenes:', err) }
   finally { loading.value = false }
@@ -704,21 +705,20 @@ const cargarOrdenes = async () => {
 const cargarMisMesas = async () => {
   if (!esMesero.value) return
   try {
-    const res  = await fetch(`${API_URL}/meseros/mis-mesas`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) mesasAsignadas.value = data.data
+    const data = await apiClient.get('/meseros/mis-mesas')
+    if (data.success || data.data) mesasAsignadas.value = data.data || data
   } catch {}
 }
 
 const cargarProductos = async () => {
   loadingProductos.value = true
   try {
-    const [pRes, paqRes] = await Promise.all([
-      fetch(`${API_URL}/productos`, { headers: getHeaders() }),
-      fetch(`${API_URL}/paquetes`,  { headers: getHeaders() }),
+    const [pData, paqData] = await Promise.all([
+      apiClient.get('/productos'),
+      apiClient.get('/paquetes'),
     ])
-    if (pRes.ok)   { const d = await pRes.json();   if (d.success) productos.value = d.data }
-    if (paqRes.ok) { const d = await paqRes.json(); if (d.success) paquetes.value  = d.data }
+    if (pData.success || pData.data) productos.value = pData.data || pData
+    if (paqData.success || paqData.data) paquetes.value  = paqData.data || paqData
   } catch {}
   finally { loadingProductos.value = false }
 }
@@ -726,16 +726,16 @@ const cargarProductos = async () => {
 const verificarCaja = async () => {
   loadingCaja.value = true
   try {
-    const res = await fetch(`${API_URL}/caja/estado`, { headers: getHeaders() })
-    if (res.ok) { const d = await res.json(); cajaAbierta.value = !!(d.success && d.data?.is_open) }
+    const d = await apiClient.get('/caja/estado')
+    if (d.success || d.data) cajaAbierta.value = !!(d.data?.is_open || d.is_open)
   } catch {}
   finally { loadingCaja.value = false }
 }
 
 const cargarClientes = async () => {
   try {
-    const res = await fetch(`${API_URL}/clientes/select-list`, { headers: getHeaders() })
-    if (res.ok) { const d = await res.json(); if (d.success) clientes.value = d.data }
+    const d = await apiClient.get('/clientes/select-list')
+    if (d.success || d.data) clientes.value = d.data || d
   } catch {}
 }
 
@@ -776,9 +776,8 @@ const confirmarAgregarAOrden = async () => {
 const enviarOrden = async () => {
   creando.value = true
   try {
-    const res  = await fetch(`${API_URL}/ordenes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(buildPayload()) })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.post('/ordenes', buildPayload())
+    if (data.success || data.data) {
       carrito.value             = []
       nuevaOrden.value.mesa     = null
       numeroComensales.value    = 1
@@ -786,7 +785,6 @@ const enviarOrden = async () => {
       comensalActivoIndex.value = 0
       vistaActual.value         = 'ordenes'
       await cargarOrdenes()
-      // El backend indica si fue nueva o se anexó
       if (data.es_nueva === false) {
         showToast(`Productos agregados al ticket ${data.data?.folio || ''} 📋`, 'warning')
       } else {
@@ -835,8 +833,8 @@ const eliminarDelCarrito = (cartId) => { carrito.value = carrito.value.filter(x 
 const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   cambiando.value = sub.uid
   try {
-    const res = await fetch(`${API_URL}/ordenes/${sub.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ estado: nuevoEstado }) })
-    if (res.ok) { await cargarOrdenes(); showToast('Estado actualizado', 'success') }
+    const data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
+    if (data.success || data.data) { await cargarOrdenes(); showToast('Estado actualizado', 'success') }
   } finally { cambiando.value = null }
 }
 
@@ -854,12 +852,8 @@ const agruparPorComensal = (detalles) => {
 const eliminarProductoDeOrden = async (detalleId, ordenId) => {
   if (!confirm('¿Seguro que quieres eliminar este producto de la orden?')) return
   try {
-    const res = await fetch(`${API_URL}/ordenes/${ordenId}/detalles/${detalleId}`, {
-      method: 'DELETE',
-      headers: getHeaders()
-    })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}`)
+    if (data.success || data.data) {
       showToast('Producto eliminado', 'success')
       await cargarOrdenes()
     } else {
@@ -884,12 +878,8 @@ const abrirEditorNotas = (detalle, ordenId) => {
 const guardarNota = async () => {
   const { detalle, ordenId, nota } = editorNotas.value
   try {
-    const res = await fetch(`${API_URL}/ordenes/${ordenId}/detalles/${detalle.id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify({ cantidad: detalle.cantidad, notas: nota })
-    })
-    if (res.ok) {
+    const data = await apiClient.put(`/ordenes/${ordenId}/detalles/${detalle.id}`, { cantidad: detalle.cantidad, notas: nota })
+    if (data.success || data.data) {
       showToast('Nota actualizada', 'success')
       editorNotas.value.visible = false
       await cargarOrdenes()
@@ -906,12 +896,8 @@ const actualizarCantidadItem = async (detalle, ordenId, delta) => {
   }
   
   try {
-    const res = await fetch(`${API_URL}/ordenes/${ordenId}/detalles/${detalle.id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify({ cantidad: nuevaCantidad, notas: detalle.notas })
-    })
-    if (res.ok) {
+    const data = await apiClient.put(`/ordenes/${ordenId}/detalles/${detalle.id}`, { cantidad: nuevaCantidad, notas: detalle.notas })
+    if (data.success || data.data) {
       await cargarOrdenes()
     }
   } catch (e) {
@@ -924,8 +910,8 @@ const entregarProductosSubOrden = async (sub) => {
   if (!ids.length) return
   cambiando.value = sub.uid
   try {
-    const res = await fetch(`${API_URL}/ordenes/${sub.id}/station-status`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ detalles: ids, estado_preparacion: 'ENTREGADO' }) })
-    if (res.ok) { await cargarOrdenes(); showToast('Pedido entregado ✨', 'success') }
+    const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, { detalles: ids, estado_preparacion: 'ENTREGADO' })
+    if (data.success || data.data) { await cargarOrdenes(); showToast('Pedido entregado ✨', 'success') }
   } finally { cambiando.value = null }
 }
 

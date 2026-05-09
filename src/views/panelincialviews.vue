@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '../components/layout/AppSidebar.vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 const route = useRoute()
@@ -39,23 +40,11 @@ const canView = (modulo) => {
   return rolePermissions[modulo]?.includes(userRole) || false
 }
 
-// ── Headers ──────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : '',
-  }
-}
-
 // ── Cargar datos ─────────────────────────────────────────
 const loadUserData = async () => {
   try {
-    const res = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    if (res.status === 401) { localStorage.removeItem('token'); router.push('/'); return }
-    const data = await res.json()
-    if (data.success) { 
+    const data = await apiClient.get('/me')
+    if (data.success || data.data) { 
       user.value = data.data || data
       await loadRestaurantes() 
     }
@@ -64,10 +53,9 @@ const loadUserData = async () => {
 
 const loadRestaurantes = async () => {
   try {
-    const res  = await fetch(`${API_URL}/restaurantes`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
-      userRestaurantes.value = data.data?.restaurantes || []
+    const data = await apiClient.get('/restaurantes')
+    if (data.success || data.data) {
+      userRestaurantes.value = (data.data?.restaurantes || data.restaurantes || [])
       const stored = localStorage.getItem('restaurante_activo')
       if (stored && userRestaurantes.value.some(r => r.id === parseInt(stored))) {
         restauranteActivo.value = parseInt(stored)
@@ -82,13 +70,8 @@ const loadRestaurantes = async () => {
 const cambiarRestaurante = async () => {
   if (!restauranteActivo.value) return
   try {
-    const res  = await fetch(`${API_URL}/cambiar-restaurante`, {
-      method: 'POST', 
-      headers: getHeaders(),
-      body: JSON.stringify({ restaurante_id: restauranteActivo.value }),
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    const data = await apiClient.post('/cambiar-restaurante', { restaurante_id: restauranteActivo.value })
+    if (data.success || data.data) {
       localStorage.setItem('restaurante_activo', restauranteActivo.value)
       window.location.reload()
     }

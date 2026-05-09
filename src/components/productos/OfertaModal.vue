@@ -130,6 +130,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue';
 import { API_URL, STORAGE_URL } from '@/config/api';
+import { apiClient } from '@/utils/apiClient';
 
 // Helper: Resolver URLs de imágenes
 const resolveImageUrl = (path) => {
@@ -201,23 +202,14 @@ const seleccionarProducto = (p) => {
 
 const guardar = async () => {
   guardando.value = true;
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   
   try {
-    const url = props.oferta ? `${API_URL}/ofertas/${props.oferta.id}` : `${API_URL}/ofertas`;
-    const method = props.oferta ? 'PUT' : 'POST';
+    const endpoint = props.oferta ? `/ofertas/${props.oferta.id}` : `/ofertas`;
+    const method = props.oferta ? 'put' : 'post';
     
-    const res = await fetch(url, {
-      method,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify(form)
-    });
+    const data = await apiClient[method](endpoint, form);
     
-    const data = await res.json();
-    if (data.success) {
+    if (data.success || data.data) {
       emit('saved');
       emit('update:modelValue', false);
     }

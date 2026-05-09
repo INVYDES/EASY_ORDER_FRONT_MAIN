@@ -166,6 +166,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // Props recibidos desde ProductosView:
 //   :categoria → selectedCategoria  (Object | null)
@@ -222,15 +223,6 @@ watch(() => props.categoria, (c) => {
 }, { immediate: true })
 
 // ── HELPERS ────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : '',
-  }
-}
-
 const validate = () => {
   errors.nombre = form.nombre.trim() ? '' : 'El nombre es obligatorio'
   return !errors.nombre
@@ -243,26 +235,20 @@ const save = async () => {
   errorMessage.value = ''
 
   try {
-    const url    = props.categoria ? `${API_URL}/categorias/${props.categoria.id}` : `${API_URL}/categorias`
-    const method = props.categoria ? 'PUT' : 'POST'
+    const endpoint = props.categoria ? `/categorias/${props.categoria.id}` : `/categorias`
+    const method = props.categoria ? 'put' : 'post'
 
-    const res  = await fetch(url, {
-      method,
-      headers: getHeaders(),
-      body: JSON.stringify({
-        nombre:      form.nombre.trim(),
-        descripcion: form.descripcion || null,
-        color:       form.color,
-        icono:       form.icono       || null,
-        orden:       form.orden       ?? 0,
-        activo:      form.activo,
-      }),
+    const data = await apiClient[method](endpoint, {
+      nombre:      form.nombre.trim(),
+      descripcion: form.descripcion || null,
+      color:       form.color,
+      icono:       form.icono       || null,
+      orden:       form.orden       ?? 0,
+      activo:      form.activo,
     })
 
-    const data = await res.json()
-
-    if (res.ok && data.success) {
-      emit('saved', data.data)
+    if (data.success || data.data) {
+      emit('saved', data.data || data)
     } else {
       errorMessage.value = data.errors
         ? Object.values(data.errors).flat().join(' · ')

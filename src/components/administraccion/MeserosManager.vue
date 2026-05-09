@@ -219,12 +219,11 @@ const showNotify = (msg, type = 'success') => {
 const loadMeserosData = async () => {
   loading.meseros = true
   try {
-    const res = await fetch(`${API_URL}/meseros`, { headers: getHeaders() })
-    const r = await res.json()
-    if (r.success) {
-      meseros.value = r.data.meseros
-      totalMesas.value = r.data.total_mesas
-    }
+    const r = await apiClient.get('/meseros')
+      if (r.success) {
+        meseros.value = r.data.meseros
+        totalMesas.value = r.data.total_mesas
+      }
   } catch (err) {
     console.error('Error cargando meseros:', err)
   } finally {

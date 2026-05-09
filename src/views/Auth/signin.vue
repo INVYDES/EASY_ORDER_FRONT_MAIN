@@ -118,7 +118,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL } from '../../config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
@@ -136,26 +136,22 @@ const handleSubmit = async () => {
 
   try {
     const isEmployeeLogin = /^\d+-\d+-\d+$/.test(loginIdentifier.value.trim())
-    const endpoint = isEmployeeLogin ? '/login-empleado' : '/login'
+    const endpoint = isEmployeeLogin ? '/empleado/login' : '/login'
     
-    const res = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        login:    loginIdentifier.value.trim(),
-        password: password.value
-      })
+    const data = await apiClient.post(endpoint, {
+      login:    loginIdentifier.value.trim(),
+      password: password.value
     })
 
-    const data = await res.json()
-
-    if (res.ok && data.success) {
+    // New structure: { data: { user, token } }
+    if (data.data && data.data.token && data.data.user) {
       const storage = keepLoggedIn.value ? localStorage : sessionStorage
-      storage.setItem('token', data.token)
-      storage.setItem('user',  JSON.stringify(data.user))
+      storage.setItem('token', data.data.token)
+      storage.setItem('user',  JSON.stringify(data.data.user))
 
-      const user = data.user
-      const rol  = user.roles?.[0]?.nombre || user.rol || ''
+      const user = data.data.user
+      // New roles structure: Array of strings ["MESERO"]
+      const rol  = (Array.isArray(user.roles) ? user.roles[0] : user.rol) || ''
       
       const routesMap: Record<string, string> = {
         'PROPIETARIO': '/panel/Gestion',
@@ -172,8 +168,13 @@ const handleSubmit = async () => {
     } else {
       errorMessage.value = data.message || 'Error al iniciar sesión'
     }
-  } catch (err) {
-    errorMessage.value = 'Error de conexión con el servidor'
+  } catch (err: any) {
+    if (err.message === 'Too Many Requests') {
+        // Handled by apiClient alert
+        errorMessage.value = 'Demasiados intentos. Por favor espera.'
+    } else {
+        errorMessage.value = 'Error de conexión con el servidor'
+    }
   } finally {
     loading.value = false
   }

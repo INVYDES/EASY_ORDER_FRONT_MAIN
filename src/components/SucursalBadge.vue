@@ -14,6 +14,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const restauranteNombre = ref('')
 
@@ -48,22 +49,9 @@ const fetchSucursalActual = async () => {
     }
 
     // ✅ Usar el endpoint /me que devuelve el usuario con restaurante_activo
-    const url = `${API_URL}/me`
-    console.log("🌐 [SucursalBadge] Fetching desde:", url)
+    console.log("🌐 [SucursalBadge] Fetching desde: /me")
 
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
-    }
-
-    const data = await response.json()
+    const data = await apiClient.get('/me')
     console.log("📦 [SucursalBadge] Respuesta:", data)
 
     // La respuesta puede estar en data.data o directamente en data

@@ -102,6 +102,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 const router = useRouter()
 
 const emit = defineEmits(['toggle', 'cambioRestaurante'])
@@ -120,30 +121,23 @@ const userInitials = computed(() => {
   return userName.value.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
 })
 
-const getHeaders = () => ({
-  'Authorization': `Bearer ${localStorage.getItem('token') ?? sessionStorage.getItem('token')}`,
-  'Content-Type': 'application/json'
-})
-
 // Cargar Datos Iniciales (Usuario + Restaurantes)
 const loadData = async () => {
   try {
     // 1. Cargar Usuario
-    const userRes = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    if (userRes.status === 401) return logout()
-    const userData = await userRes.json()
+    const userData = await apiClient.get('/me')
     user.value = userData.data || userData
 
     // 2. Cargar Restaurantes (Usando tu estructura de API)
-    const restRes = await fetch(`${API_URL}/restaurantes`, { headers: getHeaders() })
-    const restData = await restRes.json()
+    const restData = await apiClient.get('/restaurantes')
     
-    if (restData.success) {
-      restaurantes.value = restData.data.restaurantes
+    if (restData.success || restData.data) {
+      restaurantes.value = restData.data?.restaurantes || restData.restaurantes || []
       // Asignar el activo que viene de la API
-      restauranteActivo.value = restData.data.restaurante_activo
+      restauranteActivo.value = restData.data?.restaurante_activo || restData.restaurante_activo || null
     }
   } catch (error) {
+    if (error?.status === 401) return logout()
     console.error('Error cargando datos:', error)
   }
 }
@@ -169,7 +163,7 @@ const cambiarPassword = () => { showUserMenu.value = false; router.push('/panel/
 
 const logout = async () => {
   try {
-    await fetch(`${API_URL}/logout`, { method: 'POST', headers: getHeaders() })
+    await apiClient.post('/logout')
   } finally {
     localStorage.removeItem('token')
     sessionStorage.removeItem('token')

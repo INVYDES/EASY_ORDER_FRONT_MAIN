@@ -110,6 +110,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // Props: ingrediente (Object|null) para editar, null para crear
 const props = defineProps({
@@ -150,11 +151,6 @@ watch(() => props.ingrediente, (ing) => {
   }
 }, { immediate: true })
 
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
-
 const guardar = async () => {
   formError.value = ''
   if (!form.value.nombre.trim())     { formError.value = 'El nombre es obligatorio'; return }
@@ -162,11 +158,12 @@ const guardar = async () => {
 
   loading.value = true
   try {
-    const url    = props.ingrediente ? `${API_URL}/ingredientes/${props.ingrediente.id}` : `${API_URL}/ingredientes`
-    const method = props.ingrediente ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: getHeaders(), body: JSON.stringify(form.value) })
-    const data   = await res.json()
-    if (res.ok && data.success) {
+    const endpoint = props.ingrediente ? `/ingredientes/${props.ingrediente.id}` : `/ingredientes`
+    const method = props.ingrediente ? 'put' : 'post'
+    
+    const data = await apiClient[method](endpoint, form.value)
+    
+    if (data.success || data.data) {
       emit('saved')
     } else {
       formError.value = data.message || Object.values(data.errors || {}).flat().join(' · ') || 'Error al guardar'

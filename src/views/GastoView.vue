@@ -153,12 +153,12 @@
               <td class="px-5 py-4">
                 <span class="px-2.5 py-1 text-xs font-semibold rounded-full capitalize"
                   :class="getCategoriaColor(gasto.categoria)">
-                  {{ categorias[gasto.categoria] || gasto.categoria }}
+                  {{ gasto.categoria_formateada || categorias[gasto.categoria] || gasto.categoria }}
                 </span>
               </td>
               <td class="px-5 py-4 text-sm text-gray-500">{{ formatFecha(gasto.fecha) }}</td>
               <td class="px-5 py-4 text-right">
-                <span class="text-sm font-bold text-red-600">${{ formatMoney(gasto.monto) }}</span>
+                <span class="text-sm font-bold text-red-600">{{ gasto.monto_formateado || ('$' + formatMoney(gasto.monto)) }}</span>
               </td>
               <td class="px-5 py-4 text-sm text-gray-400 max-w-xs truncate">{{ gasto.notas || '—' }}</td>
               <td class="px-5 py-4 text-right">
@@ -316,7 +316,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // ── ESTADO ─────────────────────────────────────────────────
 const gastos              = ref([])
@@ -363,11 +363,6 @@ const getCategoriaFondoSuave = (cat) => ({ renta:'bg-purple-50', nomina:'bg-blue
 const getCategoriaBarColor = (cat) => ({ renta:'bg-purple-500', nomina:'bg-blue-500', servicios:'bg-cyan-500', insumos:'bg-orange-500', marketing:'bg-pink-500', mantenimiento:'bg-yellow-500', general:'bg-gray-400' }[cat] || 'bg-gray-400')
 
 // ── HELPERS ────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
-
 const formatMoney = (value) => {
   if (!value && value !== 0) return '0.00'
   return Number(value).toLocaleString('es-MX', { minimumFractionDigits:2, maximumFractionDigits:2 })
@@ -384,7 +379,6 @@ const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== i
 
 // ── COMPUTED ───────────────────────────────────────────────
 const totalGastos = computed(() =>
-  // ✅ Guard: asegurar que gastos.value es array antes de reduce
   Array.isArray(gastos.value)
     ? gastos.value.reduce((sum, g) => sum + parseFloat(g.monto || 0), 0)
     : 0
@@ -414,23 +408,19 @@ const cargarGastos = async () => {
     if (filtros.fecha_hasta) params.append('fecha_hasta', filtros.fecha_hasta)
     if (filtros.categoria)   params.append('categoria',   filtros.categoria)
 
-    const [gRes, rRes] = await Promise.all([
-      fetch(`${API_URL}/gastos?${params}`, { headers: getHeaders() }),
-      fetch(`${API_URL}/gastos/resumen?fecha_inicio=${filtros.fecha_desde}&fecha_fin=${filtros.fecha_hasta}`, { headers: getHeaders() }),
+    const [gData, rData] = await Promise.all([
+      apiClient.get(`/gastos?${params}`),
+      apiClient.get(`/gastos/resumen?fecha_inicio=${filtros.fecha_desde}&fecha_fin=${filtros.fecha_hasta}`),
     ])
 
-    const gData = await gRes.json()
-    const rData = await rRes.json()
+    // ✅ FIX: el backend devuelve { data: [...] }
+    gastos.value = Array.isArray(gData.data) ? gData.data : []
 
-    // ✅ FIX: el backend devuelve { success, data: [...], totales: {...} }
-    // No asignar gData completo — solo gData.data
-    gastos.value = gData.success && Array.isArray(gData.data) ? gData.data : []
-
-    if (rData.success) resumenData.value = rData.data
+    if (rData.data) resumenData.value = rData.data
 
   } catch (e) {
     console.error('Error en cargarGastos:', e)
-    gastos.value = []  // ✅ siempre array para evitar .reduce falle
+    gastos.value = []
     showToast('Error al cargar datos', 'error')
   } finally {
     loading.value.gastos = false
@@ -451,9 +441,8 @@ const cargarResumenPeriodo = async (periodo) => {
       params.fecha_inicio = new Date(hoy.getFullYear(), 0, 1).toISOString().split('T')[0]
       params.fecha_fin    = hoy.toISOString().split('T')[0]
     }
-    const res  = await fetch(`${API_URL}/gastos/resumen?${new URLSearchParams(params)}`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) { resumenData.value = data.data; modalResumenVisible.value = true }
+    const data = await apiClient.get(`/gastos/resumen?${new URLSearchParams(params)}`)
+    if (data.data) { resumenData.value = data.data; modalResumenVisible.value = true }
   } catch { showToast('Error al cargar resumen', 'error') }
 }
 
@@ -464,12 +453,13 @@ const guardarGasto = async () => {
   }
   guardando.value = true
   try {
-    const url    = modoEdicion.value ? `${API_URL}/gastos/${gastoSeleccionado.value.id}` : `${API_URL}/gastos`
-    const method = modoEdicion.value ? 'PUT' : 'POST'
-    const res    = await fetch(url, { method, headers: getHeaders(), body: JSON.stringify(form.value) })
-    const data   = await res.json()
-    if (res.ok && data.success) {
-      showToast(modoEdicion.value ? 'Gasto actualizado' : 'Gasto registrado')
+    const isEdit = !!modoEdicion.value
+    const url    = isEdit ? `/gastos/${gastoSeleccionado.value.id}` : `/gastos`
+    const method = isEdit ? 'put' : 'post'
+    const data   = await apiClient[method](url, form.value)
+    
+    if (data.data || data.success) {
+      showToast(isEdit ? 'Gasto actualizado' : 'Gasto registrado')
       cerrarModal(); await cargarGastos()
     } else { formError.value = data.message || 'Error al guardar' }
   } catch { formError.value = 'Error de conexión' }
@@ -479,9 +469,8 @@ const guardarGasto = async () => {
 const eliminarGasto = async (gasto) => {
   if (!confirm(`¿Eliminar "${gasto.concepto}"?`)) return
   try {
-    const res  = await fetch(`${API_URL}/gastos/${gasto.id}`, { method:'DELETE', headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) { showToast('Gasto eliminado'); await cargarGastos() }
+    const data = await apiClient.delete(`/gastos/${gasto.id}`)
+    if (data.success || data.data) { showToast('Gasto eliminado'); await cargarGastos() }
     else showToast(data.message || 'Error al eliminar', 'error')
   } catch { showToast('Error de conexión', 'error') }
 }

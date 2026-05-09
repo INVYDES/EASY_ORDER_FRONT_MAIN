@@ -174,6 +174,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   paquete: { type: Object, default: null },
@@ -263,23 +264,12 @@ const save = async () => {
   }
 
   try {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-    const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+    const endpoint = isEdit.value ? `/paquetes/${props.paquete.id}` : `/paquetes`
     
-    const url = isEdit.value ? `${API_URL}/paquetes/${props.paquete.id}` : `${API_URL}/paquetes`
-    
-    const res = await fetch(url, {
-      method: 'POST', // Usamos POST siempre y _method para PUT
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    })
+    const data = await apiClient.post(endpoint, formData)
 
-    const data = await res.json()
-    if (data.success) {
-      emit('saved', data.data)
+    if (data.success || data.data) {
+      emit('saved', data.data || data)
     } else {
       alert(data.message || 'Error al guardar el paquete')
     }

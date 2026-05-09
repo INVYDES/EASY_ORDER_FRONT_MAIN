@@ -1,14 +1,14 @@
 // src/config/api.ts
 
 // 1. Obtenemos la URL base del .env
-const base = import.meta.env.VITE_API_URL || '';
+const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // 2. Limpiamos la URL para evitar duplicidad de /api
 // Quitamos barras al final y el /api si ya existe en la variable de entorno
 const cleanBase = base.replace(/\/+$/, '').replace(/\/api$/, '');
 
 if (!cleanBase) {
-    throw new Error('VITE_API_URL no está definido en el archivo .env');
+    console.warn('VITE_API_URL no está definido en el archivo .env, usando fallback');
 }
 
 // 3. Exportamos las constantes asegurando un solo prefijo

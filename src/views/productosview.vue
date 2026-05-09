@@ -291,6 +291,7 @@ import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
 import AnunciosView from './anunciosview.vue'
 
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
@@ -384,15 +385,6 @@ const removeToast = (id) => {
 }
 
 // ── HELPERS ────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 
-    'Content-Type': 'application/json', 
-    Accept: 'application/json', 
-    Authorization: token ? `Bearer ${token}` : '' 
-  }
-}
-
 const checkAuth = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   if (!token) { 
@@ -421,14 +413,9 @@ const loadProducts = async (page = 1) => {
   if (!checkAuth()) return
   loading.products = true
   try {
-    // ✅ Agregamos página y timestamp para evitar caché
-    const res = await fetch(`${API_URL}/productos?page=${page}&per_page=15&_t=${Date.now()}`, { 
-      headers: getHeaders() 
-    })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get(`/productos?page=${page}&per_page=15&_t=${Date.now()}`)
+    if (data.success || data.data) {
       products.value = data.data || []
-      // ✅ Actualizar paginación
       if (data.pagination) {
         pagination.value = data.pagination
       } else if (data.meta) {
@@ -454,10 +441,9 @@ const loadProducts = async (page = 1) => {
 
 const loadAllProductsForSelection = async () => {
   try {
-    const res = await fetch(`${API_URL}/productos?per_page=1000`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
-      let lista = data.data
+    const data = await apiClient.get('/productos?per_page=1000')
+    if (data.success || data.data) {
+      let lista = data.data || data
       if (!Array.isArray(lista)) lista = lista?.data ?? []
       allProductsForSelection.value = lista
     }
@@ -492,7 +478,7 @@ const handleSaved = async () => {
 const handleDelete = async (id) => { 
   if (!confirm('¿Eliminar este producto?')) return
   try {
-    await fetch(`${API_URL}/productos/${id}`, { method: 'DELETE', headers: getHeaders() })
+    await apiClient.delete(`/productos/${id}`)
     await loadProducts(pagination.value.current_page)
     showToast('Producto eliminado correctamente', 'success')
   } catch (error) {
@@ -502,7 +488,7 @@ const handleDelete = async (id) => {
 
 const handleToggleActive = async (id) => { 
   try {
-    await fetch(`${API_URL}/productos/${id}/toggle-active`, { method: 'PATCH', headers: getHeaders() })
+    await apiClient.patch(`/productos/${id}/toggle-active`)
     await loadProducts(pagination.value.current_page)
     showToast('Estado del producto actualizado', 'success')
   } catch (error) {
@@ -524,11 +510,10 @@ const handleImported = () => {
 const loadCategories = async () => {
   loading.categories = true
   try {
-    const res = await fetch(`${API_URL}/categorias`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get('/categorias')
+    if (data.success || data.data) {
       const baseNames = ['cocina', 'barra', 'postres']
-      categories.value = (data.data || []).filter(c => 
+      categories.value = (data.data || data || []).filter(c => 
         baseNames.includes((c.nombre || '').toLowerCase())
       )
     }
@@ -559,7 +544,7 @@ const handleCategoriaSaved = async () => {
 const handleDeleteCategoria = async (id) => { 
   if (!confirm('¿Eliminar esta categoría?')) return
   try {
-    await fetch(`${API_URL}/categorias/${id}`, { method: 'DELETE', headers: getHeaders() })
+    await apiClient.delete(`/categorias/${id}`)
     await loadCategories()
     showToast('Categoría eliminada correctamente', 'success')
   } catch (error) {
@@ -571,15 +556,9 @@ const handleDeleteCategoria = async (id) => {
 const loadIngredientes = async () => {
   loading.ingredientes = true
   try {
-    const res = await fetch(`${API_URL}/ingredientes`, { headers: getHeaders() })
-    if (res.status === 401) { 
-      localStorage.removeItem('token')
-      router.push('/')
-      return 
-    }
-    const data = await res.json()
-    if (data.success) {
-      ingredientes.value = data.data || []
+    const data = await apiClient.get('/ingredientes')
+    if (data.success || data.data) {
+      ingredientes.value = data.data || data || []
       statsIngredientes.value = data.stats || { total: 0, bajo_stock: 0, sin_stock: 0, costo_total: 0 }
     }
   } catch (error) {
@@ -616,9 +595,8 @@ const handleStockSaved = async () => {
 
 const loadAnuncios = async () => {
   try {
-    const res = await fetch(`${API_URL}/admin/anuncios`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) anuncios.value = data.data || []
+    const data = await apiClient.get('/admin/anuncios')
+    if (data.success || data.data) anuncios.value = data.data || data || []
   } catch (error) { console.error('Error loading anuncios count:', error) }
 }
 
@@ -626,9 +604,8 @@ const loadAnuncios = async () => {
 const loadPaquetes = async () => {
   loading.paquetes = true
   try {
-    const res = await fetch(`${API_URL}/paquetes`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) paquetes.value = data.data || []
+    const data = await apiClient.get('/paquetes')
+    if (data.success || data.data) paquetes.value = data.data || data || []
   } catch (error) {
     console.error('Error loading packages:', error)
     showToast('Error al cargar paquetes', 'error')
@@ -656,9 +633,8 @@ const handlePaqueteSaved = async () => {
 const handleDeletePaquete = async (id) => {
   if (!confirm('¿Eliminar este paquete?')) return
   try {
-    const res = await fetch(`${API_URL}/paquetes/${id}`, { method: 'DELETE', headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.delete(`/paquetes/${id}`)
+    if (data.success || data.data) {
       showToast('Paquete eliminado', 'success')
       await loadPaquetes()
     }
@@ -667,9 +643,8 @@ const handleDeletePaquete = async (id) => {
 
 const handleToggleActivePaquete = async (id) => {
   try {
-    const res = await fetch(`${API_URL}/paquetes/${id}/toggle-active`, { method: 'PATCH', headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.patch(`/paquetes/${id}/toggle-active`)
+    if (data.success || data.data) {
       showToast('Estado actualizado', 'success')
       await loadPaquetes()
     }
@@ -679,9 +654,8 @@ const handleToggleActivePaquete = async (id) => {
 const handleDeleteIngrediente = async (id) => {
   if (!confirm('¿Eliminar este ingrediente?')) return
   try {
-    const res = await fetch(`${API_URL}/ingredientes/${id}`, { method: 'DELETE', headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) { 
+    const data = await apiClient.delete(`/ingredientes/${id}`)
+    if (data.success || data.data) { 
       showToast('Ingrediente eliminado correctamente', 'success')
       await loadIngredientes()
     } else {

@@ -346,6 +346,7 @@ import GastoView           from './GastoView.vue'
 import MeserosManager      from '../components/administraccion/MeserosManager.vue'
 import FormularioTrabajador   from '../components/administraccion/FormularioTrabajador.vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
@@ -433,37 +434,49 @@ const loadData = async () => {
   loading.general = true
   try {
     const today = new Date().toISOString().split('T')[0]
-    const [uRes, rRes, dRes, cRes] = await Promise.all([
-      fetch(`${API_URL}/me`,                  { headers: getHeaders() }),
-      fetch(`${API_URL}/restaurantes`,        { headers: getHeaders() }),
-      fetch(`${API_URL}/reportes/dashboard`,  { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`, { headers: getHeaders() }),
+    
+    // Usando apiClient (maneja errores 401 y 429 internamente)
+    const [uData, rData, dData, cData] = await Promise.all([
+      apiClient.get('/me'),
+      apiClient.get('/restaurantes'),
+      apiClient.get('/reportes/dashboard').catch(() => ({ success: false, data: {} })),
+      apiClient.get(`/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`),
     ])
-    if (uRes.status === 401) { localStorage.removeItem('token'); router.push('/'); return }
-    const [uData, rData, dData, cData] = await Promise.all([uRes.json(), rRes.json(), dRes.json(), cRes.json()])
-    if (uData.success) currentUser.value = uData.data || uData
-    if (rData.success) restaurantes.value = rData.data?.restaurantes || []
-    if (cData.success) ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
-    if (dData.success) {
-      dashData.ventas_hoy         = dData.data?.ventas_hoy         || 0
-      dashData.ordenes_por_estado = dData.data?.ordenes_por_estado || []
-      dashData.ordenes_hoy        = dData.data?.ordenes_hoy
-        ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
+
+    if (uData.success || uData.data) currentUser.value = uData.data || uData
+    if (rData.success || rData.data) restaurantes.value = rData.data?.restaurantes || rData.data || []
+    
+    // Nueva estructura de paginación para ordenes
+    ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
+    
+    // Aprovechamos statistics de ordenes si vienen, o lo del dashboard
+    if (cData.statistics) {
+        dashData.ventas_hoy = cData.statistics.total_ventas_hoy || 0
+        dashData.ordenes_hoy = cData.statistics.total_ordenes || 0
+        dashData.ordenes_por_estado = cData.statistics.por_estado || []
+    } else if (dData.success || dData.data) {
+        const dashboard = dData.data || dData;
+        dashData.ventas_hoy         = dashboard.ventas_hoy         || 0
+        dashData.ordenes_por_estado = dashboard.ordenes_por_estado || []
+        dashData.ordenes_hoy        = dashboard.ordenes_hoy
+            ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
     }
-    if (rData.success) {
+
+    if (rData.success || rData.data) {
       const raId = currentUser.value?.restaurante_activo?.id ?? currentUser.value?.restaurante_activo ?? null
-      const restActivo = (rData.data?.restaurantes || []).find(r => r.id === raId)
+      const restList = rData.data?.restaurantes || rData.data || []
+      const restActivo = restList.find(r => r.id === raId)
       if (restActivo?.estadisticas) {
         if (!dashData.ordenes_hoy && restActivo.estadisticas.ordenes_hoy) dashData.ordenes_hoy = restActivo.estadisticas.ordenes_hoy
         if (!dashData.ventas_hoy  && restActivo.estadisticas.ventas_hoy)  dashData.ventas_hoy  = restActivo.estadisticas.ventas_hoy
       }
     }
+
     if (currentUser.value?.propietario_id) {
       try {
-        const eRes  = await fetch(`${API_URL}/propietarios/${currentUser.value.propietario_id}`, { headers: getHeaders() })
-        const eData = await eRes.json()
-        if (eData.success) {
-          empleados.value = (eData.data?.usuarios || eData.data?.users || [])
+        const eData = await apiClient.get(`/propietarios/${currentUser.value.propietario_id}`)
+        if (eData.success || eData.data) {
+          empleados.value = (eData.data?.usuarios || eData.data?.users || eData.data || [])
             .filter(u => u.id !== currentUser.value.id)
         }
       } catch {}
@@ -476,9 +489,8 @@ const loadData = async () => {
 const cargarSucursalesDueno = async () => {
   loading.sucursales = true
   try {
-    const res  = await fetch(`${API_URL}/user/owner-restaurants`, { headers: getHeaders() })
-    const r    = await res.json()
-    if (r.success) sucursalesDueno.value = r.data
+    const r = await apiClient.get('/user/owner-restaurants')
+    if (r.success || r.data) sucursalesDueno.value = r.data || r
   } catch(err) { console.error('Error sucursales:', err) }
   finally { loading.sucursales = false }
 }

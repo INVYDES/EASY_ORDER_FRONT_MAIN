@@ -225,6 +225,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   ticket: { type: Object, required: true },
@@ -279,14 +280,11 @@ const uniqueIdentifier = computed(() => {
 
 // --- SINCRONIZACIÓN PROFUNDA ---
 const syncIdentity = async () => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-  const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-
   try {
     // Intentar obtener la orden completa para asegurar el restaurante_id
-    const resO = await fetch(`${API_URL}/ordenes/${props.ticket.id}`, { headers })
-    if (resO.ok) {
-      const dataO = await resO.json()
+    const dataO = await apiClient.get(`/ordenes/${props.ticket.id}`)
+    
+    if (dataO.success || dataO.data) {
       const realOrder = dataO.data || dataO
       if (realOrder.restaurante_id) detectedRestId.value = realOrder.restaurante_id
     }
@@ -295,9 +293,8 @@ const syncIdentity = async () => {
 
     const rid = restauranteId.value
     if (rid) {
-      const resR = await fetch(`${API_URL}/restaurantes/${rid}`, { headers })
-      if (resR.ok) {
-        const dataR = await resR.json()
+      const dataR = await apiClient.get(`/restaurantes/${rid}`)
+      if (dataR.success || dataR.data) {
         const r = dataR.data || dataR
         nombreSucursal.value = (r.nombre || 'RESTAURANTE').toUpperCase()
         

@@ -325,7 +325,7 @@
 import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 // ── Importa la URL base desde tu config centralizado ──────────────────────────
-const API_URL = import.meta.env.VITE_API_URL ?? 'https://corion.mx/cws/eorder/backend/public/index.php/api'
+import { apiClient } from '@/utils/apiClient'
 
 // ── Props / Emits ─────────────────────────────────────────────────────────────
 const props = defineProps<{
@@ -457,28 +457,14 @@ const margenPct = computed(() => {
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const getToken = () =>
-  localStorage.getItem('token') ?? sessionStorage.getItem('token') ?? ''
-
-const getHeaders = (withContentType = true) => {
-  const token = getToken()
-  const h: Record<string, string> = {
-    Authorization: token ? `Bearer ${token}` : '',
-    Accept: 'application/json',
-  }
-  if (withContentType) h['Content-Type'] = 'application/json'
-  return h
-}
-
 const yaEnReceta = (id: number) => receta.value.some(r => r.id === id)
 
 // ── Cargar ingredientes del catálogo (una sola vez) ───────────────────────────
 const loadTodosIngredientes = async () => {
   if (todosIngredientes.value.length) return
   try {
-    const res  = await fetch(`${API_URL}/ingredientes`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) todosIngredientes.value = data.data || []
+    const data = await apiClient.get('/ingredientes')
+    if (data.success || data.data) todosIngredientes.value = data.data || data || []
   } catch (e) {
     console.error('Error cargando ingredientes:', e)
   }
@@ -504,11 +490,11 @@ const cargarReceta = async () => {
       return
     }
 
-    const res  = await fetch(`${API_URL}/ingredientes/producto/${props.product.id}`, { headers: getHeaders() })
-    const data = await res.json()
+    const data = await apiClient.get(`/ingredientes/producto/${props.product.id}`)
 
-    if (data.success && Array.isArray(data.data)) {
-      receta.value = data.data.map((i: any) => ({
+    const arrayData = data.data || data
+    if ((data.success || arrayData) && Array.isArray(arrayData)) {
+      receta.value = arrayData.map((i: any) => ({
         ...i,
         // El backend devuelve cantidad_receta (v2) o cantidad (pivot v1)
         // Tomamos el primero que exista y no sea 0
@@ -561,14 +547,9 @@ const guardarReceta = async () => {
         cantidad: Number(i.cantidad_receta),
       })),
     }
-    const res  = await fetch(`${API_URL}/ingredientes/producto/${props.product.id}/sync`, {
-      method:  'POST',
-      headers: getHeaders(),
-      body:    JSON.stringify(payload),
-    })
-    const data = await res.json()
+    const data = await apiClient.post(`/ingredientes/producto/${props.product.id}/sync`, payload)
 
-    if (data.success) {
+    if (data.success || data.data) {
       recetaModificada.value = false
     } else {
       errorMessage.value = data.message || 'Error al guardar receta'
@@ -646,15 +627,14 @@ const validate = () => {
   return !errors.nombre && !errors.precio && !errors.categoria_id
 }
 
-// ── Guardar producto ──────────────────────────────────────────────────────────
 const save = async () => {
   if (!validate()) return
   loading.value      = true
   errorMessage.value = ''
 
   try {
-    const url    = props.product ? `${API_URL}/productos/${props.product.id}` : `${API_URL}/productos`
-    let res: Response
+    const endpoint = props.product ? `/productos/${props.product.id}` : `/productos`
+    let data: any;
 
     if (newImageFile.value) {
       // Con imagen: multipart/form-data
@@ -672,36 +652,26 @@ const save = async () => {
       fd.append('imagen',             newImageFile.value)
       if (props.product) fd.append('_method', 'PUT')
 
-      res = await fetch(url, {
-        method:  'POST',
-        headers: getHeaders(false),
-        body:    fd,
-      })
+      data = await apiClient.post(endpoint, fd)
     } else {
       // Sin imagen: JSON
-      const method = props.product ? 'PUT' : 'POST'
-      res = await fetch(url, {
-        method,
-        headers: getHeaders(true),
-        body: JSON.stringify({
-          nombre:          form.nombre,
-          descripcion:     form.descripcion,
-          precio:          form.precio,
-          costo:           form.costo,
-          stock:           form.stock,
-          stock_minimo:    form.stock_minimo,
-          categoria_id:    form.categoria_id,
-          activo:             form.activo,
-          eliminar_imagen:    form.eliminar_imagen,
-          minutos_produccion: form.minutos_produccion,
-          nomina_diaria:      form.nomina_diaria,
-        }),
+      const method = props.product ? 'put' : 'post'
+      data = await apiClient[method](endpoint, {
+        nombre:          form.nombre,
+        descripcion:     form.descripcion,
+        precio:          form.precio,
+        costo:           form.costo,
+        stock:           form.stock,
+        stock_minimo:    form.stock_minimo,
+        categoria_id:    form.categoria_id,
+        activo:             form.activo,
+        eliminar_imagen:    form.eliminar_imagen,
+        minutos_produccion: form.minutos_produccion,
+        nomina_diaria:      form.nomina_diaria,
       })
     }
 
-    const data = await res.json()
-
-    if (res.ok && data.success) {
+    if (data.success || data.data) {
       emit('saved')
     } else {
       errorMessage.value = data.errors
@@ -718,9 +688,8 @@ const save = async () => {
 // ── Categorías (si no vienen como prop) ──────────────────────────────────────
 const loadCategorias = async () => {
   try {
-    const res  = await fetch(`${API_URL}/categorias`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) categorias.value = data.data || []
+    const data = await apiClient.get('/categorias')
+    if (data.success || data.data) categorias.value = data.data || data || []
   } catch (e) {
     console.error('Error categorías:', e)
   }

@@ -61,6 +61,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   apiUrl:        { type: String,   required: true },
@@ -162,14 +163,6 @@ const onImageError = (e) => {
   // Si falla la imagen, podríamos mostrar un emoji de respaldo aquí si quisiéramos
 }
 
-const safeGetHeaders = () => {
-  try {
-    if (typeof props.getHeaders === 'function') return props.getHeaders()
-  } catch {}
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
-
 // ── ANIMACIÓN ──────────────────────────────────────────────
 const calculateWidth = () => {
   if (!track.value || !anuncios.value.length) return
@@ -191,33 +184,35 @@ const startAnimation = () => {
 // ── FETCH ──────────────────────────────────────────────────
 const fetchAnuncios = async () => {
   try {
-    const url = new URL(`${props.apiUrl}/anuncios`)
+    let endpoint = '/anuncios?'
     
     // Si es tipo cliente, filtramos por mostrar_cliente, de lo contrario por mostrar_interno (Menú Digital)
     if (props.tipo === 'cliente') {
-      url.searchParams.append('mostrar_cliente', '1')
+      endpoint += 'mostrar_cliente=1&'
     } else {
-      url.searchParams.append('mostrar_interno', '1')
+      endpoint += 'mostrar_interno=1&'
     }
 
     if (props.restauranteId) {
-      url.searchParams.append('restaurante_id', props.restauranteId)
+      endpoint += `restaurante_id=${props.restauranteId}&`
     }
 
-    const res  = await fetch(url.toString(), { headers: safeGetHeaders() })
-    if (!res.ok) return
-    const data = await res.json()
-    if (data.success && Array.isArray(data.data)) {
-      anuncios.value = data.data.filter(a => {
-        const esVigente = a.activo && a.vigente;
-        if (props.tipo === 'cliente') {
-          return esVigente && a.mostrar_cliente;
-        } else {
-          return esVigente && a.mostrar_interno;
-        }
-      })
-      await nextTick()
-      setTimeout(() => { calculateWidth(); offsetPx.value = 0; startAnimation() }, 60)
+    const data = await apiClient.get(endpoint.replace(/&$/, ''))
+    
+    if (data.success || data.data) {
+      const lista = data.data || data || []
+      if (Array.isArray(lista)) {
+        anuncios.value = lista.filter(a => {
+          const esVigente = a.activo && a.vigente;
+          if (props.tipo === 'cliente') {
+            return esVigente && a.mostrar_cliente;
+          } else {
+            return esVigente && a.mostrar_interno;
+          }
+        })
+        await nextTick()
+        setTimeout(() => { calculateWidth(); offsetPx.value = 0; startAnimation() }, 60)
+      }
     }
   } catch {}
 }

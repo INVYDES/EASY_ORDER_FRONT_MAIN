@@ -21,6 +21,7 @@ import CajaDetalleModal from '../components/caja/CajaDetalleModal.vue'
 
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
@@ -190,15 +191,9 @@ const exportarCorte = () => {
 // ── API ───────────────────────────────────────────────────────────────────────
 const loadCajaEstado = async () => {
   try {
-    const res = await fetch(`${API_URL}/caja/estado`, { headers: getHeaders() })
-    if (res.status === 401) {
-      localStorage.removeItem('token')
-      router.push('/')
-      return
-    }
-    const data = await res.json()
-    if (data.success) {
-      const d = data.data
+    const data = await apiClient.get('/caja/estado')
+    if (data.success || data.data) {
+      const d = data.data || data
       cajaAbierta.value = d.is_open
       cajaOpenedAt.value = d.opened_at || null
       openingAmount.value = d.opening_amount || 0
@@ -215,10 +210,9 @@ const loadCajaEstado = async () => {
 
 const actualizarTotalesCaja = async () => {
   try {
-    const res = await fetch(`${API_URL}/caja/estado`, { headers: getHeaders() })
-    const data = await res.json()
-    if (!data.success) return
-    const d = data.data
+    const data = await apiClient.get('/caja/estado')
+    if (!(data.success || data.data)) return
+    const d = data.data || data
     cashInRegister.value = d.cash_in_register || 0
     efectivoSales.value = d.daily_sales || d.ventas_efectivo || 0
     cardSales.value = d.card_sales || d.ventas_tarjeta || 0
@@ -229,39 +223,35 @@ const actualizarTotalesCaja = async () => {
 const loadOrders = async () => {
   try {
     const today = new Date().toISOString().split('T')[0]
-    let closedOrdersQuery = `${API_URL}/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
-      closedOrdersQuery = `${API_URL}/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+      closedOrdersQuery = `/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
     } else if (!cajaAbierta.value) {
-      // Si la caja está cerrada, no mostramos órdenes cerradas para que inicie en 0
       closedOrdersQuery = null;
     }
 
     const fetches = [
-      fetch(`${API_URL}/ordenes?estado=ABIERTA&per_page=100`, { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=POR_PREPARAR&per_page=100`, { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=EN_PREPARACION&per_page=100`, { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=LISTA&per_page=100`, { headers: getHeaders() }),
-      fetch(`${API_URL}/ordenes?estado=ENTREGADA&per_page=100`, { headers: getHeaders() })
+      apiClient.get(`/ordenes?estado=ABIERTA&per_page=100`),
+      apiClient.get(`/ordenes?estado=POR_PREPARAR&per_page=100`),
+      apiClient.get(`/ordenes?estado=EN_PREPARACION&per_page=100`),
+      apiClient.get(`/ordenes?estado=LISTA&per_page=100`),
+      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`)
     ];
     
     if (closedOrdersQuery) {
-      fetches.push(fetch(closedOrdersQuery, { headers: getHeaders() }));
+      fetches.push(apiClient.get(closedOrdersQuery));
     }
 
-    const results = await Promise.all(fetches)
-    const jsonResults = await Promise.all(results.map(r => r.json()))
+    const jsonResults = await Promise.all(fetches)
     const map = new Map()
     
-    // Obtener el ID del restaurante actual para sellar las órdenes
     const rid = restauranteActivo.value?.id || localStorage.getItem('restaurante_id_activo')
 
     jsonResults.forEach(r => {
-      if (r.success) {
+      if (r.success || r.data) {
         const items = Array.isArray(r.data) ? r.data : (r.data?.data || [])
         items.forEach(o => {
-          // SELLO: Inyectamos el ID del restaurante si no lo tiene
           if (!o.restaurante_id && rid) o.restaurante_id = rid
           map.set(o.id, o)
         })
@@ -275,18 +265,16 @@ const loadOrders = async () => {
 
 const loadMovements = async () => {
   try {
-    const res = await fetch(`${API_URL}/caja/movimientos`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) movements.value = data.data || []
+    const data = await apiClient.get('/caja/movimientos')
+    if (data.success || data.data) movements.value = data.data || data || []
   } catch { }
 }
 
 const loadHistorial = async () => {
   loading.historial = true
   try {
-    const res = await fetch(`${API_URL}/caja/historial?per_page=20`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) historial.value = data.data || []
+    const data = await apiClient.get('/caja/historial?per_page=20')
+    if (data.success || data.data) historial.value = data.data || data || []
   } catch { }
   finally {
     loading.historial = false
@@ -416,9 +404,8 @@ const handleMovimientoSaved = async ({ monto, tipo }) => {
 onMounted(async () => {
   await loadAllData()
   try {
-    const res = await fetch(`${API_URL}/me`, { headers: getHeaders() })
-    const data = await res.json()
-    if (data.success) {
+    const data = await apiClient.get('/me')
+    if (data.success || data.data) {
       const user = data.data || data
       const ra = user?.restaurante_activo
       restauranteActivo.value = typeof ra === 'object' && ra !== null ? ra.id : (ra ?? null)

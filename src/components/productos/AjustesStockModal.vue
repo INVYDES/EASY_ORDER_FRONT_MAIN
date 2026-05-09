@@ -100,6 +100,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // Props: ingrediente (Object) — el ingrediente al que se ajusta el stock
 const props = defineProps({
@@ -118,11 +119,6 @@ watch(() => props.ingrediente, () => {
   form.value = { tipo: 'entrada', cantidad: '', motivo: '' }
 }, { immediate: true })
 
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
-
 const guardar = async () => {
   if (!form.value.cantidad || Number(form.value.cantidad) <= 0) {
     alert('Ingresa una cantidad válida')
@@ -131,17 +127,13 @@ const guardar = async () => {
 
   loading.value = true
   try {
-    const res  = await fetch(`${API_URL}/ingredientes/${props.ingrediente.id}/ajustar-stock`, {
-      method:  'POST',
-      headers: getHeaders(),
-      body:    JSON.stringify({
-        tipo:     form.value.tipo,
-        cantidad: Number(form.value.cantidad),
-        motivo:   form.value.motivo || null,
-      }),
+    const data = await apiClient.post(`/ingredientes/${props.ingrediente.id}/ajustar-stock`, {
+      tipo:     form.value.tipo,
+      cantidad: Number(form.value.cantidad),
+      motivo:   form.value.motivo || null,
     })
-    const data = await res.json()
-    if (res.ok && data.success) {
+    
+    if (data.success || data.data) {
       emit('saved')
     } else {
       alert(data.message || 'Error al ajustar stock')

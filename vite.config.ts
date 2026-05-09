@@ -4,9 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(() => ({
-  // base para que los assets carguen correctamente en el subdirectorio de producción
   base: '/cws/eorder/',
-  //cambio de prueba 
   plugins: [
     vue(),
     tailwindcss(),
@@ -23,10 +21,19 @@ export default defineConfig(() => ({
     port: 5173,
     strictPort: true,
     hmr: {
-      host: '192.168.1.71', // ← tu IP local
-      protocol: 'ws',       // ws en dev, no wss
+      host: '192.168.1.71',
+      protocol: 'ws',
       port: 5173,
     },
+    // 👇 Agrega esto
+    proxy: {
+      '/cws/eorder/api': {
+        target: 'http://192.168.1.71:8000', // ← IP y puerto de tu backend Laravel
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path, // mantiene la ruta tal cual
+      }
+    }
   },
 
   build: {

@@ -146,6 +146,7 @@
 import { ref } from 'vue'
 import * as XLSX from 'xlsx'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // Emits consumidos por ProductosView: @close, @imported
 const emit = defineEmits(['close', 'imported'])
@@ -164,15 +165,6 @@ const overwriteExisting = ref(true)
 const createCategories  = ref(false)
 
 // ── HELPERS ────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : '',
-  }
-}
-
 const normalizeRow = (item) => ({
   nombre:       item.nombre       || item.Nombre       || item.name        || item.Name        || '',
   precio:       parseFloat(item.precio || item.Precio   || item.price       || item.Price)      || 0,
@@ -246,19 +238,13 @@ const startImport = async () => {
       importProgress.value = Math.min(importProgress.value + 10, 90)
     }, 150)
 
-    const res = await fetch(`${API_URL}/productos/import`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ productos, sobrescribir: overwriteExisting.value }),
-    })
+    const data = await apiClient.post(`/productos/import`, { productos, sobrescribir: overwriteExisting.value })
 
     clearInterval(interval)
     importProgress.value = 100
 
-    const data = await res.json()
-
-    if (res.ok && data.success) {
-      importResult.value = data.data
+    if (data.success || data.data) {
+      importResult.value = data.data || data
       // Avisa al padre y cierra tras mostrar el resultado
       setTimeout(() => {
         emit('imported')

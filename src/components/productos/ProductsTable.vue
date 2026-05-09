@@ -187,6 +187,7 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 // 1. Props y Emits
 const props = defineProps({
@@ -206,18 +207,9 @@ const loadIngredientes = async () => {
   if (ingredientesCargados.value) return
   
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-    if (!token) {
-      console.warn('No hay token para cargar ingredientes')
-      return
-    }
-    
-    const res = await fetch(`${API_URL}/ingredientes`, {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-    })
-    const data = await res.json()
-    if (data.success) {
-      ingredientesGlobales.value = data.data || []
+    const data = await apiClient.get('/ingredientes')
+    if (data.success || data.data) {
+      ingredientesGlobales.value = data.data || data || []
       ingredientesCargados.value = true
       console.log('✅ Ingredientes cargados:', ingredientesGlobales.value.length)
     }

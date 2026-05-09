@@ -159,6 +159,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { API_URL } from '@/config/api'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
@@ -275,11 +276,7 @@ const handleResize = () => {
 
 const logout = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-    await fetch(`${API_URL}/logout`, { 
-      method: 'POST', 
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    await apiClient.post('/logout')
   } catch {}
   finally {
     localStorage.clear(); sessionStorage.clear()

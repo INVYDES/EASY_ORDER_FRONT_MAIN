@@ -7,6 +7,7 @@ import VueApexCharts from "vue3-apexcharts"
 import './index.css'
 
 // 👇 IMPORTACIÓN CORRECTA
+import './plugins/fetchInterceptor'
 import './plugins/echo'
 
 const app = createApp(App)
