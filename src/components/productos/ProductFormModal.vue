@@ -346,7 +346,7 @@ const categorias   = ref<any[]>(props.categorias || [])
 const activeTab    = ref<'info' | 'receta'>('info') // Mantenemos el estado interno pero quitamos los botones de tab
 
 const form = reactive({
-  nombre: '', descripcion: '', precio: 0, stock: 0,
+  nombre: '', descripcion: '', precio: 0, costo: 0, stock: 0,
   stock_minimo: 5, categoria_id: null as number | null,
   activo: true, eliminar_imagen: false,
   minutos_produccion: 0, nomina_diaria: 0
@@ -439,6 +439,11 @@ watch(porcionesDisponibles, (newVal) => {
   if (newVal !== null && receta.value.length > 0) {
     form.stock = newVal
   }
+})
+
+// ── Sincronizar campo COSTO con la receta ────────────────────────────────────
+watch(costoTotalReceta, (newVal) => {
+  form.costo = newVal
 })
 
 const margenEstimado = computed(() => {
@@ -611,6 +616,7 @@ const resetForm = () => {
   form.nombre          = p?.nombre       ?? ''
   form.descripcion     = p?.descripcion  ?? ''
   form.precio          = p?.precio       ?? 0
+  form.costo           = p?.costo        ?? 0
   form.stock           = p?.stock        ?? 0
   form.stock_minimo    = p?.stock_minimo ?? 5
   form.categoria_id    = p?.categoria_id ?? null
@@ -656,6 +662,7 @@ const save = async () => {
       fd.append('nombre',       form.nombre)
       fd.append('descripcion',  form.descripcion || '')
       fd.append('precio',       String(form.precio))
+      fd.append('costo',        String(form.costo))
       fd.append('stock',        String(form.stock))
       fd.append('stock_minimo', String(form.stock_minimo))
       if (form.categoria_id) fd.append('categoria_id', String(form.categoria_id))
@@ -680,6 +687,7 @@ const save = async () => {
           nombre:          form.nombre,
           descripcion:     form.descripcion,
           precio:          form.precio,
+          costo:           form.costo,
           stock:           form.stock,
           stock_minimo:    form.stock_minimo,
           categoria_id:    form.categoria_id,
