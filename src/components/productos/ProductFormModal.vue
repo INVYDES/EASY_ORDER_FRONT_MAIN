@@ -58,8 +58,8 @@
                     class="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center text-xs hover:bg-red-600 transition">✕</button>
                 </div>
                 <div v-else class="flex flex-col items-center justify-center py-10 text-gray-400">
-                  <div class="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
-                    <span class="text-2xl">🖼️</span>
+                  <div class="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3 text-gray-300">
+                    Sin Imagen
                   </div>
                   <p class="text-sm font-bold text-gray-600">Arrastra una imagen o haz clic</p>
                   <p class="text-xs mt-1">JPG, PNG, WebP · máx. 2MB</p>
@@ -173,7 +173,7 @@
               <!-- ── PRECIO SUGERIDO ── -->
               <div class="bg-violet-50 border border-violet-100 rounded-2xl p-5 space-y-4">
                 <div class="flex items-center justify-between">
-                  <p class="text-xs font-black text-violet-700 uppercase tracking-widest">💡 Calculadora de Precio</p>
+                  <p class="text-xs font-black text-violet-700 uppercase tracking-widest">Calculadora de Precio</p>
                   <span class="px-2 py-1 bg-violet-200 text-violet-800 text-[10px] font-black rounded-lg">PRO</span>
                 </div>
 
