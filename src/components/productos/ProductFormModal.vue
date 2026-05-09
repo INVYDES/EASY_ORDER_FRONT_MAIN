@@ -218,7 +218,7 @@
                   <div v-for="(item, idx) in receta" :key="item.id"
                     class="group flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 hover:border-indigo-300 transition-all">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm" :class="item.bajo_stock ? 'bg-amber-100' : 'bg-gray-50'">
-                      {{ item.bajo_stock ? '⚠️' : '🍎' }}
+                      {{ item.bajo_stock ? '⚠️' : '📦' }}
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-bold text-gray-800 truncate">{{ item.nombre }}</p>
@@ -240,11 +240,35 @@
                 </div>
               </div>
 
-              <!-- ── BUSCADOR DE INGREDIENTES ── -->
-              <div class="bg-gray-900 rounded-2xl p-5 shadow-xl shadow-gray-200">
+              <!-- ── BUSCADOR E INGREDIENTES ── -->
+              <div class="bg-gray-900 rounded-2xl p-5 shadow-xl shadow-gray-200 space-y-4">
+                
+                <!-- Selector Desplegable -->
+                <div>
+                  <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">Seleccionar del catálogo</label>
+                  <select @change="(e) => {
+                    const id = (e.target as HTMLSelectElement).value;
+                    const ing = todosIngredientes.find(i => i.id == id);
+                    if (ing) seleccionarIngrediente(ing);
+                    (e.target as HTMLSelectElement).value = '';
+                  }" class="w-full px-4 py-3 bg-gray-800 border-none rounded-xl text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition cursor-pointer">
+                    <option value="">-- Elige un ingrediente --</option>
+                    <option v-for="ing in todosIngredientes" :key="ing.id" :value="ing.id" :disabled="yaEnReceta(ing.id)">
+                      {{ ing.nombre }} ({{ ing.unidad }}) {{ yaEnReceta(ing.id) ? '· [Ya en receta]' : '' }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="flex items-center gap-4 py-2">
+                  <div class="h-px bg-gray-800 flex-1"></div>
+                  <span class="text-[10px] font-bold text-gray-600 uppercase">O busca por nombre</span>
+                  <div class="h-px bg-gray-800 flex-1"></div>
+                </div>
+
+                <!-- Buscador -->
                 <div class="relative">
                   <span class="absolute left-4 top-3.5 text-gray-500">🔍</span>
-                  <input v-model="busquedaIngrediente" type="text" placeholder="Buscar ingrediente para agregar..."
+                  <input v-model="busquedaIngrediente" type="text" placeholder="Escribe para filtrar..."
                     class="w-full pl-10 pr-4 py-3 bg-gray-800 border-none rounded-xl text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none placeholder-gray-500 transition"
                     @input="buscarIngredientes" />
                 </div>
@@ -488,12 +512,6 @@ const cargarReceta = async () => {
   } finally {
     loadingReceta.value = false
   }
-}
-
-// Cambiar a tab receta carga siempre los datos frescos
-const switchToReceta = async () => {
-  activeTab.value = 'receta'
-  await cargarReceta()
 }
 
 // ── Búsqueda de ingredientes ──────────────────────────────────────────────────
