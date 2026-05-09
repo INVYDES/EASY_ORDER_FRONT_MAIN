@@ -118,9 +118,9 @@
                 <div class="relative">
                   <input v-model.number="form.stock" type="number" readonly placeholder="0"
                     class="w-full px-4 py-3 border-none bg-gray-100 text-gray-500 rounded-xl focus:outline-none text-sm cursor-not-allowed font-black" />
-                  <span v-if="receta.length" class="absolute right-3 top-3 text-indigo-500" title="Calculado por receta">⚙️</span>
+                  <span v-if="receta.length" class="absolute right-3 top-3 text-indigo-500 text-[10px]" title="Calculado por receta">Sincronizado</span>
                 </div>
-                <p v-if="receta.length" class="text-[10px] text-indigo-500 mt-1 font-medium">✓ Sincronizado con ingredientes</p>
+                <p v-if="receta.length" class="text-[10px] text-indigo-500 mt-1 font-medium">Calculado por receta</p>
               </div>
             </div>
 
@@ -217,8 +217,8 @@
                 <div v-else class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   <div v-for="(item, idx) in receta" :key="item.id"
                     class="group flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 hover:border-indigo-300 transition-all">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm" :class="item.bajo_stock ? 'bg-amber-100' : 'bg-gray-50'">
-                      {{ item.bajo_stock ? '⚠️' : '📦' }}
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm" :class="item.bajo_stock ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-400'">
+                      {{ item.bajo_stock ? 'Stock Bajo' : 'Item' }}
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-bold text-gray-800 truncate">{{ item.nombre }}</p>
@@ -241,61 +241,59 @@
               </div>
 
               <!-- ── BUSCADOR E INGREDIENTES ── -->
-              <div class="bg-gray-900 rounded-2xl p-5 shadow-xl shadow-gray-200 space-y-4">
+              <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-4">
                 
+                <!-- Buscador -->
+                <div class="relative">
+                  <input v-model="busquedaIngrediente" type="text" placeholder="Buscar ingrediente por nombre..."
+                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                    @input="buscarIngredientes" />
+                </div>
+
+                <div class="flex items-center gap-4 py-2">
+                  <div class="h-px bg-gray-200 flex-1"></div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">o selecciona del catálogo</span>
+                  <div class="h-px bg-gray-200 flex-1"></div>
+                </div>
+
                 <!-- Selector Desplegable -->
                 <div>
-                  <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">Seleccionar del catálogo</label>
                   <select @change="(e) => {
                     const id = (e.target as HTMLSelectElement).value;
                     const ing = todosIngredientes.find(i => i.id == id);
                     if (ing) seleccionarIngrediente(ing);
                     (e.target as HTMLSelectElement).value = '';
-                  }" class="w-full px-4 py-3 bg-gray-800 border-none rounded-xl text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition cursor-pointer">
+                  }" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition cursor-pointer">
                     <option value="">-- Elige un ingrediente --</option>
                     <option v-for="ing in todosIngredientes" :key="ing.id" :value="ing.id" :disabled="yaEnReceta(ing.id)">
-                      {{ ing.nombre }} ({{ ing.unidad }}) {{ yaEnReceta(ing.id) ? '· [Ya en receta]' : '' }}
+                      {{ ing.nombre }} ({{ ing.unidad }}) {{ yaEnReceta(ing.id) ? '[Ya en receta]' : '' }}
                     </option>
                   </select>
-                </div>
-
-                <div class="flex items-center gap-4 py-2">
-                  <div class="h-px bg-gray-800 flex-1"></div>
-                  <span class="text-[10px] font-bold text-gray-600 uppercase">O busca por nombre</span>
-                  <div class="h-px bg-gray-800 flex-1"></div>
-                </div>
-
-                <!-- Buscador -->
-                <div class="relative">
-                  <span class="absolute left-4 top-3.5 text-gray-500">🔍</span>
-                  <input v-model="busquedaIngrediente" type="text" placeholder="Escribe para filtrar..."
-                    class="w-full pl-10 pr-4 py-3 bg-gray-800 border-none rounded-xl text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none placeholder-gray-500 transition"
-                    @input="buscarIngredientes" />
                 </div>
                 
                 <div v-if="busquedaIngrediente" class="mt-4 space-y-1 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                   <div v-for="ing in ingredientesBusqueda" :key="ing.id"
-                    class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-800 transition group">
+                    class="flex items-center justify-between p-2 rounded-xl hover:bg-white border border-transparent hover:border-gray-100 transition group">
                     <div class="flex-1">
-                      <p class="text-sm font-bold text-gray-200">{{ ing.nombre }}</p>
-                      <p class="text-[10px] text-gray-500">{{ ing.unidad }} · ${{ Number(ing.costo_unitario).toFixed(2) }}</p>
+                      <p class="text-sm font-bold text-gray-700">{{ ing.nombre }}</p>
+                      <p class="text-[10px] text-gray-400">{{ ing.unidad }} · {{ Number(ing.costo_unitario).toFixed(2) }}</p>
                     </div>
                     <button v-if="!yaEnReceta(ing.id)" @click="seleccionarIngrediente(ing)" type="button"
-                      class="px-3 py-1.5 bg-indigo-600 text-white text-[10px] font-black rounded-lg hover:bg-indigo-500 transition uppercase tracking-wider">
-                      + Agregar
+                      class="px-3 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-lg hover:bg-indigo-600 hover:text-white transition uppercase tracking-wider">
+                      Agregar
                     </button>
-                    <span v-else class="text-emerald-500 text-xs font-bold">✓ Ya en receta</span>
+                    <span v-else class="text-emerald-600 text-xs font-bold">Ya en receta</span>
                   </div>
                   <div v-if="!ingredientesBusqueda.length" class="py-4 text-center">
-                    <p class="text-xs text-gray-500">No se encontraron resultados</p>
+                    <p class="text-xs text-gray-400">No se encontraron resultados</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Guardar receta flotante o botón al final -->
+              <!-- Guardar receta -->
               <button v-if="recetaModificada" @click="guardarReceta" :disabled="guardandoReceta" type="button"
-                class="w-full py-4 bg-emerald-600 text-white text-sm font-black rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition animate-pulse">
-                {{ guardandoReceta ? 'Guardando cambios...' : '💾 Guardar Receta Ahora' }}
+                class="w-full py-4 bg-emerald-600 text-white text-sm font-black rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition">
+                {{ guardandoReceta ? 'Guardando cambios...' : 'Guardar Receta' }}
               </button>
             </template>
           </div>
@@ -310,10 +308,9 @@
         </button>
         <button @click="save" :disabled="loading" type="button"
           class="flex-[2] py-4 text-sm font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition disabled:opacity-50">
-          {{ loading ? 'Sincronizando...' : (product ? '💾 Guardar Información del Producto' : '🚀 Crear Nuevo Producto') }}
+          {{ loading ? 'Sincronizando...' : (product ? 'Guardar Información' : 'Crear Producto') }}
         </button>
       </div>
-
     </div>
   </div>
 </template>
