@@ -401,6 +401,7 @@ const ROLES_MAP = { 1:'Super Admin', 2:'Administrador', 3:'Mesero', 4:'Cocina', 
 const getRolNombre = (emp) => {
   if (emp.roles?.length) {
     const r = emp.roles[0]
+    if (typeof r === 'string') return r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
     if (r?.nombre) return r.nombre
     if (r?.name)   return r.name
     if (typeof r === 'number') return ROLES_MAP[r] || `Rol ${r}`
@@ -412,7 +413,16 @@ const getRolNombre = (emp) => {
 }
 
 const getRolId = (emp) => {
-  if (emp.roles?.length) { const r=emp.roles[0]; if(r?.id) return String(r.id); if(typeof r==='number') return String(r) }
+  if (emp.roles?.length) {
+    const r = emp.roles[0]
+    if (typeof r === 'string') {
+      // Intentar mapear de string a ID si es necesario para lógica interna
+      const invMap = Object.fromEntries(Object.entries(ROLES_MAP).map(([k,v]) => [v.toUpperCase(), k]))
+      return invMap[r.toUpperCase()] || '0'
+    }
+    if (r?.id) return String(r.id)
+    if (typeof r === 'number') return String(r)
+  }
   if (emp.rol_id) return String(emp.rol_id)
   if (emp.rol)    return String(emp.rol)
   return ''

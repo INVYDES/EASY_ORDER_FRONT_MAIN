@@ -376,7 +376,8 @@ const loadingOfertas          = ref(false)
 // Datos del usuario
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
-const rolActual  = userActual?.roles?.[0]?.nombre ?? ''
+const roleRaw    = userActual?.roles?.[0]
+const rolActual  = typeof roleRaw === 'string' ? roleRaw : (roleRaw?.nombre ?? '')
 const esCliente  = rolActual === 'CLIENTE'
 const clienteId  = esCliente ? (userActual?.cliente_id ?? null) : null
 

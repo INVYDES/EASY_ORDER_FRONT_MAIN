@@ -46,7 +46,7 @@
     </div>
 
     <!-- TARJETA DE LICENCIA (solo PROPIETARIO / ADMIN) -->
-    <div v-if="['PROPIETARIO', 'ADMIN'].includes(user?.roles?.[0]?.nombre)" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-if="['PROPIETARIO', 'ADMIN'].includes(typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles?.[0]?.nombre)" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="px-6 py-5">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
@@ -230,7 +230,9 @@ const userRoleLabel = computed(() => {
     CAJA: 'Caja',               BARRA: 'Barra',
     CLIENTE: 'Cliente',
   }
-  return map[user.value?.roles?.[0]?.nombre] || 'Usuario'
+  const roleRaw = user.value?.roles?.[0]
+  const role = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre
+  return map[role?.toUpperCase()] || role || 'Usuario'
 })
 
 const roleBadgeClass = computed(() => {
@@ -240,7 +242,9 @@ const roleBadgeClass = computed(() => {
     CAJA: 'bg-green-100 text-green-700',          BARRA: 'bg-pink-100 text-pink-700',
     CLIENTE: 'bg-teal-100 text-teal-700',
   }
-  return map[user.value?.roles?.[0]?.nombre] || 'bg-gray-100 text-gray-600'
+  const roleRaw = user.value?.roles?.[0]
+  const role = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre
+  return map[role?.toUpperCase()] || 'bg-gray-100 text-gray-600'
 })
 
 const porcentajeLicencia = computed(() => {
@@ -292,7 +296,8 @@ const loadUser = async () => {
 
 const loadLicencia = async () => {
   // Solo propietarios tienen licencia
-  const rol = user.value?.roles?.[0]?.nombre
+  const roleRaw = user.value?.roles?.[0]
+  const rol = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre
   if (!user.value?.propietario_id && rol !== 'PROPIETARIO') {
     licenciaActiva.value = null
     return

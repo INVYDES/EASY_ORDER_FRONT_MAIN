@@ -107,7 +107,20 @@ const urgente = computed(() => minutosTranscurridos.value > 20)
 
 // --- Lógica de filtrado de cocina ---
 const esProductoCocina = (detalle) => {
-  return (detalle.categoria || '').toLowerCase() === 'cocina'
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  
+  // 1. Es bebida?
+  const esBebida = cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
+                   ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
+  if (esBebida) return false
+
+  // 2. Es postre?
+  const esPostre = cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
+  if (esPostre) return false
+
+  // 3. Por defecto es cocina
+  return true
 }
 
 const detallesComida = computed(() => {

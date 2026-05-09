@@ -474,11 +474,12 @@ const handleSubmit = async (): Promise<void> => {
 
       // ✅ FIX: guardar user con roles para que el guard funcione correctamente
       // La respuesta del propietario no incluye roles → los inferimos
+      const rawRoles = data.data.user?.roles
       const userConRol = {
         ...data.data.user,
-        roles: data.data.user?.roles?.length
-          ? data.data.user.roles
-          : [{ id: 1, nombre: 'PROPIETARIO' }]
+        roles: Array.isArray(rawRoles) && rawRoles.length > 0
+          ? rawRoles.map(r => typeof r === 'string' ? r : r.nombre)
+          : ['PROPIETARIO']
       }
       localStorage.setItem('user', JSON.stringify(userConRol))
 

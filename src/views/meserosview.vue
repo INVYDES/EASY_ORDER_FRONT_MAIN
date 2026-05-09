@@ -565,7 +565,10 @@ const userRaw    = localStorage.getItem('user') || sessionStorage.getItem('user'
 const userActual = JSON.parse(userRaw)
 const esMesero   = computed(() => {
   const roles = userActual.roles || []
-  return roles.some(r => r.id === 3 || r.id === '3')
+  return roles.some(r => {
+    if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
+    return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
 })
 
 const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebida','cerveza','agua','trago','coctel','limonada','naranjada']

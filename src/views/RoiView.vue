@@ -412,6 +412,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   apiUrl: { type: String, required: true },
@@ -754,15 +755,10 @@ const fetchAll = async () => {
 
 const fetchProductosRoi = async () => {
   try {
-    const response = await fetch(
-      `${props.apiUrl}/reportes/reporte-productos?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}&limite=20`,
-      { headers: safeGetHeaders() }
-    )
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const data = await apiClient.get(`/reportes/reporte-productos?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}&limite=20`)
     
-    const data = await response.json()
-    if (data.success) {
-      productosRoi.value = (data.data || []).map(p => {
+    if (data.success || data.data) {
+      productosRoi.value = (Array.isArray(data.data) ? data.data : (data.data?.data || [])).map(p => {
         const venta_total = Number(p.total_ventas || 0)
         const costo_total = Number(p.costo_total || (p.costo_unitario || 0) * (p.total_vendido || 0))
         const margen = venta_total - costo_total
@@ -787,15 +783,12 @@ const fetchProductosRoi = async () => {
 
 const fetchGastos = async () => {
   try {
-    const response = await fetch(
-      `${props.apiUrl}/gastos/resumen?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}`,
-      { headers: safeGetHeaders() }
-    )
-    const data = await response.json()
-    if (data.success) {
+    const data = await apiClient.get(`/gastos/resumen?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}`)
+    if (data.success || data.data) {
+      const gData = data.data || data
       gastoResumen.value = {
-        ...data.data,
-        roi_pct: data.data.roi_pct !== null ? Math.round(data.data.roi_pct) : null
+        ...gData,
+        roi_pct: gData.roi_pct !== null ? Math.round(gData.roi_pct) : null
       }
     }
   } catch (error) {
@@ -806,11 +799,6 @@ const fetchGastos = async () => {
 const fetchComparacion = async () => {
   try {
     // Período actual
-    const responseA = await fetch(
-      `${props.apiUrl}/reportes/ventas?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}&grupo=dia`,
-      { headers: safeGetHeaders() }
-    )
-    const dataA = await responseA.json()
     if (dataA.success) {
       ventasActual.value = dataA.data?.totales || { total_ventas: 0, total_ordenes: 0, promedio_por_orden: 0 }
     }
@@ -854,18 +842,12 @@ const guardarGasto = async () => {
   guardandoGasto.value = true
   
   try {
-    const response = await fetch(`${props.apiUrl}/gastos`, {
-      method: 'POST',
-      headers: safeGetHeaders(),
-      body: JSON.stringify({
-        ...gastoForm.value,
-        monto: parseFloat(gastoForm.value.monto)
-      })
+    const data = await apiClient.post('/gastos', {
+      ...gastoForm.value,
+      monto: parseFloat(gastoForm.value.monto)
     })
     
-    const data = await response.json()
-    
-    if (response.ok && data.success) {
+    if (data.success || data.data) {
       showModalGasto.value = false
       gastoForm.value = { 
         concepto: '', 

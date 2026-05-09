@@ -202,7 +202,8 @@ const PUBLIC_PATHS = [
 
 router.beforeEach((to, _from, next) => {
   const { token, user } = getSession();
-  const role = user?.roles?.[0]?.nombre as string | undefined;
+  const roleRaw = user?.roles?.[0];
+  const role = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre;
 
   // 1. Ya logueado intentando ir al login → redirigir a su panel
   if (token && to.path === "/") {
@@ -226,7 +227,7 @@ router.beforeEach((to, _from, next) => {
   if (to.meta.roles) {
     const allowed = to.meta.roles as string[];
     // Obtener todos los nombres de roles del usuario
-    const userRoles = user?.roles?.map((r: any) => r.nombre) || [];
+    const userRoles = user?.roles?.map((r: any) => typeof r === 'string' ? r : r.nombre) || [];
     
     // Verificar si alguno de los roles del usuario está permitido
     const hasPermission = userRoles.some((r: string) => allowed.includes(r));

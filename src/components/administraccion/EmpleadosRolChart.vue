@@ -98,6 +98,7 @@ const getRolNombre = (emp) => {
   const ROLES_MAP = { 1:'Admin', 2:'Admin', 3:'Mesero', 4:'Cocina', 5:'Caja', 6:'Barra' }
   if (emp.roles?.length) {
     const r = emp.roles[0]
+    if (typeof r === 'string') return r
     return r?.nombre || r?.name || (typeof r === 'number' ? ROLES_MAP[r] : 'Otro')
   }
   return ROLES_MAP[emp.rol_id] || emp.rol || 'Otro'

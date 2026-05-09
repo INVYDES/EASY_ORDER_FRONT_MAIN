@@ -164,7 +164,7 @@ const handleSubmit = async () => {
       const user = data.data.user
 
       const rol: string = (Array.isArray(user.roles)
-        ? user.roles[0]?.nombre
+        ? (typeof user.roles[0] === 'string' ? user.roles[0] : user.roles[0]?.nombre)
         : user.rol) || ''
 
       console.log('✅ rol detectado:', rol)

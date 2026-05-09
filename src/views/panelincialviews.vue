@@ -35,7 +35,8 @@ const rolePermissions = {
 
 const canView = (modulo) => {
   if (!user.value?.roles) return false
-  const userRole = user.value.roles[0]?.nombre || ''
+  const roleRaw = user.value.roles[0]
+  const userRole = typeof roleRaw === 'string' ? roleRaw : (roleRaw?.nombre || '')
   return rolePermissions[modulo]?.includes(userRole) || false
 }
 

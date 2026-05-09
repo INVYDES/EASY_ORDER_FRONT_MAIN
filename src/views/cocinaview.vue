@@ -11,9 +11,12 @@
       </div>
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-xl">
-          <div :class="['w-2 h-2 rounded-full', loading ? 'bg-amber-400 animate-pulse' : 'bg-blue-400']"></div>
-          <span class="text-xs text-gray-400">
-            {{ loading ? 'Actualizando...' : `Polling ${POLL_INTERVAL/1000}s` }}
+          <div :class="['w-2 h-2 rounded-full', wsConectado ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : (loading ? 'bg-amber-400 animate-pulse' : 'bg-red-400')]"></div>
+          <span class="text-xs font-medium text-gray-300">
+            {{ wsConectado ? 'En vivo' : (loading ? 'Conectando...' : 'Polling') }}
+          </span>
+          <span v-if="ultimaActualizacion" class="text-[10px] text-gray-600 border-l border-gray-800 pl-2 ml-1">
+            {{ ultimaActualizacion }}
           </span>
         </div>
         <button @click="loadOrders" :disabled="loading"
@@ -220,12 +223,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import SucursalBadge from '../components/SucursalBadge.vue'
 import OrdenCardCocina from '../components/cocina/OrdenCardCocina.vue'
 import { apiClient } from '@/utils/apiClient'
-const POLL_INTERVAL = 15000
+import { useRestauranteChannel } from '../composables/useRestauranteChannel'
+
+const POLL_INTERVAL = 30000 // Aumentamos intervalo ya que tenemos WS
 const router        = useRouter()
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
@@ -233,6 +238,8 @@ const orders     = ref([])
 const loading    = ref(false)
 const procesando = ref(null)
 const toasts     = ref([])
+const restauranteActivo = ref(null)
+const ultimaActualizacion = ref(null)
 let   pollTimer  = null
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
@@ -311,7 +318,7 @@ const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== i
 
 // ── Cargar órdenes (polling) ───────────────────────────────────────────────────
 const loadOrders = async () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = getToken()
   if (!token) { router.push('/'); return }
   loading.value = true
   try {
@@ -323,8 +330,42 @@ const loadOrders = async () => {
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
     }
   } catch (e) { console.error('Error cocina:', e) }
-  finally { loading.value = false }
+  finally { 
+    loading.value = false 
+    ultimaActualizacion.value = new Date().toLocaleTimeString()
+  }
 }
+
+const getToken = () => localStorage.getItem('token') ?? sessionStorage.getItem('token')
+
+// ── WebSockets ────────────────────────────────────────────────────────────────
+const onOrdenWS = async (evento) => {
+  const { accion, orden } = evento
+  console.log('📡 WS Kitchen:', accion, orden.id)
+  
+  if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
+    if (!isCocinaOrder(orden)) {
+      // Si ya no es de cocina (ej: se canceló o se cerró), la quitamos si estaba
+      orders.value = orders.value.filter(o => o.id !== orden.id)
+      return
+    }
+
+    const idx = orders.value.findIndex(o => o.id === orden.id)
+    if (idx !== -1) {
+      orders.value[idx] = { ...orders.value[idx], ...orden }
+    } else {
+      orders.value.push(orden)
+      orders.value.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      showToast(`Nueva orden #${orden.id} recibida`, 'info')
+    }
+  } else if (accion === 'cerrada' || accion === 'eliminada') {
+    orders.value = orders.value.filter(o => o.id !== orden.id)
+  }
+}
+
+const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
+  onOrden: onOrdenWS
+})
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
 const abrirModalIngredientes = async (orden, nuevoEstado) => {
@@ -428,6 +469,16 @@ const marcarEntregada = async (id) => {
 onMounted(async () => {
   await loadOrders()
   pollTimer = setInterval(loadOrders, POLL_INTERVAL)
+
+  // Cargar restaurante activo para WS
+  try {
+    const data = await apiClient.get('/me')
+    if (data.success || data.data) {
+      const user = data.data || data
+      const ra = user?.restaurante_activo
+      restauranteActivo.value = typeof ra === 'object' && ra !== null ? ra.id : (ra ?? null)
+    }
+  } catch {}
 })
 
 onUnmounted(() => {

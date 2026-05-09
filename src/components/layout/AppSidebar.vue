@@ -185,9 +185,10 @@ const userInitials = computed(() => {
 })
 
 const userRoleLabel = computed(() => {
-  const role = props.user?.roles?.[0]?.nombre
+  const roleRaw = props.user?.roles?.[0]
+  const role = typeof roleRaw === 'string' ? roleRaw : (roleRaw?.nombre || roleRaw?.name)
   const map = { 'PROPIETARIO': 'Propietario', 'ADMIN': 'Admin', 'MESERO': 'Mesero', 'COCINA': 'Cocina', 'CAJA': 'Caja' }
-  return map[role] || role || 'Usuario'
+  return map[role?.toUpperCase()] || role || 'Usuario'
 })
 
 const activeRestImage = computed(() => {
@@ -209,7 +210,7 @@ const activeRestName = computed(() => {
 const isAdminOrOwner = computed(() => {
   if (!props.user?.roles) return false
   return props.user.roles.some(r => {
-    const name = (r.nombre || '').toUpperCase()
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
     return name.includes('PROPIETARIO') || 
            name.includes('ADMIN') || 
            name.includes('ADMINISTRADOR') ||
@@ -231,7 +232,7 @@ const hasPermission = (permission) => {
   }
   
   // 3. Respaldo por nombre de rol
-  const roles = props.user?.roles?.map((r) => r.nombre) || []
+  const roles = props.user?.roles?.map((r) => typeof r === 'string' ? r.toUpperCase() : r.nombre?.toUpperCase()) || []
   
   switch (permission) {
     case 'VER_PANEL':   return true
