@@ -11,10 +11,7 @@ declare global {
 
 window.Pusher = Pusher
 
-// API_BASE se lee del .env (local/túnel/producción)
-const API_BASE = import.meta.env.VITE_API_URL
-
-console.log('🔌 Backend URL:', API_BASE)
+import { API_BASE_URL } from '@/config/api'
 
 // ✅ Token se lee dinámicamente en cada auth request, no al importar
 const getToken = (): string =>
@@ -29,13 +26,13 @@ window.Echo = new Echo({
   forceTLS:          (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
   enabledTransports: ['ws', 'wss'],
 
-  // ✅ Sin prefijo extra — Laravel registra la ruta en /broadcasting/auth
-  authEndpoint: `${API_BASE}/broadcasting/auth`,
+  // ✅ Usamos API_BASE_URL (limpia) para el endpoint de broadcasting
+  authEndpoint: `${API_BASE_URL}/broadcasting/auth`,
 
   // ✅ authorizer personalizado para leer el token en tiempo real
   authorizer: (channel: { name: string }) => ({
     authorize: (socketId: string, callback: (error: Error | null, data: any) => void) => {
-      fetch(`${API_BASE}/broadcasting/auth`, {
+      fetch(`${API_BASE_URL}/broadcasting/auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -335,7 +335,7 @@ import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
 
 const router = useRouter()
 const API_URL     = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-const STORAGE_URL = (import.meta.env.VITE_API_URL || '').replace('/api', '/storage/') || 'http://localhost:8000/storage/'
+import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 // --- Estado ---

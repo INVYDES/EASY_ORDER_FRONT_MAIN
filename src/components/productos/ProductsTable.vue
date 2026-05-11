@@ -186,7 +186,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-import { API_URL } from '@/config/api'
+import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 // 1. Props y Emits
@@ -289,12 +289,9 @@ const resolveImage = (p) => {
   // Si ya es URL completa o data URI, devolverla tal cual
   if (path.startsWith('http') || path.startsWith('data:')) return path
   
-  const base = API_URL.replace('/api', '')
-  // Si empieza con /storage, concatenar con base URL
-  if (path.startsWith('/storage/')) return `${base}${path}`
-  
-  // Fallback
-  return `${base}/storage/${path}`
+  // Si empieza con /storage/, le quitamos eso porque STORAGE_URL ya lo incluye
+  const cleanPath = path.replace(/^\/storage\//, '')
+  return `${STORAGE_URL}${cleanPath}`
 }
 const onImageError = (e) => { e.target.style.display = 'none' }
 

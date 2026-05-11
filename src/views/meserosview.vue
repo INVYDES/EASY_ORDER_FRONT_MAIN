@@ -529,6 +529,8 @@ const toasts          = ref([])
 const cajaAbierta     = ref(false)
 const nuevaOrden      = ref({ clienteId: null, mesa: null })
 const mesasAsignadas  = ref([])
+const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
+const ultimaActualizacion = ref(null)
 
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
 const ordenExistente = ref(null)   // se muestra el modal de confirmación
@@ -704,6 +706,35 @@ const cargarOrdenes = async () => {
   } catch (err) { console.error('Error órdenes:', err) }
   finally { loading.value = false }
 }
+
+// ── WebSockets ────────────────────────────────────────────────────────────────
+const onOrdenWS = async (evento) => {
+  const { accion, orden } = evento
+  console.log('📡 WS Waiter:', accion, orden.id)
+  ultimaActualizacion.value = new Date().toLocaleTimeString()
+
+  if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
+    const idx = ordenes.value.findIndex(o => o.id === orden.id)
+    if (idx !== -1) {
+      ordenes.value[idx] = { ...ordenes.value[idx], ...orden }
+    } else {
+      ordenes.value.unshift(orden)
+      showToast(`Nueva orden #${orden.id} creada`, 'info')
+    }
+    
+    // Si un producto se puso LISTO, avisar al mesero
+    const tieneListos = (orden.detalles || []).some(d => d.estado_preparacion === 'LISTO')
+    if (tieneListos && orden.estado !== 'ENTREGADA') {
+      showToast(`¡Orden #${orden.folio || orden.id} tiene productos listos! 🍽️`, 'success', 6000)
+    }
+  } else if (accion === 'cerrada' || accion === 'eliminada') {
+    ordenes.value = ordenes.value.filter(o => o.id !== orden.id)
+  }
+}
+
+const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
+  onOrden: onOrdenWS
+})
 
 const cargarMisMesas = async () => {
   if (!esMesero.value) return
@@ -929,6 +960,15 @@ onMounted(async () => {
   if (cajaAbierta.value) {
     await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes()])
     if (esMesero.value) await cargarMisMesas()
+  }
+  
+  // Sincronizar restaurante activo para WS si no estaba en localStorage
+  if (!restauranteActivo.value) {
+    try {
+      const data = await apiClient.get('/me')
+      const ra = data.data?.restaurante_activo || data.restaurante_activo
+      restauranteActivo.value = typeof ra === 'object' ? ra.id : ra
+    } catch {}
   }
 })
 </script>

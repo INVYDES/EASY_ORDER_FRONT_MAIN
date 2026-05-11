@@ -148,6 +148,10 @@
             <i class="fa-solid fa-box text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
           </RouterLink>
+          <RouterLink to="/panel/nomina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/nomina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+            <i class="fa-solid fa-file-invoice-dollar text-lg w-6 text-center"></i>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Nóminas</span>
+          </RouterLink>
         </div>
       </div>
 
@@ -158,7 +162,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { API_URL } from '@/config/api'
+import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
@@ -197,9 +201,7 @@ const activeRestImage = computed(() => {
   
   if (rest.imagen.startsWith('http')) return rest.imagen
   
-  // Limpiamos la URL para quitar /api y /index.php si existen
-  const baseUrl = API_URL.replace('/api', '').replace('/index.php', '')
-  return `${baseUrl}/storage/${rest.imagen}`
+  return `${STORAGE_URL}${rest.imagen}`
 })
 
 const activeRestName = computed(() => {

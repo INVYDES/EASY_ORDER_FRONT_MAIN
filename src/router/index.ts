@@ -24,6 +24,7 @@ import Barraview          from "../views/barraview.vue";
 import Perfilview         from "../views/perfilview.vue";
 import LicenciasView      from "../views/LicenciasView.vue";
 import Menuview           from "../views/menuview.vue";
+import NominaView         from "../views/NominaView.vue";
 
 const routes = [
 
@@ -133,6 +134,13 @@ const routes = [
         path: "licencias",
         name: "licencias",
         component: LicenciasView,
+        meta: { roles: ["PROPIETARIO", "ADMIN"] }
+      },
+
+      {
+        path: "nomina",
+        name: "nomina",
+        component: NominaView,
         meta: { roles: ["PROPIETARIO", "ADMIN"] }
       },
 

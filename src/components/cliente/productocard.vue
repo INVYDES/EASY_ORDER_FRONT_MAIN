@@ -73,7 +73,7 @@
 <script setup>
 import { computed } from 'vue'
 
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000'
+import { STORAGE_URL } from '@/config/api'
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -88,10 +88,10 @@ const imagenUrl = computed(() => {
   const path = props.product.imagen_url || props.product.imagen
   if (!path) return null
   if (path.startsWith('http') || path.startsWith('data:')) return path
-  if (path.startsWith('/storage/')) {
-    return `${API_BASE}${path}`
-  }
-  return `${API_BASE}/storage/${path}`
+  
+  // Limpiamos el path si ya trae /storage/ para evitar duplicidad con STORAGE_URL
+  const cleanPath = path.replace(/^\/storage\//, '')
+  return `${STORAGE_URL}${cleanPath}`
 })
 
 const agregar = () => {
