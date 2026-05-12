@@ -126,11 +126,6 @@
       <span class="text-2xl font-bold text-indigo-600">{{ metrics.porcentajeUtilidad || 0 }}%</span>
     </div>
 
-    <!-- 11. KPI Empleados -->
-    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">KPI Empleados</p>
-      <span class="text-2xl font-bold text-gray-800">{{ metrics.kpiEmpleados || 0 }}</span>
-    </div>
   </div>
 </template>
 

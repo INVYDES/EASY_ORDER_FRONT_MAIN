@@ -1,64 +1,45 @@
 <template>
-  <div class="bg-gray-800/50 rounded-xl p-3 border border-gray-700/50 hover:border-gray-600 transition-all">
-    <!-- Header con folio y tiempo -->
-    <div class="flex items-center justify-between mb-2">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-mono bg-pink-900/50 px-2 py-0.5 rounded text-pink-300">
-          {{ order.folio || '#' + order.id }}
+  <div class="rounded-xl overflow-hidden border transition-all"
+    :class="urgente ? 'bg-purple-950/30 border-purple-700/50' : 'bg-gray-800 border-gray-700/50 hover:border-gray-600'">
+
+    <!-- Header -->
+    <div class="px-3 py-2.5 flex items-center justify-between border-b"
+      :class="urgente ? 'border-purple-700/40' : 'border-gray-700/50'">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-sm font-black text-white shrink-0">
+          {{ order.folio || ('#' + order.id) }}
         </span>
-        <span class="text-[10px] text-gray-500">
-          {{ order.created_at_humano }}
+        <span v-if="order.mesa"
+          class="text-xs text-gray-400 bg-gray-700/70 px-2 py-0.5 rounded-full shrink-0">
+          🪑 Mesa {{ order.mesa }}
         </span>
       </div>
-      <div class="flex items-center gap-1">
-        <span class="text-xs text-gray-400">
-          {{ detallesPostres.length }} productos
-        </span>
-      </div>
+      <span :class="['text-xs shrink-0 ml-2', tiempoClass]">⏱ {{ tiempoTexto }}</span>
     </div>
 
-    <!-- Lista de productos (SOLO postres) -->
-    <div class="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
-      <div
-        v-for="detalle in detallesPostres"
-        :key="detalle.id"
-        class="flex items-start gap-2 text-sm"
-      >
-        <span class="text-pink-400 font-bold text-xs mt-0.5">•</span>
-        <div class="flex-1">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-gray-200 text-sm">
-              {{ detalle.cantidad }}x {{ detalle.producto_nombre }}
-            </span>
-            <span class="text-xs text-gray-500">
-              {{ '$' + detalle.subtotal_formateado }}
-            </span>
-          </div>
-          <p v-if="detalle.notas" class="text-[10px] text-amber-500/70 mt-0.5 italic">
-            📝 {{ detalle.notas }}
-          </p>
-          <p class="text-[10px] text-gray-600">
-            {{ detalle.categoria }}
+    <!-- Solo los postres -->
+    <div class="px-3 py-3 space-y-2">
+      <div v-for="item in postresFiltrados" :key="item.id" class="flex items-baseline gap-2">
+        <span class="text-base font-black leading-none shrink-0"
+          :class="urgente ? 'text-purple-300' : 'text-white'">
+          {{ item.cantidad }}×
+        </span>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-gray-200 leading-snug">{{ getNombreProducto(item) }}</p>
+          <p v-if="item.notas" class="text-[10px] text-amber-400 mt-0.5 italic">
+            📝 {{ item.notas }}
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Nota general de la orden -->
-    <div v-if="order.notas" class="mb-3 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg p-2">
-      <span class="text-amber-400/80">📝 Nota general:</span>
-      <p class="text-gray-300 text-xs mt-0.5">{{ order.notas }}</p>
+    <!-- Acción -->
+    <div class="px-3 pb-3">
+      <button @click="$emit('accion')" :disabled="procesando"
+        :class="['w-full py-2.5 text-xs font-bold rounded-lg transition disabled:opacity-50', accionClass]">
+        {{ procesando ? 'Actualizando...' : accionLabel }}
+      </button>
     </div>
-
-    <!-- Botón de acción -->
-    <button
-      @click="$emit('accion')"
-      :disabled="procesando"
-      :class="[accionClass, 'w-full py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50']"
-    >
-      <span v-if="procesando" class="inline-block animate-spin mr-2">⏳</span>
-      {{ accionLabel }}
-    </button>
   </div>
 </template>
 
@@ -66,32 +47,43 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  order: { type: Object, required: true },
-  accionLabel: { type: String, required: true },
-  accionClass: { type: String, required: true },
-  procesando: { type: Boolean, default: false }
+  order:       { type: Object,  required: true },
+  accionLabel: { type: String,  default: '' },
+  accionClass: { type: String,  default: '' },
+  procesando:  { type: Boolean, default: false },
 })
-
 defineEmits(['accion'])
 
-// ✅ Lógica de filtrado: solo categoría 'Postres'
+// ✅ Lógica de filtrado estricta: busca la categoría en el producto
 const esProductoPostre = (detalle) => {
-  return (detalle.categoria || '').toLowerCase() === 'postres'
+  const prodRaw = detalle.producto
+  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').toLowerCase()
+  return cat.includes('postres') || cat.includes('reposteria') || cat.includes('pastel')
 }
 
-// Filtrar SOLO productos de postres
-const detallesPostres = computed(() => {
-  if (!props.order.detalles) return []
-  return props.order.detalles.filter(d => esProductoPostre(d))
+const getNombreProducto = (detalle) => {
+  const prodRaw = detalle.producto
+  return detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
+}
+
+const postresFiltrados = computed(() =>
+  (props.order.detalles || []).filter(esProductoPostre)
+)
+
+const minutosTranscurridos = computed(() => {
+  if (!props.order.created_at) return 0
+  return Math.floor((Date.now() - new Date(props.order.created_at)) / 60000)
 })
+const tiempoTexto = computed(() => {
+  const m = minutosTranscurridos.value
+  if (m < 1)  return 'Ahora'
+  if (m < 60) return `${m} min`
+  return `${Math.floor(m/60)}h ${m%60}m`
+})
+const tiempoClass = computed(() => {
+  const m = minutosTranscurridos.value
+  if (m > 15) return 'text-red-400 font-bold animate-pulse'
+  return 'text-gray-600'
+})
+const urgente = computed(() => minutosTranscurridos.value > 15)
 </script>
-
-<style scoped>
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-</style>

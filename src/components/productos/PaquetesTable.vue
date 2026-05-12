@@ -81,14 +81,49 @@
         </tbody>
       </table>
     </div>
+
+    <div v-if="pagination && pagination.total > 0" class="px-5 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
+      <p class="text-xs text-gray-500">
+        Mostrando <span class="font-medium text-gray-700">{{ pagination.from || ((pagination.current_page - 1) * pagination.per_page + 1) }}</span> a 
+        <span class="font-medium text-gray-700">{{ pagination.to || Math.min(pagination.current_page * pagination.per_page, pagination.total) }}</span> de 
+        <span class="font-medium text-gray-700">{{ pagination.total }}</span> resultados
+      </p>
+      
+      <div class="flex items-center gap-2">
+        <button 
+          @click="$emit('change-page', pagination.current_page - 1)"
+          :disabled="pagination.current_page === 1"
+          class="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <span class="text-xs font-semibold px-3 py-1 bg-white border rounded-lg shadow-sm">
+          Pág. {{ pagination.current_page }} / {{ pagination.last_page }}
+        </span>
+
+        <button 
+          @click="$emit('change-page', pagination.current_page + 1)"
+          :disabled="pagination.current_page >= pagination.last_page"
+          class="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 defineProps({
   paquetes: { type: Array, required: true },
-  loading: { type: Boolean, default: false }
+  loading: { type: Boolean, default: false },
+  pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, total: 0, per_page: 10 }) }
 })
 
-defineEmits(['edit', 'delete', 'toggle-active'])
+defineEmits(['edit', 'delete', 'toggle-active', 'change-page'])
 </script>

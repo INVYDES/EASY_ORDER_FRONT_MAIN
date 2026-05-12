@@ -1,21 +1,30 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-5">
-    <h3 class="font-semibold text-gray-800 mb-4">Pedidos por estado</h3>
-    <div class="flex items-center justify-center gap-6 flex-wrap">
-      <div class="relative h-44 w-44 shrink-0">
-        <canvas ref="chartRef"></canvas>
-        <!-- Total en centro -->
-        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <p class="text-2xl font-black text-gray-800">{{ totalOrdenes }}</p>
-          <p class="text-[10px] text-gray-400">órdenes</p>
+  <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-gray-800">Pedidos por estado</h3>
+      <div class="flex gap-3">
+        <div v-for="(item, i) in items" :key="item.label" class="flex items-center gap-1.5">
+          <div class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: colors[i] }"></div>
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-tight">{{ item.label }}</span>
         </div>
       </div>
-      <div class="space-y-2.5 text-sm min-w-32">
-        <div v-for="(item, i) in items" :key="i" class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: colors[i] }"></span>
-          <span class="text-gray-600 flex-1">{{ item.label }}</span>
-          <span class="font-bold text-gray-900 ml-2">{{ item.value }}</span>
-        </div>
+    </div>
+
+    <div class="relative h-64 flex items-center justify-center">
+      <canvas ref="chartRef"></canvas>
+      <!-- Total central -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <span class="text-3xl font-black text-gray-800">{{ totalOrdenes }}</span>
+        <span class="text-xs text-gray-400 font-medium uppercase tracking-widest">órdenes</span>
+      </div>
+    </div>
+
+    <!-- Detalle por estado -->
+    <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-center">
+      <div v-for="(item, i) in items" :key="item.label" class="rounded-xl p-2.5 transition-transform hover:scale-105" :style="{ backgroundColor: colors[i] + '15' }">
+        <p class="text-[10px] font-black uppercase tracking-wider mb-1" :style="{ color: colors[i] }">{{ item.label }}</p>
+        <p class="text-xl font-black text-gray-800 leading-none">{{ item.value }}</p>
+        <p class="text-[10px] font-bold text-gray-400 mt-1">{{ totalOrdenes ? Math.round((Number(item.value) || 0) / totalOrdenes * 100) : 0 }}%</p>
       </div>
     </div>
   </div>
@@ -57,6 +66,7 @@ const buildChart = async () => {
   chartInst?.destroy()
   const vals  = items.value.map(i => i.value || 0)
   const total = vals.reduce((a, b) => a + b, 0)
+  
   chartInst = new window.Chart(chartRef.value, {
     type: 'doughnut',
     data: {
@@ -65,14 +75,26 @@ const buildChart = async () => {
         data: total > 0 ? vals : [1, 1, 1, 1],
         backgroundColor: colors,
         borderWidth: 0,
-        hoverOffset: 4,
+        hoverOffset: 12,
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      cutout: '72%',
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          cornerRadius: 12,
+          padding: 12,
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: (ctx) => ` ${ctx.label}: ${ctx.raw} órdenes`
+          }
+        }
+      },
+      cutout: '75%',
     },
   })
 }

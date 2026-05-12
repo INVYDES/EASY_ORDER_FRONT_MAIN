@@ -34,7 +34,7 @@
           {{ detalle.cantidad }}×
         </span>
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-200 leading-snug font-medium">{{ detalle.producto_nombre || detalle.producto?.nombre }}</p>
+          <p class="text-sm text-gray-200 leading-snug font-medium">{{ getNombreProducto(detalle) }}</p>
           <p v-if="detalle.notas" class="text-[10px] text-amber-400 mt-0.5 italic">
             📝 {{ detalle.notas }}
           </p>
@@ -107,20 +107,19 @@ const urgente = computed(() => minutosTranscurridos.value > 20)
 
 // --- Lógica de filtrado de cocina ---
 const esProductoCocina = (detalle) => {
-  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
-  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  const prodRaw = detalle.producto
+  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').toLowerCase()
   
-  // 1. Es bebida?
-  const esBebida = cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
-                   ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
-  if (esBebida) return false
-
-  // 2. Es postre?
-  const esPostre = cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
-  if (esPostre) return false
-
-  // 3. Por defecto es cocina
+  if (cat === 'cocina') return true
+  if (cat === 'barra' || cat === 'bebida' || cat === 'postres' || cat === 'postre') return false
+  
+  // Por defecto va a cocina
   return true
+}
+
+const getNombreProducto = (detalle) => {
+  const prodRaw = detalle.producto
+  return detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
 }
 
 const detallesComida = computed(() => {

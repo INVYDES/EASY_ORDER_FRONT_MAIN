@@ -1,45 +1,6 @@
 <template>
   <div class="space-y-6">
 
-    <!-- ══ FILTROS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-      <div class="flex flex-wrap items-center gap-4">
-        <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
-          <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
-            :class="['px-4 py-1.5 text-sm font-medium rounded-lg transition-all',
-              kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:bg-gray-200']">
-            {{ p.label }}
-          </button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input v-model="kpiFechaInicio" type="date" @change="kpiPeriodo = 'custom'"
-            class="px-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-          <span class="text-gray-400">→</span>
-          <input v-model="kpiFechaFin" type="date" @change="kpiPeriodo = 'custom'"
-            class="px-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-        </div>
-
-        <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
-          <button v-for="g in grupos" :key="g.value" @click="kpiGrupo = g.value; loadKpis()"
-            :class="['px-3 py-1.5 text-xs font-medium rounded-lg transition',
-              kpiGrupo === g.value ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200']">
-            {{ g.label }}
-          </button>
-        </div>
-
-        <button @click="loadKpis" :disabled="loading"
-          class="px-5 py-1.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2">
-          <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ loading ? 'Actualizando...' : 'Aplicar Filtros' }}
-        </button>
-
-        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer ml-auto">
-          <input type="checkbox" v-model="mostrarComparacion" class="rounded text-indigo-600 focus:ring-indigo-500" @change="loadKpis" />
-          Comparar vs período anterior
-        </label>
-      </div>
-    </div>
 
     <!-- ══ TIEMPOS DE PREPARACIÓN ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -109,6 +70,46 @@
         <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas Digitales</p>
         <p class="text-2xl font-black text-violet-700 mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
         <p class="text-xs text-gray-400 mt-1">Terminal + Transferencia</p>
+      </div>
+    </div>
+
+    <!-- ══ FILTROS ══ -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
+            :class="['px-4 py-1.5 text-sm font-medium rounded-lg transition-all',
+              kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:bg-gray-200']">
+            {{ p.label }}
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input v-model="kpiFechaInicio" type="date" @change="kpiPeriodo = 'custom'"
+            class="px-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <span class="text-gray-400">→</span>
+          <input v-model="kpiFechaFin" type="date" @change="kpiPeriodo = 'custom'"
+            class="px-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+        </div>
+
+        <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <button v-for="g in grupos" :key="g.value" @click="kpiGrupo = g.value; loadKpis()"
+            :class="['px-3 py-1.5 text-xs font-medium rounded-lg transition',
+              kpiGrupo === g.value ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200']">
+            {{ g.label }}
+          </button>
+        </div>
+
+        <button @click="loadKpis" :disabled="loading"
+          class="px-5 py-1.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2">
+          <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ loading ? 'Actualizando...' : 'Aplicar Filtros' }}
+        </button>
+
+        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer ml-auto">
+          <input type="checkbox" v-model="mostrarComparacion" class="rounded text-indigo-600 focus:ring-indigo-500" @change="loadKpis" />
+          Comparar vs período anterior
+        </label>
       </div>
     </div>
 
@@ -282,7 +283,6 @@ const kpiCards = computed(() => [
   { label: 'Ingresos', value: '$' + fm(kpiData.value.totales?.total_ventas), icon: '💰', raw: kpiData.value.totales?.total_ventas, rawAnterior: kpiAnterior.value.totales?.total_ventas },
   { label: 'Órdenes', value: kpiData.value.totales?.total_ordenes || 0, icon: '🧾', raw: kpiData.value.totales?.total_ordenes, rawAnterior: kpiAnterior.value.totales?.total_ordenes },
   { label: 'Ticket Prom.', value: '$' + fm(kpiData.value.totales?.promedio_por_orden), icon: '📈', raw: kpiData.value.totales?.promedio_por_orden, rawAnterior: kpiAnterior.value.totales?.promedio_por_orden },
-  { label: 'Utilidad del Día', value: '$' + fm(finanzasDia.value.utilidadTotal), icon: '⭐', raw: null, rawAnterior: null },
 ])
 
 // --- API FETCH ---

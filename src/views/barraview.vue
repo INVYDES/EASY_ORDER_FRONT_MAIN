@@ -252,10 +252,9 @@ const fechaHoy = computed(() =>
 )
 
 const esBarra = (detalle) => {
-  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
-  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
-         ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
+  const prodRaw = detalle.producto
+  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
 }
 const tieneBarra = (orden) => (orden.detalles || []).some(esBarra)
 
@@ -266,7 +265,7 @@ const pendingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isBarraOrder(o)) return false
     const detalles = getDetallesBarra(o)
-    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
   })
 })
 
@@ -274,7 +273,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isBarraOrder(o)) return false
     const detalles = getDetallesBarra(o)
-    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'EN_PREPARACION') && !detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
   })
 })
 
@@ -285,7 +284,7 @@ const readyOrders = computed(() => {
     if (!isBarraOrder(o)) return false
     if (hiddenOrders.value.includes(o.id)) return false
     const detalles = getDetallesBarra(o)
-    return detalles.length > 0 && detalles.every(d => d.estado_preparacion === 'LISTO')
+    return detalles.length > 0 && detalles.every(d => (d.estado_preparacion || d.estado) === 'LISTO')
   })
 })
 

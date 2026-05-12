@@ -264,7 +264,8 @@ const fechaHoy = computed(() =>
 )
 
 const esPostre = (detalle) => {
-  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  const prodRaw = detalle.producto
+  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
   return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
 }
 
@@ -275,7 +276,7 @@ const pendingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isPostreOrder(o)) return false
     const detalles = getDetallesPostres(o)
-    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
   })
 })
 
@@ -283,7 +284,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isPostreOrder(o)) return false
     const detalles = getDetallesPostres(o)
-    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'EN_PREPARACION') && !detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
   })
 })
 
@@ -291,7 +292,7 @@ const readyOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isPostreOrder(o)) return false
     const detalles = getDetallesPostres(o)
-    return detalles.length > 0 && detalles.every(d => d.estado_preparacion === 'LISTO')
+    return detalles.length > 0 && detalles.every(d => (d.estado_preparacion || d.estado) === 'LISTO')
   })
 })
 

@@ -286,7 +286,7 @@ const pendingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isCocinaOrder(o)) return false
     const detalles = getDetallesCocina(o)
-    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
   })
 })
 
@@ -294,7 +294,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isCocinaOrder(o)) return false
     const detalles = getDetallesCocina(o)
-    return detalles.length > 0 && detalles.some(d => d.estado_preparacion === 'EN_PREPARACION') && !detalles.some(d => d.estado_preparacion === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
   })
 })
 
@@ -305,7 +305,7 @@ const readyOrders = computed(() => {
     if (!isCocinaOrder(o)) return false
     if (hiddenOrders.value.includes(o.id)) return false
     const detalles = getDetallesCocina(o)
-    return detalles.length > 0 && detalles.every(d => d.estado_preparacion === 'LISTO')
+    return detalles.length > 0 && detalles.every(d => (d.estado_preparacion || d.estado) === 'LISTO')
   })
 })
 

@@ -37,25 +37,20 @@
         <!-- Gráficas de Hoy -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
-          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
+          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" />
         </div>
 
         <!-- Gráficas de Rendimiento -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <VentasSemanaChart :api-url="API_URL" :get-headers="getHeaders" />
-          <TopProductosChart :api-url="API_URL" :get-headers="getHeaders" />
+          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
+          <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" />
         </div>
 
         <!-- Gráficas de Operación -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
           <!-- Radar Chart de Distribución de Fuerza de Trabajo (PDF Page 2) -->
-          <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-            <h3 class="font-bold text-gray-800 mb-4">Distribución de la Fuerza de Trabajo</h3>
-            <div class="h-64 flex items-center justify-center text-gray-300 italic">
-              <p>Radar Chart — Cocina, Barra, Postres, Caja, Meseros</p>
-            </div>
-          </div>
+          <CanalVentasChart :data="salesChannels" />
         </div>
       </template>
     </template>
@@ -65,12 +60,10 @@
       <div class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 gap-8">
           <CanalVentasChart :data="salesChannels" />
-          <TopMarginList :products="financialProducts" />
         </div>
 
-        <BundleStrategyCard :products="financialProducts" />
       </div>
     </template>
 
@@ -84,12 +77,8 @@
       <KpiProductos :api-url="API_URL" :get-headers="getHeaders" />
     </template>
 
-    <!-- ══ TAB ROI ══ -->
-    <template v-if="activeTab === 'roi'">
-      <RoiChart :api-url="API_URL" :get-headers="getHeaders" />
-    </template>
 
-    <!-- ══ TAB MÉTRICAS MESEROS ══ -->
+    <!-- ══ TAB KPIs EMPLEADOS ══ -->
     <template v-if="activeTab === 'meseros'">
       <!-- Distribución de Equipo — estrella del tab -->
       <div class="mb-6">
@@ -180,8 +169,7 @@ const tabs = [
   { key: 'financiero', label: '💰 Análisis Financiero'  },
   { key: 'kpis',       label: '📊 KPIs Ventas'         },
   { key: 'productos',  label: '📦 KPIs Productos'       },
-  { key: 'roi',        label: '📈 ROI'                  },
-  { key: 'meseros',    label: '👥 Métricas Meseros'     },
+  { key: 'meseros',    label: '👥 KPIs Empleados'      },
 ]
 
 const getHeaders = () => {

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50/50 p-4 lg:p-8">
+  <div class="space-y-8">
     <!-- TOASTS -->
     <div class="fixed top-4 right-4 z-[200] space-y-2 pointer-events-none">
       <div v-for="toast in toasts" :key="toast.id"
@@ -244,13 +244,28 @@ const verifyPassword = async () => {
   authError.value = ''
   
   try {
-    // Obtenemos el usuario actual para usar su login (email o username)
     const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user')
-    const user = JSON.parse(userRaw)
+    if (!userRaw) {
+      authError.value = 'Sesión de usuario no encontrada. Por favor, reinicia sesión.'
+      return
+    }
+
+    let user = {}
+    try {
+      user = JSON.parse(userRaw)
+    } catch (e) {
+      authError.value = 'Error en los datos de sesión. Por favor, reinicia sesión.'
+      return
+    }
+    
+    if (!user) {
+      authError.value = 'Usuario no válido. Por favor, reinicia sesión.'
+      return
+    }
     
     // Intentamos loguear de nuevo con la contraseña ingresada para validar
     const resp = await apiClient.post('/login', {
-      login: user.email || user.username || user.usuario,
+      login: user.email || user.username || user.usuario || user.name || '',
       password: password.value
     })
 
@@ -282,8 +297,8 @@ const filterYear = ref(2025)
 const showGenerateModal = ref(false)
 
 const getTenantHeader = () => {
-  const restId = localStorage.getItem('restaurante_id_activo')
-  return restId ? { 'X-Restaurante-Id': restId } : {}
+  const restId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_activo')
+  return restId ? { 'X-Restaurante-Id': String(restId) } : {}
 }
 
 const stats = reactive({
@@ -306,7 +321,8 @@ const loadNominas = async () => {
       headers: getTenantHeader()
     })
     if (resp.success || Array.isArray(resp.data) || Array.isArray(resp)) {
-      nominas.value = resp.data || resp || []
+      const data = resp.data || resp || []
+      nominas.value = Array.isArray(data) ? data : []
       calcularStats()
     }
   } catch (err) {
@@ -417,6 +433,9 @@ onMounted(() => {
   if (sessionStorage.getItem('nomina_unlocked') === 'true') {
     isAuthenticated.value = true
     loadNominas()
+  } else {
+    // Si no está desbloqueado, nos aseguramos de que isAuthenticated sea false
+    isAuthenticated.value = false
   }
 })
 </script>

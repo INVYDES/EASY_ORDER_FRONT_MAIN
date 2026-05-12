@@ -61,10 +61,20 @@ const loading = reactive({
 })
 
 // ── Computed ──────────────────────────────────────────────────────────────────
-const openOrders = computed(() => orders.value.filter(o => o.estado !== 'CERRADA'))
-const closedOrders = computed(() => orders.value.filter(o => o.estado === 'CERRADA'))
-const ordenesListas = computed(() => orders.value.filter(o => o.estado === 'ENTREGADA').length)
-const ordenesEnProceso = computed(() => orders.value.filter(o => ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)).length)
+const openOrders = computed(() => {
+  return orders.value.filter(o => {
+    const s = (o.estado || '').toUpperCase()
+    return s === 'ENTREGADA' || s === 'ENTREGADO'
+  })
+})
+const closedOrders = computed(() => orders.value.filter(o => (o.estado || '').toUpperCase() === 'CERRADA'))
+const ordenesListas = computed(() => openOrders.value.length)
+const ordenesEnProceso = computed(() => {
+  return orders.value.filter(o => {
+    const s = (o.estado || '').toUpperCase()
+    return ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(s)
+  }).length
+})
 const totalVentasDia = computed(() => efectivoSales.value + cardSales.value + transferSales.value)
 const totalTips = computed(() => closedOrders.value.reduce((s, o) => s + Number(o.propina || 0), 0))
 

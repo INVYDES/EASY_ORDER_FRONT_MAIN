@@ -196,7 +196,7 @@ const userRoleLabel = computed(() => {
 })
 
 const activeRestImage = computed(() => {
-  const rest = props.restaurantes.find(r => r.id === props.restauranteActivo)
+  const rest = props.restaurantes.find(r => r && r.id === props.restauranteActivo)
   if (!rest || !rest.imagen) return null
   
   if (rest.imagen.startsWith('http')) return rest.imagen
@@ -205,7 +205,7 @@ const activeRestImage = computed(() => {
 })
 
 const activeRestName = computed(() => {
-  return props.restaurantes.find(r => r.id === props.restauranteActivo)?.nombre || 'Seleccionar...'
+  return props.restaurantes.find(r => r && r.id === props.restauranteActivo)?.nombre || 'Seleccionar...'
 })
 
 // Verificar si es administrador o propietario

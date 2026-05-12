@@ -30,7 +30,7 @@
         <div class="bg-slate-50 rounded-xl p-4 mb-5 space-y-1.5 max-h-40 overflow-y-auto">
           <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Productos actuales</p>
           <div v-for="d in ordenExistente.detalles" :key="d.id" class="flex justify-between text-xs font-bold text-slate-600">
-            <span>{{ d.cantidad }}× {{ d.producto_nombre || d.producto?.nombre }}</span>
+            <span class="text-sm font-black text-gray-800">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
             <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
           </div>
         </div>
@@ -178,7 +178,7 @@
                         <div class="flex items-center justify-between gap-2">
                           <div class="min-w-0 flex-1">
                             <p class="text-[11px] font-black text-slate-700 leading-tight uppercase truncate">
-                              {{ detalle.cantidad }}× {{ (detalle.producto_nombre || detalle.producto?.nombre || 'Producto') }}
+                              {{ detalle.cantidad }}× {{ detalle.producto_nombre || detalle.nombre || (typeof detalle.producto === 'string' ? detalle.producto : detalle.producto?.nombre) || 'Producto' }}
                             </p>
                             <!-- Notas del producto -->
                             <p v-if="detalle.notas" class="text-[9px] text-amber-600 font-bold italic mt-0.5">
@@ -509,6 +509,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
+import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
 const vistaActual  = ref('ordenes')
 const tabActivo    = ref('todas')
@@ -604,24 +605,24 @@ const mesaConOrden = (m) => ordenes.value.some(o =>
 // ── Lógica de sub-órdenes (sin cambios) ────────────────────────────────────
 const esBebida = (d) => {
   if (!d) return false
-  const cat    = (d.producto?.categoria?.nombre || d.categoria || '').toLowerCase()
-  const nombre = (d.producto_nombre || d.producto?.nombre || '').toLowerCase()
-  return cat.includes('barra') || cat.includes('bebida') || BEBIDA_KEYWORDS.some(k => nombre.includes(k))
+  const prodRaw = d.producto
+  const cat = (prodRaw?.categoria?.nombre || d.categoria || '').toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida')
 }
 const esPostre = (d) => {
   if (!d) return false
-  const cat    = (d.producto?.categoria?.nombre || d.categoria || '').toLowerCase()
-  const nombre = (d.producto_nombre || d.producto?.nombre || '').toLowerCase()
-  return cat.includes('postre') || nombre.includes('postre') || nombre.includes('helado') || nombre.includes('pastel')
+  const prodRaw = d.producto
+  const cat = (prodRaw?.categoria?.nombre || d.categoria || '').toLowerCase()
+  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
 }
 const calcularEstadoEstacion = (detalles, estadoOrden) => {
   if (estadoOrden === 'ABIERTA') return 'ABIERTA'
   if (['CERRADA','PAGADA'].includes(estadoOrden)) return 'CERRADA'
   if (!detalles?.length) return 'POR_PREPARAR'
   const total      = detalles.length
-  const entregados = detalles.filter(d => d.estado_preparacion === 'ENTREGADO').length
-  const listos     = detalles.filter(d => d.estado_preparacion === 'LISTO').length
-  const enPrep     = detalles.filter(d => d.estado_preparacion === 'EN_PREPARACION').length
+  const entregados = detalles.filter(d => (d.estado_preparacion || d.estado) === 'ENTREGADO').length
+  const listos     = detalles.filter(d => (d.estado_preparacion || d.estado) === 'LISTO').length
+  const enPrep     = detalles.filter(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION').length
   if (entregados === total) return 'ENTREGADA'
   if (listos > 0) return 'LISTA'
   if (enPrep > 0) return 'EN_PREPARACION'
@@ -865,18 +866,33 @@ const eliminarDelCarrito = (cartId) => { carrito.value = carrito.value.filter(x 
 
 // ── Acciones de órdenes ────────────────────────────────────────────────────
 const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
+  if (!nuevoEstado) return
   cambiando.value = sub.uid
   try {
     const data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
-    if (data.success || data.data) { await cargarOrdenes(); showToast('Estado actualizado', 'success') }
-  } finally { cambiando.value = null }
+    if (data.success || data.data) { 
+      await cargarOrdenes()
+      showToast('Estado actualizado', 'success') 
+    } else {
+      // Si el error es por estado redundante, lo tratamos como éxito silencioso
+      if (data.message && data.message.includes('No se puede cambiar de')) {
+        await cargarOrdenes()
+      } else {
+        showToast(data.message || 'Error al actualizar', 'error')
+      }
+    }
+  } catch (err) {
+    showToast('Error de conexión', 'error')
+  } finally {
+    cambiando.value = null
+  }
 }
 
 // ── Agrupación por comensal ────────────────────────────────────────────────
 const agruparPorComensal = (detalles) => {
   const grupos = {}
   detalles.forEach(d => {
-    const comensal = d.nom_comensal || 'General'
+    const comensal = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
     if (!grupos[comensal]) grupos[comensal] = []
     grupos[comensal].push(d)
   })
@@ -940,7 +956,7 @@ const actualizarCantidadItem = async (detalle, ordenId, delta) => {
 }
 
 const entregarProductosSubOrden = async (sub) => {
-  const ids = sub.detalles_estacion.filter(d => d.estado_preparacion === 'LISTO').map(d => d.id)
+  const ids = sub.detalles_estacion.filter(d => (d.estado_preparacion || d.estado) === 'LISTO').map(d => d.id)
   if (!ids.length) return
   cambiando.value = sub.uid
   try {

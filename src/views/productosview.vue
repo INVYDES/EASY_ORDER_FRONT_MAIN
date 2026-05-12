@@ -52,8 +52,8 @@
     </div>
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
-    <div v-if="activeTab === 'paquetes'">
-      <div class="flex justify-end mb-4">
+    <div v-if="activeTab === 'paquetes'" class="space-y-6">
+      <div class="flex justify-end">
         <button
           @click="openCreatePaquete"
           class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
@@ -63,11 +63,16 @@
       </div>
       <PaquetesTable 
         :paquetes="paquetes"
+        :pagination="paginationPaquetes"
         :loading="loading.paquetes"
         @edit="openEditPaquete"
         @delete="handleDeletePaquete"
         @toggle-active="handleToggleActivePaquete"
+        @change-page="changePagePaquetes"
       />
+
+      <!-- Sugerencia Estratégica movida de Métricas -->
+      <BundleStrategyCard :products="allProductsForSelection" />
     </div>
 
     <!-- ── PRODUCTOS ──────────────────────────────────────── -->
@@ -289,6 +294,7 @@ import AjusteStockModal from '../components/productos/AjustesStockModal.vue'
 import PaquetesTable from '../components/productos/PaquetesTable.vue'
 import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
 import AnunciosView from './anunciosview.vue'
+import BundleStrategyCard from '../components/administraccion/BundleStrategyCard.vue'
 
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -313,6 +319,15 @@ const pagination = ref({
   current_page: 1,
   last_page: 1,
   per_page: 15,
+  total: 0,
+  from: 0,
+  to: 0
+})
+
+const paginationPaquetes = ref({
+  current_page: 1,
+  last_page: 1,
+  per_page: 10,
   total: 0,
   from: 0,
   to: 0
@@ -601,17 +616,37 @@ const loadAnuncios = async () => {
 }
 
 // ── PAQUETES ───────────────────────────────────────────────
-const loadPaquetes = async () => {
+const loadPaquetes = async (page = 1) => {
+  if (!checkAuth()) return
   loading.paquetes = true
   try {
-    const data = await apiClient.get('/paquetes')
-    if (data.success || data.data) paquetes.value = data.data || data || []
+    const data = await apiClient.get(`/paquetes?page=${page}&per_page=10&_t=${Date.now()}`)
+    if (data.success || data.data) {
+      paquetes.value = data.data || []
+      if (data.pagination) {
+        paginationPaquetes.value = data.pagination
+      } else if (data.meta) {
+        paginationPaquetes.value = {
+          current_page: data.meta.current_page,
+          last_page: data.meta.last_page,
+          per_page: data.meta.per_page,
+          total: data.meta.total,
+          from: data.meta.from,
+          to: data.meta.to
+        }
+      }
+    }
   } catch (error) {
     console.error('Error loading packages:', error)
     showToast('Error al cargar paquetes', 'error')
   } finally {
     loading.paquetes = false
   }
+}
+
+const changePagePaquetes = (page) => {
+  if (page < 1 || page > paginationPaquetes.value.last_page) return
+  loadPaquetes(page)
 }
 
 const openCreatePaquete = () => {

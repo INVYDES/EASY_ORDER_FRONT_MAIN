@@ -34,7 +34,7 @@
           {{ item.cantidad }}×
         </span>
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-200 leading-snug">{{ item.producto_nombre }}</p>
+          <p class="text-sm text-gray-200 leading-snug">{{ getNombreProducto(item) }}</p>
           <p v-if="item.notas" class="text-[10px] text-amber-400 mt-0.5 italic">
             📝 {{ item.notas }}
           </p>
@@ -67,9 +67,6 @@
 <script setup>
 import { computed } from 'vue'
 
-// IDs de categorías que se consideran bebidas
-const BEBIDA_CATEGORIA_IDS = [7] // ← tu categoria_id de bebidas
-
 const props = defineProps({
   order:       { type: Object,  required: true },
   accionLabel: { type: String,  default: '' },
@@ -78,18 +75,20 @@ const props = defineProps({
 })
 defineEmits(['accion'])
 
-// ✅ Lógica de filtrado: solo categoría 'Barra'
+// ✅ Lógica de filtrado estricta: busca la categoría en el producto
 const esBarra = (detalle) => {
-  return (detalle.categoria || '').toLowerCase() === 'barra'
+  const prodRaw = detalle.producto
+  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida')
+}
+
+const getNombreProducto = (detalle) => {
+  const prodRaw = detalle.producto
+  return detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
 }
 
 const bebidasFiltradas = computed(() =>
   (props.order.detalles || []).filter(esBarra)
-)
-
-// ¿La orden tiene también productos de otras categorías? (orden mixta)
-const tieneComida = computed(() =>
-  (props.order.detalles || []).some(d => !esBebida(d))
 )
 
 const minutosTranscurridos = computed(() => {
