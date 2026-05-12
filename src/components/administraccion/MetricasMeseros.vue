@@ -2,30 +2,56 @@
   <div class="space-y-6">
 
     <!-- Encabezado + Filtros -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
-          <h3 class="text-base font-semibold text-gray-800">Métricas de Rendimiento</h3>
-          <p class="text-xs text-gray-400 mt-0.5">Análisis operativo por departamentos</p>
+          <h3 class="text-lg font-bold text-gray-800">Panel de Rendimiento de Empleados</h3>
+          <p class="text-sm text-gray-500 mt-1">
+            Analiza el desempeño de tu equipo. Filtra por fechas o selecciona un empleado específico para ver sus resultados.
+          </p>
         </div>
-        <div class="flex flex-wrap gap-3">
+
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Filtro de Fecha Desde -->
           <div class="flex flex-col gap-1">
-            <label class="text-xs text-gray-500 font-medium">Desde</label>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Inicio</span>
             <input v-model="filtros.fecha_desde" type="date"
-              class="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-gray-50 transition-all hover:border-indigo-300" />
           </div>
+
+          <!-- Filtro de Fecha Hasta -->
           <div class="flex flex-col gap-1">
-            <label class="text-xs text-gray-500 font-medium">Hasta</label>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Fin</span>
             <input v-model="filtros.fecha_hasta" type="date"
-              class="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-gray-50 transition-all hover:border-indigo-300" />
           </div>
-          <div class="flex flex-col justify-end">
-            <button @click="cargar"
-              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition flex items-center gap-2">
-              <i class="fa-solid fa-rotate-right text-xs"></i> Aplicar
-            </button>
+
+          <!-- Selección de Empleado -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Empleado</span>
+            <select v-model="filtros.mesero_id"
+              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-gray-50 cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              <option value="">Todos los empleados</option>
+              <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
+                {{ emp.nombre || emp.name || emp.username }}
+              </option>
+            </select>
           </div>
+
+          <!-- Botón de Acción -->
+          <button @click="cargar"
+            class="mt-5 h-[40px] px-6 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-md shadow-indigo-100">
+            <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
+            {{ loading ? 'Actualizando...' : 'Actualizar Datos' }}
+          </button>
         </div>
+      </div>
+
+      <div class="mt-4 p-3 bg-indigo-50/50 rounded-xl flex items-center gap-3 border border-indigo-100/50">
+        <i class="fa-solid fa-circle-question text-indigo-500 text-sm"></i>
+        <p class="text-xs text-indigo-700 font-medium">
+          ¿Necesitas ayuda? Selecciona las fechas y el empleado que deseas consultar, luego haz clic en "Actualizar Datos".
+        </p>
       </div>
     </div>
 
@@ -155,16 +181,16 @@
 
         <div class="overflow-x-auto">
           <table class="min-w-full">
-            <thead class="bg-zinc-100">
-              <tr>
-                <th class="px-5 py-3 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Mesero</th>
-                <th class="px-5 py-3 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Órdenes</th>
-                <th class="px-5 py-3 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Ventas</th>
-                <th class="px-5 py-3 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Ticket Prom.</th>
-                <th class="px-5 py-3 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Mesas</th>
-                <th class="px-5 py-3 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Participación</th>
-              </tr>
-            </thead>
+          <thead class="bg-zinc-100">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Mesero</th>
+              <th class="px-5 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-widest">Órdenes</th>
+              <th class="px-5 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-widest">Ventas</th>
+              <th class="px-5 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-widest">Ticket Prom.</th>
+              <th class="px-5 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-widest">Mesas</th>
+              <th class="px-5 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Participación</th>
+            </tr>
+          </thead>
             <tbody class="divide-y divide-zinc-100">
               <tr v-for="(m, i) in metricasMeseros" :key="m.mesero_id" class="hover:bg-zinc-50 transition-colors">
                 <td class="px-5 py-4">
@@ -205,7 +231,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 
 const props = defineProps({
   apiUrl: { type: String, required: true },
-  getHeaders: { type: Function, required: true }
+  getHeaders: { type: Function, required: true },
+  empleados: { type: Array, default: () => [] }
 })
 
 // ── Estado ────────────────────────────────────────────────────────────────
@@ -222,6 +249,7 @@ const hoy = new Date().toISOString().split('T')[0]
 const filtros = reactive({
   fecha_desde: hoy,
   fecha_hasta: hoy,
+  mesero_id: '',
 })
 
 // ── KPI Lists (UI) ────────────────────────────────────────────────────────
@@ -274,6 +302,7 @@ const cargar = async () => {
     const params = new URLSearchParams()
     if (filtros.fecha_desde) params.append('fecha_desde', filtros.fecha_desde)
     if (filtros.fecha_hasta) params.append('fecha_hasta', filtros.fecha_hasta)
+    if (filtros.mesero_id)   params.append('user_id', filtros.mesero_id)
 
     const res = await fetch(`${props.apiUrl}/meseros/metricas-ventas?${params}`, {
       headers: props.getHeaders()

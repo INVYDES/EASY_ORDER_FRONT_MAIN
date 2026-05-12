@@ -1,33 +1,77 @@
 <template>
   <div class="space-y-6">
 
-    <!-- FILTROS -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-      <div class="flex flex-wrap items-center gap-4">
-        <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
-          <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
-            :class="['px-4 py-1.5 text-xs font-bold rounded-lg transition-all',
-              kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700']">
-            {{ p.label }}
+    <!-- ══ FILTROS ══ -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="flex-1">
+          <h3 class="text-lg font-bold text-slate-800">Análisis de Popularidad de Productos</h3>
+          <p class="text-sm text-slate-500 mt-1">
+            Descubre qué productos prefieren tus clientes. Filtra por periodo o por el mesero que tomó la orden.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Rango de Fechas -->
+          <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+            <div class="flex flex-col gap-0.5 px-2">
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inicio</span>
+              <input v-model="kpiFechaInicio" type="date"
+                class="bg-transparent text-sm font-semibold text-slate-700 focus:outline-none" />
+            </div>
+            <div class="w-px h-8 bg-slate-200"></div>
+            <div class="flex flex-col gap-0.5 px-2">
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Fin</span>
+              <input v-model="kpiFechaFin" type="date"
+                class="bg-transparent text-sm font-semibold text-slate-700 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Selector de Empleado -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Vendido por:</span>
+            <select v-model="kpiMeseroId" @change="loadKpis"
+              class="px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              <option value="">Todo el personal</option>
+              <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
+                {{ emp.nombre || emp.name || emp.username }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Botón Actualizar -->
+          <button @click="loadKpis" :disabled="loading"
+            class="h-[42px] px-6 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 disabled:opacity-50">
+            <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
+            {{ loading ? 'Actualizando...' : 'Actualizar' }}
           </button>
         </div>
-        <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100">
-          <input v-model="kpiFechaInicio" type="date" class="bg-transparent px-2 py-1 text-xs font-medium focus:outline-none text-slate-600" />
-          <span class="text-slate-300 text-xs">→</span>
-          <input v-model="kpiFechaFin" type="date" class="bg-transparent px-2 py-1 text-xs font-medium focus:outline-none text-slate-600" />
+      </div>
+
+      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-slate-50 pt-4">
+        <!-- Atajos de Periodo -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-400 uppercase">Periodo:</span>
+          <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+            <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
+              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
+                kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700']">
+              {{ p.label }}
+            </button>
+          </div>
         </div>
-        <button @click="loadKpis" :disabled="loading"
-          class="px-6 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 shadow-md shadow-indigo-100">
-          {{ loading ? '...' : 'APLICAR' }}
-        </button>
-        <div class="flex gap-2 ml-2 border-l pl-4 border-slate-200">
+
+        <!-- Botones de Exportación -->
+        <div class="flex gap-2 ml-auto">
           <button @click="exportarReporte('pdf')"
-            class="flex items-center gap-2 px-3 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition border border-rose-100">
-            <span class="text-[10px] font-black uppercase">PDF</span>
+            class="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all border border-rose-100 group">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span class="text-xs font-bold uppercase">Exportar PDF</span>
           </button>
           <button @click="exportarReporte('excel')"
-            class="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition border border-emerald-100">
-            <span class="text-[10px] font-black uppercase">XLS</span>
+            class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 group">
+            <i class="fa-solid fa-file-excel"></i>
+            <span class="text-xs font-bold uppercase">Descargar Excel</span>
           </button>
         </div>
       </div>
@@ -158,6 +202,7 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 const props = defineProps({
   apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },
   getHeaders: { type: Function, required: true },
+  empleados: { type: Array, default: () => [] }
 })
 
 const loading = ref(false)
@@ -171,6 +216,7 @@ const topProductos = ref([])
 const productosRentabilidad = ref([])
 const productosRebase = ref([])
 const tiempoPeriodo = ref('hoy')
+const kpiMeseroId = ref('')
 
 const kpiPeriodos = [
   { key: 'total', label: 'Todo' },
@@ -260,11 +306,12 @@ const loadKpis = async () => {
   try {
     const fIni = kpiFechaInicio.value ? `&fecha_inicio=${kpiFechaInicio.value}` : ''
     const fFin = kpiFechaFin.value ? `&fecha_fin=${kpiFechaFin.value}` : ''
+    const uId  = kpiMeseroId.value ? `&user_id=${kpiMeseroId.value}` : ''
 
     const [vRes, pRes, rentRes] = await Promise.all([
-      fetch(`${props.apiUrl}/reportes/ventas?grupo=${kpiGrupo.value}${fIni}${fFin}`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/reportes/productos-mas-vendidos?limite=200${fIni}${fFin}`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/reportes/rentabilidad-productos${fIni}${fFin}`, { headers: props.getHeaders() }).catch(() => null),
+      fetch(`${props.apiUrl}/reportes/ventas?grupo=${kpiGrupo.value}${fIni}${fFin}${uId}`, { headers: props.getHeaders() }),
+      fetch(`${props.apiUrl}/reportes/productos-mas-vendidos?limite=200${fIni}${fFin}${uId}`, { headers: props.getHeaders() }),
+      fetch(`${props.apiUrl}/reportes/rentabilidad-productos?${fIni}${fFin}${uId}`, { headers: props.getHeaders() }).catch(() => null),
     ])
 
     const vData = await vRes.json()

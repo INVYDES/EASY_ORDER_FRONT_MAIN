@@ -197,7 +197,6 @@ const handleSubmit = async () => {
   try {
     const data = await apiClient.post('/register-cliente', form.value)
 
-    if (data.errors) { errors.value = data.errors; return }
     if (!data.success) throw new Error(data.message || 'No pudimos crear tu cuenta')
 
     const storage = localStorage
@@ -208,7 +207,12 @@ const handleSubmit = async () => {
     setTimeout(() => router.push('/panel/cliente'), 1200)
 
   } catch (e: any) {
-    errorMessage.value = e.message
+    if (e.response?.data?.errors) {
+      errors.value = e.response.data.errors
+      errorMessage.value = 'Por favor, corrige los errores del formulario.'
+    } else {
+      errorMessage.value = e.response?.data?.message || e.message || 'Error al procesar el registro'
+    }
   } finally {
     loading.value = false
   }

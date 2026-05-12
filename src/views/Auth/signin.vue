@@ -197,8 +197,10 @@ const handleSubmit = async () => {
     
     if (err.message === 'Too Many Requests') {
       errorMessage.value = 'Demasiados intentos. Por favor espera.'
+    } else if (err.response?.data?.errors) {
+      errorMessage.value = Object.values(err.response.data.errors).flat().join(', ')
     } else {
-      errorMessage.value = `Error: ${err.message}`
+      errorMessage.value = err.response?.data?.message || err.message || 'Error al iniciar sesión'
     }
   } finally {
     loading.value = false

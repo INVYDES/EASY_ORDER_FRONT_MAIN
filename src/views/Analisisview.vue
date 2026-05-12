@@ -3,17 +3,42 @@
 
     <SucursalBadge />
 
-    <!-- Encabezado -->
-    <div>
-      <h2 class="text-2xl font-bold text-gray-900">Análisis y Métricas</h2>
-      <p class="text-gray-500 text-sm mt-1">Inteligencia de negocio y rendimiento en tiempo real</p>
+    <div class="bg-gradient-to-r from-indigo-600 to-violet-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-100 mb-8 relative overflow-hidden">
+      <div class="relative z-10">
+        <h2 class="text-3xl font-black tracking-tight">Centro de Inteligencia</h2>
+        <p class="text-indigo-100 mt-2 max-w-xl text-lg leading-relaxed font-medium">
+          Bienvenido al panel de control. Aquí puedes ver cómo va tu negocio hoy, analizar tus productos más vendidos y revisar el desempeño de tu equipo.
+        </p>
+        <div class="flex gap-4 mt-6">
+          <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span class="text-xs font-bold uppercase tracking-wider">Datos en vivo</span>
+          </div>
+          <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+            <i class="fa-solid fa-shield-check text-indigo-200"></i>
+            <span class="text-xs font-bold uppercase tracking-wider">Reporte Seguro</span>
+          </div>
+        </div>
+      </div>
+      <!-- Decoración fondo -->
+      <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      <div class="absolute right-10 top-10 text-white/10 text-9xl">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
     </div>
 
     <!-- Tabs -->
-    <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+    <div class="flex flex-wrap items-center gap-2 bg-gray-100 rounded-2xl p-1.5 w-fit">
       <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
-        :class="['px-5 py-2 text-sm font-medium rounded-lg transition',
-          activeTab === t.key ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200']">
+        :class="['px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2',
+          activeTab === t.key ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-gray-500 hover:bg-gray-200']">
+        <i :class="[
+          t.key === 'resumen' ? 'fa-solid fa-house' : '',
+          t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
+          t.key === 'kpis' ? 'fa-solid fa-chart-bar' : '',
+          t.key === 'productos' ? 'fa-solid fa-box' : '',
+          t.key === 'meseros' ? 'fa-solid fa-users' : ''
+        ]"></i>
         {{ t.label }}
       </button>
     </div>
@@ -57,11 +82,24 @@
 
     <!-- ══ TAB ANÁLISIS FINANCIERO ══ -->
     <template v-if="activeTab === 'financiero'">
-      <div class="space-y-8">
+      <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
+        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p class="text-gray-400">Cargando datos financieros...</p>
+      </div>
+      <div v-else class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />
 
-        <div class="grid grid-cols-1 gap-8">
-          <CanalVentasChart :data="salesChannels" />
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <!-- Lista de Rentabilidad (Menor a Mayor) -->
+          <TopMarginList :products="financialProducts" />
+
+          <div class="space-y-8">
+            <!-- Estrategia de Paquetes -->
+            <BundleStrategyCard :products="financialProducts" />
+            
+            <!-- Canales de Ventas -->
+            <CanalVentasChart :data="salesChannels" />
+          </div>
         </div>
 
       </div>
@@ -69,12 +107,12 @@
 
     <!-- ══ TAB KPIs VENTAS ══ -->
     <template v-if="activeTab === 'kpis'">
-      <KpiVentas :api-url="API_URL" :get-headers="getHeaders" />
+      <KpiVentas :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
 
     <!-- ══ TAB KPIs PRODUCTOS ══ -->
     <template v-if="activeTab === 'productos'">
-      <KpiProductos :api-url="API_URL" :get-headers="getHeaders" />
+      <KpiProductos :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
 
 
@@ -84,7 +122,7 @@
       <div class="mb-6">
         <EmpleadosRolChart :empleados="empleados" />
       </div>
-      <MetricasMeseros :api-url="API_URL" :get-headers="getHeaders" />
+      <MetricasMeseros :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
 
   </div>
@@ -129,40 +167,28 @@ const dashData = reactive({
 })
 
 const financialData = reactive({
-  utilidadObjetivo:    5000,
-  utilidadReal:        4200,
-  inversionInicial:    25000,
-  ventasMensuales:     15000,
-  gastosVariables:     4000,
-  gastosOperativos:    3000,
-  gananciaNeta:        8000,
-  puntoEquilibrio:     7000,
-  roiGeneral:          32,
-  roiProducto:         15,
-  margenContribucion:  11000,
-  porcentajeUtilidad:  53.3,
-  kpiEmpleados:        88
+  utilidadObjetivo:    0,
+  utilidadReal:        0,
+  inversionInicial:    0,
+  ventasMensuales:     0,
+  gastosVariables:     0,
+  gastosOperativos:    0,
+  gananciaNeta:        0,
+  puntoEquilibrio:     0,
+  roiGeneral:          0,
+  roiProducto:         0,
+  margenContribucion:  0,
+  porcentajeUtilidad:  0,
+  kpiEmpleados:        0
 })
 
 const salesChannels = reactive({
-  Local:    120,
-  Pickup:   45,
-  Delivery: 85
+  Local:    0,
+  Pickup:   0,
+  Delivery: 0
 })
 
-const financialProducts = ref([
-  { id: 1,  nombre: 'Hamburguesa Gourmet', precio: 15, costo: 5,  ventas: 100, margen: 10, categoria: 'Cocina'  },
-  { id: 2,  nombre: 'Taco Especial',       precio: 10, costo: 3,  ventas: 150, margen: 7,  categoria: 'Cocina'  },
-  { id: 3,  nombre: 'Ensalada César',      precio: 12, costo: 4,  ventas: 30,  margen: 8,  categoria: 'Cocina'  },
-  { id: 4,  nombre: 'Sopa del Día',        precio: 8,  costo: 2,  ventas: 20,  margen: 6,  categoria: 'Cocina'  },
-  { id: 5,  nombre: 'Pizza Margarita',     precio: 14, costo: 6,  ventas: 80,  margen: 8,  categoria: 'Cocina'  },
-  { id: 6,  nombre: 'Refresco Cola',       precio: 3,  costo: 1,  ventas: 300, margen: 2,  categoria: 'Bebida'  },
-  { id: 7,  nombre: 'Jugo Natural',        precio: 5,  costo: 2,  ventas: 120, margen: 3,  categoria: 'Bebida'  },
-  { id: 8,  nombre: 'Café Latte',          precio: 4,  costo: 1,  ventas: 200, margen: 3,  categoria: 'Bebida'  },
-  { id: 9,  nombre: 'Cheesecake',          precio: 7,  costo: 3,  ventas: 10,  margen: 4,  categoria: 'Postre'  },
-  { id: 10, nombre: 'Tiramisú',            precio: 8,  costo: 4,  ventas: 15,  margen: 4,  categoria: 'Postre'  },
-  { id: 11, nombre: 'Brownie',             precio: 6,  costo: 2,  ventas: 5,   margen: 4,  categoria: 'Postre'  },
-])
+const financialProducts = ref([])
 
 const tabs = [
   { key: 'resumen',    label: '📋 Resumen General'     },
@@ -203,25 +229,47 @@ const loadData = async () => {
       dashData.ordenes_hoy        = dData.data?.ordenes_hoy
         ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
 
-      if (dData.data?.canales_ventas) {
-        Object.assign(salesChannels, dData.data.canales_ventas)
-      }
-
       // Utilidad del día
       try {
         const uData2 = await apiClient.get('/reportes/utilidad-dia')
         dashData.utilidad_hoy = uData2.success
-          ? (uData2.data?.utilidad_acumulada || 0)
+          ? (uData2.data?.utilidad_neta_dia || uData2.data?.utilidad_bruta_dia || 0)
           : (dData.data?.utilidad_hoy || 0)
       } catch {
         dashData.utilidad_hoy = dData.data?.utilidad_hoy || 0
       }
     }
 
-    // Datos financieros
+    // Canal de Ventas (Local, Pickup, Delivery)
     try {
-      const fData = await apiClient.get('/reportes/financiero')
-      if (fData.success && fData.data) Object.assign(financialData, fData.data)
+      const cTipoRes = await apiClient.get('/reportes/ventas-por-canal-tipo')
+      if (cTipoRes.success && cTipoRes.data) {
+        salesChannels.Local = cTipoRes.data.Local || 0
+        salesChannels.Pickup = cTipoRes.data.Pickup || 0
+        salesChannels.Delivery = cTipoRes.data.Delivery || 0
+      }
+    } catch (e) {
+      console.error('Error al cargar canales:', e)
+    }
+
+    // Datos financieros (ROI)
+    try {
+      const roiRes = await apiClient.get('/reportes/roi')
+      if (roiRes.success && roiRes.data) {
+        financialData.utilidadObjetivo = roiRes.data.kpis?.utilidad_objetivo || 0
+        financialData.utilidadReal = roiRes.data.kpis?.utilidad_real || 0
+        financialData.inversionInicial = roiRes.data.config?.inversion_inicial || 0
+        financialData.ventasMensuales = roiRes.data.financiero?.venta_mes || 0
+        financialData.gastosVariables = roiRes.data.financiero?.gastos_variables || 0
+        financialData.gastosOperativos = roiRes.data.financiero?.gastos_operativos || 0
+        financialData.gananciaNeta = roiRes.data.financiero?.ganancia_neta || 0
+        financialData.puntoEquilibrio = roiRes.data.kpis?.punto_equilibrio || 0
+        financialData.roiGeneral = roiRes.data.kpis?.roi_general || 0
+        financialData.roiProducto = roiRes.data.kpis?.roi_producto || 0
+        financialData.margenContribucion = roiRes.data.kpis?.margen_contribucion || 0
+        financialData.porcentajeUtilidad = roiRes.data.kpis?.pct_utilidad || 0
+        financialData.kpiEmpleados = roiRes.data.kpis?.kpi_empleados || 0
+      }
     } catch (e) {
       console.error('Error al cargar datos financieros:', e)
     }

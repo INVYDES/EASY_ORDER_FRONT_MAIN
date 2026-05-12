@@ -460,10 +460,6 @@ const handleSubmit = async (): Promise<void> => {
 
     const data = await apiClient.post('/propietarios', payload) as ApiResponse
 
-    if (data.errors) {
-      const errorMessages = Object.values(data.errors).flat().join(', ')
-      throw new Error(errorMessages)
-    }
     if (!data.success) {
       throw new Error(data.message || 'Error al procesar el registro')
     }
@@ -498,7 +494,12 @@ const handleSubmit = async (): Promise<void> => {
 
   } catch (error: any) {
     console.error('❌ Error en registro:', error)
-    errorMessage.value = error.message || 'Error de conexión con el servidor'
+    if (error.response?.data?.errors) {
+      const errorMessages = Object.values(error.response.data.errors).flat().join(', ')
+      errorMessage.value = errorMessages
+    } else {
+      errorMessage.value = error.response?.data?.message || error.message || 'Error de conexión con el servidor'
+    }
   } finally {
     cargando.value = false
   }
