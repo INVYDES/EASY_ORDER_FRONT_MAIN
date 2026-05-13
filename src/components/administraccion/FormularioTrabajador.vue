@@ -61,7 +61,7 @@
             <option value="3">Mesero</option>
             <option value="4">Cocina</option>
             <option value="5">Caja</option>
-            <option value="6">Barra</option>
+            <option value="7">Menú</option>
           </select>
         </div>
         <div>
