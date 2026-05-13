@@ -124,7 +124,7 @@
           <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
-            <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">99</span>
+            <span v-if="pendingCounts.barra > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.barra }}</span>
           </RouterLink>
           
           <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
@@ -302,13 +302,18 @@ const logout = async () => {
 const fetchPendingCounts = async () => {
   if (!props.restauranteActivo) return
   try {
-    const { data } = await apiClient.get('/ordenes/pendientes/conteo')
-    console.log('📊 Sidebar Counts:', data.data)
-    if (data.success) {
-      pendingCounts.value = data.data
+    const response = await apiClient.get('/ordenes/pendientes/conteo')
+    const resData = response.data?.success ? response.data : response
+    
+    if (resData.success) {
+      // Asignación individual para forzar reactividad
+      pendingCounts.value.cocina = resData.data.cocina || 0
+      pendingCounts.value.barra = resData.data.barra || 0
+      pendingCounts.value.postres = resData.data.postres || 0
+      console.log('✅ Conteos cargados:', pendingCounts.value)
     }
   } catch (error) {
-    console.error('❌ Error fetching sidebar counts:', error)
+    console.error('❌ Error cargando conteos:', error)
   }
 }
 
