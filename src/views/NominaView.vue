@@ -263,22 +263,7 @@
               </div>
             </div>
 
-            <div v-if="nominaConfig" class="panel config-panel">
-              <p class="panel__title" style="margin-bottom:1.25rem">Config. Global</p>
-              <div class="config-row">
-                <span class="config-row__label">Valor Hora</span>
-                <span class="config-row__val">${{ Number(nominaConfig.valor_hora_por_defecto).toLocaleString() }}</span>
-              </div>
-              <div class="config-row">
-                <span class="config-row__label">Base Defecto</span>
-                <span class="config-row__val">${{ Number(nominaConfig.salario_base_por_defecto).toLocaleString() }}</span>
-              </div>
-              <div class="config-row">
-                <span class="config-row__label">Comisión</span>
-                <span class="config-row__val config-row__val--green">{{ Number(nominaConfig.porcentaje_comision_ventas) }}%</span>
-              </div>
-              <p class="config-panel__note">Valores por defecto cuando el empleado no tiene asignación específica.</p>
-            </div>
+            <!-- Config. Global eliminada por petición del usuario -->
           </div>
 
           <!-- Employee cards -->
