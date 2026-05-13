@@ -174,22 +174,14 @@
               <div class="bg-violet-50 border border-violet-100 rounded-2xl p-5 space-y-4">
                 <div class="flex items-center justify-between">
                   <p class="text-xs font-black text-violet-700 uppercase tracking-widest">Calculadora de Precio</p>
-                  <span class="px-2 py-1 bg-violet-200 text-violet-800 text-[10px] font-black rounded-lg">PRO</span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4">
                   <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase">Tiempo Prep.</label>
-                    <div class="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-violet-100">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Tiempo Prep. Estimado</label>
+                    <div class="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-violet-100 max-w-[200px]">
                       <input v-model.number="minutosProduccion" type="number" min="0" class="w-full text-sm font-bold focus:outline-none" />
                       <span class="text-[10px] text-gray-400">min</span>
-                    </div>
-                  </div>
-                  <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase">Nómina Diaria</label>
-                    <div class="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-violet-100">
-                      <span class="text-gray-400 text-xs">$</span>
-                      <input v-model.number="nominaDiaria" type="number" min="0" class="w-full text-sm font-bold focus:outline-none" />
                     </div>
                   </div>
                 </div>
