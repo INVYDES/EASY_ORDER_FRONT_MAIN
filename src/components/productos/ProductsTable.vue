@@ -202,19 +202,27 @@ const emit = defineEmits(['edit', 'delete', 'toggle-active', 'change-page'])
 // 2. Insumos/Ingredientes para cálculos de costo
 const ingredientesGlobales = ref([])
 const ingredientesCargados = ref(false)
+const nominaMensual = ref(0)
 
-const loadIngredientes = async () => {
-  if (ingredientesCargados.value) return
-  
+const loadDatosCalculo = async () => {
   try {
-    const data = await apiClient.get('/ingredientes')
-    if (data.success || data.data) {
-      ingredientesGlobales.value = data.data || data || []
+    const [ingRes, empRes] = await Promise.all([
+        apiClient.get('/ingredientes'),
+        apiClient.get('/empleados')
+    ])
+    
+    if (ingRes.success || ingRes.data) {
+      ingredientesGlobales.value = ingRes.data || ingRes || []
       ingredientesCargados.value = true
-      console.log('✅ Ingredientes cargados:', ingredientesGlobales.value.length)
     }
+
+    if (empRes.success || empRes.data) {
+        const emps = empRes.data || empRes || []
+        nominaMensual.value = emps.reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
+    }
+    console.log('✅ Datos de cálculo cargados (Ingredientes y Nómina)')
   } catch (err) {
-    console.error('Error cargando ingredientes:', err)
+    console.error('Error cargando datos de cálculo:', err)
   }
 }
 
@@ -233,11 +241,20 @@ const calcularCostoIngrediente = (ing) => {
 }
 
 const calcularCostoTotal = (product) => {
-  if (!product.ingredientes || product.ingredientes.length === 0) return 0
-  
-  return product.ingredientes.reduce((sum, ing) => {
+  // 1. Costo Insumos
+  const costoInsumos = (product.ingredientes || []).reduce((sum, ing) => {
     return sum + calcularCostoIngrediente(ing)
   }, 0)
+
+  // 2. Mano de Obra (MO) - Basado en la misma fórmula del modal
+  // (Nomina / 14400 minutos mensuales) * 1.66 factor de utilidad * minutos prep
+  const minProd = parseFloat(product.minutos_produccion || 0)
+  const costoMO = (nominaMensual.value / 14400) * 1.66 * minProd
+
+  // 3. Gastos Indirectos (5% sobre Insumos + MO)
+  const costoIndirecto = (costoInsumos + costoMO) * 0.05
+
+  return costoInsumos + costoMO + costoIndirecto
 }
 
 const calcularMargen = (product) => {
@@ -295,17 +312,15 @@ const resolveImage = (p) => {
 }
 const onImageError = (e) => { e.target.style.display = 'none' }
 
-// ✅ Recargar ingredientes cuando cambian los productos (por si hay nuevos)
-watch(() => props.products, (newProducts) => {
-  // Si hay productos con ingredientes y no tenemos ingredientes cargados, cargarlos
-  const hasProductWithIngredients = newProducts.some(p => p.ingredientes?.length > 0)
-  if (hasProductWithIngredients && !ingredientesCargados.value) {
-    loadIngredientes()
+// ✅ Recargar datos cuando cambian los productos
+watch(() => props.products, () => {
+  if (!ingredientesCargados.value) {
+    loadDatosCalculo()
   }
 }, { immediate: false })
 
 onMounted(() => {
-  loadIngredientes()
+  loadDatosCalculo()
 })
 </script>
 
