@@ -89,7 +89,32 @@
           <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 text-sm">
             <span class="font-bold text-gray-700">Total ventas</span>
             <span class="font-bold text-indigo-600">
-              ${{ formatMoney(data.ventas.efectivo + data.ventas.tarjeta + data.ventas.transferencia) }}
+              ${{ formatMoney(data.ventas.total) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Propinas -->
+        <div v-if="data.propinas" class="bg-amber-50/50 border border-amber-100 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-amber-600 uppercase tracking-wide mb-3">Propinas</p>
+          <div class="grid grid-cols-2 gap-3 text-sm text-amber-900">
+            <div class="flex justify-between">
+              <span>💵 Efectivo</span>
+              <span class="font-semibold">${{ formatMoney(data.propinas.efectivo) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>💳 Tarjeta</span>
+              <span class="font-semibold">${{ formatMoney(data.propinas.tarjeta) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>📲 Transferencia</span>
+              <span class="font-semibold">${{ formatMoney(data.propinas.transferencia) }}</span>
+            </div>
+          </div>
+          <div class="flex justify-between border-t border-amber-200 pt-2 mt-2 text-sm">
+            <span class="font-bold text-amber-700">Total propinas</span>
+            <span class="font-bold text-amber-700">
+              ${{ formatMoney(data.propinas.total) }}
             </span>
           </div>
         </div>
@@ -213,7 +238,14 @@ const imprimir = () => {
       <tr><td>Ventas efectivo</td><td class="right">$${formatMoney(d.ventas.efectivo)}</td></tr>
       <tr><td>Ventas tarjeta</td><td class="right">$${formatMoney(d.ventas.tarjeta)}</td></tr>
       <tr><td>Transferencias</td><td class="right">$${formatMoney(d.ventas.transferencia)}</td></tr>
-      <tr><td><b>Total ventas</b></td><td class="right"><b>$${formatMoney(total)}</b></td></tr>
+      <tr><td><b>Total ventas</b></td><td class="right"><b>$${formatMoney(d.ventas.total)}</b></td></tr>
+    </table>
+    <div class="border"></div>
+    <table>
+      <tr><td>Propinas efectivo</td><td class="right">$${formatMoney(d.propinas?.efectivo)}</td></tr>
+      <tr><td>Propinas tarjeta</td><td class="right">$${formatMoney(d.propinas?.tarjeta)}</td></tr>
+      <tr><td>Propinas transfe</td><td class="right">$${formatMoney(d.propinas?.transferencia)}</td></tr>
+      <tr><td><b>Total propinas</b></td><td class="right"><b>$${formatMoney(d.propinas?.total)}</b></td></tr>
     </table>
     ${d.observaciones ? `<div class="border"></div><p style="text-align:left">Obs: ${d.observaciones}</p>` : ''}
     <div class="border"></div>
