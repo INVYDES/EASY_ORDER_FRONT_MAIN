@@ -115,17 +115,25 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-utensils text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Cocina</span>
+            <span v-show="!isCollapsed || isMobile" class="text-sm flex-1">Cocina</span>
+            <span v-if="pendingCounts.cocina > 0 && (!isCollapsed || isMobile)" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">{{ pendingCounts.cocina }}</span>
+            <div v-if="pendingCounts.cocina > 0 && isCollapsed && !isMobile" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
           </RouterLink>
-          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          
+          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
+            <span v-show="!isCollapsed || isMobile" class="text-sm flex-1">Barra</span>
+            <span v-if="pendingCounts.barra > 0 && (!isCollapsed || isMobile)" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">{{ pendingCounts.barra }}</span>
+            <div v-if="pendingCounts.barra > 0 && isCollapsed && !isMobile" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
           </RouterLink>
-          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          
+          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cake-candles text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
+            <span v-show="!isCollapsed || isMobile" class="text-sm flex-1">Postres</span>
+            <span v-if="pendingCounts.postres > 0 && (!isCollapsed || isMobile)" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">{{ pendingCounts.postres }}</span>
+            <div v-if="pendingCounts.postres > 0 && isCollapsed && !isMobile" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
           </RouterLink>
         </div>
       </div>
@@ -164,6 +172,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import { useRestauranteChannel } from '@/composables/useRestauranteChannel'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
@@ -180,6 +189,12 @@ const isCollapsed = ref(false)
 const isMobile = ref(window.innerWidth < 1024)
 const showUserMenu = ref(false)
 const showRestMenu = ref(false)
+
+const pendingCounts = ref({
+  cocina: 0,
+  barra: 0,
+  postres: 0
+})
 
 // Computed
 const userName = computed(() => props.user?.name || 'Usuario')
@@ -287,11 +302,33 @@ const logout = async () => {
   }
 }
 
+const fetchPendingCounts = async () => {
+  if (!props.restauranteActivo) return
+  try {
+    const { data } = await apiClient.get('/ordenes/pendientes/conteo')
+    if (data.success) {
+      pendingCounts.value = data.data
+    }
+  } catch (error) {
+    console.error('Error fetching pending counts:', error)
+  }
+}
+
+// Configurar WebSockets para actualizaciones en tiempo real
+useRestauranteChannel(computed(() => props.restauranteActivo), {
+  onOrden: () => {
+    // Cuando hay cualquier cambio en órdenes, refrescamos los conteos
+    fetchPendingCounts()
+  }
+})
+
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   const saved = localStorage.getItem('sidebar_collapsed')
   if (saved !== null && !isMobile.value) isCollapsed.value = saved === 'true'
   
+  fetchPendingCounts()
+
   document.addEventListener('click', (e) => {
     if (!e.target.closest('aside')) {
       showUserMenu.value = false
