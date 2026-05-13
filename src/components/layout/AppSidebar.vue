@@ -117,23 +117,20 @@
         <div class="space-y-1">
           <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-utensils text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm flex-1">Cocina</span>
-            <span v-if="pendingCounts.cocina > 0 && (!isCollapsed || isMobile)" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">{{ pendingCounts.cocina }}</span>
-            <div v-if="pendingCounts.cocina > 0 && isCollapsed && !isMobile" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Cocina</span>
+            <span v-if="pendingCounts.cocina > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.cocina }}</span>
           </RouterLink>
           
           <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm flex-1">Barra</span>
-            <span v-if="pendingCounts.barra > 0 && (!isCollapsed || isMobile)" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">{{ pendingCounts.barra }}</span>
-            <div v-if="pendingCounts.barra > 0 && isCollapsed && !isMobile" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
+            <span v-if="pendingCounts.barra > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.barra }}</span>
           </RouterLink>
           
           <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cake-candles text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm flex-1">Postres</span>
-            <span v-if="pendingCounts.postres > 0 && (!isCollapsed || isMobile)" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">{{ pendingCounts.postres }}</span>
-            <div v-if="pendingCounts.postres > 0 && isCollapsed && !isMobile" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
+            <span v-if="pendingCounts.postres > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.postres }}</span>
           </RouterLink>
         </div>
       </div>
