@@ -89,18 +89,7 @@
       <div v-else class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <!-- Lista de Rentabilidad (Menor a Mayor) -->
-          <TopMarginList :products="financialProducts" />
-
-          <div class="space-y-8">
-            <!-- Estrategia de Paquetes -->
-            <BundleStrategyCard :products="financialProducts" />
-            
-            <!-- Canales de Ventas -->
-            <CanalVentasChart :data="salesChannels" />
-          </div>
-        </div>
+        <!-- Secciones de rentabilidad, paquetes y canales eliminadas por petición del usuario -->
 
       </div>
     </template>
