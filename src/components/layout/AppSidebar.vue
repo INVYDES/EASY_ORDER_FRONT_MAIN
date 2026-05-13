@@ -168,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -321,6 +321,11 @@ useRestauranteChannel(computed(() => props.restauranteActivo), {
     fetchPendingCounts()
   }
 })
+
+// Vigilar cuando cambia el restaurante para recargar conteos
+watch(() => props.restauranteActivo, (newVal) => {
+  if (newVal) fetchPendingCounts()
+}, { immediate: true })
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)

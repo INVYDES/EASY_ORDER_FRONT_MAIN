@@ -36,9 +36,9 @@
         <p class="text-3xl font-black text-blue-400 leading-none">{{ preparingOrders.length }}</p>
         <p class="text-xs text-blue-400/60 mt-1.5 font-medium uppercase tracking-wider">Preparando</p>
       </div>
-      <div class="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-purple-400 leading-none">{{ totalBarra }}</p>
-        <p class="text-xs text-purple-400/60 mt-1.5 font-medium uppercase tracking-wider">Bebidas totales</p>
+      <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
+        <p class="text-3xl font-black text-emerald-400 leading-none">{{ readyOrders.length }}</p>
+        <p class="text-xs text-emerald-400/60 mt-1.5 font-medium uppercase tracking-wider">Listas</p>
       </div>
     </div>
 
@@ -108,6 +108,29 @@
             accion-class="bg-emerald-600 hover:bg-emerald-500 text-white"
             :procesando="procesando === order.id"
             @accion="cambiarEstado(order.id, 'LISTO')"
+          />
+        </div>
+      </div>
+
+      <!-- Listas -->
+      <div v-if="readyOrders.length > 0" class="md:col-span-2 bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
+        <div class="px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span>✅</span>
+            <h2 class="font-bold text-emerald-300 text-sm">Listas para entregar</h2>
+          </div>
+          <span class="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">
+            {{ readyOrders.length }}
+          </span>
+        </div>
+        <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
+          <OrdenCardBebida
+            v-for="order in readyOrders" :key="order.id"
+            :order="order"
+            accion-label="🫡 Marcar como entregada"
+            accion-class="bg-gray-700 hover:bg-gray-600 text-white"
+            :procesando="procesando === order.id"
+            @accion="marcarEntregada(order.id)"
           />
         </div>
       </div>
