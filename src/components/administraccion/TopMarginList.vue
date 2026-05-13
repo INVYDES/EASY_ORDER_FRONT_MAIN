@@ -27,9 +27,14 @@
             <span class="text-base">⚠️</span>
             <span class="text-sm font-semibold text-gray-700">{{ prod.nombre }}</span>
           </div>
-          <span class="text-sm font-bold" :class="(prod.margen || 0) < 0 ? 'text-red-600' : 'text-red-500'">
-            ${{ prod.margen || 0 }}
-          </span>
+          <div class="text-right leading-tight">
+            <span class="text-sm font-bold block" :class="(prod.margen || 0) < 0 ? 'text-red-600' : 'text-red-500'">
+              ${{ prod.margen || 0 }}
+            </span>
+            <span class="text-[10px] font-bold text-red-400">
+              {{ prod.precio ? ((prod.margen / prod.precio) * 100).toFixed(1) : 0 }}%
+            </span>
+          </div>
         </div>
         <div v-if="bottom5.length === 0" class="text-center py-4 text-gray-400 text-sm italic">Sin datos</div>
       </div>
@@ -45,7 +50,12 @@
         <div v-for="(prod, i) in others" :key="prod.id"
           class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
           <span class="text-sm text-gray-600">{{ prod.nombre }}</span>
-          <span class="text-sm font-medium text-gray-500">${{ prod.margen || 0 }}</span>
+          <div class="text-right leading-tight">
+            <span class="text-sm font-medium block text-gray-500">${{ prod.margen || 0 }}</span>
+            <span class="text-[10px] font-bold text-gray-400">
+              {{ prod.precio ? ((prod.margen / prod.precio) * 100).toFixed(1) : 0 }}%
+            </span>
+          </div>
         </div>
         <div v-if="others.length === 0" class="text-center py-4 text-gray-400 text-sm italic">Sin otros productos</div>
       </div>

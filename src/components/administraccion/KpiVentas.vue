@@ -238,6 +238,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { apiClient } from '@/utils/apiClient'
+import Chart from 'chart.js/auto'
 
 const props = defineProps({
   apiUrl: { type: String, default: '/api' },
@@ -361,10 +362,18 @@ const loadKpis = async () => {
     try {
       const tRes = await fetch(`${props.apiUrl}/reportes/tiempos-preparacion${params}`, { headers })
       const tData = await tRes.json()
-      if (tData.success && tData.data) {
-        tiempos.value.cocina  = tData.data.cocina  ?? null
-        tiempos.value.barra   = tData.data.barra   ?? null
-        tiempos.value.postres = tData.data.postres  ?? null
+      if (tData.success && Array.isArray(tData.data)) {
+        let c = 0, b = 0, p = 0;
+        let cCount = 0, bCount = 0, pCount = 0;
+        tData.data.forEach(item => {
+           const est = (item.estacion || '').toLowerCase();
+           if(est.includes('cocina')) { c += parseFloat(item.promedio_minutos); cCount++; }
+           if(est.includes('barra') || est.includes('bebida')) { b += parseFloat(item.promedio_minutos); bCount++; }
+           if(est.includes('postre')) { p += parseFloat(item.promedio_minutos); pCount++; }
+        });
+        tiempos.value.cocina  = cCount > 0 ? (c / cCount).toFixed(1) : null;
+        tiempos.value.barra   = bCount > 0 ? (b / bCount).toFixed(1) : null;
+        tiempos.value.postres = pCount > 0 ? (p / pCount).toFixed(1) : null;
       }
     } catch { /* endpoint no disponible aún */ }
 
@@ -384,7 +393,7 @@ const loadKpis = async () => {
       if (fData.success && fData.data) {
         finanzasDia.value.inversionProducto = fData.data.inversion_producto || 0
         finanzasDia.value.inversionManoObra = fData.data.inversion_mano_obra || 0
-        finanzasDia.value.utilidadTotal     = fData.data.utilidad_total     || 0
+        finanzasDia.value.utilidadTotal     = fData.data.utilidad_neta ?? fData.data.utilidad_bruta ?? 0
       }
     } catch { /* fallback */ }
 
@@ -416,33 +425,40 @@ const loadKpis = async () => {
 
 // --- CHART BUILDER ---
 const buildCharts = async () => {
-  if (!window.Chart) {
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js'
-    script.onload = () => buildCharts()
-    document.head.appendChild(script)
-    return
-  }
+  const C = Chart
 
-  const C = window.Chart
-
-  // 1. Línea de ventas
+  // 1. Gráfica de ventas (Barras)
   iKpiVentas?.destroy()
   if (chartKpiVentas.value) {
     iKpiVentas = new C(chartKpiVentas.value, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: kpiData.value.ventas.map(v => v.fecha || `Sem ${v.semana}`),
         datasets: [{
-          label: 'Ventas Actuales',
+          label: 'Ventas',
           data: kpiData.value.ventas.map(v => v.total_ventas),
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99,102,241,0.1)',
-          fill: true,
-          tension: 0.4
+          backgroundColor: '#10b981',
+          borderRadius: 4
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` $${Number(ctx.raw).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: (v) => '$' + Number(v).toLocaleString('es-MX') }
+          }
+        }
+      }
     })
   }
 

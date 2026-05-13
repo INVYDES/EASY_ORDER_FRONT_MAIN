@@ -68,10 +68,11 @@
           <span class="text-[10px] text-gray-400 uppercase block">Ventas</span>
           <span class="text-lg font-bold text-emerald-600">${{ metrics.ventasMensuales || 0 }}</span>
         </div>
-        <div class="ml-auto">
-          <span class="text-2xl font-black" :class="cumplimientoPE >= 100 ? 'text-emerald-600' : 'text-amber-500'">
+        <div class="ml-auto text-right">
+          <span class="text-2xl font-black block" :class="cumplimientoPE >= 100 ? 'text-emerald-600' : 'text-amber-500'">
             {{ cumplimientoPE }}%
           </span>
+          <span v-if="(metrics.puntoEquilibrio || 0) === 0" class="text-[9px] text-red-400 leading-tight block w-20">No config. gastos operativos</span>
         </div>
       </div>
       <!-- Barra de progreso -->
@@ -123,7 +124,7 @@
     <!-- 10. % Utilidad -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
       <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">% Utilidad</p>
-      <span class="text-2xl font-bold text-indigo-600">{{ metrics.porcentajeUtilidad || 0 }}%</span>
+      <span class="text-2xl font-bold" :class="Number(metrics.porcentajeUtilidad || 0) < 8 ? 'text-red-600' : 'text-indigo-600'">{{ metrics.porcentajeUtilidad || 0 }}%</span>
     </div>
 
   </div>
