@@ -152,8 +152,8 @@
             <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</span>
           </div>
           <div class="text-right">
-            <p class="text-sm font-black" :class="(p.margen_real || 0) < 0 ? 'text-red-600' : 'text-emerald-600'">${{ fm(p.margen_real) }}</p>
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Margen Neto</p>
+            <p class="text-sm font-black" :class="(p.margen_real || 0) < 0 ? 'text-red-600' : 'text-emerald-600'">{{ (p.margen_real || 0).toFixed(1) }}%</p>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Margen %</p>
           </div>
         </div>
       </div>
@@ -361,7 +361,8 @@ const loadKpis = async () => {
             const costoIndirecto = (costoInsumos + costoMO) * 0.05
 
             const costoTotal = costoInsumos + costoMO + costoIndirecto
-            const margenReal = parseFloat(p.precio || 0) - costoTotal
+            const precio = parseFloat(p.precio || 0)
+            const margenReal = precio > 0 ? ((precio - costoTotal) / precio) * 100 : 0
 
             return {
                 ...p,
