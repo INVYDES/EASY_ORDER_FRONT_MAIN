@@ -338,7 +338,10 @@ const handleOrderPaid = async (paymentData) => {
     }
   }
   selectedTab.value = 'closed'
-  await actualizarTotalesCaja()
+  await Promise.all([
+    actualizarTotalesCaja(),
+    loadMovements()
+  ])
   await nextTick()
   initChart()
   showToast(`Orden cobrada · ${paymentData.metodo_pago || 'efectivo'} · $${formatMoney(paymentData.total || 0)}`, 'success')
@@ -365,7 +368,9 @@ const onOrdenWS = async (evento) => {
       showToast(`${orden.folio} lista para cobrar ✅`, 'success')
       selectedTab.value = 'open'
     }
-    if (accion === 'cerrada') await actualizarTotalesCaja()
+    if (accion === 'cerrada') {
+      await Promise.all([actualizarTotalesCaja(), loadMovements()])
+    }
   }
   await nextTick()
   initChart()
@@ -374,8 +379,7 @@ const onOrdenWS = async (evento) => {
 const onCajaWS = async (evento) => {
   ultimaActualizacion.value = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   if (['venta', 'movimiento'].includes(evento.accion)) {
-    await actualizarTotalesCaja()
-    if (evento.accion === 'movimiento') await loadMovements()
+    await Promise.all([actualizarTotalesCaja(), loadMovements()])
   }
   if (evento.accion === 'cerrada') {
     cajaAbierta.value = false
