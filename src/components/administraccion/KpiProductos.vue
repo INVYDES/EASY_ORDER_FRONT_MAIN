@@ -131,22 +131,20 @@
       </div>
     </div>
 
-    <!-- RENTABILIDAD — Menor a Mayor -->
+    <!-- RENTABILIDAD — Mayor a Menor -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">📊 Rentabilidad de Menor a Mayor</h3>
+          <h3 class="font-bold text-slate-800 text-lg">📊 Rentabilidad de Mayor a Menor</h3>
           <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
         </div>
       </div>
       <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
         <div v-if="productosRentabilidad.length === 0" class="text-center py-8 text-slate-400 text-sm italic">Sin datos de rentabilidad</div>
         <div v-for="(p, i) in productosRentabilidad" :key="p.id || i"
-          class="flex items-center justify-between p-3.5 rounded-2xl border transition-all hover:border-indigo-200 group"
-          :class="i < 5 ? 'bg-red-50/50 border-red-100' : 'bg-slate-50/50 border-slate-100'">
+          class="flex items-center justify-between p-3.5 rounded-2xl border border-slate-100 bg-slate-50/30 transition-all hover:border-indigo-200 group">
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-sm"
-              :class="i < 5 ? 'bg-red-500 text-white' : 'bg-white text-slate-400 border border-slate-200'">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-sm bg-white text-slate-900 border border-slate-200">
               {{ i + 1 }}
             </div>
             <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</span>
@@ -370,7 +368,7 @@ const loadKpis = async () => {
             }
         })
 
-        productosRentabilidad.value = calculados.sort((a, b) => a.margen_real - b.margen_real)
+        productosRentabilidad.value = calculados.sort((a, b) => b.margen_real - a.margen_real)
     }
 
     await loadTiemposRebase()
