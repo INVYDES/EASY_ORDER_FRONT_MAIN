@@ -95,7 +95,7 @@
       <!-- SECCIÓN: OPERACIONES -->
       <div>
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
-          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">OPERACIONES PRUEBA</p>
         </div>
         <div class="space-y-1">
           <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
