@@ -95,25 +95,25 @@
         </div>
 
         <!-- Propinas -->
-        <div v-if="data.propinas" class="bg-amber-50/50 border border-amber-100 rounded-xl p-4 mb-4">
-          <p class="text-xs font-bold text-amber-600 uppercase tracking-wide mb-3">Propinas</p>
-          <div class="grid grid-cols-2 gap-3 text-sm text-amber-900">
+        <div v-if="data.propinas" class="bg-gray-50 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Propinas</p>
+          <div class="grid grid-cols-2 gap-3 text-sm">
             <div class="flex justify-between">
-              <span>💵 Efectivo</span>
-              <span class="font-semibold">${{ formatMoney(data.propinas.efectivo) }}</span>
+              <span class="text-gray-600">💵 Efectivo</span>
+              <span class="font-semibold text-gray-800">${{ formatMoney(data.propinas.efectivo) }}</span>
             </div>
             <div class="flex justify-between">
-              <span>💳 Tarjeta</span>
-              <span class="font-semibold">${{ formatMoney(data.propinas.tarjeta) }}</span>
+              <span class="text-gray-600">💳 Tarjeta</span>
+              <span class="font-semibold text-gray-800">${{ formatMoney(data.propinas.tarjeta) }}</span>
             </div>
             <div class="flex justify-between">
-              <span>📲 Transferencia</span>
-              <span class="font-semibold">${{ formatMoney(data.propinas.transferencia) }}</span>
+              <span class="text-gray-600">📲 Transferencia</span>
+              <span class="font-semibold text-gray-800">${{ formatMoney(data.propinas.transferencia) }}</span>
             </div>
           </div>
-          <div class="flex justify-between border-t border-amber-200 pt-2 mt-2 text-sm">
-            <span class="font-bold text-amber-700">Total propinas</span>
-            <span class="font-bold text-amber-700">
+          <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 text-sm">
+            <span class="font-bold text-gray-700">Total propinas</span>
+            <span class="font-bold text-amber-600">
               ${{ formatMoney(data.propinas.total) }}
             </span>
           </div>
