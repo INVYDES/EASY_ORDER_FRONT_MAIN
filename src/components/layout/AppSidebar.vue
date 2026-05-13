@@ -95,7 +95,7 @@
       <!-- SECCIÓN: OPERACIONES -->
       <div>
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
-          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">OPERACIONES PRUEBA</p>
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
         </div>
         <div class="space-y-1">
           <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
@@ -124,7 +124,7 @@
           <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
-            <span v-if="pendingCounts.barra > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.barra }}</span>
+            <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">99</span>
           </RouterLink>
           
           <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
