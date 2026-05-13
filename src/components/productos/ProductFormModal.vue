@@ -156,8 +156,23 @@
               <!-- ── PANEL DE COSTOS Y MÁRGENES ── -->
               <div class="grid grid-cols-2 gap-3">
                 <div class="bg-indigo-600 rounded-2xl p-4 shadow-sm shadow-indigo-200">
-                  <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mb-1">Costo Total (Insumos+MO+Gastos)</p>
-                  <p class="text-2xl font-black text-white">${{ (costoTotalReceta + costoManoObra + costoIndirectos).toFixed(2) }}</p>
+                  <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mb-1">Costo Total de Producción</p>
+                  <p class="text-2xl font-black text-white mb-2">${{ (costoTotalReceta + costoManoObra + costoIndirectos).toFixed(2) }}</p>
+                  
+                  <div class="space-y-0.5 border-t border-indigo-500/30 pt-2">
+                    <div class="flex justify-between text-[9px] font-bold text-indigo-100">
+                      <span>Insumos (Receta):</span>
+                      <span>${{ costoTotalReceta.toFixed(2) }}</span>
+                    </div>
+                    <div class="flex justify-between text-[9px] font-bold text-indigo-100">
+                      <span>Mano de Obra (MO):</span>
+                      <span>${{ costoManoObra.toFixed(2) }}</span>
+                    </div>
+                    <div class="flex justify-between text-[9px] font-bold text-indigo-100">
+                      <span>Gastos Indirectos (5%):</span>
+                      <span>${{ costoIndirectos.toFixed(2) }}</span>
+                    </div>
+                  </div>
                 </div>
                 <div class="rounded-2xl p-4 border" :class="margenEstimado >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'">
                   <p class="text-[10px] font-bold uppercase tracking-widest mb-1" :class="margenEstimado >= 0 ? 'text-emerald-600' : 'text-red-600'">Margen Real (con tu precio)</p>
