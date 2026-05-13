@@ -160,7 +160,7 @@
                   <p class="text-2xl font-black text-white">${{ costoTotalReceta.toFixed(2) }}</p>
                 </div>
                 <div class="rounded-2xl p-4 border" :class="margenEstimado >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'">
-                  <p class="text-[10px] font-bold uppercase tracking-widest mb-1" :class="margenEstimado >= 0 ? 'text-emerald-600' : 'text-red-600'">Margen Estimado</p>
+                  <p class="text-[10px] font-bold uppercase tracking-widest mb-1" :class="margenEstimado >= 0 ? 'text-emerald-600' : 'text-red-600'">Margen Real (con tu precio)</p>
                   <div class="flex items-baseline gap-1">
                     <p class="text-2xl font-black" :class="margenEstimado >= 0 ? 'text-emerald-700' : 'text-red-700'">
                       ${{ margenEstimado.toFixed(2) }}
@@ -176,12 +176,21 @@
                   <p class="text-xs font-black text-violet-700 uppercase tracking-widest">Calculadora de Precio</p>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4">
-                  <div class="space-y-1">
+                <div class="flex gap-4 items-end">
+                  <div class="flex-1 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase">Tiempo Prep. Estimado</label>
-                    <div class="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-violet-100 max-w-[200px]">
+                    <div class="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-violet-100">
                       <input v-model.number="minutosProduccion" type="number" min="0" class="w-full text-sm font-bold focus:outline-none" />
                       <span class="text-[10px] text-gray-400">min</span>
+                    </div>
+                  </div>
+
+                  <!-- Recuadro Margen Sugerido (Tu dibujo) -->
+                  <div v-if="precioSugerido > 0" class="flex-1 p-3 bg-white rounded-xl border border-violet-200 shadow-sm">
+                    <p class="text-[9px] font-black text-violet-400 uppercase mb-1">Margen Sugerido</p>
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-lg font-black text-violet-700">${{ margenSugerido.toFixed(2) }}</span>
+                      <span class="text-[10px] font-bold text-violet-400">{{ margenSugeridoPct }}%</span>
                     </div>
                   </div>
                 </div>
@@ -191,7 +200,9 @@
                     class="w-full py-3 bg-violet-600 text-white text-sm font-bold rounded-xl hover:bg-violet-700 shadow-sm shadow-violet-200 transition">
                     Aplicar Precio Sugerido: ${{ precioSugerido.toFixed(2) }}
                   </button>
-                  <p class="text-[10px] text-center text-violet-500 mt-2">Incluye Mano de Obra, Gastos Indirectos y 30% de Utilidad</p>
+                  <p class="text-[9px] text-center text-violet-500 mt-2 italic">
+                    Referencia: Nómina Mensual ${{ totalSueldosBaseReal.toLocaleString() }} · Incluye Gastos e Utilidad (30%)
+                  </p>
                 </div>
               </div>
 
@@ -341,8 +352,11 @@ const form = reactive({
   nombre: '', descripcion: '', precio: 0, costo: 0, stock: 0,
   stock_minimo: 5, categoria_id: null as number | null,
   activo: true, eliminar_imagen: false,
-  minutos_produccion: 0, nomina_diaria: 0
+  minutos_produccion: 0
 })
+
+const totalSueldosBaseReal = ref(0)
+const loadingNomina = ref(false)
 
 const errors = reactive({ nombre: '', precio: '', categoria_id: '' })
 
@@ -372,11 +386,9 @@ const minutosProduccion = computed({
   get: () => form.minutos_produccion,
   set: (val) => form.minutos_produccion = val
 })
-const nominaDiaria = computed({
-  get: () => form.nomina_diaria,
-  set: (val) => form.nomina_diaria = val
-})
 const minutosTurno      = ref(480) // 8 horas por defecto
+const diasMes           = ref(30)  // Estándar mensual
+const factorCargaSocial = ref(1.66) // Carga social por defecto
 
 // ── Computed: Costos y precio sugerido ───────────────────────────────────────
 const costoTotalReceta = computed(() =>
@@ -384,12 +396,13 @@ const costoTotalReceta = computed(() =>
 )
 
 /**
- * Costo de mano de obra por porción:
- * (nómina diaria × 1.66 carga social) / minutos del turno × minutos de producción
+ * Costo de mano de obra por porción basado en la nómina real:
+ * (Suma sueldos base / minutos operativos al mes) * minutos de producción * factor carga social
  */
 const costoManoObra = computed(() => {
-  if (!nominaDiaria.value || !minutosTurno.value || !minutosProduccion.value) return 0
-  const costoPorMinuto = (nominaDiaria.value * 1.66) / minutosTurno.value
+  if (!totalSueldosBaseReal.value || !minutosTurno.value || !minutosProduccion.value) return 0
+  const minutosTotalesMes = diasMes.value * minutosTurno.value
+  const costoPorMinuto = (totalSueldosBaseReal.value / minutosTotalesMes) * factorCargaSocial.value
   return costoPorMinuto * minutosProduccion.value
 })
 
@@ -405,13 +418,23 @@ const costoUtilidad = computed(() => {
 })
 
 const precioSugerido = computed(() => {
-  if (!receta.value.length) return 0
+  if (!receta.value.length && !minutosProduccion.value) return 0
   return costoBase.value + costoIndirectos.value + costoUtilidad.value
 })
 
 const aplicarPrecioSugerido = () => {
   form.precio = Math.ceil(precioSugerido.value * 100) / 100
 }
+
+const margenSugerido = computed(() => {
+  const ps = precioSugerido.value
+  return ps - costoTotalReceta.value - costoManoObra.value - costoIndirectos.value
+})
+
+const margenSugeridoPct = computed(() => {
+  const ps = precioSugerido.value
+  return ps > 0 ? Math.round((margenSugerido.value / ps) * 100) : 0
+})
 
 // Porciones posibles con el stock actual de ingredientes
 const porcionesDisponibles = computed<number | null>(() => {
@@ -440,7 +463,8 @@ watch(costoTotalReceta, (newVal) => {
 
 const margenEstimado = computed(() => {
   const precio = Number(form.precio) || 0
-  return precio - costoTotalReceta.value
+  const costos = costoTotalReceta.value + costoManoObra.value + costoIndirectos.value
+  return precio - costos
 })
 
 const margenPct = computed(() => {
@@ -468,10 +492,28 @@ const loadTodosIngredientes = async () => {
  * - Mapea cantidad_receta desde el campo correcto del pivot.
  * - NO activa recetaModificada al cargar datos existentes.
  */
+const cargarNominaReal = async () => {
+  loadingNomina.value = true
+  try {
+    const resp = await apiClient.get('/empleados')
+    const emps = resp.data || resp || []
+    if (Array.isArray(emps)) {
+      totalSueldosBaseReal.value = emps.reduce((acc, e) => acc + Number(e.salario_base || 0), 0)
+    }
+  } catch (err) {
+    console.error('Error cargando nomina real:', err)
+  } finally {
+    loadingNomina.value = false
+  }
+}
+
 const cargarReceta = async () => {
   loadingReceta.value = true
   receta.value = []
-  recetaModificada.value = false  // reset — cargar datos no es una modificación
+  recetaModificada.value = false
+  
+  // Cargamos nómina al mismo tiempo
+  cargarNominaReal()
 
   try {
     // Primero cargamos el catálogo de ingredientes (necesario para la búsqueda)
