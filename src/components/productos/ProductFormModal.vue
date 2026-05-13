@@ -244,7 +244,7 @@
                 <div class="relative">
                   <input v-model="busquedaIngrediente" type="text" placeholder="Buscar ingrediente por nombre..."
                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                    @input="buscarIngredientes" />
+                    @input="buscarIngredientes" @focus="buscarIngredientes" />
                 </div>
 
                 <div class="flex items-center gap-4 py-2">
@@ -255,7 +255,7 @@
 
                 <!-- Selector Desplegable Personalizado -->
                 <div class="relative">
-                  <button @click="showDropdown = !showDropdown" type="button"
+                  <button @click.stop="showDropdown = !showDropdown" type="button"
                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-left text-sm text-gray-700 flex items-center justify-between hover:border-indigo-300 transition shadow-sm">
                     <span>-- Selecciona del catálogo --</span>
                     <span class="text-gray-400 transition-transform" :class="showDropdown ? 'rotate-180' : ''">▼</span>
@@ -511,7 +511,8 @@ const cargarReceta = async () => {
 // ── Búsqueda de ingredientes ──────────────────────────────────────────────────
 const buscarIngredientes = () => {
   if (!busquedaIngrediente.value.trim()) {
-    ingredientesBusqueda.value = []
+    // Si no hay búsqueda, mostramos los primeros 8 por defecto
+    ingredientesBusqueda.value = todosIngredientes.value.slice(0, 8)
     return
   }
   const q = busquedaIngrediente.value.toLowerCase()
