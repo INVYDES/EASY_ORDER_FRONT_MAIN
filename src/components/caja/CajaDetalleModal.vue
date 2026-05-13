@@ -88,7 +88,7 @@
           </div>
           <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 text-sm">
             <span class="font-bold text-gray-700">Total ventas</span>
-            <span class="font-bold text-indigo-600">
+            <span class="font-bold text-gray-900">
               ${{ formatMoney(data.ventas.total) }}
             </span>
           </div>
@@ -113,7 +113,7 @@
           </div>
           <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 text-sm">
             <span class="font-bold text-gray-700">Total propinas</span>
-            <span class="font-bold text-amber-600">
+            <span class="font-bold text-gray-900">
               ${{ formatMoney(data.propinas.total) }}
             </span>
           </div>
