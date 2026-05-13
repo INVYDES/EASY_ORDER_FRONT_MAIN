@@ -112,29 +112,6 @@
         </div>
       </div>
 
-      <!-- Listas -->
-      <div v-if="readyOrders.length > 0" class="md:col-span-2 bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
-        <div class="px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span>✅</span>
-            <h2 class="font-bold text-emerald-300 text-sm">Listas para entregar</h2>
-          </div>
-          <span class="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">
-            {{ readyOrders.length }}
-          </span>
-        </div>
-        <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
-          <OrdenCardBebida
-            v-for="order in readyOrders" :key="order.id"
-            :order="order"
-            accion-label="🫡 Marcar como entregada"
-            accion-class="bg-gray-700 hover:bg-gray-600 text-white"
-            :procesando="procesando === order.id"
-            @accion="marcarEntregada(order.id)"
-          />
-        </div>
-      </div>
-
     </div>
 
     <!-- ══ MODAL INGREDIENTES ══ -->
