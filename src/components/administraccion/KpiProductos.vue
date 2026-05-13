@@ -131,28 +131,29 @@
       </div>
     </div>
 
-    <!-- RENTABILIDAD — Menor a Mayor (con alertas Top 5 inferior) -->
+    <!-- RENTABILIDAD — Menor a Mayor -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">⚠️ Rentabilidad de Menor a Mayor</h3>
-          <p class="text-xs text-slate-400">Los productos con margen más crítico aparecen primero. Se actualiza con costos de ingredientes y nómina.</p>
+          <h3 class="font-bold text-slate-800 text-lg">📊 Rentabilidad de Menor a Mayor</h3>
+          <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
         </div>
       </div>
       <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
         <div v-if="productosRentabilidad.length === 0" class="text-center py-8 text-slate-400 text-sm italic">Sin datos de rentabilidad</div>
         <div v-for="(p, i) in productosRentabilidad" :key="p.id || i"
-          class="flex items-center justify-between p-3 rounded-xl border transition-colors"
-          :class="i < 5 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'">
-          <div class="flex items-center gap-2">
-            <span v-if="i < 5" class="text-base">⚠️</span>
-            <span v-else class="text-xs font-bold text-slate-400 w-5">{{ i+1 }}</span>
-            <span class="text-sm font-semibold text-slate-700">{{ p.nombre }}</span>
-            <span v-if="p.categoria" class="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">{{ p.categoria }}</span>
+          class="flex items-center justify-between p-3.5 rounded-2xl border transition-all hover:border-indigo-200 group"
+          :class="i < 5 ? 'bg-red-50/50 border-red-100' : 'bg-slate-50/50 border-slate-100'">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-sm"
+              :class="i < 5 ? 'bg-red-500 text-white' : 'bg-white text-slate-400 border border-slate-200'">
+              {{ i + 1 }}
+            </div>
+            <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</span>
           </div>
           <div class="text-right">
-            <p class="text-sm font-black" :class="(p.margen || 0) < 0 ? 'text-red-600' : 'text-slate-700'">${{ fm(p.margen) }}</p>
-            <p class="text-[10px] text-slate-400">margen unit.</p>
+            <p class="text-sm font-black" :class="(p.margen_real || 0) < 0 ? 'text-red-600' : 'text-emerald-600'">${{ fm(p.margen_real) }}</p>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Margen Neto</p>
           </div>
         </div>
       </div>
@@ -217,6 +218,11 @@ const productosRentabilidad = ref([])
 const productosRebase = ref([])
 const tiempoPeriodo = ref('hoy')
 const kpiMeseroId = ref('')
+
+// Datos para cálculos de rentabilidad
+const todosLosProductos = ref([])
+const ingredientesGlobales = ref([])
+const nominaMensual = ref(0)
 
 const kpiPeriodos = [
   { key: 'total', label: 'Todo' },
@@ -308,28 +314,62 @@ const loadKpis = async () => {
     const fFin = kpiFechaFin.value ? `&fecha_fin=${kpiFechaFin.value}` : ''
     const uId  = kpiMeseroId.value ? `&user_id=${kpiMeseroId.value}` : ''
 
-    const [vRes, pRes, rentRes] = await Promise.all([
+    const [vRes, pRes, prodMaster, ingRes, nomRes] = await Promise.all([
       fetch(`${props.apiUrl}/reportes/ventas?grupo=${kpiGrupo.value}${fIni}${fFin}${uId}`, { headers: props.getHeaders() }),
       fetch(`${props.apiUrl}/reportes/productos-mas-vendidos?limite=200${fIni}${fFin}${uId}`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/reportes/rentabilidad-productos?${fIni}${fFin}${uId}`, { headers: props.getHeaders() }).catch(() => null),
+      fetch(`${props.apiUrl}/productos?per_page=1000`, { headers: props.getHeaders() }),
+      fetch(`${props.apiUrl}/ingredientes`, { headers: props.getHeaders() }),
+      fetch(`${props.apiUrl}/empleados`, { headers: props.getHeaders() }),
     ])
 
     const vData = await vRes.json()
     const pData = await pRes.json()
+    const pmData = await prodMaster.json()
+    const iData = await ingRes.json()
+    const nData = await nomRes.json()
 
     if (vData.success) kpiData.value = vData.data
     if (pData.success) topProductos.value = pData.data || []
+    
+    // Cargar datos para cálculos
+    if (iData.success || iData.data) ingredientesGlobales.value = iData.data || iData || []
+    
+    // Calcular nómina mensual (Compromiso Mensual)
+    if (nData.success || nData.data) {
+        const emps = nData.data || nData || []
+        nominaMensual.value = emps.reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
+    }
 
-    // Rentabilidad de menor a mayor
-    if (rentRes) {
-      const rentData = await rentRes.json()
-      if (rentData.success && rentData.data) {
-        productosRentabilidad.value = [...rentData.data].sort((a, b) => (a.margen || 0) - (b.margen || 0))
-      }
-    } else if (topProductos.value.length) {
-      // Fallback: calcular desde productos
-      productosRentabilidad.value = [...topProductos.value]
-        .sort((a, b) => (a.margen || a.precio - a.costo || 0) - (b.margen || b.precio - b.costo || 0))
+    // Calcular Rentabilidad Real
+    if (pmData.success || pmData.data) {
+        const listaMaster = pmData.data || pmData || []
+        
+        const calculados = listaMaster.map(p => {
+            // 1. Insumos
+            const costoInsumos = (p.ingredientes || []).reduce((sum, ing) => {
+                const maestro = ingredientesGlobales.value.find(i => i.id === (ing.id || ing.ingrediente_id))
+                const costoU = parseFloat(maestro?.costo_unitario || 0)
+                const cant = parseFloat(ing.cantidad_necesaria || ing.cantidad || 0)
+                return sum + (costoU * cant)
+            }, 0)
+
+            // 2. Mano de Obra (MO)
+            const minProd = parseFloat(p.minutos_produccion || 0)
+            const costoMO = (nominaMensual.value / 14400) * 1.66 * minProd
+
+            // 3. Indirectos (5%)
+            const costoIndirecto = (costoInsumos + costoMO) * 0.05
+
+            const costoTotal = costoInsumos + costoMO + costoIndirecto
+            const margenReal = parseFloat(p.precio || 0) - costoTotal
+
+            return {
+                ...p,
+                margen_real: margenReal
+            }
+        })
+
+        productosRentabilidad.value = calculados.sort((a, b) => a.margen_real - b.margen_real)
     }
 
     await loadTiemposRebase()
