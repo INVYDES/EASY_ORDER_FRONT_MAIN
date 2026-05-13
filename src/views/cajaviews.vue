@@ -46,6 +46,12 @@ const transferSales = ref(0)
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
 
+// ── Propinas (Oficiales de API) ──
+const propinasEfectivo = ref(0)
+const propinasTarjeta = ref(0)
+const propinasTransferencia = ref(0)
+const propinasTotal = ref(0)
+
 // ── Datos ─────────────────────────────────────────────────────────────────────
 const orders = ref([])
 const movements = ref([])
@@ -76,22 +82,14 @@ const ordenesEnProceso = computed(() => {
   }).length
 })
 const totalVentasDia = computed(() => efectivoSales.value + cardSales.value + transferSales.value)
-const totalTips = computed(() => closedOrders.value.reduce((s, o) => s + Number(o.propina || 0), 0))
+const totalTips = computed(() => propinasTotal.value)
 
 const tipsBreakdown = computed(() => {
-  const metodos = [
-    { metodo: 'Efectivo', keys: ['efectivo', 'EFECTIVO', null, undefined, ''], icon: '💵', total: 0 },
-    { metodo: 'Tarjeta', keys: ['tarjeta', 'TARJETA'], icon: '💳', total: 0 },
-    { metodo: 'Transferencia', keys: ['transferencia', 'TRANSFERENCIA'], icon: '📲', total: 0 },
-  ]
-
-  metodos.forEach(m => {
-    m.total = closedOrders.value
-      .filter(o => m.keys.includes(o.metodo_pago))
-      .reduce((s, o) => s + Number(o.propina || 0), 0)
-  })
-
-  return metodos.filter(i => i.total > 0)
+  return [
+    { metodo: 'Efectivo', icon: '💵', total: propinasEfectivo.value },
+    { metodo: 'Tarjeta', icon: '💳', total: propinasTarjeta.value },
+    { metodo: 'Transferencia', icon: '📲', total: propinasTransferencia.value },
+  ].filter(i => i.total > 0)
 })
 
 const corteFecha = computed(() => new Date().toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' }))
@@ -207,10 +205,24 @@ const loadCajaEstado = async () => {
       cajaOpenedAt.value = d.opened_at || null
       openingAmount.value = d.opening_amount || 0
       cashInRegister.value = d.cash_in_register || 0
-      efectivoSales.value = d.daily_sales || d.ventas_efectivo || 0
-      cardSales.value = d.card_sales || d.ventas_tarjeta || 0
-      transferSales.value = d.transfer_sales || d.ventas_transferencia || 0
+      efectivoSales.value = d.daily_sales || 0
+      cardSales.value = d.card_sales || 0
+      transferSales.value = d.transfer_sales || 0
+      
+      // Propinas
+      propinasEfectivo.value = d.propinas_efectivo || 0
+      propinasTarjeta.value = d.propinas_tarjeta || 0
+      propinasTransferencia.value = d.propinas_transferencia || 0
+      propinasTotal.value = d.total_propinas || 0
+
       if (cajaAbierta.value) showOpenModal.value = false
+    } else {
+      // Si no hay caja abierta o falla, limpiar datos
+      cajaAbierta.value = false
+      propinasEfectivo.value = 0
+      propinasTarjeta.value = 0
+      propinasTransferencia.value = 0
+      propinasTotal.value = 0
     }
   } catch (e) {
     console.error('Error caja:', e)
@@ -223,9 +235,15 @@ const actualizarTotalesCaja = async () => {
     if (!(data.success || data.data)) return
     const d = data.data || data
     cashInRegister.value = d.cash_in_register || 0
-    efectivoSales.value = d.daily_sales || d.ventas_efectivo || 0
-    cardSales.value = d.card_sales || d.ventas_tarjeta || 0
-    transferSales.value = d.transfer_sales || d.ventas_transferencia || 0
+    efectivoSales.value = d.daily_sales || 0
+    cardSales.value = d.card_sales || 0
+    transferSales.value = d.transfer_sales || 0
+    
+    // Propinas
+    propinasEfectivo.value = d.propinas_efectivo || 0
+    propinasTarjeta.value = d.propinas_tarjeta || 0
+    propinasTransferencia.value = d.propinas_transferencia || 0
+    propinasTotal.value = d.total_propinas || 0
   } catch { }
 }
 
