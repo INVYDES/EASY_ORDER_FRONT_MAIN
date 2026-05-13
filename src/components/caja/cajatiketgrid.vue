@@ -329,6 +329,7 @@
           </div>
           <p style="margin: 2px 0;"><strong>Atendió:</strong> {{ userName }}</p>
           <p style="margin: 2px 0;"><strong>Pago:</strong> {{ (metodoPago || 'EFECTIVO').toUpperCase() }}</p>
+          <p v-if="folio && folio.trim()" style="margin: 2px 0;"><strong>Referencia:</strong> {{ folio.toUpperCase() }}</p>
         </div>
         <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 4mm;">
           <thead>
@@ -664,12 +665,14 @@ const cobrarOrden = async () => {
       dataCerrar = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/cerrar`, {
         metodo_pago: metodoPago.value,
         propina:     propinaCalculada.value,
+        referencia:  folio.value.trim(),
       })
     } catch (e) {
       dataCerrar = await apiClient.put(`/ordenes/${ordenCobrar.value.id}`, {
         estado:      'CERRADA',
         metodo_pago: metodoPago.value,
         propina:     propinaCalculada.value,
+        referencia:  folio.value.trim(),
       })
     }
     if (!dataCerrar?.success && !dataCerrar?.data) {
