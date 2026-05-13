@@ -306,11 +306,12 @@ const fetchPendingCounts = async () => {
   if (!props.restauranteActivo) return
   try {
     const { data } = await apiClient.get('/ordenes/pendientes/conteo')
+    console.log('📊 Sidebar Counts:', data.data)
     if (data.success) {
       pendingCounts.value = data.data
     }
   } catch (error) {
-    console.error('Error fetching pending counts:', error)
+    console.error('❌ Error fetching sidebar counts:', error)
   }
 }
 
