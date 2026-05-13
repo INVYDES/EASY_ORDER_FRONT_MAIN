@@ -156,8 +156,8 @@
               <!-- ── PANEL DE COSTOS Y MÁRGENES ── -->
               <div class="grid grid-cols-2 gap-3">
                 <div class="bg-indigo-600 rounded-2xl p-4 shadow-sm shadow-indigo-200">
-                  <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mb-1">Costo de Producción</p>
-                  <p class="text-2xl font-black text-white">${{ costoTotalReceta.toFixed(2) }}</p>
+                  <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mb-1">Costo Total (Insumos+MO+Gastos)</p>
+                  <p class="text-2xl font-black text-white">${{ (costoTotalReceta + costoManoObra + costoIndirectos).toFixed(2) }}</p>
                 </div>
                 <div class="rounded-2xl p-4 border" :class="margenEstimado >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'">
                   <p class="text-[10px] font-bold uppercase tracking-widest mb-1" :class="margenEstimado >= 0 ? 'text-emerald-600' : 'text-red-600'">Margen Real (con tu precio)</p>
@@ -641,7 +641,6 @@ const resetForm = () => {
   imagePreview.value     = p?.imagen_url   ?? null
   newImageFile.value     = null
   form.minutos_produccion = p?.minutos_produccion ?? 0
-  form.nomina_diaria     = p?.nomina_diaria ?? 0
   errors.nombre          = ''
   errors.precio        = ''
   errors.categoria_id  = ''
@@ -683,7 +682,6 @@ const save = async () => {
       if (form.categoria_id) fd.append('categoria_id', String(form.categoria_id))
       fd.append('activo',             form.activo ? '1' : '0')
       fd.append('minutos_produccion', String(form.minutos_produccion))
-      fd.append('nomina_diaria',      String(form.nomina_diaria))
       fd.append('imagen',             newImageFile.value)
       if (props.product) fd.append('_method', 'PUT')
 
@@ -702,7 +700,6 @@ const save = async () => {
         activo:             form.activo,
         eliminar_imagen:    form.eliminar_imagen,
         minutos_produccion: form.minutos_produccion,
-        nomina_diaria:      form.nomina_diaria,
       })
     }
 
