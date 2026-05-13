@@ -219,6 +219,12 @@ const loadCajaEstado = async () => {
     } else {
       // Si no hay caja abierta o falla, limpiar datos
       cajaAbierta.value = false
+      openingAmount.value = 0
+      cashInRegister.value = 0
+      efectivoSales.value = 0
+      cardSales.value = 0
+      transferSales.value = 0
+      movements.value = []
       propinasEfectivo.value = 0
       propinasTarjeta.value = 0
       propinasTransferencia.value = 0
