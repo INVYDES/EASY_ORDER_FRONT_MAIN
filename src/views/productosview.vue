@@ -50,6 +50,9 @@
         </span>
       </button>
     </div>
+    
+    <!-- Sugerencia Estratégica Visible Siempre -->
+    <BundleStrategyCard :products="allProductsForSelection" />
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
     <div v-if="activeTab === 'paquetes'" class="space-y-6">
@@ -71,9 +74,6 @@
         @toggle-active="handleToggleActivePaquete"
         @change-page="changePagePaquetes"
       />
-
-      <!-- Sugerencia Estratégica movida de Métricas -->
-      <BundleStrategyCard :products="allProductsForSelection" />
     </div>
 
     <!-- ── PRODUCTOS ──────────────────────────────────────── -->
