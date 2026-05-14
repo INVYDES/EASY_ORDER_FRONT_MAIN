@@ -156,7 +156,6 @@
           <div class="flex items-center justify-between">
             <div>
               <h4 class="text-sm font-black text-indigo-900 uppercase tracking-wider">💰 Análisis Financiero del Paquete</h4>
-              <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-0.5">Basado en componentes y nómina real</p>
             </div>
           </div>
 
