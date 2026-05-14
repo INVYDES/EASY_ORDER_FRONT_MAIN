@@ -50,7 +50,6 @@
         </span>
       </button>
     </div>
-    </div>
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
     <div v-if="activeTab === 'paquetes'" class="space-y-6">
