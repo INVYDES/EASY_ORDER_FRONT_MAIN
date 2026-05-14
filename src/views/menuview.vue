@@ -450,10 +450,23 @@ const cargarRestauranteActivo = async () => {
     if (data?.success) {
       const user = data.data || data
       const ra = user?.restaurante_activo
-      if (ra && typeof ra === 'object') { restauranteSeleccionado.value = ra; return ra.id }
+      if (ra && typeof ra === 'object') { 
+        restauranteSeleccionado.value = ra
+        localStorage.setItem('restaurante_id_activo', ra.id)
+        return ra.id 
+      }
+    }
+    // Fallback: Si no viene en el /me, usar el guardado en localStorage
+    const savedId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
+    if (savedId) {
+      console.warn('⚠️ Restaurante no vino en /me, usando fallback de localStorage:', savedId)
+      return savedId
     }
     return null
-  } catch { return null }
+  } catch (err) { 
+    console.error('❌ Error cargando /me:', err)
+    return localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
+  }
 }
 
 const cargarProductos = async (restauranteId) => {
@@ -600,8 +613,27 @@ const handleCheckout = async (checkoutData) => {
 }
 
 onMounted(async () => {
-  const restId = await cargarRestauranteActivo()
-  if (restId) { await Promise.all([cargarProductos(restId), cargarOfertas(restId), cargarPaquetes(restId)]) }
+  console.log('🚀 Iniciando Kiosko de Menú...');
+  try {
+    const restId = await cargarRestauranteActivo()
+    console.log('📍 Restaurante ID identificado:', restId);
+    
+    if (restId) { 
+      // Cargamos productos primero ya que es lo más importante
+      await cargarProductos(restId).catch(e => console.error('Error productos:', e))
+      
+      // El resto puede fallar sin bloquear
+      cargarOfertas(restId).catch(e => console.error('Error ofertas:', e))
+      cargarPaquetes(restId).catch(e => console.error('Error paquetes:', e))
+    } else {
+      console.error('❌ No se pudo identificar el restaurante activo');
+    }
+  } catch (err) {
+    console.error('🔥 Error crítico en inicialización:', err)
+  } finally {
+    loading.value.productos = false
+    console.log('✅ Carga finalizada, loader apagado');
+  }
 })
 </script>
 
