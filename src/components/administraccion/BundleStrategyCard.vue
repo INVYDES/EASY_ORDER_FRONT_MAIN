@@ -75,12 +75,15 @@ const props = defineProps({
 })
 
 onMounted(() => {
-  console.log('📊 BundleStrategyCard montado. Productos recibidos:', props.products?.length)
+  console.log('📊 BundleStrategyCard montado. Productos:', props.products?.length)
 })
 
 const num = (v) => {
   if (v === null || v === undefined) return 0
-  const n = Number(v)
+  if (typeof v === 'number') return v
+  // Limpiar $, comas y espacios si es un string
+  const clean = String(v).replace(/[$,\s]/g, '')
+  const n = parseFloat(clean)
   return isNaN(n) ? 0 : n
 }
 
@@ -90,65 +93,82 @@ const bundle = computed(() => {
   const source = Array.isArray(props.products) ? props.products : []
   
   if (source.length === 0) {
-    return { kitchen: 'N/A', drink: 'N/A', dessert: 'N/A' }
+    return { kitchen: 'Cargando...', drink: 'Cargando...', dessert: 'Cargando...' }
+  }
+
+  const result = {
+    kitchen: 'N/A', kitchenMargen: 0,
+    drink: 'N/A', drinkVentas: 0,
+    dessert: 'N/A', dessertVentas: 0
   }
 
   try {
-    // 0. Determinar umbral dinámico
     const safeProducts = source.filter(p => p && typeof p === 'object')
-    const excludeCount = safeProducts.length > 10 ? 10 : Math.ceil(safeProducts.length * 0.3)
+    
+    // Top ventas para exclusión (usamos copia para no mutar)
+    const sortedBySales = [...safeProducts].sort((a, b) => num(b.ventas) - num(a.ventas))
+    const excludeCount = Math.max(2, Math.ceil(safeProducts.length * 0.2))
+    const topExclusionIds = sortedBySales.slice(0, excludeCount).map(p => p.id)
 
-    // Top ventas para exclusión
-    const topExclusion = [...safeProducts]
-      .sort((a, b) => num(b.ventas) - num(a.ventas))
-      .slice(0, excludeCount)
-      .map(p => p.id)
-
-    // Helpers de categorías flexibles
+    // Helpers de categorías
     const isDrink = (p) => {
-      const c = (p?.categoria || '').toLowerCase()
-      return ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas', 'barra'].includes(c)
+      const c = String(p?.categoria || '').toLowerCase()
+      return ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas', 'barra', 'barras'].includes(c)
     }
     const isDessert = (p) => {
-      const c = (p?.categoria || '').toLowerCase()
-      return ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles'].includes(c)
+      const c = String(p?.categoria || '').toLowerCase()
+      return ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles', 'nieve', 'helado'].includes(c)
     }
     const isKitchen = (p) => !isDrink(p) && !isDessert(p)
 
-    // 1. Cocina: Mayor margen, NO en el top de ventas actual
-    const kitchenList = safeProducts.filter(p => isKitchen(p) && !topExclusion.includes(p.id))
-    const kitchen = kitchenList.length > 0 
-      ? kitchenList.sort((a, b) => (num(b.precio) - num(b.costo)) - (num(a.precio) - num(a.costo)))[0]
-      : [...safeProducts].sort((a, b) => (num(b.precio) - num(b.costo)) - (num(a.precio) - num(a.costo)))[0]
+    // 1. Cocina (Try individual)
+    try {
+      const kitchenOptions = safeProducts.filter(p => isKitchen(p) && !topExclusionIds.includes(p.id))
+      const k = kitchenOptions.length > 0 
+        ? kitchenOptions.sort((a, b) => (num(b.precio) - num(b.costo)) - (num(a.precio) - num(a.costo)))[0]
+        : safeProducts.sort((a, b) => (num(b.precio) - num(b.costo)) - (num(a.precio) - num(a.costo)))[0]
+      
+      if (k) {
+        result.kitchen = k.nombre
+        result.kitchenMargen = num(k.precio) - num(k.costo)
+      }
+    } catch (e1) { console.error('Error calculando Cocina:', e1) }
 
-    // 2. Bebida: #1 en ventas
-    const drinkList = safeProducts.filter(p => isDrink(p))
-    const drink = drinkList.length > 0
-      ? drinkList.sort((a, b) => num(b.ventas) - num(a.ventas))[0]
-      : null
+    // 2. Bebida (Try individual)
+    try {
+      const drinkOptions = safeProducts.filter(p => isDrink(p))
+      const d = drinkOptions.length > 0
+        ? drinkOptions.sort((a, b) => num(b.ventas) - num(a.ventas))[0]
+        : null
+      
+      if (d) {
+        result.drink = d.nombre
+        result.drinkVentas = num(d.ventas)
+      }
+    } catch (e2) { console.error('Error calculando Bebida:', e2) }
 
-    // 3. Postre: Menor volumen con ROI positivo
-    const dessertList = safeProducts.filter(p => isDessert(p) && num(p.precio) > num(p.costo))
-    const dessert = dessertList.length > 0
-      ? dessertList.sort((a, b) => num(a.ventas) - num(b.ventas))[0]
-      : safeProducts.filter(p => isDessert(p))[0]
+    // 3. Postre (Try individual)
+    try {
+      const dessertOptions = safeProducts.filter(p => isDessert(p))
+      const ds = dessertOptions.length > 0
+        ? dessertOptions.sort((a, b) => num(a.ventas) - num(b.ventas))[0] // Menor volumen
+        : null
+      
+      if (ds) {
+        result.dessert = ds.nombre
+        result.dessertVentas = num(ds.ventas)
+      }
+    } catch (e3) { console.error('Error calculando Postre:', e3) }
 
-    return {
-      kitchen: kitchen?.nombre || 'N/A',
-      kitchenMargen: kitchen ? num(kitchen.precio) - num(kitchen.costo) : null,
-      drink: drink?.nombre || 'N/A',
-      drinkVentas: drink?.ventas || 0,
-      dessert: dessert?.nombre || 'N/A',
-      dessertVentas: dessert?.ventas || 0,
-    }
   } catch (err) {
-    console.error('❌ Error en lógica de BundleStrategyCard:', err)
-    return { kitchen: 'Reintentando...', drink: 'Reintentando...', dessert: 'Reintentando...' }
+    console.error('❌ Error general en BundleStrategyCard:', err)
   }
+
+  return result
 })
 
 const executeBundle = () => {
-  if (bundle.value.kitchen === 'N/A') return
+  if (bundle.value.kitchen === 'N/A' || bundle.value.kitchen === 'Cargando...') return
   alert(`Paquete estratégico enviado:\n🍳 ${bundle.value.kitchen}\n🥤 ${bundle.value.drink}\n🍮 ${bundle.value.dessert}`)
 }
 </script>
