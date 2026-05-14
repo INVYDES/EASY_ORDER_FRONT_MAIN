@@ -68,56 +68,70 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 const props = defineProps({
   products: { type: Array, required: true, default: () => [] }
 })
 
+onMounted(() => {
+  console.log('📊 BundleStrategyCard montado. Productos recibidos:', props.products?.length)
+})
+
 const fmtM = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
 
 const bundle = computed(() => {
-  if (!props.products || props.products.length === 0) return { kitchen: 'N/A', drink: 'N/A', dessert: 'N/A' }
+  console.log('🔄 Recalculando bundle sugerido con', props.products?.length, 'productos');
+  
+  if (!props.products || props.products.length === 0) {
+    return { kitchen: 'N/A', drink: 'N/A', dessert: 'N/A' }
+  }
 
-  // 0. Determinar umbral dinámico (si hay pocos, solo excluimos los 2 mejores para Cocina)
-  const excludeCount = props.products.length > 10 ? 10 : Math.ceil(props.products.length * 0.3);
+  try {
+    // 0. Determinar umbral dinámico
+    const safeProducts = props.products.filter(p => p && typeof p === 'object');
+    const excludeCount = safeProducts.length > 10 ? 10 : Math.ceil(safeProducts.length * 0.3);
 
-  // Top ventas para exclusión
-  const topExclusion = [...props.products]
-    .sort((a, b) => (b.ventas || 0) - (a.ventas || 0))
-    .slice(0, excludeCount)
-    .map(p => p.id)
+    // Top ventas para exclusión
+    const topExclusion = [...safeProducts]
+      .sort((a, b) => (Number(b.ventas) || 0) - (Number(a.ventas) || 0))
+      .slice(0, excludeCount)
+      .map(p => p.id)
 
-  // Helpers de categorías flexibles
-  const isDrink = (cat) => ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas'].includes(cat?.toLowerCase());
-  const isDessert = (cat) => ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles'].includes(cat?.toLowerCase());
-  const isKitchen = (cat) => !isDrink(cat) && !isDessert(cat);
+    // Helpers de categorías flexibles
+    const isDrink = (cat) => ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas'].includes(cat?.toLowerCase());
+    const isDessert = (cat) => ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles'].includes(cat?.toLowerCase());
+    const isKitchen = (cat) => !isDrink(cat) && !isDessert(cat);
 
-  // 1. Cocina: Mayor margen, NO en el top de ventas actual
-  const kitchen = props.products
-    .filter(p => isKitchen(p.categoria) && !topExclusion.includes(p.id))
-    .sort((a, b) => ((b.precio || 0) - (b.costo || 0)) - ((a.precio || 0) - (a.costo || 0)))[0] 
-    || props.products.sort((a, b) => ((b.precio || 0) - (b.costo || 0)) - ((a.precio || 0) - (a.costo || 0)))[0];
+    // 1. Cocina: Mayor margen, NO en el top de ventas actual
+    const kitchen = safeProducts
+      .filter(p => isKitchen(p.categoria) && !topExclusion.includes(p.id))
+      .sort((a, b) => ((Number(b.precio) || 0) - (Number(b.costo) || 0)) - ((Number(a.precio) || 0) - (Number(a.costo) || 0)))[0] 
+      || safeProducts.sort((a, b) => ((Number(b.precio) || 0) - (Number(b.costo) || 0)) - ((Number(a.precio) || 0) - (Number(a.costo) || 0)))[0];
 
-  // 2. Bebida: #1 en ventas
-  const drink = props.products
-    .filter(p => isDrink(p.categoria))
-    .sort((a, b) => (b.ventas || 0) - (a.ventas || 0))[0]
-    || props.products.filter(p => isDrink(p.categoria))[0];
+    // 2. Bebida: #1 en ventas
+    const drink = safeProducts
+      .filter(p => isDrink(p.categoria))
+      .sort((a, b) => (Number(b.ventas) || 0) - (Number(a.ventas) || 0))[0]
+      || safeProducts.filter(p => isDrink(p.categoria))[0];
 
-  // 3. Postre: Menor volumen con ROI positivo
-  const dessert = props.products
-    .filter(p => isDessert(p.categoria) && (p.precio || 0) > (p.costo || 0))
-    .sort((a, b) => (a.ventas || 0) - (b.ventas || 0))[0]
-    || props.products.filter(p => isDessert(p.categoria))[0];
+    // 3. Postre: Menor volumen con ROI positivo
+    const dessert = safeProducts
+      .filter(p => isDessert(p.categoria) && (Number(p.precio) || 0) > (Number(p.costo) || 0))
+      .sort((a, b) => (Number(a.ventas) || 0) - (Number(b.ventas) || 0))[0]
+      || safeProducts.filter(p => isDessert(p.categoria))[0];
 
-  return {
-    kitchen: kitchen?.nombre || 'N/A',
-    kitchenMargen: kitchen ? (kitchen.precio || 0) - (kitchen.costo || 0) : null,
-    drink: drink?.nombre || 'N/A',
-    drinkVentas: drink?.ventas || 0,
-    dessert: dessert?.nombre || 'N/A',
-    dessertVentas: dessert?.ventas || 0,
+    return {
+      kitchen: kitchen?.nombre || 'N/A',
+      kitchenMargen: kitchen ? (Number(kitchen.precio) || 0) - (Number(kitchen.costo) || 0) : null,
+      drink: drink?.nombre || 'N/A',
+      drinkVentas: drink?.ventas || 0,
+      dessert: dessert?.nombre || 'N/A',
+      dessertVentas: dessert?.ventas || 0,
+    }
+  } catch (err) {
+    console.error('❌ Error en lógica de BundleStrategyCard:', err);
+    return { kitchen: 'Error', drink: 'Error', dessert: 'Error' }
   }
 })
 
