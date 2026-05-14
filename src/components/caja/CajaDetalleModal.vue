@@ -31,12 +31,12 @@
         <div class="grid grid-cols-2 gap-3 mb-5">
           <div class="bg-emerald-50 rounded-xl p-4">
             <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide mb-1">Apertura</p>
-            <p class="text-sm font-bold text-gray-800">{{ data.caja.fecha_apertura }}</p>
+            <p class="text-sm font-bold text-gray-800">{{ data.caja.fecha_apertura?.split(' ')[0] }} {{ toLocalTime(data.caja.fecha_apertura) }}</p>
             <p class="text-xs text-gray-500 mt-1">{{ data.caja.abierto_por }}</p>
           </div>
           <div class="bg-red-50 rounded-xl p-4">
             <p class="text-xs text-red-500 font-semibold uppercase tracking-wide mb-1">Cierre</p>
-            <p class="text-sm font-bold text-gray-800">{{ data.caja.fecha_cierre || '—' }}</p>
+            <p class="text-sm font-bold text-gray-800">{{ data.caja.fecha_cierre ? data.caja.fecha_cierre.split(' ')[0] : '' }} {{ toLocalTime(data.caja.fecha_cierre) }}</p>
             <p class="text-xs text-gray-500 mt-1">{{ data.caja.cerrado_por || '—' }}</p>
           </div>
         </div>
@@ -147,7 +147,7 @@
                     <p class="text-[11px] font-bold text-gray-700" :class="{ 'text-sky-700': m.descripcion === 'CORTE X' }">
                       {{ m.descripcion }}
                     </p>
-                    <p class="text-[9px] text-gray-400">{{ m.created_at_formateado || m.fecha }}</p>
+                    <p class="text-[9px] text-gray-400">{{ toLocalTime(m.created_at || m.fecha) }}</p>
                   </div>
                 </div>
                 <span class="text-xs font-black" :class="m.tipo === 'ingreso' ? 'text-emerald-600' : 'text-red-500'">
@@ -204,6 +204,26 @@ const getHeaders = () => {
 
 const formatMoney = (v) => v === undefined || v === null ? '0.00' : Number(v).toFixed(2)
 
+// Helper robusto para convertir fecha del servidor (DD/MM/YYYY HH:mm) a hora local
+const toLocalTime = (dateStr) => {
+  if (!dateStr) return '—';
+  try {
+    let d;
+    // Si el formato es DD/MM/YYYY HH:mm:ss
+    if (dateStr.includes('/')) {
+      const [fecha, hora] = dateStr.split(' ');
+      const [dia, mes, anio] = fecha.split('/');
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+    } else {
+      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+    }
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const loadDetalle = async () => {
   loading.value = true
   error.value   = ''
@@ -232,22 +252,12 @@ const imprimir = () => {
   const d = data.value
   const win = window.open('', '_blank', 'width=400,height=700')
   
-  // Helper para convertir fecha del servidor a hora local (HH:mm)
-  const toLocalTime = (dateStr) => {
-    if (!dateStr) return '—';
-    // Intentar manejar formato "YYYY-MM-DD HH:mm:ss" o ISO
-    const date = new Date(dateStr.replace(' ', 'T') + 'Z'); 
-    // Si la conversión falla o la fecha es inválida, intentar directo
-    const finalDate = isNaN(date.getTime()) ? new Date(dateStr) : date;
-    return finalDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
-  };
-
   // Construir filas de movimientos detallados
   let movimientosHTML = '';
   if (d.movimientos.lista && d.movimientos.lista.length > 0) {
     movimientosHTML = d.movimientos.lista.map(m => `
       <tr>
-        <td style="font-size:10px;">${toLocalTime(m.created_at)} ${m.descripcion}</td>
+        <td style="font-size:10px;">${toLocalTime(m.created_at || m.fecha)} ${m.descripcion}</td>
         <td class="right" style="font-size:10px;">${m.tipo === 'ingreso' ? '+' : '-'}$${Number(m.monto).toFixed(2)}</td>
       </tr>
     `).join('');
