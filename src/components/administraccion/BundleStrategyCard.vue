@@ -81,8 +81,7 @@ onMounted(() => {
 const num = (v) => {
   if (v === null || v === undefined) return 0
   if (typeof v === 'number') return v
-  // Limpiar $, comas y espacios si es un string
-  const clean = String(v).replace(/[$,\s]/g, '')
+  const clean = String(v).replace(/[$,\s%]/g, '')
   const n = parseFloat(clean)
   return isNaN(n) ? 0 : n
 }
@@ -96,6 +95,11 @@ const bundle = computed(() => {
     return { kitchen: 'Cargando...', drink: 'Cargando...', dessert: 'Cargando...' }
   }
 
+  // Debug para ver qué campos manda el servidor realmente
+  if (source.length > 0) {
+    console.log('🔍 Muestra de producto recibido:', JSON.parse(JSON.stringify(source[0])));
+  }
+
   const result = {
     kitchen: 'N/A', kitchenMargen: 0,
     drink: 'N/A', drinkVentas: 0,
@@ -105,12 +109,15 @@ const bundle = computed(() => {
   try {
     const safeProducts = source.filter(p => p && typeof p === 'object')
     
-    // Top ventas para exclusión (usamos copia para no mutar)
-    const sortedBySales = [...safeProducts].sort((a, b) => num(b.ventas) - num(a.ventas))
+    // Función interna para obtener ventas de forma flexible
+    const getVentas = (p) => num(p.ventas_count) || num(p.ventas) || num(p.cantidad_vendida) || 0;
+
+    // Top ventas para exclusión
+    const sortedBySales = [...safeProducts].sort((a, b) => getVentas(b) - getVentas(a))
     const excludeCount = Math.max(2, Math.ceil(safeProducts.length * 0.2))
     const topExclusionIds = sortedBySales.slice(0, excludeCount).map(p => p.id)
 
-    // Helpers de categorías robustos (pueden venir como string o objeto)
+    // Helpers de categorías
     const getCatName = (p) => {
       if (!p) return ''
       if (typeof p.categoria === 'object' && p.categoria !== null) return String(p.categoria.nombre || '').toLowerCase()
@@ -127,11 +134,11 @@ const bundle = computed(() => {
     }
     const isKitchen = (p) => {
       const c = getCatName(p)
-      if (!c) return true // Fallback a cocina si no hay categoría
+      if (!c) return true
       return !isDrink(p) && !isDessert(p)
     }
 
-    // 1. Cocina (Try individual)
+    // 1. Cocina
     try {
       const kitchenOptions = safeProducts.filter(p => isKitchen(p) && !topExclusionIds.includes(p.id))
       const k = kitchenOptions.length > 0 
@@ -142,33 +149,33 @@ const bundle = computed(() => {
         result.kitchen = k.nombre
         result.kitchenMargen = num(k.precio) - num(k.costo)
       }
-    } catch (e1) { console.error('Error calculando Cocina:', e1) }
+    } catch (e1) { console.error('Error Cocina:', e1) }
 
-    // 2. Bebida (Try individual)
+    // 2. Bebida
     try {
       const drinkOptions = safeProducts.filter(p => isDrink(p))
       const d = drinkOptions.length > 0
-        ? drinkOptions.sort((a, b) => num(b.ventas) - num(a.ventas))[0]
+        ? drinkOptions.sort((a, b) => getVentas(b) - getVentas(a))[0]
         : null
       
       if (d) {
         result.drink = d.nombre
-        result.drinkVentas = num(d.ventas)
+        result.drinkVentas = getVentas(d)
       }
-    } catch (e2) { console.error('Error calculando Bebida:', e2) }
+    } catch (e2) { console.error('Error Bebida:', e2) }
 
-    // 3. Postre (Try individual)
+    // 3. Postre
     try {
       const dessertOptions = safeProducts.filter(p => isDessert(p))
       const ds = dessertOptions.length > 0
-        ? dessertOptions.sort((a, b) => num(a.ventas) - num(b.ventas))[0] // Menor volumen
+        ? dessertOptions.sort((a, b) => getVentas(a) - getVentas(b))[0]
         : null
       
       if (ds) {
         result.dessert = ds.nombre
-        result.dessertVentas = num(ds.ventas)
+        result.dessertVentas = getVentas(ds)
       }
-    } catch (e3) { console.error('Error calculando Postre:', e3) }
+    } catch (e3) { console.error('Error Postre:', e3) }
 
   } catch (err) {
     console.error('❌ Error general en BundleStrategyCard:', err)
