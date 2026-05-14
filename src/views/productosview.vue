@@ -457,7 +457,7 @@ const loadProducts = async (page = 1) => {
 
 const loadAllProductsForSelection = async () => {
   try {
-    const data = await apiClient.get('/productos?per_page=1000')
+    const data = await apiClient.get('/productos?per_page=1000&with=ingredientes')
     if (data.success || data.data) {
       let lista = data.data || data
       if (!Array.isArray(lista)) lista = lista?.data ?? []

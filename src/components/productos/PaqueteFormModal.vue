@@ -288,7 +288,9 @@ const cargarNominaReal = async () => {
 const costoInsumosTotal = computed(() => {
   return form.productos.reduce((sum, p) => {
     const costoProd = (p.ingredientes || []).reduce((s, ing) => {
-      return s + (parseFloat(ing.costo_unitario || 0) * parseFloat(ing.pivot?.cantidad || 0))
+      // 👈 Corregido: Buscar cantidad en ambos lugares posibles
+      const cantIng = parseFloat(ing.cantidad_necesaria || ing.pivot?.cantidad || 0)
+      return s + (parseFloat(ing.costo_unitario || 0) * cantIng)
     }, 0)
     return sum + (costoProd * p.cantidad)
   }, 0)
@@ -351,6 +353,7 @@ const handleFile = (e) => {
 const addProduct = (p) => {
   form.productos.push({ ...p, cantidad: 1 })
   searchProd.value = ''
+  isFocused.value = false // 👈 Cerrar el buscador tras añadir
 }
 
 const removeProduct = (idx) => {

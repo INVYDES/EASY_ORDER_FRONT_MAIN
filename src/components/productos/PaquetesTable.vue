@@ -174,7 +174,8 @@ const calcularCosto = (pkg) => {
     
     // 1. Insumos (Receta)
     const costoInsumos = (p.ingredientes || []).reduce((sum, ing) => {
-      return sum + (parseFloat(ing.costo_unitario || 0) * parseFloat(ing.pivot?.cantidad || 0))
+      const cantIng = parseFloat(ing.cantidad_necesaria || ing.pivot?.cantidad || 0)
+      return sum + (parseFloat(ing.costo_unitario || 0) * cantIng)
     }, 0)
 
     // 2. Mano de Obra (MO) - Basado en la nómina total del restaurante
