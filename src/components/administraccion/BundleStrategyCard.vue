@@ -110,16 +110,26 @@ const bundle = computed(() => {
     const excludeCount = Math.max(2, Math.ceil(safeProducts.length * 0.2))
     const topExclusionIds = sortedBySales.slice(0, excludeCount).map(p => p.id)
 
-    // Helpers de categorías
+    // Helpers de categorías robustos (pueden venir como string o objeto)
+    const getCatName = (p) => {
+      if (!p) return ''
+      if (typeof p.categoria === 'object' && p.categoria !== null) return String(p.categoria.nombre || '').toLowerCase()
+      return String(p.categoria || '').toLowerCase()
+    }
+
     const isDrink = (p) => {
-      const c = String(p?.categoria || '').toLowerCase()
+      const c = getCatName(p)
       return ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas', 'barra', 'barras'].includes(c)
     }
     const isDessert = (p) => {
-      const c = String(p?.categoria || '').toLowerCase()
+      const c = getCatName(p)
       return ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles', 'nieve', 'helado'].includes(c)
     }
-    const isKitchen = (p) => !isDrink(p) && !isDessert(p)
+    const isKitchen = (p) => {
+      const c = getCatName(p)
+      if (!c) return true // Fallback a cocina si no hay categoría
+      return !isDrink(p) && !isDessert(p)
+    }
 
     // 1. Cocina (Try individual)
     try {
