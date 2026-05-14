@@ -272,7 +272,7 @@ const imprimir = () => {
     movimientosHTML = d.movimientos.lista.map(m => `
       <tr>
         <td style="font-size:10px;">${toLocalTime(m.created_at || m.fecha)} ${m.descripcion}</td>
-        <td class="right" style="font-size:10px;">${m.tipo === 'ingreso' ? '+' : '-'}$${Number(m.monto).toFixed(2)}</td>
+        <td class="right" style="font-size:10px;">${(m.tipo === 'ingreso' || m.descripcion === 'Apertura de caja') ? '+' : '-'}$${Number(m.monto).toFixed(2)}</td>
       </tr>
     `).join('');
   }
