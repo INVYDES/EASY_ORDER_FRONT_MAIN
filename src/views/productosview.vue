@@ -50,9 +50,7 @@
         </span>
       </button>
     </div>
-    
-    <!-- Sugerencia Estratégica Visible Siempre -->
-    <BundleStrategyCard :products="allProductsForSelection" />
+    </div>
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
     <div v-if="activeTab === 'paquetes'" class="space-y-6">
@@ -275,6 +273,14 @@
       @close="showPaqueteModal = false"
       @saved="handlePaqueteSaved"
     />
+
+    <!-- Sugerencia Estratégica (Posición Final Estable) -->
+    <div class="mt-8">
+      <BundleStrategyCard 
+        :key="allProductsForSelection.length"
+        :products="allProductsForSelection" 
+      />
+    </div>
 
   </div>
 </template>
