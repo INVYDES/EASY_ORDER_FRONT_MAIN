@@ -79,15 +79,25 @@
           </div>
 
             <!-- Buscador para agregar -->
-            <div class="relative">
+            <div class="relative group">
               <input 
                 v-model="searchProd"
                 type="text"
                 placeholder="🔍 Buscar producto para añadir..."
                 @focus="isFocused = true"
-                @blur="setTimeout(() => isFocused = false, 200)"
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
+                @blur="setTimeout(() => isFocused = false, 250)"
+                class="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
               />
+              
+              <!-- Botón de Flecha para abrir/cerrar -->
+              <button 
+                type="button"
+                @click.stop="isFocused = !isFocused"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-all duration-300 transform"
+                :class="isFocused ? 'rotate-180' : 'rotate-0'"
+              >
+                <span class="text-xs">▼</span>
+              </button>
               
               <!-- Resultados búsqueda / Lista desplegable -->
               <div v-if="isFocused && filteredProducts.length > 0" class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-64 overflow-y-auto animate-fade-in border-t-4 border-t-indigo-500">
