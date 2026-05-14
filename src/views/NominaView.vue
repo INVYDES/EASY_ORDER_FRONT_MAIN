@@ -255,9 +255,8 @@
           <!-- Sidebar: KPI + Config -->
           <div class="personal-sidebar">
             <div class="commitment-card">
-              <p class="commitment-card__label">Compromiso Mensual</p>
+              <p class="commitment-card__label">NOMINA TOTAL BASE</p>
               <p class="commitment-card__value">${{ Number(totalSueldosBase).toLocaleString() }}</p>
-              <p class="commitment-card__sub">Suma de salarios base activos</p>
               <div class="commitment-card__badge">
                 <i class="fa-solid fa-user-check"></i> {{ empleados.length }} Colaboradores
               </div>
