@@ -78,64 +78,77 @@ onMounted(() => {
   console.log('📊 BundleStrategyCard montado. Productos recibidos:', props.products?.length)
 })
 
+const num = (v) => {
+  if (v === null || v === undefined) return 0
+  const n = Number(v)
+  return isNaN(n) ? 0 : n
+}
+
 const fmtM = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
 
 const bundle = computed(() => {
-  console.log('🔄 Recalculando bundle sugerido con', props.products?.length, 'productos');
+  const source = Array.isArray(props.products) ? props.products : []
   
-  if (!props.products || props.products.length === 0) {
+  if (source.length === 0) {
     return { kitchen: 'N/A', drink: 'N/A', dessert: 'N/A' }
   }
 
   try {
     // 0. Determinar umbral dinámico
-    const safeProducts = props.products.filter(p => p && typeof p === 'object');
-    const excludeCount = safeProducts.length > 10 ? 10 : Math.ceil(safeProducts.length * 0.3);
+    const safeProducts = source.filter(p => p && typeof p === 'object')
+    const excludeCount = safeProducts.length > 10 ? 10 : Math.ceil(safeProducts.length * 0.3)
 
     // Top ventas para exclusión
     const topExclusion = [...safeProducts]
-      .sort((a, b) => (Number(b.ventas) || 0) - (Number(a.ventas) || 0))
+      .sort((a, b) => num(b.ventas) - num(a.ventas))
       .slice(0, excludeCount)
       .map(p => p.id)
 
     // Helpers de categorías flexibles
-    const isDrink = (cat) => ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas'].includes(cat?.toLowerCase());
-    const isDessert = (cat) => ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles'].includes(cat?.toLowerCase());
-    const isKitchen = (cat) => !isDrink(cat) && !isDessert(cat);
+    const isDrink = (p) => {
+      const c = (p?.categoria || '').toLowerCase()
+      return ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas', 'barra'].includes(c)
+    }
+    const isDessert = (p) => {
+      const c = (p?.categoria || '').toLowerCase()
+      return ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles'].includes(c)
+    }
+    const isKitchen = (p) => !isDrink(p) && !isDessert(p)
 
     // 1. Cocina: Mayor margen, NO en el top de ventas actual
-    const kitchen = safeProducts
-      .filter(p => isKitchen(p.categoria) && !topExclusion.includes(p.id))
-      .sort((a, b) => ((Number(b.precio) || 0) - (Number(b.costo) || 0)) - ((Number(a.precio) || 0) - (Number(a.costo) || 0)))[0] 
-      || safeProducts.sort((a, b) => ((Number(b.precio) || 0) - (Number(b.costo) || 0)) - ((Number(a.precio) || 0) - (Number(a.costo) || 0)))[0];
+    const kitchenList = safeProducts.filter(p => isKitchen(p) && !topExclusion.includes(p.id))
+    const kitchen = kitchenList.length > 0 
+      ? kitchenList.sort((a, b) => (num(b.precio) - num(b.costo)) - (num(a.precio) - num(a.costo)))[0]
+      : [...safeProducts].sort((a, b) => (num(b.precio) - num(b.costo)) - (num(a.precio) - num(a.costo)))[0]
 
     // 2. Bebida: #1 en ventas
-    const drink = safeProducts
-      .filter(p => isDrink(p.categoria))
-      .sort((a, b) => (Number(b.ventas) || 0) - (Number(a.ventas) || 0))[0]
-      || safeProducts.filter(p => isDrink(p.categoria))[0];
+    const drinkList = safeProducts.filter(p => isDrink(p))
+    const drink = drinkList.length > 0
+      ? drinkList.sort((a, b) => num(b.ventas) - num(a.ventas))[0]
+      : null
 
     // 3. Postre: Menor volumen con ROI positivo
-    const dessert = safeProducts
-      .filter(p => isDessert(p.categoria) && (Number(p.precio) || 0) > (Number(p.costo) || 0))
-      .sort((a, b) => (Number(a.ventas) || 0) - (Number(b.ventas) || 0))[0]
-      || safeProducts.filter(p => isDessert(p.categoria))[0];
+    const dessertList = safeProducts.filter(p => isDessert(p) && num(p.precio) > num(p.costo))
+    const dessert = dessertList.length > 0
+      ? dessertList.sort((a, b) => num(a.ventas) - num(b.ventas))[0]
+      : safeProducts.filter(p => isDessert(p))[0]
 
     return {
       kitchen: kitchen?.nombre || 'N/A',
-      kitchenMargen: kitchen ? (Number(kitchen.precio) || 0) - (Number(kitchen.costo) || 0) : null,
+      kitchenMargen: kitchen ? num(kitchen.precio) - num(kitchen.costo) : null,
       drink: drink?.nombre || 'N/A',
       drinkVentas: drink?.ventas || 0,
       dessert: dessert?.nombre || 'N/A',
       dessertVentas: dessert?.ventas || 0,
     }
   } catch (err) {
-    console.error('❌ Error en lógica de BundleStrategyCard:', err);
-    return { kitchen: 'Error', drink: 'Error', dessert: 'Error' }
+    console.error('❌ Error en lógica de BundleStrategyCard:', err)
+    return { kitchen: 'Reintentando...', drink: 'Reintentando...', dessert: 'Reintentando...' }
   }
 })
 
 const executeBundle = () => {
+  if (bundle.value.kitchen === 'N/A') return
   alert(`Paquete estratégico enviado:\n🍳 ${bundle.value.kitchen}\n🥤 ${bundle.value.drink}\n🍮 ${bundle.value.dessert}`)
 }
 </script>
