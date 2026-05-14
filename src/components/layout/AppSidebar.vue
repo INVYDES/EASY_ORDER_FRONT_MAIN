@@ -252,8 +252,8 @@ const hasPermission = (permission) => {
     case 'VER_PANEL':   return true
     case 'VER_MESERO':  return roles.includes('MESERO')
     case 'VER_COCINA':  return roles.includes('COCINA')
-    case 'VER_BARRA':   return roles.includes('BARRA')
-    case 'VER_POSTRES': return roles.includes('POSTRES')
+    case 'VER_BARRA':   return roles.includes('BARRA') || roles.includes('COCINA')
+    case 'VER_POSTRES': return roles.includes('POSTRES') || roles.includes('COCINA')
     case 'VER_CAJA':    return roles.includes('CAJA')
     default: return false
   }

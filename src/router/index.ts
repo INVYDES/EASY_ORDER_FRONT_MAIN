@@ -120,7 +120,7 @@ const routes = [
         path: "barra",
         name: "barra",
         component: Barraview,
-        meta: { roles: ["BARRA", "ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["BARRA", "COCINA", "ADMIN", "PROPIETARIO"] }
       },
 
       {
