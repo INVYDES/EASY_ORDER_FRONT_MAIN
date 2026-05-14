@@ -142,7 +142,7 @@
                 :class="{ 'border-sky-200 bg-sky-50/30': m.descripcion === 'CORTE X' }"
               >
                 <div class="flex items-center gap-2">
-                  <span class="text-xs">{{ m.tipo === 'ingreso' ? '🟢' : '🔴' }}</span>
+                  <span class="text-xs">{{ (m.tipo === 'ingreso' || m.descripcion === 'Apertura de caja') ? '🟢' : '🔴' }}</span>
                   <div>
                     <p class="text-[11px] font-bold text-gray-700" :class="{ 'text-sky-700': m.descripcion === 'CORTE X' }">
                       {{ m.descripcion }}
@@ -150,8 +150,8 @@
                     <p class="text-[9px] text-gray-400">{{ toLocalTime(m.created_at || m.fecha) }}</p>
                   </div>
                 </div>
-                <span class="text-xs font-black" :class="m.tipo === 'ingreso' ? 'text-emerald-600' : 'text-red-500'">
-                  {{ m.tipo === 'ingreso' ? '+' : '-' }}${{ formatMoney(m.monto) }}
+                <span class="text-xs font-black" :class="(m.tipo === 'ingreso' || m.descripcion === 'Apertura de caja') ? 'text-emerald-600' : 'text-red-500'">
+                  {{ (m.tipo === 'ingreso' || m.descripcion === 'Apertura de caja') ? '+' : '-' }}${{ formatMoney(m.monto) }}
                 </span>
               </div>
             </div>
@@ -209,16 +209,30 @@ const toLocalTime = (dateStr) => {
   if (!dateStr) return '—';
   try {
     let d;
+    // Si ya es un ISO string completo (trae T o Z)
+    if (dateStr.includes('T') || dateStr.endsWith('Z')) {
+      d = new Date(dateStr);
+    } 
     // Si el formato es DD/MM/YYYY HH:mm:ss
-    if (dateStr.includes('/')) {
+    else if (dateStr.includes('/')) {
       const [fecha, hora] = dateStr.split(' ');
       const [dia, mes, anio] = fecha.split('/');
       d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
-    } else {
-      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+    } 
+    // Otros formatos (YYYY-MM-DD HH:mm:ss)
+    else {
+      d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('T') ? '' : 'Z'));
     }
+
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    
+    // Devolver hora local en formato 24h
+    return d.toLocaleTimeString('es-MX', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: false 
+    });
   } catch (e) {
     return dateStr;
   }
