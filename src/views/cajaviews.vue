@@ -123,6 +123,24 @@ const removeToast = (id) => {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatMoney = (v) => Number(v || 0).toFixed(2)
 
+const toLocalTime = (dateStr) => {
+  if (!dateStr) return '—';
+  try {
+    let d;
+    if (dateStr.includes('/')) {
+      const [fecha, hora] = dateStr.split(' ');
+      const [dia, mes, anio] = fecha.split('/');
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+    } else {
+      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+    }
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const getHeaders = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   return {

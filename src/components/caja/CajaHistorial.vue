@@ -30,7 +30,7 @@
             </span>
           </div>
           <p class="text-xs text-gray-400 mt-0.5">
-            {{ caja.apertura }} → {{ caja.cierre }} · {{ caja.abierto_por || '—' }}
+            {{ toLocalTime(caja.apertura) }} → {{ toLocalTime(caja.cierre) }} · {{ caja.abierto_por || '—' }}
           </p>
         </div>
         <div class="text-right shrink-0 space-y-1">
@@ -70,6 +70,29 @@ const parseFecha = (f) => {
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(f)) { const [d,m,y]=f.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`) }
   return new Date(f + 'T00:00:00')
 }
+const toLocalTime = (dateStr) => {
+  if (!dateStr) return '—';
+  try {
+    let d;
+    // El servidor a veces manda solo la hora "HH:mm:ss" o el datetime "DD/MM/YYYY HH:mm:ss"
+    if (dateStr.includes('/')) {
+      const [fecha, hora] = dateStr.split(' ');
+      const [dia, mes, anio] = fecha.split('/');
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+    } else if (dateStr.includes(':') && !dateStr.includes('-') && !dateStr.includes('/')) {
+      // Si solo es la hora, asumimos la fecha de hoy
+      const hoy = new Date().toISOString().split('T')[0];
+      d = new Date(`${hoy}T${dateStr}Z`);
+    } else {
+      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+    }
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const formatDia = (f) => { const d=parseFecha(f); return d&&!isNaN(d)?d.getDate().toString().padStart(2,'0'):'--' }
 const formatMes = (f) => { const d=parseFecha(f); return d&&!isNaN(d)?d.toLocaleDateString('es-MX',{month:'short'}).toUpperCase():'' }
 </script>
