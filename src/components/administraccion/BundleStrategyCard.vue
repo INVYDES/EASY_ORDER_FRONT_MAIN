@@ -77,34 +77,47 @@ const props = defineProps({
 const fmtM = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
 
 const bundle = computed(() => {
-  // Top 10 de ventas (excluidos de Cocina)
-  const top10Sales = [...props.products]
-    .sort((a, b) => b.ventas - a.ventas)
-    .slice(0, 10)
+  if (!props.products || props.products.length === 0) return { kitchen: 'N/A', drink: 'N/A', dessert: 'N/A' }
+
+  // 0. Determinar umbral dinámico (si hay pocos, solo excluimos los 2 mejores para Cocina)
+  const excludeCount = props.products.length > 10 ? 10 : Math.ceil(props.products.length * 0.3);
+
+  // Top ventas para exclusión
+  const topExclusion = [...props.products]
+    .sort((a, b) => (b.ventas || 0) - (a.ventas || 0))
+    .slice(0, excludeCount)
     .map(p => p.id)
 
-  // 1. Cocina: Mayor margen, NO en Top 10 ventas
+  // Helpers de categorías flexibles
+  const isDrink = (cat) => ['bebida', 'bebidas', 'refresco', 'refrescos', 'jugo', 'jugos', 'agua', 'aguas'].includes(cat?.toLowerCase());
+  const isDessert = (cat) => ['postre', 'postres', 'dulce', 'reposteria', 'pastel', 'pasteles'].includes(cat?.toLowerCase());
+  const isKitchen = (cat) => !isDrink(cat) && !isDessert(cat);
+
+  // 1. Cocina: Mayor margen, NO en el top de ventas actual
   const kitchen = props.products
-    .filter(p => p.categoria === 'Cocina' && !top10Sales.includes(p.id))
-    .sort((a, b) => (b.precio - b.costo) - (a.precio - a.costo))[0]
+    .filter(p => isKitchen(p.categoria) && !topExclusion.includes(p.id))
+    .sort((a, b) => ((b.precio || 0) - (b.costo || 0)) - ((a.precio || 0) - (a.costo || 0)))[0] 
+    || props.products.sort((a, b) => ((b.precio || 0) - (b.costo || 0)) - ((a.precio || 0) - (a.costo || 0)))[0];
 
   // 2. Bebida: #1 en ventas
   const drink = props.products
-    .filter(p => p.categoria === 'Bebida')
-    .sort((a, b) => b.ventas - a.ventas)[0]
+    .filter(p => isDrink(p.categoria))
+    .sort((a, b) => (b.ventas || 0) - (a.ventas || 0))[0]
+    || props.products.filter(p => isDrink(p.categoria))[0];
 
   // 3. Postre: Menor volumen con ROI positivo
   const dessert = props.products
-    .filter(p => p.categoria === 'Postre' && p.precio > p.costo)
-    .sort((a, b) => a.ventas - b.ventas)[0]
+    .filter(p => isDessert(p.categoria) && (p.precio || 0) > (p.costo || 0))
+    .sort((a, b) => (a.ventas || 0) - (b.ventas || 0))[0]
+    || props.products.filter(p => isDessert(p.categoria))[0];
 
   return {
     kitchen: kitchen?.nombre || 'N/A',
-    kitchenMargen: kitchen ? kitchen.precio - kitchen.costo : null,
+    kitchenMargen: kitchen ? (kitchen.precio || 0) - (kitchen.costo || 0) : null,
     drink: drink?.nombre || 'N/A',
-    drinkVentas: drink?.ventas,
+    drinkVentas: drink?.ventas || 0,
     dessert: dessert?.nombre || 'N/A',
-    dessertVentas: dessert?.ventas,
+    dessertVentas: dessert?.ventas || 0,
   }
 })
 
