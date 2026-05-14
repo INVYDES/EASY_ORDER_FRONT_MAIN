@@ -62,6 +62,7 @@ const loadRestaurantes = async () => {
       } else if (userRestaurantes.value.length > 0) {
         restauranteActivo.value = userRestaurantes.value[0].id
         localStorage.setItem('restaurante_activo', restauranteActivo.value)
+        localStorage.setItem('restaurante_id', restauranteActivo.value)
       }
     }
   } catch (e) { console.error('Error al cargar restaurantes:', e) }
@@ -73,6 +74,7 @@ const cambiarRestaurante = async () => {
     const data = await apiClient.post('/cambiar-restaurante', { restaurante_id: restauranteActivo.value })
     if (data.success || data.data) {
       localStorage.setItem('restaurante_activo', restauranteActivo.value)
+      localStorage.setItem('restaurante_id', restauranteActivo.value)
       window.location.reload()
     }
   } catch (e) { console.error('Error al cambiar restaurante:', e) }

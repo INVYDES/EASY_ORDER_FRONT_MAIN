@@ -154,6 +154,7 @@ const handleSubmit = async () => {
       storage.setItem('token', data.data.token)
       storage.setItem('user',  JSON.stringify(data.data.user))
       storage.setItem('restaurante_activo', String(data.data.user.restaurante_activo ?? ''))
+      storage.setItem('restaurante_id',     String(data.data.user.restaurante_activo ?? ''))
 
       console.log('✅ Storage guardado:', {
         token: data.data.token,

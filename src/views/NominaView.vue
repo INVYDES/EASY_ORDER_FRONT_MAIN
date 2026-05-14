@@ -609,7 +609,7 @@ const showPaymentModal = ref(false)
 const showEmpConfigModal = ref(false)
 
 const getTenantHeader = () => {
-  const restId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_activo')
+  const restId = localStorage.getItem('restaurante_id')
   return restId ? { 'X-Restaurante-Id': String(restId) } : {}
 }
 
