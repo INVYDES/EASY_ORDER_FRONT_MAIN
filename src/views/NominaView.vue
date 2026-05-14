@@ -258,11 +258,17 @@
               <p class="commitment-card__label">NOMINA TOTAL BASE</p>
               <p class="commitment-card__value">${{ Number(totalSueldosBase).toLocaleString() }}</p>
               <div class="commitment-card__badge">
-                <i class="fa-solid fa-user-check"></i> {{ empleados.length }} Colaboradores
+                <i class="fa-solid fa-users"></i> {{ empleados.length }} Colaboradores
               </div>
             </div>
 
-            <!-- Config. Global eliminada por petición del usuario -->
+            <div class="commitment-card commitment-card--active-only">
+              <p class="commitment-card__label">NOMINA TOTAL ACTIVA</p>
+              <p class="commitment-card__value">${{ Number(totalSueldosActivos).toLocaleString() }}</p>
+              <div class="commitment-card__badge">
+                <i class="fa-solid fa-user-check"></i> {{ colaboradoresActivos }} Activos
+              </div>
+            </div>
           </div>
 
           <!-- Employee cards -->
@@ -650,6 +656,16 @@ const montoTotalMesActual = computed(() =>
 
 const totalSueldosBase = computed(() =>
   empleados.value.reduce((acc, emp) => acc + Number(emp.salario_base || 0), 0)
+)
+
+const totalSueldosActivos = computed(() =>
+  empleados.value
+    .filter(emp => !!emp.activo)
+    .reduce((acc, emp) => acc + Number(emp.salario_base || 0), 0)
+)
+
+const colaboradoresActivos = computed(() =>
+  empleados.value.filter(emp => !!emp.activo).length
 )
 
 // --- Data Loading ---
