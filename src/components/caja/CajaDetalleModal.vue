@@ -230,46 +230,99 @@ const loadDetalle = async () => {
 const imprimir = () => {
   if (!data.value) return
   const d = data.value
-  const total = (d.ventas.efectivo + d.ventas.tarjeta + d.ventas.transferencia)
   const win = window.open('', '_blank', 'width=400,height=700')
+  
+  // Construir filas de movimientos detallados
+  let movimientosHTML = '';
+  if (d.movimientos.lista && d.movimientos.lista.length > 0) {
+    movimientosHTML = d.movimientos.lista.map(m => `
+      <tr>
+        <td style="font-size:10px;">${m.created_at_formateado?.split(' ')[1] || ''} ${m.descripcion}</td>
+        <td class="right" style="font-size:10px;">${m.tipo === 'ingreso' ? '+' : '-'}$${Number(m.monto).toFixed(2)}</td>
+      </tr>
+    `).join('');
+  }
+
   win.document.write(`
-    <html><head><title>Corte de Caja</title>
-    <style>body{font-family:monospace;font-size:12px;padding:16px;max-width:300px;margin:0 auto;}
-    table{width:100%;border-collapse:collapse;}td{padding:2px 0;}
-    .right{text-align:right;}.border{border-top:1px dashed #000;padding-top:6px;margin-top:6px;}
-    h2,p{text-align:center;margin:4px 0;}
+    <html><head><title>Corte de Caja Detallado</title>
+    <style>
+      body{font-family:monospace;font-size:12px;padding:10px;max-width:280px;margin:0 auto;color:#000;}
+      table{width:100%;border-collapse:collapse;margin:5px 0;}
+      td{padding:2px 0;vertical-align:top;}
+      .right{text-align:right;}
+      .border-top{border-top:1px dashed #000;margin-top:8px;padding-top:8px;}
+      .border-bottom{border-bottom:1px dashed #000;margin-bottom:8px;padding-bottom:8px;}
+      .header{text-align:center;}
+      .section-title{font-weight:bold;text-transform:uppercase;font-size:10px;margin-top:10px;display:block;}
+      .bold{font-weight:bold;}
     </style></head><body>
-    <h2>EASY ORDER</h2><p>CORTE DE CAJA</p>
-    <p style="font-size:10px;">${d.caja.fecha_apertura?.split(' ')[0]}</p>
-    <div class="border"></div>
-    <table>
-      <tr><td>Apertura</td><td class="right">${d.caja.fecha_apertura}</td></tr>
-      <tr><td>Cierre</td><td class="right">${d.caja.fecha_cierre || '—'}</td></tr>
-      <tr><td>Abierto por</td><td class="right">${d.caja.abierto_por}</td></tr>
-    </table>
-    <div class="border"></div>
-    <table>
-      <tr><td>Fondo apertura</td><td class="right">$${formatMoney(d.montos.monto_inicial)}</td></tr>
-      <tr><td>Efectivo final</td><td class="right">$${formatMoney(d.montos.monto_final)}</td></tr>
-      <tr><td><b>Diferencia</b></td><td class="right"><b>$${formatMoney(d.montos.diferencia)}</b></td></tr>
-    </table>
-    <div class="border"></div>
-    <table>
-      <tr><td>Ventas efectivo</td><td class="right">$${formatMoney(d.ventas.efectivo)}</td></tr>
-      <tr><td>Ventas tarjeta</td><td class="right">$${formatMoney(d.ventas.tarjeta)}</td></tr>
-      <tr><td>Transferencias</td><td class="right">$${formatMoney(d.ventas.transferencia)}</td></tr>
-      <tr><td><b>Total ventas</b></td><td class="right"><b>$${formatMoney(d.ventas.total)}</b></td></tr>
-    </table>
-    <div class="border"></div>
-    <table>
-      <tr><td>Propinas efectivo</td><td class="right">$${formatMoney(d.propinas?.efectivo)}</td></tr>
-      <tr><td>Propinas tarjeta</td><td class="right">$${formatMoney(d.propinas?.tarjeta)}</td></tr>
-      <tr><td>Propinas transfe</td><td class="right">$${formatMoney(d.propinas?.transferencia)}</td></tr>
-      <tr><td><b>Total propinas</b></td><td class="right"><b>$${formatMoney(d.propinas?.total)}</b></td></tr>
-    </table>
-    ${d.observaciones ? `<div class="border"></div><p style="text-align:left">Obs: ${d.observaciones}</p>` : ''}
-    <div class="border"></div>
-    <p style="font-size:10px;">Generado por Easy Order</p>
+      <div class="header border-bottom">
+        <h2 style="margin:0;font-size:16px;">EASY ORDER</h2>
+        <p style="margin:2px 0;">DETALLE DE CAJA</p>
+        <p style="margin:2px 0;font-size:10px;">FECHA: ${d.caja.fecha_apertura?.split(' ')[0]}</p>
+      </div>
+
+      <table>
+        <tr><td>APERTURA</td><td class="right">${d.caja.fecha_apertura?.split(' ')[1]}</td></tr>
+        <tr><td>CIERRE</td><td class="right">${d.caja.fecha_cierre?.split(' ')[1] || '—'}</td></tr>
+        <tr><td>USUARIO</td><td class="right">${d.caja.abierto_por}</td></tr>
+      </table>
+
+      <div class="border-top">
+        <span class="section-title">MONTOS DE CONTROL</span>
+        <table>
+          <tr><td>Fondo apertura</td><td class="right">$${formatMoney(d.montos.monto_inicial)}</td></tr>
+          <tr><td>Efectivo final</td><td class="right">$${formatMoney(d.montos.monto_final)}</td></tr>
+          <tr class="bold"><td>Diferencia</td><td class="right">$${formatMoney(d.montos.diferencia)}</td></tr>
+        </table>
+      </div>
+
+      <div class="border-top">
+        <span class="section-title">DESGLOSE VENTAS</span>
+        <table>
+          <tr><td>💵 Efectivo</td><td class="right">$${formatMoney(d.ventas.efectivo)}</td></tr>
+          <tr><td>💳 Tarjeta</td><td class="right">$${formatMoney(d.ventas.tarjeta)}</td></tr>
+          <tr><td>📲 Transfe.</td><td class="right">$${formatMoney(d.ventas.transferencia)}</td></tr>
+          <tr><td>🧾 Total Órdenes</td><td class="right">${d.ventas.total_ordenes}</td></tr>
+          <tr class="bold"><td>TOTAL VENTAS</td><td class="right">$${formatMoney(d.ventas.total)}</td></tr>
+        </table>
+      </div>
+
+      <div class="border-top">
+        <span class="section-title">PROPINAS</span>
+        <table>
+          <tr><td>Efectivo</td><td class="right">$${formatMoney(d.propinas?.efectivo)}</td></tr>
+          <tr><td>Tarjeta</td><td class="right">$${formatMoney(d.propinas?.tarjeta)}</td></tr>
+          <tr><td>Transferencia</td><td class="right">$${formatMoney(d.propinas?.transferencia)}</td></tr>
+          <tr class="bold"><td>TOTAL PROPINAS</td><td class="right">$${formatMoney(d.propinas?.total)}</td></tr>
+        </table>
+      </div>
+
+      <div class="border-top">
+        <span class="section-title">FLUJO DE CAJA (Manual)</span>
+        <table>
+          <tr><td>(+) Ingresos</td><td class="right">$${formatMoney(d.movimientos.ingresos)}</td></tr>
+          <tr><td>(-) Egresos</td><td class="right">$${formatMoney(d.movimientos.egresos)}</td></tr>
+        </table>
+      </div>
+
+      <div class="border-top">
+        <span class="section-title">REGISTRO DE ACTIVIDAD</span>
+        <table>
+          ${movimientosHTML || '<tr><td colspan="2">Sin movimientos</td></tr>'}
+        </table>
+      </div>
+
+      ${d.observaciones ? `
+      <div class="border-top">
+        <span class="section-title">OBSERVACIONES</span>
+        <p style="font-size:10px;margin:2px 0;">${d.observaciones}</p>
+      </div>` : ''}
+
+      <div class="header border-top" style="margin-top:20px;">
+        <p style="font-size:9px;">Generado por Easy Order</p>
+        <p style="font-size:9px;">${new Date().toLocaleString()}</p>
+      </div>
     </body></html>
   `)
   win.document.close()
