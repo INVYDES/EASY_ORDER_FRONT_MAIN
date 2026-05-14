@@ -65,6 +65,7 @@
         :paquetes="paquetes"
         :pagination="paginationPaquetes"
         :loading="loading.paquetes"
+        :total-sueldos-base="totalSueldosBase"
         @edit="openEditPaquete"
         @delete="handleDeletePaquete"
         @toggle-active="handleToggleActivePaquete"
@@ -702,6 +703,19 @@ const handleDeleteIngrediente = async (id) => {
   }
 }
 
+const totalSueldosBase = ref(0)
+const cargarNominaTotal = async () => {
+  try {
+    const data = await apiClient.get('/empleados')
+    const emps = data.data || data || []
+    if (Array.isArray(emps)) {
+      totalSueldosBase.value = emps
+        .filter(e => !!e.activo || e.activo === 1)
+        .reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
+    }
+  } catch (e) { console.error('Error nomina:', e) }
+}
+
 // ── LIFECYCLE ──────────────────────────────────────────────
 onMounted(() => {
   loadProducts(1)  // Cargar primera página
@@ -710,6 +724,7 @@ onMounted(() => {
   loadAnuncios()
   loadPaquetes()
   loadAllProductsForSelection()
+  cargarNominaTotal()
 })
 </script>
 

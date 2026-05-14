@@ -17,7 +17,10 @@
           <tr>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Paquete</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contenido</th>
+            <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Stock</th>
             <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Precio</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Costo</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Margen</th>
             <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
             <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
           </tr>
@@ -47,8 +50,28 @@
                 </span>
               </div>
             </td>
+            <td class="px-6 py-4 text-center">
+              <div v-if="calcularStock(pkg) <= 0" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-50 text-red-600 border border-red-100">
+                <span class="text-[10px] font-black uppercase">Sin Stock</span>
+              </div>
+              <div v-else :class="['inline-flex flex-col items-center px-3 py-1 rounded-xl border font-bold', 
+                calcularStock(pkg) <= 5 ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100']">
+                <span class="text-sm">{{ Math.floor(calcularStock(pkg)) }} uds</span>
+                <span class="text-[8px] uppercase tracking-tighter opacity-70">Disponibles</span>
+              </div>
+            </td>
             <td class="px-6 py-4 text-right">
-              <span class="text-sm font-black text-indigo-600">${{ Number(pkg.precio).toFixed(2) }}</span>
+              <span class="text-sm font-black text-gray-900">${{ Number(pkg.precio).toFixed(2) }}</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <p class="text-sm font-bold text-gray-500">${{ calcularCosto(pkg).toFixed(2) }}</p>
+              <p class="text-[9px] text-gray-400 uppercase font-medium">Producción</p>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <p class="text-sm font-black" :class="calcularMargen(pkg).pct > 20 ? 'text-emerald-600' : 'text-amber-600'">
+                {{ calcularMargen(pkg).pct }}%
+              </p>
+              <p class="text-[9px] text-gray-400 uppercase font-medium">+${{ calcularMargen(pkg).valor.toFixed(2) }}</p>
             </td>
             <td class="px-6 py-4 text-center">
               <button 
@@ -119,11 +142,58 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   paquetes: { type: Array, required: true },
   loading: { type: Boolean, default: false },
-  pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, total: 0, per_page: 10 }) }
+  pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, total: 0, per_page: 10 }) },
+  totalSueldosBase: { type: Number, default: 0 }
 })
 
 defineEmits(['edit', 'delete', 'toggle-active', 'change-page'])
+
+// ── Lógica de cálculos dinámicos ──────────────────────────────────────────
+
+const calcularStock = (pkg) => {
+  if (!pkg.productos || pkg.productos.length === 0) return 0
+  const stocks = pkg.productos.map(p => {
+    const cantNecesaria = parseFloat(p.pivot?.cantidad || 0)
+    const stockActual = parseFloat(p.stock || 0)
+    if (cantNecesaria <= 0) return Infinity
+    return Math.floor(stockActual / cantNecesaria)
+  })
+  const min = Math.min(...stocks)
+  return min === Infinity ? 0 : min
+}
+
+const calcularCosto = (pkg) => {
+  if (!pkg.productos) return 0
+  return pkg.productos.reduce((total, p) => {
+    const cantInPkg = parseFloat(p.pivot?.cantidad || 1)
+    
+    // 1. Insumos (Receta)
+    const costoInsumos = (p.ingredientes || []).reduce((sum, ing) => {
+      return sum + (parseFloat(ing.costo_unitario || 0) * parseFloat(ing.pivot?.cantidad || 0))
+    }, 0)
+
+    // 2. Mano de Obra (MO) - Basado en la nómina total del restaurante
+    // (Total Nómina / 14400 minutos operativos al mes) * minutos producción * factor carga social
+    const minProd = parseFloat(p.minutos_produccion || 0)
+    const costoMO = (props.totalSueldosBase / 14400) * 1.66 * minProd
+
+    // 3. Indirectos (5%)
+    const costoProdIndividual = (costoInsumos + costoMO) * 1.05
+
+    return total + (costoProdIndividual * cantInPkg)
+  }, 0)
+}
+
+const calcularMargen = (pkg) => {
+  const precio = parseFloat(pkg.precio || 0)
+  const costo = calcularCosto(pkg)
+  const valor = precio - costo
+  const pct = precio > 0 ? Math.round((valor / precio) * 100) : 0
+  return { valor, pct }
+}
 </script>

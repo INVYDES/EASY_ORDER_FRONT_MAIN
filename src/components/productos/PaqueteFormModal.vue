@@ -150,6 +150,67 @@
             </div>
           </div>
         </div>
+
+        <!-- ══ CALCULADORA DE PRECIO Y MÁRGENES ══ -->
+        <div class="bg-indigo-50/30 rounded-3xl p-6 border border-indigo-100 space-y-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-black text-indigo-900 uppercase tracking-wider">💰 Análisis Financiero del Paquete</h4>
+              <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-0.5">Basado en componentes y nómina real</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Costos -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-50">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-[10px] font-black text-gray-400 uppercase">Costo Producción</span>
+                <span class="text-xl font-black text-indigo-600">${{ costoTotal.toFixed(2) }}</span>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-gray-500 font-medium">Insumos (Suma):</span>
+                  <span class="text-gray-900 font-bold">${{ costoInsumosTotal.toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-gray-500 font-medium">Mano de Obra (MO):</span>
+                  <span class="text-gray-900 font-bold">${{ costoManoObraTotal.toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between text-[11px] pt-1 border-t border-gray-50">
+                  <span class="text-gray-500 font-medium">Gastos Indirectos (5%):</span>
+                  <span class="text-gray-900 font-bold">${{ costoIndirectosTotal.toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Margen -->
+            <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Margen Real</span>
+                <span class="text-xl font-black text-emerald-700">${{ margenReal.toFixed(2) }}</span>
+              </div>
+              <p class="text-3xl font-black text-emerald-600">{{ margenRealPct }}%</p>
+              <p class="text-[10px] text-emerald-500 font-bold uppercase mt-1 tracking-tighter">Utilidad sobre precio final</p>
+            </div>
+          </div>
+
+          <!-- Sugerencia -->
+          <div class="bg-white rounded-2xl p-4 border border-indigo-100 shadow-sm relative overflow-hidden group">
+            <div class="absolute right-0 top-0 bottom-0 w-24 bg-indigo-500/5 -skew-x-12 translate-x-12"></div>
+            <div class="flex items-center justify-between relative z-10">
+              <div>
+                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Precio Sugerido (30% util.)</p>
+                <p class="text-2xl font-black text-indigo-600">${{ precioSugerido.toFixed(2) }}</p>
+              </div>
+              <button 
+                @click="aplicarPrecioSugerido"
+                class="px-5 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95"
+              >
+                Aplicar Sugerido
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer -->
@@ -198,6 +259,7 @@ const form = reactive({
 })
 
 onMounted(() => {
+  cargarNominaReal()
   if (props.paquete) {
     form.nombre = props.paquete.nombre
     form.descripcion = props.paquete.descripcion
@@ -209,6 +271,65 @@ onMounted(() => {
     previewUrl.value = props.paquete.imagen_url
   }
 })
+
+// ── Lógica Financiera ──────────────────────────────────────────────────────────
+const totalSueldosBaseReal = ref(0)
+const cargarNominaReal = async () => {
+  try {
+    const resp = await apiClient.get('/empleados')
+    const emps = resp.data || resp || []
+    if (Array.isArray(emps)) {
+      totalSueldosBaseReal.value = emps
+        .filter(e => !!e.activo || e.activo === 1)
+        .reduce((acc, e) => acc + Number(e.salario_base || 0), 0)
+    }
+  } catch (err) { console.error('Error nómina:', err) }
+}
+
+const costoInsumosTotal = computed(() => {
+  return form.productos.reduce((sum, p) => {
+    const costoProd = (p.ingredientes || []).reduce((s, ing) => {
+      return s + (parseFloat(ing.costo_unitario || 0) * parseFloat(ing.pivot?.cantidad || 0))
+    }, 0)
+    return sum + (costoProd * p.cantidad)
+  }, 0)
+})
+
+const costoManoObraTotal = computed(() => {
+  if (!totalSueldosBaseReal.value) return 0
+  return form.productos.reduce((sum, p) => {
+    const minProd = parseFloat(p.minutos_produccion || 0)
+    const costoMO = (totalSueldosBaseReal.value / 14400) * 1.66 * minProd
+    return sum + (costoMO * p.cantidad)
+  }, 0)
+})
+
+const costoIndirectosTotal = computed(() => {
+  return (costoInsumosTotal.value + costoManoObraTotal.value) * 0.05
+})
+
+const costoTotal = computed(() => {
+  return costoInsumosTotal.value + costoManoObraTotal.value + costoIndirectosTotal.value
+})
+
+const precioSugerido = computed(() => {
+  const subtotal = costoTotal.value
+  return subtotal + (subtotal * 0.30)
+})
+
+const margenReal = computed(() => {
+  const precio = parseFloat(form.precio || 0)
+  return precio - costoTotal.value
+})
+
+const margenRealPct = computed(() => {
+  const precio = parseFloat(form.precio || 0)
+  return precio > 0 ? Math.round((margenReal.value / precio) * 100) : 0
+})
+
+const aplicarPrecioSugerido = () => {
+  form.precio = Math.ceil(precioSugerido.value * 100) / 100
+}
 
 const filteredProducts = computed(() => {
   const s = searchProd.value.toLowerCase()
