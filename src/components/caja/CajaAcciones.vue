@@ -6,6 +6,10 @@
       class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-sm transition">
       <span class="text-lg">💵</span> Movimiento de efectivo
     </button>
+    <button @click="$emit('corte-x')"
+      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-medium text-sm transition">
+      <span class="text-lg">✂️</span> Corte X
+    </button>
     <button @click="$emit('exportar')"
       class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-sm transition">
       <span class="text-lg">🖨️</span> Exportar corte
@@ -43,5 +47,5 @@ defineProps({
   closedOrdersCount:{ type: Number, default: 0 },
   totalOrdenes:     { type: Number, default: 0 },
 })
-defineEmits(['movimiento', 'exportar', 'cerrar'])
+defineEmits(['movimiento', 'exportar', 'cerrar', 'corte-x'])
 </script>

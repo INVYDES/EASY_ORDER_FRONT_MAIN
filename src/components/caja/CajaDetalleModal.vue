@@ -122,7 +122,7 @@
         <!-- Movimientos -->
         <div class="bg-gray-50 rounded-xl p-4 mb-4">
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Movimientos de efectivo</p>
-          <div class="space-y-2 text-sm">
+          <div class="space-y-2 text-sm mb-4">
             <div class="flex justify-between">
               <span class="text-gray-600">↑ Ingresos manuales</span>
               <span class="font-semibold text-emerald-600">${{ formatMoney(data.movimientos.ingresos) }}</span>
@@ -131,9 +131,29 @@
               <span class="text-gray-600">↓ Egresos manuales</span>
               <span class="font-semibold text-red-500">${{ formatMoney(data.movimientos.egresos) }}</span>
             </div>
-            <div class="flex justify-between border-t border-gray-200 pt-2">
-              <span class="text-gray-500">Total movimientos</span>
-              <span class="font-semibold">{{ data.movimientos.total_movimientos }}</span>
+          </div>
+
+          <!-- Listado Detallado de Movimientos -->
+          <div v-if="data.movimientos.lista?.length > 0" class="border-t border-gray-200 pt-3">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Registro de Actividad</p>
+            <div class="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scroll">
+              <div v-for="m in data.movimientos.lista" :key="m.id" 
+                class="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-100 shadow-sm"
+                :class="{ 'border-sky-200 bg-sky-50/30': m.descripcion === 'CORTE X' }"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="text-xs">{{ m.tipo === 'ingreso' ? '🟢' : '🔴' }}</span>
+                  <div>
+                    <p class="text-[11px] font-bold text-gray-700" :class="{ 'text-sky-700': m.descripcion === 'CORTE X' }">
+                      {{ m.descripcion }}
+                    </p>
+                    <p class="text-[9px] text-gray-400">{{ m.created_at_formateado || m.fecha }}</p>
+                  </div>
+                </div>
+                <span class="text-xs font-black" :class="m.tipo === 'ingreso' ? 'text-emerald-600' : 'text-red-500'">
+                  {{ m.tipo === 'ingreso' ? '+' : '-' }}${{ formatMoney(m.monto) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>

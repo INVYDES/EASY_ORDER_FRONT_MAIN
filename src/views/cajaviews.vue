@@ -18,6 +18,7 @@ import CajaFlowTable from '../components/caja/CajaFlowTable.vue'
 import CloseCajaModal from '../components/caja/CloseCajaModal.vue'
 import OpenCajaModal from '../components/caja/OpenCajaModal.vue'
 import CajaDetalleModal from '../components/caja/CajaDetalleModal.vue'
+import CorteXModal from '../components/caja/CorteXModal.vue'
 
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 import { apiClient } from '@/utils/apiClient'
@@ -29,6 +30,7 @@ const selectedTab = ref('open')
 const showCloseModal = ref(false)
 const showOpenModal = ref(false)
 const showMovimientoModal = ref(false)
+const showCorteXModal = ref(false)
 const showDetalleModal = ref(false)
 const cajaDetalleId = ref(null)
 const audioNuevaOrden = ref(null)
@@ -90,6 +92,12 @@ const tipsBreakdown = computed(() => {
     { metodo: 'Tarjeta', icon: '💳', total: propinasTarjeta.value },
     { metodo: 'Transferencia', icon: '📲', total: propinasTransferencia.value },
   ].filter(i => i.total > 0)
+})
+
+const cortesXAmount = computed(() => {
+  return movements.value
+    .filter(m => m.descripcion === 'CORTE X')
+    .reduce((acc, m) => acc + Number(m.monto || 0), 0)
 })
 
 const corteFecha = computed(() => new Date().toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' }))
@@ -462,6 +470,7 @@ onMounted(async () => {
     <CajaDetalleModal v-if="showDetalleModal" :caja-id="cajaDetalleId" @close="showDetalleModal=false; cajaDetalleId=null" />
     <CloseCajaModal v-if="showCloseModal" :opening="openingAmount" :cash="cashInRegister" :sales="efectivoSales" @close="showCloseModal=false" @confirm="handleCloseCaja" />
     <CajaMovimientoModal v-if="showMovimientoModal" @close="showMovimientoModal = false" @saved="handleMovimientoSaved" />
+    <CorteXModal v-if="showCorteXModal" @close="showCorteXModal = false" @saved="handleMovimientoSaved" />
 
     <div class="toast-container">
       <div v-for="toast in toasts" :key="toast.id" :class="['toast-card', toast.type]">
@@ -477,7 +486,7 @@ onMounted(async () => {
       :opening-amount="openingAmount" :efectivo-sales="efectivoSales"
       :card-sales="cardSales" :transfer-sales="transferSales"
       :total-tips="totalTips" :total-ventas="totalVentasDia"
-      :cash-in-register="cashInRegister" :corte-fecha="corteFecha" />
+      :cash-in-register="cashInRegister" :cortes-x-amount="cortesXAmount" :corte-fecha="corteFecha" />
 
     <div class="main-content">
       
@@ -546,6 +555,7 @@ onMounted(async () => {
               :closed-orders-count="closedOrders.length"
               :total-ordenes="orders.length"
               @movimiento="showMovimientoModal = true"
+              @corte-x="showCorteXModal = true"
               @exportar="exportarCorte"
               @cerrar="showCloseModal = true"
             />

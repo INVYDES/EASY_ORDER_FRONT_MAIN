@@ -40,6 +40,12 @@
             <td style="text-align:right">${{ fm(totalTips) }}</td>
           </tr>
 
+          <!-- Cortes X (Retiros parciales) -->
+          <tr v-if="cortesXAmount > 0">
+            <td style="color: #666;">Retiros (Corte X)</td>
+            <td style="text-align:right; color: #666;">-${{ fm(cortesXAmount) }}</td>
+          </tr>
+
           <tr><td colspan="2" style="padding:4px;"></td></tr>
 
           <!-- Efectivo en caja -->
@@ -74,6 +80,7 @@ const props = defineProps({
   totalTips:      { type: Number, default: 0 },
   totalVentas:    { type: Number, default: 0 },
   cashInRegister: { type: Number, default: 0 },
+  cortesXAmount:  { type: Number, default: 0 },
   corteFecha:     { type: String, default: '' },
 })
 
