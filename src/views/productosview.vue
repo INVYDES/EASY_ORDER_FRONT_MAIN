@@ -462,7 +462,8 @@ const loadProducts = async (page = 1) => {
 
 const loadAllProductsForSelection = async () => {
   try {
-    const data = await apiClient.get('/productos?per_page=1000&with=ingredientes,categoria')
+    // Pedimos los datos con el cálculo de ventas de los últimos 30 días
+    const data = await apiClient.get('/productos?per_page=1000&with=ingredientes,categoria&days=30')
     if (data.success || data.data) {
       let lista = data.data || data
       if (!Array.isArray(lista)) lista = lista?.data ?? []
