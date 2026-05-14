@@ -740,9 +740,13 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 const cargarMisMesas = async () => {
   if (!esMesero.value) return
   try {
-    const data = await apiClient.get('/meseros/mis-mesas')
-    if (data.success || data.data) mesasAsignadas.value = data.data || data
-  } catch {}
+    const res = await apiClient.get('/meseros/mis-mesas')
+    if (res.success && res.data) {
+      mesasAsignadas.value = res.data.mis_mesas || []
+    }
+  } catch (err) {
+    console.error('Error cargando mis mesas:', err)
+  }
 }
 
 const cargarProductos = async () => {
