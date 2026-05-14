@@ -232,12 +232,22 @@ const imprimir = () => {
   const d = data.value
   const win = window.open('', '_blank', 'width=400,height=700')
   
+  // Helper para convertir fecha del servidor a hora local (HH:mm)
+  const toLocalTime = (dateStr) => {
+    if (!dateStr) return '—';
+    // Intentar manejar formato "YYYY-MM-DD HH:mm:ss" o ISO
+    const date = new Date(dateStr.replace(' ', 'T') + 'Z'); 
+    // Si la conversión falla o la fecha es inválida, intentar directo
+    const finalDate = isNaN(date.getTime()) ? new Date(dateStr) : date;
+    return finalDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
   // Construir filas de movimientos detallados
   let movimientosHTML = '';
   if (d.movimientos.lista && d.movimientos.lista.length > 0) {
     movimientosHTML = d.movimientos.lista.map(m => `
       <tr>
-        <td style="font-size:10px;">${m.created_at_formateado?.split(' ')[1] || ''} ${m.descripcion}</td>
+        <td style="font-size:10px;">${toLocalTime(m.created_at)} ${m.descripcion}</td>
         <td class="right" style="font-size:10px;">${m.tipo === 'ingreso' ? '+' : '-'}$${Number(m.monto).toFixed(2)}</td>
       </tr>
     `).join('');
@@ -263,8 +273,8 @@ const imprimir = () => {
       </div>
 
       <table>
-        <tr><td>APERTURA</td><td class="right">${d.caja.fecha_apertura?.split(' ')[1]}</td></tr>
-        <tr><td>CIERRE</td><td class="right">${d.caja.fecha_cierre?.split(' ')[1] || '—'}</td></tr>
+        <tr><td>APERTURA</td><td class="right">${toLocalTime(d.caja.fecha_apertura)}</td></tr>
+        <tr><td>CIERRE</td><td class="right">${toLocalTime(d.caja.fecha_cierre)}</td></tr>
         <tr><td>USUARIO</td><td class="right">${d.caja.abierto_por}</td></tr>
       </table>
 
@@ -280,10 +290,10 @@ const imprimir = () => {
       <div class="border-top">
         <span class="section-title">DESGLOSE VENTAS</span>
         <table>
-          <tr><td>💵 Efectivo</td><td class="right">$${formatMoney(d.ventas.efectivo)}</td></tr>
-          <tr><td>💳 Tarjeta</td><td class="right">$${formatMoney(d.ventas.tarjeta)}</td></tr>
-          <tr><td>📲 Transfe.</td><td class="right">$${formatMoney(d.ventas.transferencia)}</td></tr>
-          <tr><td>🧾 Total Órdenes</td><td class="right">${d.ventas.total_ordenes}</td></tr>
+          <tr><td>Efectivo</td><td class="right">$${formatMoney(d.ventas.efectivo)}</td></tr>
+          <tr><td>Tarjeta</td><td class="right">$${formatMoney(d.ventas.tarjeta)}</td></tr>
+          <tr><td>Transferencia</td><td class="right">$${formatMoney(d.ventas.transferencia)}</td></tr>
+          <tr><td>Total Ordenes</td><td class="right">${d.ventas.total_ordenes}</td></tr>
           <tr class="bold"><td>TOTAL VENTAS</td><td class="right">$${formatMoney(d.ventas.total)}</td></tr>
         </table>
       </div>
@@ -321,7 +331,7 @@ const imprimir = () => {
 
       <div class="header border-top" style="margin-top:20px;">
         <p style="font-size:9px;">Generado por Easy Order</p>
-        <p style="font-size:9px;">${new Date().toLocaleString()}</p>
+        <p style="font-size:9px;">${new Date().toLocaleString('es-MX')}</p>
       </div>
     </body></html>
   `)
