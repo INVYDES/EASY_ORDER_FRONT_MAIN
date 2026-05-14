@@ -30,6 +30,14 @@
       @export="exportProducts"
     />
 
+    <!-- Sugerencia Estratégica (Posición Superior Prioritaria) -->
+    <div class="relative z-10 my-4">
+      <BundleStrategyCard 
+        :key="'strategy-' + allProductsForSelection.length"
+        :products="allProductsForSelection" 
+      />
+    </div>
+
     <!-- Tabs -->
     <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
       <button
@@ -272,14 +280,6 @@
       @close="showPaqueteModal = false"
       @saved="handlePaqueteSaved"
     />
-
-    <!-- Sugerencia Estratégica (Posición Final Estable) -->
-    <div class="mt-8">
-      <BundleStrategyCard 
-        :key="allProductsForSelection.length"
-        :products="allProductsForSelection" 
-      />
-    </div>
 
   </div>
 </template>
