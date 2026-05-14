@@ -228,7 +228,7 @@
                   {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
                 </button>
                 <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
-                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Archivada' : 'En proceso' }}
+                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Cobrada' : 'En proceso' }}
                 </div>
               </div>
             </div>
@@ -681,7 +681,7 @@ const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e)
 const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200' }[e] || 'border-slate-100')
 const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300' }[e] || 'bg-slate-100 text-slate-500')
 const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋')
-const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cerrada' }[e] || e)
+const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada' }[e] || e)
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
 const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregar' }[e] || '')
 const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
