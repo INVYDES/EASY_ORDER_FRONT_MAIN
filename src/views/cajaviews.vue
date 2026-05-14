@@ -440,6 +440,7 @@ const handleCloseCaja = async () => {
 
 const handleMovimientoSaved = async ({ monto, tipo }) => {
   showMovimientoModal.value = false
+  showCorteXModal.value = false
   await Promise.all([loadMovements(), actualizarTotalesCaja()])
   showToast(`${tipo === 'ingreso' ? '↑ Entrada' : '↓ Salida'} de $${formatMoney(monto)} registrada`,
     tipo === 'ingreso' ? 'success' : 'warning')
