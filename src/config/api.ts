@@ -20,7 +20,7 @@ export const STORAGE_URL = `${base.replace(/\/index\.php$/, '').replace(/\/api$/
 
 export const getHeaders = (customHeaders: Record<string, string> = {}) => {
     const token = localStorage.getItem('token') ?? sessionStorage.getItem('token');
-    const restauranteId = localStorage.getItem('restaurante_id');
+    const restauranteId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id');
 
     return {
         'Content-Type': 'application/json',
