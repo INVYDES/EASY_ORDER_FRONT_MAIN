@@ -332,10 +332,12 @@ const loadKpis = async () => {
     // Cargar datos para cálculos
     if (iData.success || iData.data) ingredientesGlobales.value = iData.data || iData || []
     
-    // Calcular nómina mensual (Compromiso Mensual)
+    // Calcular nómina mensual (Solo Personal Activo)
     if (nData.success || nData.data) {
-        const emps = nData.data || nData || []
-        nominaMensual.value = emps.reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
+        const emps = Array.isArray(nData.data) ? nData.data : (nData.data?.data || nData || [])
+        nominaMensual.value = emps
+            .filter(e => !!e.activo || e.activo === 1)
+            .reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
     }
 
     // Calcular Rentabilidad Real
