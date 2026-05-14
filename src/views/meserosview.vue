@@ -275,9 +275,15 @@
                       Mesa {{ m }}{{ mesaConOrden(m) ? ' ⚠️ orden abierta' : '' }}
                     </option>
                   </select>
-                  <input v-else v-model="nuevaOrden.mesa" type="number" min="1" placeholder="Ej: 5"
-                    class="w-full px-4 py-3.5 border rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
-                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : 'border-slate-100'" />
+                  <select v-else v-model="nuevaOrden.mesa"
+                    class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
+                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : ''">
+                    <option :value="null">Selecciona una mesa</option>
+                    <option v-for="n in totalMesasRestaurante" :key="n" :value="n">
+                      Mesa {{ n }}{{ mesaConOrden(n) ? ' ⚠️ abierta' : '' }}
+                    </option>
+                    <option v-if="totalMesasRestaurante === 0" disabled>No hay mesas configuradas</option>
+                  </select>
 
                   <!-- Aviso inline si la mesa tiene orden abierta -->
                   <div v-if="mesaTieneOrdenAbierta" class="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
@@ -531,6 +537,7 @@ const cajaAbierta     = ref(false)
 const nuevaOrden      = ref({ clienteId: null, mesa: null })
 const mesasAsignadas  = ref([])
 const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
+const totalMesasRestaurante = ref(0)
 const ultimaActualizacion = ref(null)
 
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
@@ -746,6 +753,17 @@ const cargarMisMesas = async () => {
     }
   } catch (err) {
     console.error('Error cargando mis mesas:', err)
+  }
+}
+
+const cargarCapacidadRestaurante = async () => {
+  try {
+    const res = await apiClient.get('/meseros')
+    if (res.success && res.data) {
+      totalMesasRestaurante.value = Number(res.data.total_mesas || 0)
+    }
+  } catch (err) {
+    console.error('Error cargando capacidad:', err)
   }
 }
 
@@ -978,7 +996,7 @@ const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id 
 onMounted(async () => {
   await verificarCaja()
   if (cajaAbierta.value) {
-    await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes()])
+    await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes(), cargarCapacidadRestaurante()])
     if (esMesero.value) await cargarMisMesas()
   }
   
