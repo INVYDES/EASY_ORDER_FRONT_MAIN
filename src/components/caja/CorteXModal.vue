@@ -83,11 +83,21 @@ const guardar = async () => {
 
   loading.value = true
   try {
+    // Generar folio: CORTE-X-DDMMYY-HHMM
+    const ahora = new Date();
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const anio = String(ahora.getFullYear()).slice(-2);
+    const hrs = String(ahora.getHours()).padStart(2, '0');
+    const min = String(ahora.getMinutes()).padStart(2, '0');
+    
+    const folioReferencia = `CORTE-X-${dia}${mes}${anio}-${hrs}${min}`;
+
     const data = await apiClient.post('/caja/movimientos', {
       tipo: 'egreso',
       monto: montoNum,
       descripcion: 'CORTE X',
-      referencia: 'CORTE-X-' + Date.now().toString().slice(-6)
+      referencia: folioReferencia
     })
 
     if (data?.success) {
