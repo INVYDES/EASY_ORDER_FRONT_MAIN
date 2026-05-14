@@ -20,11 +20,13 @@ export const STORAGE_URL = `${base.replace(/\/index\.php$/, '').replace(/\/api$/
 
 export const getHeaders = (customHeaders: Record<string, string> = {}) => {
     const token = localStorage.getItem('token') ?? sessionStorage.getItem('token');
+    const restauranteId = localStorage.getItem('restaurante_id');
 
     return {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...(restauranteId && { 'X-Restaurante-Id': restauranteId }),
         ...customHeaders
     };
 };

@@ -107,11 +107,38 @@
 
     <!-- ══ TAB KPIs EMPLEADOS ══ -->
     <template v-if="activeTab === 'meseros'">
-      <!-- Distribución de Equipo — estrella del tab -->
-      <div class="mb-6">
-        <EmpleadosRolChart :empleados="empleados" />
+      <div class="space-y-6">
+        <!-- Distribución de Equipo (Fuerza Operativa) -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Distribución de Fuerza Operativa</h3>
+           <EmpleadosRolChart :empleados="empleados" />
+        </div>
+
+        <!-- Sub-tabs para Empleados -->
+        <div class="flex border-b border-gray-200">
+          <button v-for="st in subTabs" :key="st.key"
+            @click="activeSubTab = st.key"
+            :class="['px-6 py-3 text-sm font-bold transition-all border-b-2',
+              activeSubTab === st.key ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
+            {{ st.label }}
+          </button>
+        </div>
+
+        <!-- Vista de Meseros -->
+        <div v-if="activeSubTab === 'meseros_sub'">
+           <KpiMeserosModule :api-url="API_URL" :get-headers="getHeaders" />
+        </div>
+
+        <!-- Vista de Cocina -->
+        <div v-if="activeSubTab === 'cocina_sub'">
+           <KpiCocinaModule :api-url="API_URL" :get-headers="getHeaders" />
+        </div>
+
+        <!-- Vista de Caja -->
+        <div v-if="activeSubTab === 'caja_sub'">
+           <KpiCajaModule :api-url="API_URL" :get-headers="getHeaders" />
+        </div>
       </div>
-      <MetricasMeseros :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
 
   </div>
@@ -131,6 +158,9 @@ import KpiVentas            from '../components/administraccion/KpiVentas.vue'
 import KpiProductos         from '../components/administraccion/KpiProductos.vue'
 import RoiChart             from '../components/RoiChart.vue'
 import MetricasMeseros      from '../components/administraccion/MetricasMeseros.vue'
+import KpiMeserosModule    from '../components/administraccion/KpiMeserosModule.vue'
+import KpiCocinaModule     from '../components/administraccion/KpiCocinaModule.vue'
+import KpiCajaModule       from '../components/administraccion/KpiCajaModule.vue'
 import FinancialMetricsGrid from '../components/administraccion/FinancialMetricsGrid.vue'
 import CanalVentasChart     from '../components/administraccion/CanalVentasChart.vue'
 import TopMarginList        from '../components/administraccion/TopMarginList.vue'
@@ -140,11 +170,12 @@ import { apiClient }        from '@/utils/apiClient'
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 const activeTab          = ref('resumen')
+const activeSubTab       = ref('meseros_sub')
 const loading            = ref(true)
 const empleados          = ref([])
 const restaurantes       = ref([])
 const ordenesCerradasHoy = ref([])
-const allProducts        = ref([])  // ✅ declarado
+const allProducts        = ref([])
 
 const propietarioData = reactive({})  // ✅ declarado
 
@@ -187,12 +218,20 @@ const tabs = [
   { key: 'meseros',    label: '👥 KPIs Empleados'      },
 ]
 
+const subTabs = [
+  { key: 'meseros_sub', label: '🚶 Meseros' },
+  { key: 'cocina_sub',  label: '👨‍🍳 Cocina' },
+  { key: 'caja_sub',    label: '💵 Caja' },
+]
+
 const getHeaders = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const restauranteId = localStorage.getItem('restaurante_id')
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : ''
+    Authorization: token ? `Bearer ${token}` : '',
+    ...(restauranteId && { 'X-Restaurante-Id': restauranteId })
   }
 }
 
