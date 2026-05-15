@@ -136,7 +136,7 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="font-bold text-slate-800 text-lg">📊 Rentabilidad de Mayor a Menor</h3>
-          <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
+          <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO Activa)</p>
         </div>
       </div>
       <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
