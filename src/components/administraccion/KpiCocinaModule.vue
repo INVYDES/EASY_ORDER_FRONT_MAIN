@@ -125,8 +125,11 @@ import Chart from 'chart.js/auto'
 
 const props = defineProps({
   apiUrl: String,
-  getHeaders: Function
+  getHeaders: Function,
+  serverDate: { type: String, default: '' },
 })
+
+const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
 
 const kpis = ref({
   tiempos_platillos: [],
@@ -143,8 +146,11 @@ const tempConfig = ref([])
 
 const filtros = reactive({
   cocinero_id: '',
-  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-CA'),
-  fecha_hasta: new Date().toLocaleDateString('en-CA')
+  fecha_desde: (() => {
+    const d = new Date(getServerToday() + 'T00:00:00')
+    return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleDateString('en-CA')
+  })(),
+  fecha_hasta: getServerToday()
 })
 
 let barChart = null

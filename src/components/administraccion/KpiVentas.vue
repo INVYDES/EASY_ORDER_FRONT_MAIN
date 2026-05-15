@@ -236,14 +236,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 import Chart from 'chart.js/auto'
 
 const props = defineProps({
   apiUrl: { type: String, default: '/api' },
   getHeaders: { type: Function, required: true },
-  empleados: { type: Array, default: () => [] }
+  empleados: { type: Array, default: () => [] },
+  refreshKey: { type: Number, default: 0 },
+  serverDate: { type: String, default: '' },
 })
 
 // --- ESTADO ---
@@ -290,6 +292,7 @@ const dp = (a, b) => b ? Math.abs(((a - b) / b) * 100).toFixed(1) : '0'
 const di = (a, b) => a >= b ? '↑' : '↓'
 const dc = (a, b) => a >= b ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
 const fmtDate = (d) => d.toLocaleDateString('en-CA')
+const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
 
 const kpiGrupoLabel = computed(() => ({ dia: 'día', semana: 'semana', mes: 'mes' }[kpiGrupo.value]))
 
@@ -306,15 +309,16 @@ const canalLeyenda = computed(() => [
 // --- LÓGICA DE PERIODOS ---
 const setKpiPeriodo = (key) => {
   kpiPeriodo.value = key
-  const hoy = new Date()
+  const hoyStr = getServerToday()
+  const hoy = new Date(hoyStr + 'T00:00:00')
   if (key === 'hoy') {
-    kpiFechaInicio.value = fmtDate(hoy); kpiFechaFin.value = fmtDate(hoy); kpiGrupo.value = 'dia'
+    kpiFechaInicio.value = hoyStr; kpiFechaFin.value = hoyStr; kpiGrupo.value = 'dia'
   } else if (key === 'semana') {
-    const inicio = new Date(); inicio.setDate(hoy.getDate() - 6);
-    kpiFechaInicio.value = fmtDate(inicio); kpiFechaFin.value = fmtDate(hoy); kpiGrupo.value = 'dia'
+    const inicio = new Date(hoy); inicio.setDate(hoy.getDate() - 6);
+    kpiFechaInicio.value = fmtDate(inicio); kpiFechaFin.value = hoyStr; kpiGrupo.value = 'dia'
   } else if (key === 'mes') {
-    const inicio = new Date(); inicio.setDate(hoy.getDate() - 29);
-    kpiFechaInicio.value = fmtDate(inicio); kpiFechaFin.value = fmtDate(hoy); kpiGrupo.value = 'semana'
+    const inicio = new Date(hoy); inicio.setDate(hoy.getDate() - 29);
+    kpiFechaInicio.value = fmtDate(inicio); kpiFechaFin.value = hoyStr; kpiGrupo.value = 'semana'
   } else if (key === 'total') {
     kpiFechaInicio.value = ''; kpiFechaFin.value = ''; kpiGrupo.value = 'mes'
   }
@@ -505,5 +509,6 @@ const buildCharts = async () => {
   }
 }
 
+watch(() => props.refreshKey, () => loadKpis())
 onMounted(() => setKpiPeriodo('semana'))
 </script>

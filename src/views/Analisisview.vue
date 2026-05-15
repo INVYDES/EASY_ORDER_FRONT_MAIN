@@ -63,13 +63,13 @@
         <!-- Gráficas de Hoy -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
-          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" />
+          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
 
         <!-- Gráficas de Rendimiento -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
-          <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" />
+          <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
 
         <!-- Gráficas de Operación -->
@@ -97,7 +97,7 @@
 
     <!-- ══ TAB KPIs VENTAS ══ -->
     <template v-if="activeTab === 'kpis'">
-      <KpiVentas :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
+      <KpiVentas :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" :refresh-key="refreshCounter" :server-date="serverDate" />
     </template>
 
     <!-- ══ TAB KPIs PRODUCTOS ══ -->
@@ -127,17 +127,17 @@
 
         <!-- Vista de Meseros -->
         <div v-if="activeSubTab === 'meseros_sub'">
-           <KpiMeserosModule :api-url="API_URL" :get-headers="getHeaders" />
+           <KpiMeserosModule :api-url="API_URL" :get-headers="getHeaders" :server-date="serverDate" />
         </div>
 
         <!-- Vista de Cocina -->
         <div v-if="activeSubTab === 'cocina_sub'">
-           <KpiCocinaModule :api-url="API_URL" :get-headers="getHeaders" />
+           <KpiCocinaModule :api-url="API_URL" :get-headers="getHeaders" :server-date="serverDate" />
         </div>
 
         <!-- Vista de Caja -->
         <div v-if="activeSubTab === 'caja_sub'">
-           <KpiCajaModule :api-url="API_URL" :get-headers="getHeaders" />
+           <KpiCajaModule :api-url="API_URL" :get-headers="getHeaders" :server-date="serverDate" />
         </div>
       </div>
     </template>
@@ -177,6 +177,8 @@ const empleados          = ref([])
 const restaurantes       = ref([])
 const ordenesCerradasHoy = ref([])
 const allProducts        = ref([])
+const refreshCounter     = ref(0)
+const serverDate         = ref('')
 
 const propietarioData = reactive({})  // ✅ declarado
 
@@ -257,6 +259,7 @@ const loadData = async () => {
   };
 
   const today = await fetchServerDate();
+  serverDate.value = today;
 
     const [uData, rData, dData, cData] = await Promise.all([
       apiClient.get('/me'),
@@ -355,6 +358,7 @@ const loadData = async () => {
     console.error('Error al cargar métricas:', e)
   } finally {
     loading.value = false
+    refreshCounter.value++
   }
 }
 

@@ -47,11 +47,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 const props = defineProps({
   apiUrl:     { type: String,   required: true },
   getHeaders: { type: Function, required: true },
+  refreshKey: { type: Number,   default: 0 },
+  serverDate: { type: String,   default: '' },
 })
 
 const chartRef    = ref(null)
@@ -76,13 +78,15 @@ const loadChartJS = () => new Promise(resolve => {
   s.onload = resolve; document.head.appendChild(s)
 })
 
+const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
+
 const fetchYDraw = async (dias) => {
   loading.value = true
   try {
-    const hoy = new Date()
-    const fin  = hoy.toLocaleDateString('en-CA')
-    const ini  = new Date(hoy); ini.setDate(ini.getDate() - dias + 1)
-    const iniStr = ini.toLocaleDateString('en-CA')
+    const hoyStr = getServerToday()
+    const fin  = hoyStr
+    const iniDate = new Date(hoyStr + 'T00:00:00'); iniDate.setDate(iniDate.getDate() - dias + 1)
+    const iniStr = iniDate.toLocaleDateString('en-CA')
 
     const res  = await fetch(
       `${props.apiUrl}/reportes/ventas?fecha_inicio=${iniStr}&fecha_fin=${fin}&grupo=dia`,
@@ -137,6 +141,7 @@ const fetchYDraw = async (dias) => {
 
 const cambiarPeriodo = (dias) => { periodoActivo.value = dias; fetchYDraw(dias) }
 
+watch(() => props.refreshKey, () => fetchYDraw(periodoActivo.value))
 onMounted(() => fetchYDraw(periodoActivo.value))
 </script>
 

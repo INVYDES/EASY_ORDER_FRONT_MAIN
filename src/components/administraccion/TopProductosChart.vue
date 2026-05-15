@@ -57,11 +57,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 const props = defineProps({
   apiUrl:     { type: String,   required: true },
   getHeaders: { type: Function, required: true },
+  refreshKey: { type: Number,   default: 0 },
+  serverDate: { type: String,   default: '' },
 })
 
 const loading  = ref(false)
@@ -109,12 +111,14 @@ const barClass = (i) => {
   return bars[i] || 'bg-slate-300'
 }
 
+const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
+
 const fetchProductos = async () => {
   loading.value = true
   try {
-    const hoy = new Date()
-    const fin = hoy.toLocaleDateString('en-CA')
-    const ini = new Date(hoy)
+    const hoyStr = getServerToday()
+    const fin = hoyStr
+    const ini = new Date(hoyStr + 'T00:00:00')
     ini.setDate(ini.getDate() - periodo.value + 1)
     const iniStr = ini.toLocaleDateString('en-CA')
     
@@ -136,5 +140,6 @@ const fetchProductos = async () => {
 
 const setPeriodo = (v) => { periodo.value = v; fetchProductos() }
 
+watch(() => props.refreshKey, fetchProductos)
 onMounted(fetchProductos)
 </script>

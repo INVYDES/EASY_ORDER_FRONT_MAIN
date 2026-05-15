@@ -632,6 +632,7 @@ const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebi
 
 const POLL_INTERVAL = 5000
 let pollTimer = null
+let pollingEnProgreso = false
 
 const tabs = [
   { key: 'todas',          label: 'Todas',          icon: '📋', color: '#6366f1' },
@@ -1094,15 +1095,20 @@ onMounted(async () => {
   }
 
   // Iniciar polling silencioso independiente del rol
-  pollTimer = setInterval(async () => {
+  const poll = async () => {
+    if (pollingEnProgreso) { pollTimer = setTimeout(poll, POLL_INTERVAL); return }
     if (cajaAbierta.value) {
+      pollingEnProgreso = true
       await cargarOrdenes(true)
+      pollingEnProgreso = false
     }
-  }, POLL_INTERVAL)
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
 })
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  if (pollTimer) clearTimeout(pollTimer)
 })
 </script>
 

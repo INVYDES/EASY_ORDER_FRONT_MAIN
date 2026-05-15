@@ -411,7 +411,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 
 const apexchart = VueApexCharts
@@ -420,6 +420,8 @@ const props = defineProps({
   apiUrl:     { type: String,   required: true },
   getHeaders: { type: Function, required: true },
   empleados:  { type: Array,    default: () => [] },
+  refreshKey: { type: Number,   default: 0 },
+  serverDate: { type: String,   default: '' },
 })
 
 // ── Paleta compartida ─────────────────────────────────────────────────────
@@ -438,7 +440,8 @@ const empleadosReales = computed(() =>
 const loading         = ref(false)
 const metricasMeseros = ref([])
 
-const hoy    = new Date().toLocaleDateString('en-CA')
+const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
+const hoy    = getServerToday()
 const filtros = reactive({ fecha_desde: hoy, fecha_hasta: hoy, mesero_id: '' })
 
 const resumenGeneral = reactive({
@@ -693,6 +696,7 @@ const cargar = async () => {
   }
 }
 
+watch(() => props.refreshKey, () => { if (props.refreshKey) cargar() })
 onMounted(cargar)
 </script>
 
