@@ -3,9 +3,11 @@
 
     <div class="mb-4">
       <h2 class="text-xl font-semibold text-gray-800">
-        {{ modoEdicion ? 'Editar Trabajador' : 'Registrar Nuevo Trabajador' }}
+        {{ esCuentaMenu ? (modoEdicion ? 'Editar Cuenta de Menú' : 'Nueva Cuenta de Menú') : (modoEdicion ? 'Editar Trabajador' : 'Registrar Nuevo Trabajador') }}
       </h2>
-      <p v-if="!modoEdicion" class="text-xs text-gray-400 mt-1">El usuario y correo se generarán automáticamente.</p>
+      <p v-if="!modoEdicion" class="text-xs text-gray-400 mt-1">
+        {{ esCuentaMenu ? 'El nombre servirá para identificar el Kiosko.' : 'El usuario y correo se generarán automáticamente.' }}
+      </p>
     </div>
 
     <!-- ✅ Cadena de acceso -->
@@ -28,7 +30,7 @@
     <form @submit.prevent="handleSubmit" class="space-y-5">
 
       <!-- Nombre y Apellidos -->
-      <div class="grid grid-cols-2 gap-4">
+      <div v-if="!esCuentaMenu" class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nombre *</label>
           <input v-model="form.nombre" type="text" required maxlength="100"
@@ -39,6 +41,13 @@
           <input v-model="form.apellidos" type="text" required maxlength="120"
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
         </div>
+      </div>
+
+      <!-- Nombre único para Cuenta de Menú -->
+      <div v-else>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nombre de la Cuenta *</label>
+        <input v-model="form.nombre" type="text" required maxlength="150" placeholder="Ej: Kiosko Entrada Principal"
+          class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
       </div>
 
       <!-- Password -->
@@ -52,7 +61,7 @@
 
       <!-- Rol y Sucursal -->
       <div class="grid grid-cols-2 gap-4">
-        <div>
+        <div v-if="!esCuentaMenu">
           <label class="block text-sm font-semibold text-gray-700 mb-1.5">Rol *</label>
           <select v-model="form.rol_id" required
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
@@ -61,10 +70,9 @@
             <option value="3">Mesero</option>
             <option value="4">Cocina</option>
             <option value="5">Caja</option>
-            <option value="7">Menú</option>
           </select>
         </div>
-        <div>
+        <div :class="esCuentaMenu ? 'col-span-2' : ''">
           <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sucursal *</label>
            <select v-model="form.restaurante_id" required
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
@@ -95,7 +103,7 @@
         </button>
         <button type="submit" :disabled="loading || passwordsMismatch"
           class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition text-sm shadow-md shadow-indigo-100">
-          {{ loading ? 'Procesando...' : (modoEdicion ? 'Guardar Cambios' : 'Registrar Empleado') }}
+          {{ loading ? 'Procesando...' : (modoEdicion ? 'Guardar Cambios' : (esCuentaMenu ? 'Crear Cuenta' : 'Registrar Empleado')) }}
         </button>
       </div>
 
@@ -108,7 +116,8 @@ import { ref, watch, computed } from 'vue'
 
 const props = defineProps({
   empleado:     { type: Object, default: null },
-  restaurantes: { type: Array,  default: () => [] }
+  restaurantes: { type: Array,  default: () => [] },
+  esCuentaMenu: { type: Boolean, default: false }
 })
 const emit = defineEmits(['guardar', 'cancelar'])
 
@@ -166,7 +175,7 @@ const handleSubmit = () => {
   cadenaAcceso.value = ''
 
   if (!form.value.nombre)         { errorMessage.value = 'El nombre es obligatorio'; return }
-  if (!form.value.rol_id)         { errorMessage.value = 'El rol es obligatorio'; return }
+  if (!props.esCuentaMenu && !form.value.rol_id) { errorMessage.value = 'El rol es obligatorio'; return }
   if (!form.value.restaurante_id) { errorMessage.value = 'La sucursal es obligatoria'; return }
   
   if (!modoEdicion.value && !form.value.password) {
@@ -177,8 +186,8 @@ const handleSubmit = () => {
   loading.value = true
 
   const payload = {
-    name:           `${form.value.nombre} ${form.value.apellidos}`.trim(),
-    rol_id:         form.value.rol_id,
+    name:           props.esCuentaMenu ? form.value.nombre : `${form.value.nombre} ${form.value.apellidos}`.trim(),
+    rol_id:         props.esCuentaMenu ? '7' : form.value.rol_id,
     restaurante_id: form.value.restaurante_id,
     es_activo:      form.value.es_activo,
     // email y username se envían como null para que el backend los genere
