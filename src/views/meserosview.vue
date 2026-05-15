@@ -556,7 +556,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
@@ -629,6 +629,9 @@ const esMesero   = computed(() => {
 })
 
 const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebida','cerveza','agua','trago','coctel','limonada','naranjada']
+
+const POLL_INTERVAL = 5000
+let pollTimer = null
 
 const tabs = [
   { key: 'todas',          label: 'Todas',          icon: '📋', color: '#6366f1' },
@@ -745,15 +748,14 @@ const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-
 
 // ── API ────────────────────────────────────────────────────────────────────
 
-const cargarOrdenes = async () => {
-  loading.value = true
+const cargarOrdenes = async (silent = false) => {
+  if (!silent) loading.value = true
   try {
     const d = new Date()
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     
     const states = ['ABIERTA','POR_PREPARAR','EN_PREPARACION','LISTA','ENTREGADA']
     const urls   = states.map(s => `/meseros/mis-ordenes?estado=${s}&per_page=100`)
-    // Traer TODO el historial del día actual para no ocultar las canceladas o pagadas
     urls.push(`/meseros/mis-ordenes?fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
     const results = await Promise.all(urls.map(url => apiClient.get(url)))
     const map = new Map()
@@ -765,7 +767,7 @@ const cargarOrdenes = async () => {
     })
     ordenes.value = [...map.values()].sort((a, b) => b.id - a.id)
   } catch (err) { console.error('Error órdenes:', err) }
-  finally { loading.value = false }
+  finally { if (!silent) loading.value = false }
 }
 
 // ── WebSockets ────────────────────────────────────────────────────────────────
@@ -1090,6 +1092,17 @@ onMounted(async () => {
       restauranteActivo.value = typeof ra === 'object' ? ra.id : ra
     } catch {}
   }
+
+  // Iniciar polling silencioso independiente del rol
+  pollTimer = setInterval(async () => {
+    if (cajaAbierta.value) {
+      await cargarOrdenes(true)
+    }
+  }, POLL_INTERVAL)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 

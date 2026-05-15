@@ -51,7 +51,7 @@ const cards = computed(() => [
     value:  '$' + fm(props.utilidadBrutaHoy),
     icon:   '⭐',
     border: 'border-violet-500',
-    sub:    'Ventas - Insumos',
+    sub:    'Ventas - Costo de Produccion(Ya incluye mano de obra)',
     subColor: 'text-violet-500 font-medium',
   },
   {

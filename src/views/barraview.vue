@@ -217,7 +217,7 @@ import OrdenCardBebida from '../components/bebida/OrdenCardBebida.vue'
 import { apiClient } from '@/utils/apiClient'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
-const POLL_INTERVAL = 30000 // Aumentamos ya que hay WS
+const POLL_INTERVAL = 5000
 const router        = useRouter()
 
 const BEBIDA_CATEGORIA_IDS = [7]
@@ -302,10 +302,10 @@ const showToast = (message, type = 'info', duration = 3500) => {
 const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
 
 // ── Cargar órdenes (polling) ───────────────────────────────────────────────────
-const loadOrders = async () => {
+const loadOrders = async (silent = false) => {
   const token = getToken()
   if (!token) { router.push('/'); return }
-  loading.value = true
+  if (!silent) loading.value = true
   try {
     const data = await apiClient.get('/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')
     if (data.success || data.data) {
@@ -316,7 +316,7 @@ const loadOrders = async () => {
     }
   } catch (e) { console.error('Error barra:', e) }
   finally { 
-    loading.value = false 
+    if (!silent) loading.value = false
     ultimaActualizacion.value = new Date().toLocaleTimeString()
   }
 }
@@ -449,7 +449,7 @@ const marcarEntregada = async (id) => {
 // ── Ciclo de vida ──────────────────────────────────────────────────────────────
 onMounted(async () => {
   await loadOrders()
-  pollTimer = setInterval(loadOrders, POLL_INTERVAL)
+  pollTimer = setInterval(() => loadOrders(true), POLL_INTERVAL)
 
   // Cargar restaurante activo para WS
   try {

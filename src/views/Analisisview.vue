@@ -146,7 +146,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import SucursalBadge        from '../components/SucursalBadge.vue'
 import DashboardKpis        from '../components/administraccion/DashboardKpis.vue'
 import VentasPorHoraChart   from '../components/administraccion/Ventasxhorachart.vue'
@@ -241,7 +241,22 @@ const getHeaders = () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const today = new Date().toLocaleDateString('en-CA')
+  // Helper to get server date
+  const fetchServerDate = async () => {
+    try {
+      const res = await apiClient.get('/server-time');
+      if (res.success && res.data?.current_time) {
+        // current_time format: 'YYYY-MM-DD HH:MM:SS'
+        return res.data.current_time.split(' ')[0];
+      }
+    } catch (e) {
+      console.error('Error fetching server time', e);
+    }
+    // Fallback to client date if server fails
+    return new Date().toISOString().split('T')[0];
+  };
+
+  const today = await fetchServerDate();
 
     const [uData, rData, dData, cData] = await Promise.all([
       apiClient.get('/me'),
@@ -343,9 +358,16 @@ const loadData = async () => {
   }
 }
 
+let metricsInterval = null;
 // ✅ onMounted para iniciar la carga
 onMounted(() => {
   loadData()
+  // Refresh metrics every minute to keep data up-to-date with server
+  metricsInterval = setInterval(loadData, 60_000) // 60 seconds
+})
+// Cleanup interval on component unmount
+onBeforeUnmount(() => {
+  if (metricsInterval) clearInterval(metricsInterval)
 })
 </script>
 
