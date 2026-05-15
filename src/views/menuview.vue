@@ -103,10 +103,29 @@
     </div>
 
     <!-- Layout Principal -->
-    <div class="flex flex-1 overflow-hidden h-full">
+    <div class="flex flex-1 overflow-hidden h-full relative">
+
+      <!-- Botón de Carrito (Toggle Sidebar) -->
+      <button 
+        @click="sidebarAbierta = !sidebarAbierta"
+        class="hidden sm:flex absolute z-30 bg-white border-2 border-indigo-600 text-indigo-600 shadow-xl w-14 h-14 rounded-2xl items-center justify-center hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all group overflow-hidden"
+        :class="sidebarAbierta ? 'right-[25rem] top-2' : 'right-4 top-2'"
+      >
+        <div class="relative">
+          <span class="text-2xl transition-transform duration-500" :class="{ 'scale-110': sidebarAbierta }">🛒</span>
+          <span v-if="totalItems > 0" 
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce shadow-sm">
+            {{ totalItems }}
+          </span>
+        </div>
+        <!-- Tooltip -->
+        <div class="absolute -bottom-10 bg-slate-800 text-white text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
+          {{ sidebarAbierta ? 'Ocultar Pedido' : 'Ver Mi Pedido' }}
+        </div>
+      </button>
 
       <!-- Contenedor de Scroll de Productos -->
-      <div class="flex-1 overflow-y-auto p-5 space-y-8 custom-scrollbar">
+      <div class="flex-1 overflow-y-auto p-5 space-y-10 custom-scrollbar transition-all duration-700 ease-in-out">
         
         <div v-if="loading.productos" class="flex flex-col items-center justify-center py-20 gap-3">
           <div class="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -122,14 +141,17 @@
               <div class="flex-1 h-px bg-slate-100"></div>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 gap-6 transition-all duration-700"
+                 :class="sidebarAbierta ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'">
               <button 
                 v-for="pkg in paquetes" 
                 :key="pkg.id"
                 @click="agregarPaqueteAlPedido(pkg)"
                 class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all group p-1"
+                :class="{ 'p-2 scale-105': !sidebarAbierta }"
               >
-                <div class="relative h-40 rounded-[1.8rem] overflow-hidden bg-indigo-50">
+                <div class="relative rounded-[1.8rem] overflow-hidden bg-indigo-50"
+                     :class="sidebarAbierta ? 'h-40' : 'h-64'">
                   <img 
                     v-if="pkg.imagen_url" 
                     :src="getImageUrl(pkg.imagen_url)" 
@@ -143,7 +165,8 @@
                 </div>
                 
                 <div class="p-4 flex-1 flex flex-col">
-                  <h4 class="text-slate-800 font-black text-base leading-tight uppercase mb-2">{{ pkg.nombre }}</h4>
+                  <h4 class="text-slate-800 font-black leading-tight uppercase mb-2"
+                      :class="sidebarAbierta ? 'text-base' : 'text-2xl'">{{ pkg.nombre }}</h4>
                   <div class="flex flex-wrap gap-1.5 mb-4">
                     <span v-for="p in pkg.productos" :key="p.id" class="text-[9px] bg-slate-50 text-slate-500 px-2 py-1 rounded-lg font-black border border-slate-100">
                       {{ p.pivot.cantidad }}× {{ p.nombre.toUpperCase() }}
@@ -171,21 +194,25 @@
               <div class="flex-1 h-px bg-slate-100"></div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div class="grid grid-cols-2 gap-6 transition-all duration-700"
+                 :class="sidebarAbierta ? 'sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'">
               <button v-for="p in cat.productos" :key="p.id"
                 @click="agregarAlPedido(p)"
                 :disabled="p.agotado"
                 class="bg-white rounded-3xl border border-slate-50 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl transition-all group disabled:opacity-50 relative p-1">
-                <div class="w-full h-28 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative">
+                <div class="w-full rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative transition-all duration-700"
+                     :class="sidebarAbierta ? 'h-28' : 'h-52'">
                   <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre"
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   <span v-else class="text-3xl">🍽️</span>
                   <div v-if="p.agotado" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest">Agotado</div>
                 </div>
-                <div class="p-3 flex-1 flex flex-col justify-between">
+                <div class="p-3 flex-1 flex flex-col justify-between" :class="{ 'p-4': !sidebarAbierta }">
                   <div>
-                    <p class="font-black text-slate-800 text-xs leading-tight uppercase tracking-tighter line-clamp-2">{{ p.nombre }}</p>
-                    <p v-if="p.bajo_stock && !p.agotado" class="text-[8px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded mt-1.5 inline-block uppercase">Últimas {{ p.stock }}</p>
+                    <p class="font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2 transition-all"
+                       :class="sidebarAbierta ? 'text-xs' : 'text-xl'">{{ p.nombre }}</p>
+                    <p v-if="p.bajo_stock && !p.agotado" class="font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded mt-1.5 inline-block uppercase transition-all"
+                       :class="sidebarAbierta ? 'text-[8px]' : 'text-sm'">Últimas {{ p.stock }}</p>
                   </div>
                   <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
                     <span class="font-black text-slate-900 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
@@ -198,11 +225,18 @@
               </button>
             </div>
           </div>
+
+          <!-- Mensaje cuando no hay productos -->
+          <div v-if="productos.length === 0 && paquetes.length === 0" class="flex flex-col items-center justify-center py-20 text-center opacity-40">
+            <span class="text-7xl mb-4">📭</span>
+            <h3 class="text-xl font-black text-slate-800 uppercase tracking-widest">Sin Productos Disponibles</h3>
+            <p class="text-slate-500 text-sm mt-2 font-medium">No se encontraron productos para este restaurante.</p>
+          </div>
         </template>
       </div>
 
       <!-- Carrito lateral (Escritorio) -->
-      <div class="w-96 shrink-0 bg-white border-l border-slate-100 flex flex-col shadow-2xl z-10 hidden sm:flex">
+      <div v-show="sidebarAbierta" class="w-96 shrink-0 bg-white border-l border-slate-100 flex flex-col shadow-2xl z-10 hidden sm:flex animate-slide-left">
         <div class="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
           <div class="flex justify-between items-center mb-1">
             <h3 class="font-black text-slate-900 text-xl tracking-tight">Tu Pedido</h3>
@@ -352,6 +386,7 @@ const showCheckout            = ref(false)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const paquetes                = ref([])
+const sidebarAbierta          = ref(true)
 
 // --- ESTADO COMENSALES ---
 const numeroComensales    = ref(1)
@@ -409,9 +444,9 @@ const cerrarSesion = () => {
 const categorias = computed(() => {
   const mapa = new Map()
   productos.value.forEach(p => {
-    if (!p.categoria) return
-    const id = p.categoria.id
-    if (!mapa.has(id)) mapa.set(id, { id, nombre:p.categoria.nombre, color:p.categoria.color||'#6366f1', icono:p.categoria.icono||'📦', orden:p.categoria.orden??99, productos:[] })
+    const catData = p.categoria || { id: 0, nombre: 'Otros', color: '#6366f1', icono: '📦', orden: 99 }
+    const id = catData.id
+    if (!mapa.has(id)) mapa.set(id, { id, nombre:catData.nombre, color:catData.color||'#6366f1', icono:catData.icono||'📦', orden:catData.orden??99, productos:[] })
     mapa.get(id).productos.push(p)
   })
   return [...mapa.values()].sort((a,b) => a.orden - b.orden)
@@ -689,6 +724,8 @@ onMounted(async () => {
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .animate-fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-left { animation: slideLeft 0.3s ease-out; }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
 .animate-slide-up { animation: slideUp 0.3s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
