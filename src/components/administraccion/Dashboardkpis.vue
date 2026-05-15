@@ -23,17 +23,11 @@ const props = defineProps({
   ordenesHoy:    { type: Number, default: 0 },
   ventasHoy:     { type: Number, default: 0 },
   utilidadHoy:   { type: Number, default: 0 },
+  utilidadBrutaHoy: { type: Number, default: 0 },
   ordenesPorEstado: { type: Array, default: () => [] },
 })
 
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
-
-const enCurso = computed(() => {
-  const estados = ['ABIERTA','EN_PREPARACION','LISTA']
-  return props.ordenesPorEstado
-    .filter(x => estados.includes(x.estado))
-    .reduce((s, x) => s + Number(x.total || 0), 0)
-})
 
 const cards = computed(() => [
   {
@@ -45,15 +39,7 @@ const cards = computed(() => [
     subColor: props.ventasHoy === 0 ? 'text-gray-400' : 'text-indigo-500 font-medium',
   },
   {
-    label:  'Pedidos hoy',
-    value:  String(props.ordenesHoy),
-    icon:   '🧾',
-    border: 'border-amber-500',
-    sub:    enCurso.value > 0 ? `${enCurso.value} en curso` : 'Sin pedidos activos',
-    subColor: enCurso.value > 0 ? 'text-amber-500 font-medium' : 'text-gray-400',
-  },
-  {
-    label:  'Ticket Promedio',
+    label:  'Ticket promedio',
     value:  '$' + fm(props.ventasHoy / (props.ordenesHoy || 1)),
     icon:   '📈',
     border: 'border-emerald-500',
@@ -61,12 +47,20 @@ const cards = computed(() => [
     subColor: 'text-emerald-500 font-medium',
   },
   {
-    label:  'Utilidad del día acumulada',
-    value:  '$' + fm(props.utilidadHoy),
+    label:  'Utilidad bruta del día',
+    value:  '$' + fm(props.utilidadBrutaHoy),
     icon:   '⭐',
     border: 'border-violet-500',
-    sub:    'Ventas - Insumos - Nómina',
+    sub:    'Ventas - Insumos',
     subColor: 'text-violet-500 font-medium',
+  },
+  {
+    label:  'Utilidad neta del día',
+    value:  '$' + fm(props.utilidadHoy),
+    icon:   '🏆',
+    border: 'border-teal-500',
+    sub:    'Bruta - Retiros de caja',
+    subColor: 'text-teal-500 font-medium',
   },
 ])
 </script>

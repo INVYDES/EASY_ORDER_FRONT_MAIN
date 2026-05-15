@@ -56,6 +56,7 @@
           :ordenes-hoy="dashData.ordenes_hoy"
           :ventas-hoy="dashData.ventas_hoy"
           :utilidad-hoy="dashData.utilidad_hoy"
+          :utilidad-bruta-hoy="dashData.utilidad_bruta_hoy"
           :ordenes-por-estado="dashData.ordenes_por_estado"
         />
 
@@ -183,6 +184,7 @@ const dashData = reactive({
   ventas_hoy: 0,
   ordenes_hoy: 0,
   utilidad_hoy: 0,
+  utilidad_bruta_hoy: 0,
   ordenes_por_estado: []
 })
 
@@ -245,7 +247,7 @@ const loadData = async () => {
       apiClient.get('/me'),
       apiClient.get('/restaurantes'),
       apiClient.get('/reportes/dashboard'),
-      apiClient.get(`/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`),
+      apiClient.get(`/ordenes?estado=CERRADA,ENTREGADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`),
     ])
 
     if (rData.success)  restaurantes.value       = rData.data?.restaurantes || []
@@ -260,11 +262,13 @@ const loadData = async () => {
       // Utilidad del día
       try {
         const uData2 = await apiClient.get('/reportes/utilidad-dia')
+        dashData.utilidad_bruta_hoy = uData2.success ? (uData2.data?.utilidad_bruta_dia ?? 0) : 0
         dashData.utilidad_hoy = uData2.success
-          ? (uData2.data?.utilidad_neta_dia || uData2.data?.utilidad_bruta_dia || 0)
-          : (dData.data?.utilidad_hoy || 0)
+          ? (uData2.data?.utilidad_neta_dia ?? uData2.data?.utilidad_bruta_dia ?? 0)
+          : (dData.data?.utilidad_neta_hoy ?? 0)
       } catch {
-        dashData.utilidad_hoy = dData.data?.utilidad_hoy || 0
+        dashData.utilidad_bruta_hoy = 0
+        dashData.utilidad_hoy = dData.data?.utilidad_neta_hoy ?? 0
       }
     }
 
