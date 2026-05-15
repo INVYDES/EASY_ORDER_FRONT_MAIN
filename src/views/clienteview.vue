@@ -651,7 +651,7 @@ const handleCheckout = async (checkoutData) => {
   try {
     const body = {
       restaurante_id: restauranteSeleccionado.value.id,
-      productos:      pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad })),
+      productos:      pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null })),
       metodo_pago:    checkoutData.metodo_pago,
       tipo_entrega:   checkoutData.tipo_entrega,
       notas:          checkoutData.notas || null,
