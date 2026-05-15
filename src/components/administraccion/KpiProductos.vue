@@ -357,7 +357,14 @@ const setKpiPeriodo = (key) => {
 const loadTiemposRebase = async () => {
   try {
     const data = await apiClient.get(`/reportes/tiempos-rebase?periodo=${tiempoPeriodo.value}&limite=5`)
-    if (data.success) productosRebase.value = data.data || []
+    if (data.success && data.data) {
+      // Extraer el arreglo correspondiente al periodo seleccionado
+      const periodKey = tiempoPeriodo.value === 'hoy' ? 'hoy' : 
+                       (tiempoPeriodo.value === 'semana' ? 'ultimos_7_dias' : 'ultimo_mes')
+      productosRebase.value = data.data[periodKey] || []
+    } else {
+      productosRebase.value = []
+    }
   } catch { productosRebase.value = [] }
 }
 
