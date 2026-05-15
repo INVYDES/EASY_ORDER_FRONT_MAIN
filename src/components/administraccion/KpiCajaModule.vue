@@ -7,7 +7,7 @@
           <i class="fa-solid fa-cash-register"></i>
         </div>
         <div>
-          <h2 class="text-2xl font-black text-gray-800">Rendimiento de Caja</h2>
+          <h2 class="text-2xl font-black text-gray-800">Rendimiento de Caja {{ filtros.cajero_id ? 'Particular' : 'General' }}</h2>
           <p class="text-gray-400 font-medium">Seguimiento de tiempos de cobro y precisión en arqueos.</p>
         </div>
       </div>

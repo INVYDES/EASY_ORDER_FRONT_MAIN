@@ -7,7 +7,7 @@
           <i class="fa-solid fa-fire-burner"></i>
         </div>
         <div>
-          <h2 class="text-2xl font-black text-gray-800">Rendimiento de Cocina</h2>
+          <h2 class="text-2xl font-black text-gray-800">Rendimiento de Cocina {{ filtros.cocinero_id ? 'Particular' : 'General' }}</h2>
           <p class="text-gray-400 font-medium">Análisis de tiempos de respuesta por estación y personal.</p>
         </div>
       </div>

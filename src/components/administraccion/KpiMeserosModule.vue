@@ -7,7 +7,7 @@
           <i class="fa-solid fa-user-tie"></i>
         </div>
         <div>
-          <h2 class="text-2xl font-black text-gray-800">Perfil de Rendimiento</h2>
+          <h2 class="text-2xl font-black text-gray-800">Perfil de Rendimiento {{ filtros.mesero_id ? 'Particular' : 'General' }}</h2>
           <p class="text-gray-400 font-medium">Selecciona un mesero para ver su análisis detallado.</p>
         </div>
       </div>
