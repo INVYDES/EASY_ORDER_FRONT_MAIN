@@ -345,11 +345,10 @@
                     Quitar
                   </button>
                 </div>
-                <div v-if="errorMsg" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
-                  <i class="fa-solid fa-circle-exclamation text-red-400"></i>
-                  <span class="font-medium">{{ typeof errorMsg === 'object' ? Object.values(errorMsg)[0][0] : errorMsg }}</span>
+                <div v-if="formError" class="mt-4 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
+                  <span class="font-medium text-xs">{{ formError }}</span>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 5MB.</p>
+                <p class="text-[10px] text-gray-400 mt-2 font-bold" :class="formError?.includes('250KB') ? 'text-red-500' : ''">JPG, PNG o WebP. Máx 250KB.</p>
               </div>
             </div>
           </div>
@@ -755,6 +754,14 @@ const cerrarModalRestaurante = () => {
 
 const onFileChange = (e) => {
   const file = e.target.files[0]; if (!file) return
+  
+  if (file.size > 250 * 1024) {
+    formError.value = 'El logo es demasiado pesado (' + (file.size/1024).toFixed(0) + 'KB). El límite es 250KB.'
+    if (fileInput.value) fileInput.value.value = ''
+    return
+  }
+  
+  formError.value = ''
   restForm.imagen = file; restForm.eliminar_imagen = false
   const reader = new FileReader()
   reader.onload = (ev) => imgPreview.value = ev.target.result

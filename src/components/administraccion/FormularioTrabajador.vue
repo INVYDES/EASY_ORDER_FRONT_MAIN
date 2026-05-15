@@ -55,8 +55,9 @@
         <label class="block text-sm font-semibold text-gray-700 mb-1.5">
           {{ modoEdicion ? 'Nueva contraseña (vacío para no cambiar)' : 'Establecer Contraseña *' }}
         </label>
-        <input v-model="form.password" type="password" :required="!modoEdicion" minlength="6"
+        <input v-model="form.password" type="password" :required="!modoEdicion"
           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+        <p class="text-[10px] text-gray-400 mt-1 ml-1">Mínimo 8 caracteres</p>
       </div>
 
       <!-- Rol y Sucursal -->
@@ -180,6 +181,11 @@ const handleSubmit = () => {
   
   if (!modoEdicion.value && !form.value.password) {
     errorMessage.value = 'La contraseña es obligatoria'
+    return
+  }
+  
+  if (form.value.password && form.value.password.length < 8) {
+    errorMessage.value = 'La contraseña debe de ser de minimo 8 caracteres'
     return
   }
 
