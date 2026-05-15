@@ -53,203 +53,16 @@
           <h1 class="page-header__title">Gestión de Nóminas</h1>
         </div>
         <div class="page-header__right">
-          <div class="tab-switcher">
-            <button
-              @click="activeMainTab = 'historial'"
-              :class="['tab-switcher__btn', activeMainTab === 'historial' && 'tab-switcher__btn--active']"
-            >
-              <i class="fa-solid fa-clock-rotate-left"></i> Historial
-            </button>
-            <button
-              @click="activeMainTab = 'personal'"
-              :class="['tab-switcher__btn', activeMainTab === 'personal' && 'tab-switcher__btn--active']"
-            >
-              <i class="fa-solid fa-users-gear"></i> Personal
-            </button>
-          </div>
+          <!-- Tab switcher eliminado -->
           <button @click="showGenerateModal = true" class="btn btn--primary">
             <i class="fa-solid fa-plus"></i> Nueva Nómina
           </button>
         </div>
       </header>
 
-      <!-- ═══ HISTORIAL ════════════════════════════════════════════════ -->
-      <template v-if="activeMainTab === 'historial'">
 
-        <!-- Banner mes actual -->
-        <div v-if="nominasActuales.length > 0" class="banner-mes">
-          <div class="banner-mes__left">
-            <span class="banner-mes__icon">📅</span>
-            <div>
-              <p class="banner-mes__title">Nóminas del Mes Actual</p>
-              <p class="banner-mes__sub">{{ nominasActuales.length }} registros · Periodo en curso</p>
-            </div>
-          </div>
-          <div class="banner-mes__stat">
-            <p class="stat-micro-label">Total del Mes</p>
-            <p class="stat-micro-value">${{ Number(montoTotalMesActual).toLocaleString() }}</p>
-          </div>
-        </div>
 
-        <!-- KPIs -->
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <p class="kpi-card__label">Total Pendiente</p>
-            <p class="kpi-card__value">${{ Number(stats.total_pendiente || 0).toLocaleString() }}</p>
-            <p class="kpi-card__foot kpi-card__foot--warn">⏳ {{ stats.pendientes || 0 }} pagos pendientes</p>
-          </div>
-          <div class="kpi-card">
-            <p class="kpi-card__label">Total Pagado</p>
-            <p class="kpi-card__value">${{ Number(stats.total_pagado || 0).toLocaleString() }}</p>
-            <p class="kpi-card__foot kpi-card__foot--ok">✓ {{ stats.pagadas || 0 }} nóminas pagadas</p>
-          </div>
-          <div class="kpi-card">
-            <p class="kpi-card__label">Total Nóminas</p>
-            <p class="kpi-card__value">{{ stats.total_nominas || 0 }}</p>
-            <p class="kpi-card__foot kpi-card__foot--info">👥 Registros históricos</p>
-          </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="panel">
-          <div class="panel__header">
-            <h3 class="panel__title">Historial de Nóminas</h3>
-            <div class="panel__controls">
-              <select v-model="filterEmpleado" class="select">
-                <option value="">Todos los empleados</option>
-                <option v-for="emp in empleados" :key="emp.id" :value="emp.id">{{ emp.name }}</option>
-              </select>
-              <select v-model="filterYear" class="select">
-                <option :value="2024">2024</option>
-                <option :value="2025">2025</option>
-                <option :value="2026">2026</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Periodo</th>
-                  <th>Empleado</th>
-                  <th>Desglose</th>
-                  <th>Total</th>
-                  <th>Estado</th>
-                  <th class="text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="loadingTable">
-                  <td colspan="6" class="table-empty">Cargando registros…</td>
-                </tr>
-                <tr v-else-if="nominas.length === 0">
-                  <td colspan="6" class="table-empty">Sin nóminas para este periodo.</td>
-                </tr>
-                <tr v-for="n in nominas" :key="n.id">
-                  <td>
-                    <p class="cell-primary">{{ formatDateRange(n.periodo_inicio, n.periodo_fin) }}</p>
-                    <p class="cell-secondary">#{{ n.id }}</p>
-                  </td>
-                  <td>
-                    <p class="cell-primary cell-primary--accent">{{ n.user?.name || `Usuario #${n.user_id}` }}</p>
-                    <p class="cell-secondary">{{ n.user?.tipo_empleado || 'Empleado' }}</p>
-                  </td>
-                  <td class="breakdown-cell">
-                    <span class="breakdown-item">Base: ${{ Number(n.salario_base || 0).toLocaleString() }} ({{ n.horas_totales }}h)</span>
-                    <span v-if="n.comision_ventas > 0" class="breakdown-item">Comisiones: ${{ Number(n.comision_ventas).toLocaleString() }}</span>
-                    <span v-if="n.bonos > 0" class="breakdown-item breakdown-item--ok">Bonos: +${{ Number(n.bonos).toLocaleString() }}</span>
-                    <span v-if="n.descuentos > 0" class="breakdown-item breakdown-item--neg">Descuentos: -${{ Number(n.descuentos).toLocaleString() }}</span>
-                  </td>
-                  <td>
-                    <p class="cell-total">${{ Number(n.pago_total || n.monto_total || 0).toLocaleString() }}</p>
-                  </td>
-                  <td>
-                    <span :class="['badge', statusClass(n.estado)]">{{ n.estado }}</span>
-                  </td>
-                  <td class="text-right">
-                    <div class="action-group">
-                      <button v-if="n.estado === 'PENDIENTE'" @click="abrirEditModal(n)" class="icon-btn icon-btn--blue" title="Editar">
-                        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                      </button>
-                      <button v-if="n.estado === 'PENDIENTE'" @click="abrirPaymentModal(n)" class="icon-btn icon-btn--green" title="Pagar">
-                        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      </button>
-                      <button @click="verDetalle(n)" class="icon-btn icon-btn--indigo" title="Ver detalle">
-                        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts-row">
-          <div class="panel chart-panel">
-            <div class="chart-panel__header">
-              <div>
-                <h3 class="panel__title">Tendencia de Gasto</h3>
-                <p class="panel__subtitle">Inversión mensual · {{ filterYear }}</p>
-              </div>
-              <span class="chart-panel__icon">📈</span>
-            </div>
-            <div class="chart-wrap">
-              <div v-if="loadingTable" class="chart-loader"><div class="spinner spinner--lg"></div></div>
-              <canvas ref="chartTendencia"></canvas>
-            </div>
-          </div>
-
-          <div class="panel chart-panel">
-            <div class="chart-panel__header">
-              <div>
-                <h3 class="panel__title">Composición de Pagos</h3>
-                <p class="panel__subtitle">Base vs. Variables</p>
-              </div>
-              <span class="chart-panel__icon">📊</span>
-            </div>
-            <div class="chart-wrap">
-              <div v-if="loadingTable" class="chart-loader"><div class="spinner spinner--lg"></div></div>
-              <canvas ref="chartComposicion"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Inversión por colaborador -->
-        <div v-if="statsPorEmpleado.length > 0" class="panel">
-          <div class="panel__header">
-            <div>
-              <h3 class="panel__title">Inversión por Colaborador</h3>
-              <p class="panel__subtitle">Acumulado pagado en {{ filterYear }}</p>
-            </div>
-            <span class="chart-panel__icon">👨‍💻</span>
-          </div>
-          <div class="emp-grid">
-            <div v-for="emp in statsPorEmpleado" :key="emp.name" class="emp-stat-card">
-              <div class="emp-stat-card__top">
-                <p class="emp-stat-card__name">{{ emp.name }}</p>
-                <span class="badge badge--neutral">{{ emp.count }} nóminas</span>
-              </div>
-              <div class="emp-stat-card__bottom">
-                <div>
-                  <p class="stat-micro-label">Acumulado</p>
-                  <p class="emp-stat-card__total">${{ Number(emp.total).toLocaleString() }}</p>
-                </div>
-                <div class="text-right">
-                  <p class="stat-micro-label">Variables</p>
-                  <p class="emp-stat-card__var">+${{ Number(emp.variables).toLocaleString() }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </template>
-
-      <!-- ═══ PERSONAL ══════════════════════════════════════════════════ -->
-      <template v-else-if="activeMainTab === 'personal'">
+      <template v-if="activeMainTab === 'personal'">
         <div class="personal-layout">
 
           <!-- Sidebar: KPI + Config -->
@@ -300,8 +113,8 @@
                   <p class="emp-card__stat-val">${{ Number(emp.salario_base || 0).toLocaleString() }}</p>
                 </div>
                 <div class="emp-card__stat emp-card__stat--divider">
-                  <p class="emp-card__stat-label">Valor Hora</p>
-                  <p class="emp-card__stat-val emp-card__stat-val--accent">${{ Number(emp.salario_por_hora || 0).toLocaleString() }}</p>
+                  <p class="emp-card__stat-label">Valor Minuto (Real)</p>
+                  <p class="emp-card__stat-val emp-card__stat-val--accent">${{ (Number(emp.salario_base || 0) / 14400 * 1.36).toFixed(2) }}</p>
                 </div>
                 <div class="emp-card__stat">
                   <p class="emp-card__stat-label">Comisión</p>
@@ -353,8 +166,8 @@
 
             <div class="field-row">
               <div class="field">
-                <label class="field__label">Valor / Hora <span class="optional">opcional</span></label>
-                <input v-model="newNomina.valor_hora" type="number" step="0.01" placeholder="50.00" class="field__input" />
+                <label class="field__label">Valor / Minuto <span class="optional">con factor 1.36</span></label>
+                <input :value="(newNomina.salario_base / 14400 * 1.36).toFixed(4)" type="text" disabled class="field__input field__input--disabled" />
               </div>
               <div class="field">
                 <label class="field__label">Salario Base Fijo <span class="optional">opcional</span></label>
@@ -491,15 +304,15 @@
                   <span class="field__prefix">$</span>
                   <input v-model="selectedEmp.salario_base" type="number" step="0.01" class="field__input field__input--prefixed" placeholder="0.00" />
                 </div>
-                <p class="field__hint">Sueldo fijo sin horas extras ni comisiones.</p>
+                <p class="field__hint">Sueldo fijo sin minutos extras ni comisiones.</p>
               </div>
               <div class="field">
-                <label class="field__label">Valor por Hora</label>
+                <label class="field__label">Valor por Minuto <span class="optional">con factor 1.36</span></label>
                 <div class="field__prefix-wrap">
                   <span class="field__prefix">$</span>
-                  <input v-model="selectedEmp.salario_por_hora" type="number" step="0.01" class="field__input field__input--prefixed" placeholder="0.00" />
+                  <input :value="(selectedEmp.salario_base / 14400 * 1.36).toFixed(4)" type="text" disabled class="field__input field__input--prefixed field__input--disabled" />
                 </div>
-                <p class="field__hint">Monto por cada hora registrada.</p>
+                <p class="field__hint">Costo Real: (Sueldo / 14400) * 1.36</p>
               </div>
             </div>
 
@@ -600,7 +413,7 @@ const loadingTable = ref(false)
 const loadingAction = ref(false)
 const filterYear = ref(new Date().getFullYear())
 const filterEmpleado = ref('')
-const activeMainTab = ref('historial')
+const activeMainTab = ref('personal')
 const nominaConfig = ref(null)
 
 const showGenerateModal = ref(false)
@@ -617,8 +430,8 @@ const stats = reactive({ total_nominas: 0, total_pagado: 0, total_pendiente: 0, 
 
 const newNomina = reactive({
   user_id: '',
-  inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-  fin: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
+  inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-CA'),
+  fin: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toLocaleDateString('en-CA'),
   valor_hora: '', salario_base: '', comision_ventas: '', bonos: '', descuentos: '', observaciones: ''
 })
 
@@ -765,7 +578,7 @@ const procesarEdicion = async () => {
 }
 
 const abrirPaymentModal = (n) => {
-  Object.assign(paymentNomina, { id: n.id, fecha_pago: new Date().toISOString().split('T')[0], metodo_pago: 'Efectivo', referencia_pago: '', observaciones: '' })
+  Object.assign(paymentNomina, { id: n.id, fecha_pago: new Date().toLocaleDateString('en-CA'), metodo_pago: 'Efectivo', referencia_pago: '', observaciones: '' })
   showPaymentModal.value = true
 }
 
@@ -801,9 +614,12 @@ const abrirEmpConfigModal = (emp) => {
 const procesarEmpConfig = async () => {
   loadingAction.value = true
   try {
+    const valMin = selectedEmp.salario_base > 0 ? (selectedEmp.salario_base / 14400) : 0
     const resp = await apiClient.put(`/empleados/${selectedEmp.id}`, {
-      salario_base: Number(selectedEmp.salario_base), salario_por_hora: Number(selectedEmp.salario_por_hora),
-      comision_por_venta: Number(selectedEmp.comision_por_venta), activo: selectedEmp.activo ? 1 : 0
+      salario_base: Number(selectedEmp.salario_base), 
+      salario_por_hora: valMin,
+      comision_por_venta: Number(selectedEmp.comision_por_venta), 
+      activo: selectedEmp.activo ? 1 : 0
     }, { headers: getTenantHeader() })
     if (resp.success) { showToast(`Configuración de ${selectedEmp.name} guardada.`); showEmpConfigModal.value = false; loadEmpleados() }
     else showToast(resp.message || 'No se pudo actualizar.', 'error')

@@ -18,9 +18,9 @@
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.kitchen || 'Calculando...' }}</p>
         <p class="text-indigo-200 text-xs mt-1">No está en Top 10 ventas</p>
-        <div v-if="bundle.kitchenMargen" class="mt-2 flex items-center gap-1">
-          <span class="text-emerald-300 text-xs font-black">${{ fmtM(bundle.kitchenMargen) }}</span>
-          <span class="text-indigo-300 text-[10px]">margen unitario</span>
+        <div v-if="bundle.kitchenVentas !== undefined" class="mt-2 flex items-center gap-1">
+          <span class="text-emerald-300 text-xs font-black">{{ bundle.kitchenVentas }} uds</span>
+          <span class="text-indigo-300 text-[10px]">vendidas</span>
         </div>
       </div>
 
@@ -70,6 +70,8 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 
+const emit = defineEmits(['execute'])
+
 const props = defineProps({
   products: { type: Array, required: true, default: () => [] }
 })
@@ -86,8 +88,6 @@ const num = (v) => {
   return isNaN(n) ? 0 : n
 }
 
-const fmtM = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
-
 const bundle = computed(() => {
   const source = Array.isArray(props.products) ? props.products : []
   
@@ -95,15 +95,10 @@ const bundle = computed(() => {
     return { kitchen: 'Cargando...', drink: 'Cargando...', dessert: 'Cargando...' }
   }
 
-  // Debug para ver qué campos manda el servidor realmente
-  if (source.length > 0) {
-    console.log('🔍 Muestra de producto recibido:', JSON.parse(JSON.stringify(source[0])));
-  }
-
   const result = {
-    kitchen: 'N/A', kitchenMargen: 0,
-    drink: 'N/A', drinkVentas: 0,
-    dessert: 'N/A', dessertVentas: 0
+    kitchen: 'N/A', kitchenMargen: 0, kitchenVentas: 0, kitchenObj: null,
+    drink: 'N/A', drinkVentas: 0, drinkObj: null,
+    dessert: 'N/A', dessertVentas: 0, dessertObj: null
   }
 
   try {
@@ -148,6 +143,8 @@ const bundle = computed(() => {
       if (k) {
         result.kitchen = k.nombre
         result.kitchenMargen = num(k.precio) - num(k.costo)
+        result.kitchenVentas = getVentas(k)
+        result.kitchenObj = k
       }
     } catch (e1) { console.error('Error Cocina:', e1) }
 
@@ -161,6 +158,7 @@ const bundle = computed(() => {
       if (d) {
         result.drink = d.nombre
         result.drinkVentas = getVentas(d)
+        result.drinkObj = d
       }
     } catch (e2) { console.error('Error Bebida:', e2) }
 
@@ -174,6 +172,7 @@ const bundle = computed(() => {
       if (ds) {
         result.dessert = ds.nombre
         result.dessertVentas = getVentas(ds)
+        result.dessertObj = ds
       }
     } catch (e3) { console.error('Error Postre:', e3) }
 
@@ -186,6 +185,12 @@ const bundle = computed(() => {
 
 const executeBundle = () => {
   if (bundle.value.kitchen === 'N/A' || bundle.value.kitchen === 'Cargando...') return
-  alert(`Paquete estratégico enviado:\n🍳 ${bundle.value.kitchen}\n🥤 ${bundle.value.drink}\n🍮 ${bundle.value.dessert}`)
+  
+  const suggestedProducts = []
+  if (bundle.value.kitchenObj) suggestedProducts.push(bundle.value.kitchenObj)
+  if (bundle.value.drinkObj) suggestedProducts.push(bundle.value.drinkObj)
+  if (bundle.value.dessertObj) suggestedProducts.push(bundle.value.dessertObj)
+
+  emit('execute', suggestedProducts)
 }
 </script>

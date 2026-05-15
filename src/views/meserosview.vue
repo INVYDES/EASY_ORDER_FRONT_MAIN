@@ -173,21 +173,27 @@
                     <!-- Lista de Productos -->
                     <div class="space-y-2">
                       <div v-for="detalle in detalles" :key="detalle.id"
-                        class="flex flex-col gap-1.5 p-2 bg-white rounded-xl border border-slate-50 shadow-sm group/item">
+                        :class="['flex flex-col gap-1.5 p-2 rounded-xl border shadow-sm group/item transition-all', 
+                                detalle.cancelado ? 'bg-red-50/50 border-red-100 opacity-80' : 'bg-white border-slate-50']">
                         
                         <div class="flex items-center justify-between gap-2">
                           <div class="min-w-0 flex-1">
-                            <p class="text-[11px] font-black text-slate-700 leading-tight uppercase truncate">
+                            <p class="text-[11px] font-black leading-tight uppercase truncate"
+                               :class="detalle.cancelado ? 'text-red-400 line-through' : 'text-slate-700'">
                               {{ detalle.cantidad }}× {{ detalle.producto_nombre || detalle.nombre || (typeof detalle.producto === 'string' ? detalle.producto : detalle.producto?.nombre) || 'Producto' }}
                             </p>
-                            <!-- Notas del producto -->
-                            <p v-if="detalle.notas" class="text-[9px] text-amber-600 font-bold italic mt-0.5">
+                            <!-- Leyenda de cancelado -->
+                            <p v-if="detalle.cancelado" class="text-[9px] font-black uppercase tracking-widest text-red-600 mt-0.5">
+                              🚫 Cancelado: {{ detalle.motivo_cancelacion }}
+                            </p>
+                            <!-- Notas del producto (solo si no está cancelado para no saturar) -->
+                            <p v-else-if="detalle.notas" class="text-[9px] text-amber-600 font-bold italic mt-0.5">
                               "{{ detalle.notas }}"
                             </p>
                           </div>
 
-                          <!-- Acciones rápidas (Solo en órdenes ABIERTAS) -->
-                          <div v-if="sub.estado_estacion === 'ABIERTA'" class="flex items-center gap-2">
+                          <!-- Acciones rápidas (Solo si no está cancelado y la orden no está cerrada) -->
+                          <div v-if="!detalle.cancelado && !['CERRADA', 'PAGADA', 'CANCELADA'].includes(sub.estado_estacion)" class="flex items-center gap-2">
                             <button @click="abrirEditorNotas(detalle, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100 active:scale-90 transition-all">
                               <span class="text-base">📝</span>
                             </button>
@@ -196,15 +202,16 @@
                             </button>
                           </div>
 
-                          <!-- Badge de estado -->
+                          <!-- Badge de estado para informativos -->
                           <div v-else class="flex items-center">
-                            <span v-if="detalle.estado_preparacion === 'LISTO'" class="text-[10px] font-black text-white bg-emerald-500 px-3 py-1 rounded-xl shadow-sm">LISTO</span>
-                            <span v-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 text-sm">●</span>
+                            <span v-if="detalle.cancelado" class="text-[8px] font-black text-red-600 bg-red-100 px-2 py-0.5 rounded-lg uppercase">Anulado</span>
+                            <span v-else-if="detalle.estado_preparacion === 'LISTO'" class="text-[10px] font-black text-white bg-emerald-500 px-3 py-1 rounded-xl shadow-sm">LISTO</span>
+                            <span v-else-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 text-sm">●</span>
                           </div>
                         </div>
 
-                        <!-- Controles de Cantidad (Solo en ABIERTAS) -->
-                        <div v-if="sub.estado_estacion === 'ABIERTA'" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
+                        <!-- Controles de Cantidad (Solo en ABIERTAS y no cancelados) -->
+                        <div v-if="sub.estado_estacion === 'ABIERTA' && !detalle.cancelado" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
                           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-auto">Cantidad:</span>
                           <div class="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-100">
                             <button @click="actualizarCantidadItem(detalle, sub.id, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-red-500 font-black text-base shadow-sm active:scale-90 transition-all">−</button>
@@ -507,6 +514,44 @@
         </div>
       </div>
     </div>
+    <!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
+    <div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4" @click.self="cancelacionModal.visible = false">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in border border-slate-100">
+        <div class="p-6 bg-red-50 border-b border-red-100">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+              <h3 class="font-black text-red-800 text-sm">Motivo de cancelación</h3>
+              <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Se requiere registrar el motivo</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-6">
+          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">¿Por qué se cancela este producto?</label>
+          <div class="grid grid-cols-1 gap-2 mb-4">
+            <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
+              @click="cancelacionModal.motivo = m"
+              :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition text-left', 
+                cancelacionModal.motivo === m ? 'bg-red-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100']">
+              {{ m }}
+            </button>
+          </div>
+          <textarea v-model="cancelacionModal.motivo" rows="2" 
+            class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition font-bold"
+            placeholder="Escribe otro motivo..."></textarea>
+        </div>
+        <div class="p-6 bg-slate-50 flex gap-3">
+          <button @click="cancelacionModal.visible = false" 
+            class="flex-1 py-3 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
+            Cerrar
+          </button>
+          <button @click="confirmarCancelacion" :disabled="!cancelacionModal.motivo || creando"
+            class="flex-1 py-3 text-xs font-black text-white bg-red-600 rounded-xl hover:bg-red-700 transition shadow-lg shadow-red-100 uppercase tracking-widest disabled:opacity-50">
+            {{ creando ? 'Cancelando...' : 'Confirmar' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -539,6 +584,8 @@ const mesasAsignadas  = ref([])
 const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
 const totalMesasRestaurante = ref(0)
 const ultimaActualizacion = ref(null)
+
+const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
 
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
 const ordenExistente = ref(null)   // se muestra el modal de confirmación
@@ -623,13 +670,16 @@ const esPostre = (d) => {
   return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
 }
 const calcularEstadoEstacion = (detalles, estadoOrden) => {
-  if (estadoOrden === 'ABIERTA') return 'ABIERTA'
-  if (['CERRADA','PAGADA'].includes(estadoOrden)) return 'CERRADA'
-  if (!detalles?.length) return 'POR_PREPARAR'
-  const total      = detalles.length
-  const entregados = detalles.filter(d => (d.estado_preparacion || d.estado) === 'ENTREGADO').length
-  const listos     = detalles.filter(d => (d.estado_preparacion || d.estado) === 'LISTO').length
-  const enPrep     = detalles.filter(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION').length
+  if (['ABIERTA', 'ENTREGADA', 'CERRADA', 'PAGADA', 'CANCELADA'].includes(estadoOrden)) return estadoOrden
+  
+  const validos = detalles?.filter(d => !d.cancelado) || []
+  if (!validos.length) return 'ENTREGADA'
+  
+  const total      = validos.length
+  const entregados = validos.filter(d => (d.estado_preparacion || d.estado) === 'ENTREGADO').length
+  const listos     = validos.filter(d => (d.estado_preparacion || d.estado) === 'LISTO').length
+  const enPrep     = validos.filter(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION').length
+  
   if (entregados === total) return 'ENTREGADA'
   if (listos > 0) return 'LISTA'
   if (enPrep > 0) return 'EN_PREPARACION'
@@ -698,10 +748,13 @@ const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-
 const cargarOrdenes = async () => {
   loading.value = true
   try {
-    const today  = new Date().toISOString().split('T')[0]
+    const d = new Date()
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    
     const states = ['ABIERTA','POR_PREPARAR','EN_PREPARACION','LISTA','ENTREGADA']
     const urls   = states.map(s => `/meseros/mis-ordenes?estado=${s}&per_page=100`)
-    urls.push(`/meseros/mis-ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
+    // Traer TODO el historial del día actual para no ocultar las canceladas o pagadas
+    urls.push(`/meseros/mis-ordenes?fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
     const results = await Promise.all(urls.map(url => apiClient.get(url)))
     const map = new Map()
     results.forEach(res => { 
@@ -921,18 +974,42 @@ const agruparPorComensal = (detalles) => {
   return grupos
 }
 
-const eliminarProductoDeOrden = async (detalleId, ordenId) => {
-  if (!confirm('¿Seguro que quieres eliminar este producto de la orden?')) return
+const eliminarProductoDeOrden = (detalleId, ordenId) => {
+  cancelacionModal.value = {
+    visible: true,
+    detalleId,
+    ordenId,
+    motivo: ''
+  }
+}
+
+const confirmarCancelacion = async () => {
+  const { detalleId, ordenId, motivo } = cancelacionModal.value
+  if (!motivo) return
+  
+  creando.value = true
   try {
-    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}`)
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}`)
     if (data.success || data.data) {
-      showToast('Producto eliminado', 'success')
+      showToast('Producto cancelado correctamente', 'success')
+      cancelacionModal.value.visible = false
+      // Actualizar localmente para feedback inmediato
+      const ordenIdx = ordenes.value.findIndex(o => o.id === ordenId)
+      if (ordenIdx !== -1) {
+        const d = (ordenes.value[ordenIdx].detalles || []).find(x => x.id === detalleId)
+        if (d) {
+          d.cancelado = true
+          d.motivo_cancelacion = motivo
+        }
+      }
       await cargarOrdenes()
     } else {
       showToast(data.message || 'Error al eliminar', 'error')
     }
   } catch (e) {
     showToast('Error de conexión', 'error')
+  } finally {
+    creando.value = false
   }
 }
 
@@ -978,8 +1055,13 @@ const actualizarCantidadItem = async (detalle, ordenId, delta) => {
 }
 
 const entregarProductosSubOrden = async (sub) => {
-  const ids = sub.detalles_estacion.filter(d => (d.estado_preparacion || d.estado) === 'LISTO').map(d => d.id)
-  if (!ids.length) return
+  const ids = sub.detalles_estacion.filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado).map(d => d.id)
+  
+  if (!ids.length) {
+    // Si no hay productos "LISTOS" (por ej. fueron cancelados), forzamos avanzar la orden a ENTREGADA
+    return cambiarEstadoSubOrden(sub, 'ENTREGADA');
+  }
+
   cambiando.value = sub.uid
   try {
     const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, { detalles: ids, estado_preparacion: 'ENTREGADO' })

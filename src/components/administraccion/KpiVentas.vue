@@ -289,7 +289,7 @@ const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits:
 const dp = (a, b) => b ? Math.abs(((a - b) / b) * 100).toFixed(1) : '0'
 const di = (a, b) => a >= b ? '↑' : '↓'
 const dc = (a, b) => a >= b ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-const fmtDate = (d) => d.toISOString().split('T')[0]
+const fmtDate = (d) => d.toLocaleDateString('en-CA')
 
 const kpiGrupoLabel = computed(() => ({ dia: 'día', semana: 'semana', mes: 'mes' }[kpiGrupo.value]))
 

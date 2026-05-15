@@ -181,7 +181,7 @@ const calcularCosto = (pkg) => {
     // 2. Mano de Obra (MO) - Basado en la nómina total del restaurante
     // (Total Nómina / 14400 minutos operativos al mes) * minutos producción * factor carga social
     const minProd = parseFloat(p.minutos_produccion || 0)
-    const costoMO = (props.totalSueldosBase / 14400) * 1.66 * minProd
+    const costoMO = (props.totalSueldosBase / 14400) * 1.36 * minProd
 
     // 3. Indirectos (5%)
     const costoProdIndividual = (costoInsumos + costoMO) * 1.05

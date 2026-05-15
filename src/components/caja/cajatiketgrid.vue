@@ -11,11 +11,26 @@
           <button @click="ordenCobrar = null" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-200">✕</button>
         </div>
 
-        <!-- Detalles de la orden -->
         <div class="px-6 py-4 max-h-52 overflow-y-auto space-y-2">
-          <div v-for="d in ordenCobrar.detalles" :key="d.id" class="flex justify-between text-sm font-bold text-slate-700">
-            <span>{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
-            <span>${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+          <div v-for="d in ordenCobrar.detalles" :key="d.id" 
+            :class="['flex justify-between items-center text-sm font-bold p-2 rounded-xl group/item transition-all', 
+                    d.cancelado ? 'bg-red-50 text-red-400 opacity-80' : 'bg-slate-50 text-slate-700']">
+            <div class="flex-1">
+              <span :class="{'line-through': d.cancelado}">
+                {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
+              </span>
+              <p v-if="d.cancelado" class="text-[9px] font-black uppercase tracking-widest text-red-600 mt-0.5">🚫 Cancelado: {{ d.motivo_cancelacion }}</p>
+              <p v-else-if="d.notas" class="text-[10px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span :class="{'line-through': d.cancelado}">
+                ${{ Number(d.subtotal || 0).toFixed(2) }}
+              </span>
+              <button v-if="!d.cancelado" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
+                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-red-100">
+                <span class="text-xs">🗑️</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -271,8 +286,12 @@
         <div class="px-5 py-4 space-y-3">
           <div class="space-y-1 bg-slate-50 rounded-2xl p-3">
             <div v-for="d in (order.detalles || []).slice(0, 4)" :key="d.id"
-              class="flex justify-between text-xs font-bold text-slate-600">
-              <span class="truncate flex-1">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
+              class="flex justify-between text-xs font-bold"
+              :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
+              <span class="truncate flex-1">
+                {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
+                <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
+              </span>
               <span class="text-slate-400 ml-2">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
             </div>
             <p v-if="(order.detalles || []).length > 4" class="text-[10px] text-slate-400 font-black pt-1">
@@ -348,11 +367,13 @@
                 </td>
               </tr>
               <!-- Productos del comensal -->
-              <tr v-for="item in items" :key="item.id">
+              <tr v-for="item in items" :key="item.id" :style="item.cancelado ? 'color: #999; text-decoration: line-through;' : ''">
                 <td style="padding: 1mm 0; vertical-align: top;">{{ item.cantidad }}</td>
                 <td style="padding: 1mm 0; text-transform: uppercase;">
                   {{ item.nombre }}
-                  <div v-if="item.notas" style="font-size: 9px; font-style: italic; color: #555;">* {{ item.notas }}</div>
+                  <span v-if="item.cancelado" style="font-size: 8px; text-decoration: none !important; display: inline-block; background: #eee; padding: 0 1mm;">[CANCELADO]</span>
+                  <div v-if="item.notas && !item.cancelado" style="font-size: 9px; font-style: italic; color: #555;">* {{ item.notas }}</div>
+                  <div v-if="item.cancelado" style="font-size: 8px; font-style: italic; text-decoration: none !important;">Motivo: {{ item.motivo_cancelacion }}</div>
                 </td>
                 <td style="text-align: right; padding: 1mm 0; vertical-align: top;">${{ Number(item.subtotal).toFixed(2) }}</td>
               </tr>
@@ -384,8 +405,43 @@
           <p style="margin-top: 2mm; font-size: 8px; color: #666;">*** EASY ORDER SYSTEM ***</p>
         </div>
       </div>
+    <!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
+    <div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4" @click.self="cancelacionModal.visible = false">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100">
+        <div class="px-6 py-5 bg-red-50 border-b border-red-100 flex items-center gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h3 class="font-black text-red-800 text-sm uppercase tracking-tight">Motivo de cancelación</h3>
+            <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Este producto no se cobrará</p>
+          </div>
+        </div>
+        <div class="p-6">
+          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Selecciona o escribe el motivo</label>
+          <div class="grid grid-cols-1 gap-2 mb-4">
+            <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
+              @click="cancelacionModal.motivo = m"
+              :class="['px-4 py-2.5 rounded-2xl text-xs font-bold transition text-left border', 
+                cancelacionModal.motivo === m ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100']">
+              {{ m }}
+            </button>
+          </div>
+          <textarea v-model="cancelacionModal.motivo" rows="2" 
+            class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition font-bold"
+            placeholder="Escribe otro motivo detallado..."></textarea>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 flex gap-3">
+          <button @click="cancelacionModal.visible = false" 
+            class="flex-1 py-3 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
+            Ignorar
+          </button>
+          <button @click="confirmarCancelacion" :disabled="!cancelacionModal.motivo || cobrando"
+            class="flex-1 py-3 text-xs font-black text-white bg-red-600 rounded-2xl hover:bg-red-700 transition shadow-lg shadow-red-100 uppercase tracking-widest disabled:opacity-50">
+            {{ cobrando ? '...' : 'Confirmar' }}
+          </button>
+        </div>
+      </div>
+      </div>
     </div>
-
   </div>
 </template>
 
@@ -409,6 +465,8 @@ const cobrando       = ref(false)
 const montoRecibido  = ref(0)
 const folio          = ref('')
 const errorCobro     = ref('')
+
+const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
 
 const metodos = [
   { key: 'efectivo',      label: 'Efectivo',      icon: '💵' },
@@ -479,7 +537,9 @@ const itemsByComensal = computed(() => {
       cantidad: item.cantidad || 0,
       nombre: item.producto_nombre || item.nombre || (typeof item.producto === 'string' ? item.producto : item.producto?.nombre) || 'Producto',
       subtotal: item.subtotal || 0,
-      notas: item.notas || ''
+      notas: item.notas || '',
+      cancelado: !!item.cancelado,
+      motivo_cancelacion: item.motivo_cancelacion || ''
     })
   })
   return grouped
@@ -693,6 +753,47 @@ const cobrarOrden = async () => {
   } catch (e) {
     console.error('Error al cobrar:', e)
     alert('Error al cobrar la orden. Intenta de nuevo.')
+  } finally {
+    cobrando.value = false
+  }
+}
+
+const eliminarProductoDeOrden = (detalleId, ordenId) => {
+  cancelacionModal.value = {
+    visible: true,
+    detalleId,
+    ordenId,
+    motivo: ''
+  }
+}
+
+const confirmarCancelacion = async () => {
+  const { detalleId, ordenId, motivo } = cancelacionModal.value
+  if (!motivo) return
+  
+  cobrando.value = true
+  try {
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}`)
+    if (data.success || data.data) {
+      // Actualizar ordenCobrar.detalles localmente
+      if (ordenCobrar.value && ordenCobrar.value.id === ordenId) {
+        const item = ordenCobrar.value.detalles.find(d => d.id === detalleId)
+        if (item) {
+          item.cancelado = true
+          item.motivo_cancelacion = motivo
+        }
+        // Recalcular total localmente (solo productos no cancelados)
+        ordenCobrar.value.total = ordenCobrar.value.detalles.reduce((sum, d) => {
+          return d.cancelado ? sum : sum + Number(d.subtotal || 0)
+        }, 0)
+      }
+      cancelacionModal.value.visible = false
+      emit('refresh')
+    } else {
+      alert(data.message || 'Error al eliminar')
+    }
+  } catch (e) {
+    alert('Error de conexión')
   } finally {
     cobrando.value = false
   }

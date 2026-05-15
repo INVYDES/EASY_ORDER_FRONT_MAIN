@@ -458,7 +458,7 @@ const loadData = async () => {
   if (!token) { router.push('/'); return }
   loading.general = true
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('en-CA')
 
     const [uData, rData, dData, cData] = await Promise.all([
       apiClient.get('/me'),

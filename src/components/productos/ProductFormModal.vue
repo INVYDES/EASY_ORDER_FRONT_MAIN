@@ -402,7 +402,7 @@ const minutosProduccion = computed({
 })
 const minutosTurno      = ref(480) // 8 horas por defecto
 const diasMes           = ref(30)  // Estándar mensual
-const factorCargaSocial = ref(1.66) // Carga social por defecto
+const factorCargaSocial = ref(1.36) // Carga social por defecto
 
 // ── Computed: Costos y precio sugerido ───────────────────────────────────────
 const costoTotalReceta = computed(() =>

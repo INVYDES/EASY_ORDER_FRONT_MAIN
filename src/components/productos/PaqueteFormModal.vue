@@ -248,7 +248,8 @@ import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   paquete: { type: Object, default: null },
-  availableProducts: { type: Array, default: () => [] }
+  availableProducts: { type: Array, default: () => [] },
+  initialProducts: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['close', 'saved'])
@@ -278,6 +279,12 @@ onMounted(() => {
       cantidad: p.pivot?.cantidad || 1
     }))
     previewUrl.value = props.paquete.imagen_url
+  } else if (props.initialProducts && props.initialProducts.length > 0) {
+    // Si venimos desde una sugerencia estratégica
+    form.productos = props.initialProducts.map(p => ({
+      ...p,
+      cantidad: 1
+    }))
   }
 })
 
@@ -310,7 +317,7 @@ const costoManoObraTotal = computed(() => {
   if (!totalSueldosBaseReal.value) return 0
   return form.productos.reduce((sum, p) => {
     const minProd = parseFloat(p.minutos_produccion || 0)
-    const costoMO = (totalSueldosBaseReal.value / 14400) * 1.66 * minProd
+    const costoMO = (totalSueldosBaseReal.value / 14400) * 1.36 * minProd
     return sum + (costoMO * p.cantidad)
   }, 0)
 })
