@@ -81,7 +81,7 @@ const toLocalTime = (dateStr) => {
       d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
     } else if (dateStr.includes(':') && !dateStr.includes('-') && !dateStr.includes('/')) {
       // Si solo es la hora, asumimos la fecha de hoy
-      const hoy = new Date().toISOString().split('T')[0];
+      const hoy = new Date().toLocaleDateString('en-CA');
       d = new Date(`${hoy}T${dateStr}Z`);
     } else {
       d = new Date(dateStr.replace(' ', 'T') + 'Z');

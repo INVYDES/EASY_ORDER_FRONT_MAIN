@@ -336,14 +336,14 @@ const resumenData = ref({
 })
 
 const filtros = reactive({
-  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-  fecha_hasta: new Date().toISOString().split('T')[0],
+  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-CA'),
+  fecha_hasta: new Date().toLocaleDateString('en-CA'),
   categoria:   '',
 })
 
 const form = ref({
   concepto: '', categoria: '', monto: '',
-  fecha: new Date().toISOString().split('T')[0], notas: '',
+  fecha: new Date().toLocaleDateString('en-CA'), notas: '',
 })
 
 // ── CATÁLOGOS ──────────────────────────────────────────────
@@ -432,14 +432,14 @@ const cargarResumenPeriodo = async (periodo) => {
     const hoy = new Date()
     let params = {}
     if (periodo === 'month') {
-      params.fecha_inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0]
-      params.fecha_fin    = hoy.toISOString().split('T')[0]
+      params.fecha_inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toLocaleDateString('en-CA')
+      params.fecha_fin    = hoy.toLocaleDateString('en-CA')
     } else if (periodo === 'last-month') {
-      params.fecha_inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1).toISOString().split('T')[0]
-      params.fecha_fin    = new Date(hoy.getFullYear(), hoy.getMonth(), 0).toISOString().split('T')[0]
+      params.fecha_inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1).toLocaleDateString('en-CA')
+      params.fecha_fin    = new Date(hoy.getFullYear(), hoy.getMonth(), 0).toLocaleDateString('en-CA')
     } else if (periodo === 'year') {
-      params.fecha_inicio = new Date(hoy.getFullYear(), 0, 1).toISOString().split('T')[0]
-      params.fecha_fin    = hoy.toISOString().split('T')[0]
+      params.fecha_inicio = new Date(hoy.getFullYear(), 0, 1).toLocaleDateString('en-CA')
+      params.fecha_fin    = hoy.toLocaleDateString('en-CA')
     }
     const data = await apiClient.get(`/gastos/resumen?${new URLSearchParams(params)}`)
     if (data.data) { resumenData.value = data.data; modalResumenVisible.value = true }
@@ -477,7 +477,7 @@ const eliminarGasto = async (gasto) => {
 
 const abrirModalCrear = () => {
   modoEdicion.value = false; gastoSeleccionado.value = null
-  form.value = { concepto:'', categoria:'', monto:'', fecha: new Date().toISOString().split('T')[0], notas:'' }
+  form.value = { concepto:'', categoria:'', monto:'', fecha: new Date().toLocaleDateString('en-CA'), notas:'' }
   formError.value = ''; modalVisible.value = true
 }
 const abrirModalEditar = (gasto) => {

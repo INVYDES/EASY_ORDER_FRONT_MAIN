@@ -425,41 +425,71 @@ const categoriasFiltradas = computed(() => {
 const totalPedido = computed(() => pedido.value.reduce((s,i) => s + i.precio * i.cantidad, 0))
 const totalItems  = computed(() => pedido.value.reduce((s,i) => s + i.cantidad, 0))
 
-const normalizar = (p) => ({
-  id:          p.id,
-  nombre:      p.nombre,
-  descripcion: p.descripcion || '',
-  precio:      parseFloat(p.precio || 0),
-  imagen_url:  p.imagen_url  || p.imagen || null,
-  stock:       p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0,
-  agotado:     (p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
-  bajo_stock:  p.bajo_stock ?? false,
-  categoria:   p.categoria ? {
-    id:     p.categoria.id,
-    nombre: p.categoria.nombre,
-    color:  p.categoria.color  || '#6366f1',
-    icono:  p.categoria.icono  || '📦',
-    orden:  p.categoria.orden  ?? 99,
-  } : null,
-})
+const normalizar = (p) => {
+  if (!p) return null;
+  try {
+    return {
+      id:          p.id,
+      nombre:      p.nombre || 'Sin nombre',
+      descripcion: p.descripcion || '',
+      precio:      parseFloat(p.precio || 0),
+      imagen_url:  p.imagen_url  || p.imagen || null,
+      stock:       parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
+      agotado:     parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
+      bajo_stock:  p.bajo_stock ?? false,
+      categoria:   p.categoria ? {
+        id:     p.categoria.id,
+        nombre: p.categoria.nombre,
+        color:  p.categoria.color  || '#6366f1',
+        icono:  p.categoria.icono  || '📦',
+        orden:  p.categoria.orden  ?? 99,
+      } : { id: 0, nombre: 'Otros', color: '#6366f1', icono: '📦', orden: 99 },
+    }
+  } catch (e) {
+    console.error('❌ Error normalizando producto:', p, e);
+    return null;
+  }
+}
 
-// --- API ---
 const cargarRestauranteActivo = async () => {
   try {
     const data = await apiClient.get('/me')
     if (data?.success) {
-      const user = data.data || data
-      const ra = user?.restaurante_activo
-      if (ra && typeof ra === 'object') { 
-        restauranteSeleccionado.value = ra
-        localStorage.setItem('restaurante_id_activo', ra.id)
-        return ra.id 
+      const userData = data.data || data;
+      
+      // 1. Intentar obtener el objeto restaurante completo (ya viene en /me)
+      if (userData.restaurante) {
+        console.log('✅ [KIOSKO] Info del restaurante cargada desde /me:', userData.restaurante.nombre)
+        restauranteSeleccionado.value = userData.restaurante
+        localStorage.setItem('restaurante_id_activo', userData.restaurante.id)
+        return userData.restaurante.id
+      }
+
+      // 2. Fallback al ID de restaurante_activo
+      const ra = userData.restaurante_activo;
+      if (ra) { 
+        const id = typeof ra === 'object' ? ra.id : ra;
+        console.log('✅ [KIOSKO] Usando ID de restaurante_activo:', id);
+        restauranteSeleccionado.value = typeof ra === 'object' ? ra : { id: ra, nombre: 'Restaurante' };
+        localStorage.setItem('restaurante_id_activo', id);
+        return id;
+      }
+
+      // 3. Fallback: Ver si hay una lista de restaurantes
+      const listaRest = userData.restaurantes || userData.data?.restaurantes;
+      if (Array.isArray(listaRest) && listaRest.length > 0) {
+        const id = listaRest[0].id;
+        console.warn('⚠️ [KIOSKO] Usando primer restaurante de la lista del usuario:', id);
+        restauranteSeleccionado.value = listaRest[0];
+        localStorage.setItem('restaurante_id_activo', id);
+        return id;
       }
     }
-    // Fallback: Si no viene en el /me, usar el guardado en localStorage
+
+    // 4. Fallback final: LocalStorage
     const savedId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
     if (savedId) {
-      console.warn('⚠️ Restaurante no vino en /me, usando fallback de localStorage:', savedId)
+      console.warn('⚠️ [KIOSKO] Usando fallback de localStorage:', savedId)
       return savedId
     }
     return null
@@ -472,16 +502,33 @@ const cargarRestauranteActivo = async () => {
 const cargarProductos = async (restauranteId) => {
   loading.value.productos = true
   try {
+    console.log('📡 [KIOSKO] Pidiendo productos disponibles...');
     const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
+    console.log('📦 [KIOSKO] Respuesta disponibles:', dispData);
+    
     if (dispData?.success && Array.isArray(dispData.data) && dispData.data.length > 0) {
-      productos.value = dispData.data.map(normalizar); return
+      productos.value = dispData.data.map(normalizar).filter(p => p !== null); 
+      console.log('✅ [KIOSKO] Productos con stock cargados:', productos.value.length);
+      return
     }
+    
+    console.warn('⚠️ [KIOSKO] No hay productos con stock, intentando catálogo general...');
     const todosData = await apiClient.get(`/productos?restaurante_id=${restauranteId}&per_page=100`)
+    console.log('📦 [KIOSKO] Respuesta catálogo general:', todosData);
+    
     if (todosData?.success) {
-      let lista = todosData.data; if (!Array.isArray(lista)) lista = lista?.data ?? []
-      productos.value = lista.map(normalizar)
+      let lista = todosData.data; 
+      if (!Array.isArray(lista)) lista = lista?.data ?? []
+      productos.value = lista.map(normalizar).filter(p => p !== null);
+      console.log('✅ [KIOSKO] Catálogo general cargado:', productos.value.length);
+    } else {
+      console.error('❌ [KIOSKO] Falló carga de catálogo general:', todosData?.message);
     }
-  } finally { loading.value.productos = false }
+  } catch (err) {
+    console.error('❌ [KIOSKO] Error en cargarProductos:', err);
+  } finally { 
+    loading.value.productos = false 
+  }
 }
 
 const cargarOfertas = async (restauranteId) => {
@@ -613,26 +660,26 @@ const handleCheckout = async (checkoutData) => {
 }
 
 onMounted(async () => {
-  console.log('🚀 Iniciando Kiosko de Menú...');
+  console.log('🚀 [KIOSKO] Iniciando inicialización...');
   try {
     const restId = await cargarRestauranteActivo()
-    console.log('📍 Restaurante ID identificado:', restId);
+    console.log('📍 [KIOSKO] Resultado de ID Restaurante:', restId);
     
     if (restId) { 
-      // Cargamos productos primero ya que es lo más importante
-      await cargarProductos(restId).catch(e => console.error('Error productos:', e))
+      console.log('🔄 [KIOSKO] Cargando productos para ID:', restId);
+      await cargarProductos(restId).catch(e => console.error('❌ [KIOSKO] Error productos:', e))
       
-      // El resto puede fallar sin bloquear
-      cargarOfertas(restId).catch(e => console.error('Error ofertas:', e))
-      cargarPaquetes(restId).catch(e => console.error('Error paquetes:', e))
+      console.log('🔄 [KIOSKO] Cargando ofertas y paquetes...');
+      cargarOfertas(restId).catch(e => console.error('❌ [KIOSKO] Error ofertas:', e))
+      cargarPaquetes(restId).catch(e => console.error('❌ [KIOSKO] Error paquetes:', e))
     } else {
-      console.error('❌ No se pudo identificar el restaurante activo');
+      console.error('❌ [KIOSKO] No se pudo identificar el restaurante activo. Revisa el localStorage o la sesión.');
     }
   } catch (err) {
-    console.error('🔥 Error crítico en inicialización:', err)
+    console.error('🔥 [KIOSKO] Error crítico en inicialización:', err)
   } finally {
     loading.value.productos = false
-    console.log('✅ Carga finalizada, loader apagado');
+    console.log('✅ [KIOSKO] Carga finalizada.');
   }
 })
 </script>

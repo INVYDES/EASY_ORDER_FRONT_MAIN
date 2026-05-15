@@ -191,12 +191,67 @@
       </div>
     </div>
 
+    <!-- ══ SECCIÓN: PLATILLOS DEVUELTOS / CANCELADOS ══ -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="font-bold text-slate-800 text-lg">📉 Platillos Devueltos / Cancelados</h3>
+          <p class="text-xs text-slate-400 font-medium">Historial de productos eliminados con motivo de cancelación</p>
+        </div>
+        <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
+           Total Mermas: ${{ fm(totalMermas) }}
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+              <th class="py-3 px-2">Fecha/Hora</th>
+              <th class="py-3 px-2">Producto</th>
+              <th class="py-3 px-2">Cant</th>
+              <th class="py-3 px-2">Subtotal</th>
+              <th class="py-3 px-2">Motivo</th>
+              <th class="py-3 px-2">Autorizó</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr v-if="productosDevueltos.length === 0">
+              <td colspan="6" class="py-10 text-center text-slate-300 italic text-sm">No hay devoluciones registradas en este periodo</td>
+            </tr>
+            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-slate-50 transition-colors group">
+              <td class="py-4 px-2 font-bold text-slate-500">
+                {{ d.fecha ? new Date(d.fecha.replace(' ', 'T') + 'Z').toLocaleString('es-MX', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: true }) : '—' }}
+              </td>
+              <td class="py-4 px-2 font-black text-slate-800 uppercase tracking-tight">{{ d.producto || d.producto_nombre || d.nombre || 'Producto' }}</td>
+              <td class="py-4 px-2 font-black text-slate-600">{{ d.cantidad }}</td>
+              <td class="py-4 px-2 font-black text-red-600">${{ fm(d.subtotal) }}</td>
+              <td class="py-4 px-2">
+                <span class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold border border-red-100 text-[10px]">
+                  {{ d.motivo || d.motivo_cancelacion || 'Sin motivo' }}
+                </span>
+              </td>
+              <td class="py-4 px-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
+                    {{ (d.usuario || 'U').substring(0,1) }}
+                  </div>
+                  <span class="font-bold text-slate-600">{{ d.usuario || 'Sistema' }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
 
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },
@@ -214,6 +269,7 @@ const kpiAnterior = ref({ ventas: [], totales: null })
 const topProductos = ref([])
 const productosRentabilidad = ref([])
 const productosRebase = ref([])
+const productosDevueltos = ref([])
 const tiempoPeriodo = ref('hoy')
 const kpiMeseroId = ref('')
 
@@ -240,6 +296,8 @@ const kpiGrupoLabel = computed(() => ({ dia: 'día', semana: 'semana', mes: 'mes
 const dc = (a, b) => Number(a||0) >= Number(b||0) ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
 const di = (a, b) => Number(a||0) >= Number(b||0) ? '↑' : '↓'
 const dp = (a, b) => { const bVal = Number(b||0); if(!bVal) return '0'; return Math.abs(((Number(a||0)-bVal)/bVal)*100).toFixed(1) }
+
+const totalMermas = computed(() => productosDevueltos.value.reduce((s, d) => s + Number(d.subtotal || 0), 0))
 
 const rankClass = (i) => [
   'bg-amber-400 text-white shadow-md shadow-amber-100',
@@ -281,7 +339,7 @@ const bundle = computed(() => {
 const setKpiPeriodo = (key) => {
   kpiPeriodo.value = key
   const hoy = new Date()
-  const fmt = (d) => d.toISOString().split('T')[0]
+  const fmt = (d) => d.toLocaleDateString('en-CA')
   if (key === 'total') {
     kpiFechaInicio.value = ''; kpiFechaFin.value = ''; kpiGrupo.value = 'mes'
   } else if (key === 'hoy') {
@@ -298,9 +356,7 @@ const setKpiPeriodo = (key) => {
 
 const loadTiemposRebase = async () => {
   try {
-    const headers = props.getHeaders()
-    const res = await fetch(`${props.apiUrl}/reportes/tiempos-rebase?periodo=${tiempoPeriodo.value}&limite=5`, { headers })
-    const data = await res.json()
+    const data = await apiClient.get(`/reportes/tiempos-rebase?periodo=${tiempoPeriodo.value}&limite=5`)
     if (data.success) productosRebase.value = data.data || []
   } catch { productosRebase.value = [] }
 }
@@ -308,26 +364,24 @@ const loadTiemposRebase = async () => {
 const loadKpis = async () => {
   loading.value = true
   try {
-    const fIni = kpiFechaInicio.value ? `&fecha_inicio=${kpiFechaInicio.value}` : ''
-    const fFin = kpiFechaFin.value ? `&fecha_fin=${kpiFechaFin.value}` : ''
-    const uId  = kpiMeseroId.value ? `&user_id=${kpiMeseroId.value}` : ''
+    const params = {
+      fecha_inicio: kpiFechaInicio.value || null,
+      fecha_fin:    kpiFechaFin.value || null,
+      user_id:      kpiMeseroId.value || null
+    }
 
-    const [vRes, pRes, prodMaster, ingRes, nomRes] = await Promise.all([
-      fetch(`${props.apiUrl}/reportes/ventas?grupo=${kpiGrupo.value}${fIni}${fFin}${uId}`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/reportes/productos-mas-vendidos?limite=200${fIni}${fFin}${uId}`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/productos?per_page=1000`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/ingredientes`, { headers: props.getHeaders() }),
-      fetch(`${props.apiUrl}/empleados`, { headers: props.getHeaders() }),
+    const [vData, pData, pmData, iData, nData, devData] = await Promise.all([
+      apiClient.get(`/reportes/ventas`, { params: { ...params, grupo: kpiGrupo.value } }),
+      apiClient.get(`/reportes/productos-mas-vendidos`, { params: { ...params, limite: 200 } }),
+      apiClient.get(`/productos`, { params: { per_page: 1000 } }),
+      apiClient.get(`/ingredientes`),
+      apiClient.get(`/empleados`),
+      apiClient.get(`/reportes/platillos-devueltos`, { params }),
     ])
-
-    const vData = await vRes.json()
-    const pData = await pRes.json()
-    const pmData = await prodMaster.json()
-    const iData = await ingRes.json()
-    const nData = await nomRes.json()
 
     if (vData.success) kpiData.value = vData.data
     if (pData.success) topProductos.value = pData.data || []
+    if (devData.success) productosDevueltos.value = devData.data || []
     
     // Cargar datos para cálculos
     if (iData.success || iData.data) ingredientesGlobales.value = iData.data || iData || []
@@ -355,7 +409,7 @@ const loadKpis = async () => {
 
             // 2. Mano de Obra (MO)
             const minProd = parseFloat(p.minutos_produccion || 0)
-            const costoMO = (nominaMensual.value / 14400) * 1.66 * minProd
+            const costoMO = (nominaMensual.value / 14400) * 1.36 * minProd
 
             // 3. Indirectos (5%)
             const costoIndirecto = (costoInsumos + costoMO) * 0.05

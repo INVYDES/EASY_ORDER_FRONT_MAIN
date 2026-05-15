@@ -56,12 +56,12 @@ const loadRestaurantes = async () => {
     const data = await apiClient.get('/restaurantes')
     if (data.success || data.data) {
       userRestaurantes.value = (data.data?.restaurantes || data.restaurantes || [])
-      const stored = localStorage.getItem('restaurante_activo')
+      const stored = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
       if (stored && userRestaurantes.value.some(r => r.id === parseInt(stored))) {
         restauranteActivo.value = parseInt(stored)
       } else if (userRestaurantes.value.length > 0) {
         restauranteActivo.value = userRestaurantes.value[0].id
-        localStorage.setItem('restaurante_activo', restauranteActivo.value)
+        localStorage.setItem('restaurante_id_activo', restauranteActivo.value)
         localStorage.setItem('restaurante_id', restauranteActivo.value)
       }
     }
@@ -73,7 +73,7 @@ const cambiarRestaurante = async () => {
   try {
     const data = await apiClient.post('/cambiar-restaurante', { restaurante_id: restauranteActivo.value })
     if (data.success || data.data) {
-      localStorage.setItem('restaurante_activo', restauranteActivo.value)
+      localStorage.setItem('restaurante_id_activo', restauranteActivo.value)
       localStorage.setItem('restaurante_id', restauranteActivo.value)
       window.location.reload()
     }

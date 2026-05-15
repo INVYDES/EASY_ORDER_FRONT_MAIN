@@ -445,7 +445,7 @@ const gastoForm = ref({
   concepto: '',
   categoria: 'general',
   monto: '',
-  fecha: new Date().toISOString().split('T')[0],
+  fecha: new Date().toLocaleDateString('en-CA'),
   notas: ''
 })
 
@@ -493,7 +493,7 @@ const getCategoriaLabel = (cat) => {
 
 const colorCategoria = (cat) => COLORES_CATEGORIA[cat] || '#94a3b8'
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
-const fmtDate = (d) => d.toISOString().split('T')[0]
+const fmtDate = (d) => d.toLocaleDateString('en-CA')
 const subDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() - n); return x }
 
 // Helper para headers seguros
@@ -853,7 +853,7 @@ const guardarGasto = async () => {
         concepto: '', 
         categoria: 'general', 
         monto: '', 
-        fecha: new Date().toISOString().split('T')[0], 
+        fecha: new Date().toLocaleDateString('en-CA'), 
         notas: '' 
       }
       await fetchGastos()

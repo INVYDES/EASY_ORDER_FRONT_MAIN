@@ -19,8 +19,8 @@ const router = useRouter()
 // Estado
 const productos = ref([])
 const loading = ref(true)
-const fechaInicio = ref(new Date().toISOString().split('T')[0]) // Hoy
-const fechaFin = ref(new Date().toISOString().split('T')[0]) // Hoy
+const fechaInicio = ref(new Date().toLocaleDateString('en-CA')) // Hoy
+const fechaFin = ref(new Date().toLocaleDateString('en-CA')) // Hoy
 
 // Verificar autenticación
 const checkAuth = () => {
@@ -100,8 +100,8 @@ const cambiarPeriodo = (dias) => {
   const inicio = new Date()
   inicio.setDate(inicio.getDate() - dias)
   
-  fechaFin.value = fin.toISOString().split('T')[0]
-  fechaInicio.value = inicio.toISOString().split('T')[0]
+  fechaFin.value = fin.toLocaleDateString('en-CA')
+  fechaInicio.value = inicio.toLocaleDateString('en-CA')
   
   loadTopProducts()
 }

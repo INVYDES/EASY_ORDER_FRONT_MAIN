@@ -241,7 +241,7 @@ const getHeaders = () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('en-CA')
 
     const [uData, rData, dData, cData] = await Promise.all([
       apiClient.get('/me'),

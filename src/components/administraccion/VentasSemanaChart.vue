@@ -80,9 +80,9 @@ const fetchYDraw = async (dias) => {
   loading.value = true
   try {
     const hoy = new Date()
-    const fin  = hoy.toISOString().split('T')[0]
+    const fin  = hoy.toLocaleDateString('en-CA')
     const ini  = new Date(hoy); ini.setDate(ini.getDate() - dias + 1)
-    const iniStr = ini.toISOString().split('T')[0]
+    const iniStr = ini.toLocaleDateString('en-CA')
 
     const res  = await fetch(
       `${props.apiUrl}/reportes/ventas?fecha_inicio=${iniStr}&fecha_fin=${fin}&grupo=dia`,

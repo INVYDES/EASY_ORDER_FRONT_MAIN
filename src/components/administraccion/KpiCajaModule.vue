@@ -104,8 +104,8 @@ const listaCajeros = ref([])
 
 const filtros = reactive({
   cajero_id: '',
-  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-  fecha_hasta: new Date().toISOString().split('T')[0]
+  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-CA'),
+  fecha_hasta: new Date().toLocaleDateString('en-CA')
 })
 
 const avgPaymentTime = computed(() => {

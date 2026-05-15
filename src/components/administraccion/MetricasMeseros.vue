@@ -438,7 +438,7 @@ const empleadosReales = computed(() =>
 const loading         = ref(false)
 const metricasMeseros = ref([])
 
-const hoy    = new Date().toISOString().split('T')[0]
+const hoy    = new Date().toLocaleDateString('en-CA')
 const filtros = reactive({ fecha_desde: hoy, fecha_hasta: hoy, mesero_id: '' })
 
 const resumenGeneral = reactive({

@@ -165,7 +165,7 @@ const gastoForm = ref({
   concepto: '', 
   categoria: 'general', 
   monto: '', 
-  fecha: new Date().toISOString().split('T')[0] 
+  fecha: new Date().toLocaleDateString('en-CA') 
 })
 
 const categoriasGasto = ['renta', 'nomina', 'servicios', 'insumos', 'marketing', 'mantenimiento', 'general']
@@ -325,7 +325,7 @@ const guardarGasto = async () => {
     
     if (res.ok) {
       showModalGasto.value = false
-      gastoForm.value = { concepto: '', categoria: 'general', monto: '', fecha: new Date().toISOString().split('T')[0] }
+      gastoForm.value = { concepto: '', categoria: 'general', monto: '', fecha: new Date().toLocaleDateString('en-CA') }
       fetchAll()
     } else {
       const err = await res.json()
@@ -344,8 +344,8 @@ const setPeriodo = (dias) => {
   const hoy = new Date()
   const inicio = new Date()
   inicio.setDate(hoy.getDate() - dias)
-  fechaFin.value = hoy.toISOString().split('T')[0]
-  fechaInicio.value = inicio.toISOString().split('T')[0]
+  fechaFin.value = hoy.toLocaleDateString('en-CA')
+  fechaInicio.value = inicio.toLocaleDateString('en-CA')
   fetchAll()
 }
 

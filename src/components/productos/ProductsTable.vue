@@ -247,9 +247,9 @@ const calcularCostoTotal = (product) => {
   }, 0)
 
   // 2. Mano de Obra (MO) - Basado en la misma fórmula del modal
-  // (Nomina / 14400 minutos mensuales) * 1.66 factor de utilidad * minutos prep
+  // (Nomina / 14400 minutos mensuales) * 1.36 factor de utilidad * minutos prep
   const minProd = parseFloat(product.minutos_produccion || 0)
-  const costoMO = (nominaMensual.value / 14400) * 1.66 * minProd
+  const costoMO = (nominaMensual.value / 14400) * 1.36 * minProd
 
   // 3. Gastos Indirectos (5% sobre Insumos + MO)
   const costoIndirecto = (costoInsumos + costoMO) * 0.05

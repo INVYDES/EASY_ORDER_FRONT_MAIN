@@ -126,8 +126,8 @@ const resumen = ref({
 
 const filtros = reactive({
   mesero_id: '',
-  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-  fecha_hasta: new Date().toISOString().split('T')[0]
+  fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-CA'),
+  fecha_hasta: new Date().toLocaleDateString('en-CA')
 })
 
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2 }) : '0.00'

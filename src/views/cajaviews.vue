@@ -281,7 +281,7 @@ const actualizarTotalesCaja = async () => {
 
 const loadOrders = async () => {
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('en-CA')
     let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {

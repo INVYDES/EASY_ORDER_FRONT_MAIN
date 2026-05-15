@@ -35,6 +35,7 @@
       <BundleStrategyCard 
         :key="'strategy-' + allProductsForSelection.length"
         :products="allProductsForSelection" 
+        @execute="handleExecuteBundle"
       />
     </div>
 
@@ -277,7 +278,8 @@
       v-if="showPaqueteModal"
       :paquete="selectedPaquete"
       :available-products="allProductsForSelection"
-      @close="showPaqueteModal = false"
+      :initial-products="suggestedProductsForNewPaquete"
+      @close="closePaqueteModal"
       @saved="handlePaqueteSaved"
     />
 
@@ -317,6 +319,7 @@ const anuncios = ref([])
 const selectedProduct = ref(null)
 const selectedCategoria = ref(null)
 const selectedPaquete = ref(null)
+const suggestedProductsForNewPaquete = ref([])
 const searchTerm = ref('')
 const toasts = ref([])
 
@@ -658,7 +661,21 @@ const changePagePaquetes = (page) => {
 
 const openCreatePaquete = () => {
   selectedPaquete.value = null
+  suggestedProductsForNewPaquete.value = []
   showPaqueteModal.value = true
+}
+
+const closePaqueteModal = () => {
+  showPaqueteModal.value = false
+  suggestedProductsForNewPaquete.value = []
+}
+
+const handleExecuteBundle = (products) => {
+  suggestedProductsForNewPaquete.value = products
+  activeTab.value = 'paquetes'
+  selectedPaquete.value = null
+  showPaqueteModal.value = true
+  showToast('Sugerencia cargada en el nuevo paquete', 'info')
 }
 
 const openEditPaquete = (p) => {
