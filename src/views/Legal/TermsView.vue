@@ -294,7 +294,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const goBack = () => {
-  router.back();
+  router.push('/registro');
 };
 </script>
 
