@@ -106,7 +106,7 @@
       </div>
 
       <!-- SECCIÓN: OPERACIONES -->
-      <div>
+      <div v-if="!isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
         </div>
@@ -123,7 +123,7 @@
       </div>
 
       <!-- SECCIÓN: ESTACIONES -->
-      <div>
+      <div v-if="!isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
         </div>
@@ -149,7 +149,7 @@
       </div>
 
       <!-- SECCIÓN: ADMINISTRACIÓN -->
-      <div v-if="isAdminOrOwner">
+      <div v-if="isAdminOrOwner && !isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Administración</p>
         </div>
