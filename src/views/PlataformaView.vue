@@ -188,6 +188,43 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Confirmación Premium -->
+    <div v-if="confirmModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+      <div class="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl transform transition-all scale-100 border border-gray-100">
+        <div class="p-8 text-center">
+          <!-- Icono de Advertencia -->
+          <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          
+          <h3 class="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">{{ confirmModal.title }}</h3>
+          <p class="text-gray-500 text-sm leading-relaxed mb-8">
+            {{ confirmModal.message }}
+          </p>
+
+          <div class="flex flex-col gap-3">
+            <button 
+              @click="confirmAction"
+              :disabled="confirmModal.loading"
+              class="w-full py-4 bg-red-600 text-white rounded-2xl font-bold text-lg hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <span v-if="confirmModal.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              {{ confirmModal.loading ? 'Procesando...' : confirmModal.confirmText }}
+            </button>
+            <button 
+              @click="confirmModal.show = false"
+              :disabled="confirmModal.loading"
+              class="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -200,6 +237,16 @@ const stats = ref({});
 const loading = ref(false);
 const searchQuery = ref('');
 const selectedPropietario = ref(null);
+
+// Modal de Confirmación
+const confirmModal = ref({
+  show: false,
+  title: '',
+  message: '',
+  confirmText: 'Eliminar',
+  action: null,
+  loading: false
+});
 
 const fetchPlataformaData = async () => {
   try {
@@ -247,39 +294,47 @@ const formatDate = (date) => {
   });
 };
 
-const deletePropietario = async (prop) => {
-  const confirmMsg = `¿ESTÁS SEGURO? Esta acción ELIMINARÁ PERMANENTEMENTE al propietario "${prop.nombre_completo}", TODOS sus restaurantes y TODOS los datos históricos (ventas, productos, etc.).\n\nEsta acción NO se puede deshacer.`;
-  
-  if (confirm(confirmMsg)) {
-    try {
+const deletePropietario = (prop) => {
+  confirmModal.value = {
+    show: true,
+    title: '¿ELIMINAR PROPIETARIO?',
+    message: `Esta acción ELIMINARÁ PERMANENTEMENTE al propietario "${prop.nombre_completo}", TODOS sus restaurantes y TODOS los datos históricos (ventas, productos, etc.). Esta acción NO se puede deshacer.`,
+    confirmText: 'Si, eliminar todo',
+    action: async () => {
       const res = await apiClient.delete(`/plataforma/propietarios/${prop.id}`);
-      if (res.success) {
-        alert('Propietario eliminado correctamente');
-        fetchPlataformaData();
-      }
-    } catch (error) {
-      alert('Error al eliminar: ' + (error.message || 'Error desconocido'));
+      if (res.success) fetchPlataformaData();
     }
-  }
+  };
 };
 
-const deleteRestaurante = async (res) => {
-  const confirmMsg = `¿Eliminar el restaurante "${res.nombre}"? Se borrarán todos sus productos, ventas e historial permanentemente.`;
-  
-  if (confirm(confirmMsg)) {
-    try {
+const deleteRestaurante = (res) => {
+  confirmModal.value = {
+    show: true,
+    title: '¿ELIMINAR RESTAURANTE?',
+    message: `¿Eliminar el restaurante "${res.nombre}"? Se borrarán todos sus productos, ventas e historial permanentemente.`,
+    confirmText: 'Si, borrar restaurante',
+    action: async () => {
       const resp = await apiClient.delete(`/plataforma/restaurantes/${res.id}`);
       if (resp.success) {
-        alert('Restaurante eliminado correctamente');
         if (selectedPropietario.value) {
-          // Actualizar lista local del modal
           selectedPropietario.value.restaurantes = selectedPropietario.value.restaurantes.filter(r => r.id !== res.id);
         }
-        fetchPlataformaData(); // Refrescar stats y tabla principal
+        fetchPlataformaData();
       }
-    } catch (error) {
-      alert('Error al eliminar restaurante: ' + (error.message || 'Error desconocido'));
     }
+  };
+};
+
+const confirmAction = async () => {
+  if (!confirmModal.value.action) return;
+  try {
+    confirmModal.value.loading = true;
+    await confirmModal.value.action();
+    confirmModal.value.show = false;
+  } catch (error) {
+    alert('Error al procesar la acción: ' + (error.message || 'Error desconocido'));
+  } finally {
+    confirmModal.value.loading = false;
   }
 };
 
