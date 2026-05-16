@@ -282,7 +282,7 @@
     </div>
     
     <div class="mt-8 text-center pb-12">
-      <button @click="$router.back()" class="text-black font-black hover:underline bg-white px-8 py-3 rounded-full shadow-lg border-2 border-black transition-transform hover:scale-105">
+      <button @click="goBack" class="text-black font-black hover:underline bg-white px-8 py-3 rounded-full shadow-lg border-2 border-black transition-transform hover:scale-105">
         ← VOLVER AL REGISTRO
       </button>
     </div>
@@ -290,7 +290,12 @@
 </template>
 
 <script setup>
-// Static Legal View
+import { useRouter } from 'vue-router';
+const router = useRouter();
+
+const goBack = () => {
+  router.back();
+};
 </script>
 
 <style scoped>
