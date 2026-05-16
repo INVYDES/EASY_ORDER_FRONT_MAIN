@@ -1,4 +1,4 @@
-// src/plugins/fetchInterceptor.ts
+import router from '@/router';
 
 const originalFetch = window.fetch;
 
@@ -9,8 +9,6 @@ window.fetch = async (...args) => {
         // Global Error Handling: Rate Limiting
         if (response.status === 429) {
             alert("Has excedido el límite de intentos. Por favor, espera un minuto.");
-            // We can throw here or let the application handle the 429 gracefully, 
-            // but the guide specifies to intercept and alert.
         }
 
         // Global Error Handling: Single Session (Unauthorized)
@@ -20,9 +18,8 @@ window.fetch = async (...args) => {
             sessionStorage.removeItem('token');
             sessionStorage.removeItem('user');
             
-            // Only redirect if not already on the login page
             if (!window.location.pathname.includes('/login') && window.location.pathname !== '/' && !window.location.pathname.includes('/registro')) {
-                window.location.href = '/';
+                router.push('/');
             }
         }
 
