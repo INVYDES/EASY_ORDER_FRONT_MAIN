@@ -163,8 +163,13 @@ const routes = [
 
 
   // -------------------------
-  // 404
+  // LEGAL
   // -------------------------
+  {
+    path: "/terminos-y-condiciones",
+    name: "Terms",
+    component: () => import("../views/Legal/TermsView.vue")
+  },
 
   { path: "/:pathMatch(.*)*", redirect: "/" }
 

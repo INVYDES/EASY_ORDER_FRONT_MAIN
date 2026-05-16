@@ -160,15 +160,15 @@
 
           <!-- Términos y Condiciones -->
           <div class="flex items-center gap-2 text-sm pt-4">
-            <input v-model="aceptaTerminos" type="checkbox" required class="accent-indigo-600 w-4 h-4" />
-            <span class="text-gray-600">
-              Acepto los <a href="#" class="text-indigo-600 hover:underline">términos y condiciones</a>
-            </span>
+            <input v-model="aceptaTerminos" id="terminos_checkbox" type="checkbox" required class="accent-indigo-600 w-4 h-4 cursor-pointer" />
+            <label for="terminos_checkbox" class="text-gray-600 cursor-pointer">
+              Acepto los <RouterLink to="/terminos-y-condiciones" target="_blank" class="text-indigo-600 hover:underline font-bold">términos y condiciones</RouterLink>
+            </label>
           </div>
 
           <!-- Botón de Envío -->
-          <button type="submit" :disabled="cargando"
-            class="w-full py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 font-bold text-lg shadow-lg">
+          <button type="submit" :disabled="cargando || !aceptaTerminos"
+            class="w-full py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:bg-gray-400 font-bold text-lg shadow-lg">
             {{ cargando ? 'Procesando registro...' : 'Comenzar ahora' }}
           </button>
 
