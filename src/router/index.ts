@@ -215,6 +215,7 @@ const PUBLIC_PATHS = [
   "/registro/cliente",
   "/recuperar-contrasena",
   "/reset-password",
+  "/terminos-y-condiciones",
 ];
 
 
