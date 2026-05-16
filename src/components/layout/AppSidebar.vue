@@ -92,6 +92,19 @@
         </div>
       </div>
 
+      <!-- SECCIÓN: PLATAFORMA (Solo Super Admin) -->
+      <div v-if="isSuperAdmin">
+        <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
+          <p class="text-[11px] font-bold text-indigo-400 uppercase tracking-widest">Plataforma</p>
+        </div>
+        <div class="space-y-1">
+          <RouterLink to="/panel/plataforma" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-indigo-50 text-indigo-700 font-bold shadow-sm': $route.path === '/panel/plataforma', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+            <i class="fa-solid fa-server text-lg w-6 text-center"></i>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Panel Maestro</span>
+          </RouterLink>
+        </div>
+      </div>
+
       <!-- SECCIÓN: OPERACIONES -->
       <div>
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
@@ -229,6 +242,14 @@ const isAdminOrOwner = computed(() => {
            name.includes('ADMIN') || 
            name.includes('ADMINISTRADOR') ||
            name.includes('DUEÑO')
+  })
+})
+
+const isSuperAdmin = computed(() => {
+  if (!props.user?.roles) return false
+  return props.user.roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name === 'SUPER_ADMIN'
   })
 })
 
