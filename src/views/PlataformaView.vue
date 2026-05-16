@@ -174,9 +174,8 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import { apiClient } from '@/utils/apiClient';
 
-const apiBase = import.meta.env.VITE_API_URL;
 const propietarios = ref([]);
 const stats = ref({});
 const loading = ref(false);
@@ -187,12 +186,12 @@ const fetchPlataformaData = async () => {
   try {
     loading.value = true;
     const [resProps, resStats] = await Promise.all([
-      axios.get(`${apiBase}/plataforma/propietarios`),
-      axios.get(`${apiBase}/plataforma/stats`)
+      apiClient.get('/plataforma/propietarios'),
+      apiClient.get('/plataforma/stats')
     ]);
     
-    if (resProps.data.success) propietarios.value = resProps.data.data;
-    if (resStats.data.success) stats.value = resStats.data.data;
+    if (resProps.success) propietarios.value = resProps.data;
+    if (resStats.success) stats.value = resStats.data;
   } catch (error) {
     console.error('Error fetching platform data:', error);
   } finally {
