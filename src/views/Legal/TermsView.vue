@@ -281,21 +281,11 @@
       </div>
     </div>
     
-    <div class="mt-8 text-center pb-12">
-      <button @click="goBack" class="text-black font-black hover:underline bg-white px-8 py-3 rounded-full shadow-lg border-2 border-black transition-transform hover:scale-105">
-        ← VOLVER AL REGISTRO
-      </button>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-const router = useRouter();
-
-const goBack = () => {
-  router.push('/registro');
-};
+// Static Legal View
 </script>
 
 <style scoped>
