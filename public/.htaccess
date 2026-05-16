@@ -1,8 +1,8 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /cws/eorder/
+  RewriteBase /cws/eorder_b/
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /cws/eorder/index.html [L]
+  RewriteRule . /cws/eorder_b/index.html [L]
 </IfModule>
