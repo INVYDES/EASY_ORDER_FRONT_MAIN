@@ -4,6 +4,6 @@
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_URI} !^/cws/eorder_b/backend/
+  RewriteCond %{REQUEST_URI} !backend
   RewriteRule . /cws/eorder_b/index.html [L]
 </IfModule>
