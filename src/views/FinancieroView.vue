@@ -65,35 +65,51 @@
           </div>
         </div>
 
-        <!-- Gastos Mensuales -->
+        <!-- Gastos Fijos Mensuales -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div class="flex items-center gap-3 mb-5">
             <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-lg">📉</div>
             <div>
-              <h3 class="text-lg font-bold text-gray-800">Gastos Mensuales</h3>
+              <h3 class="text-lg font-bold text-gray-800">Gastos Fijos Mensuales</h3>
               <p class="text-xs text-gray-400">Costos recurrentes para operar el negocio</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Gastos Variables</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Renta</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
-                <input v-model.number="form.gastos_variables" type="number" min="0" step="0.01"
+                <input v-model.number="form.gasto_renta" type="number" min="0" step="0.01"
                   class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="0.00" />
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Insumos, empaque, comisiones — varían con las ventas</p>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Gastos Operativos</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Servicios (agua, luz, internet)</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
-                <input v-model.number="form.gastos_operativos" type="number" min="0" step="0.01"
+                <input v-model.number="form.gasto_servicios" type="number" min="0" step="0.01"
                   class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="0.00" />
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Renta, nómina, servicios, software, marketing</p>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Software / Apps</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <input v-model.number="form.gasto_software" type="number" min="0" step="0.01"
+                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="0.00" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Marketing / Publicidad</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <input v-model.number="form.gasto_marketing" type="number" min="0" step="0.01"
+                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="0.00" />
+              </div>
             </div>
           </div>
         </div>
@@ -154,12 +170,14 @@ const toasts = ref([])
 const form = reactive({
   inversion_inicial: 0,
   utilidad_objetivo: 0,
-  gastos_variables: 0,
-  gastos_operativos: 0,
+  gasto_renta: 0,
+  gasto_servicios: 0,
+  gasto_software: 0,
+  gasto_marketing: 0,
 })
 
 const totalGastosMensuales = computed(() =>
-  (form.gastos_variables || 0) + (form.gastos_operativos || 0)
+  (form.gasto_renta || 0) + (form.gasto_servicios || 0) + (form.gasto_software || 0) + (form.gasto_marketing || 0)
 )
 
 const puntoEquilibrio = computed(() => {
@@ -183,10 +201,13 @@ const cargarConfig = async () => {
   try {
     const r = await apiClient.get('/reportes/roi')
     if (r.success && r.data) {
-      form.inversion_inicial = r.data.config?.inversion_inicial || 0
-      form.utilidad_objetivo = r.data.kpis?.utilidad_objetivo || 0
-      form.gastos_variables  = r.data.financiero?.gastos_variables || 0
-      form.gastos_operativos = r.data.financiero?.gastos_operativos || 0
+      const cfg = r.data.config || {}
+      form.inversion_inicial = cfg.inversion_inicial || 0
+      form.utilidad_objetivo = cfg.utilidad_objetivo || 0
+      form.gasto_renta       = cfg.gasto_renta || 0
+      form.gasto_servicios   = cfg.gasto_servicios || 0
+      form.gasto_software    = cfg.gasto_software || 0
+      form.gasto_marketing   = cfg.gasto_marketing || 0
     }
   } catch (e) {
     console.error('Error cargando configuración financiera:', e)
@@ -197,18 +218,14 @@ const guardar = async () => {
   cargando.value = true
   try {
     const payload = {
-      config: {
-        inversion_inicial: form.inversion_inicial || 0,
-      },
-      kpis: {
-        utilidad_objetivo: form.utilidad_objetivo || 0,
-      },
-      financiero: {
-        gastos_variables: form.gastos_variables || 0,
-        gastos_operativos: form.gastos_operativos || 0,
-      },
+      inversion_inicial: form.inversion_inicial || 0,
+      utilidad_objetivo: form.utilidad_objetivo || 0,
+      gasto_renta:       form.gasto_renta || 0,
+      gasto_servicios:   form.gasto_servicios || 0,
+      gasto_software:    form.gasto_software || 0,
+      gasto_marketing:   form.gasto_marketing || 0,
     }
-    const r = await apiClient.post('/reportes/roi', payload)
+    const r = await apiClient.put('/reportes/roi/config', payload)
     if (r.success) {
       showToast('Configuración financiera guardada exitosamente', 'success')
     } else {
