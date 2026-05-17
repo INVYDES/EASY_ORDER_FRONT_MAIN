@@ -71,8 +71,10 @@ let chartInstance = null
 // Los 5 ejes solicitados en el pentágono
 const PENTAGONO_LABELS = ['COCINA', 'BARRA', 'POSTRES', 'CAJA', 'MESEROS']
 
-const activosCount = computed(() => 
-  props.empleados.filter(e => e.es_activo !== false).length
+const isActivo = (e) => e.activo === true || e.activo === 1
+
+const activosCount = computed(() =>
+  props.empleados.filter(e => isActivo(e)).length
 )
 
 // Mapeo inteligente de roles a los 5 ejes del pentágono

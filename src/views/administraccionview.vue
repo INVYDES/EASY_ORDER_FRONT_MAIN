@@ -266,6 +266,11 @@
       <GastoView />
     </template>
 
+    <!-- ══ TAB FINANCIERO ══ -->
+    <template v-if="mainTab === 'financiero'">
+      <FinancieroView />
+    </template>
+
     <!-- ══ TAB MESEROS ══ -->
     <template v-if="mainTab === 'meseros'">
       <MeserosManager />
@@ -406,6 +411,7 @@ import SucursalBadge       from '../components/SucursalBadge.vue'
 import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
 import GastoView           from './GastoView.vue'
+import FinancieroView      from './FinancieroView.vue'
 import MeserosManager      from '../components/administraccion/MeserosManager.vue'
 import FormularioTrabajador from '../components/administraccion/FormularioTrabajador.vue'
 import { apiClient } from '@/utils/apiClient'
@@ -447,6 +453,7 @@ const mainTabs = [
   { key:'meseros',  label:'👥 Meseros'               },
   { key:'anuncios', label:'📢 Marquesina'            },
   { key:'gastos',   label:'🧾 Gastos'                },
+  { key:'financiero', label:'💰 Financiero'           },
 ]
 
 const crudTabs = computed(() => [

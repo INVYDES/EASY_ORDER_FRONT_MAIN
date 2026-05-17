@@ -77,25 +77,6 @@
       </div>
     </div>
 
-    <!-- KPI CARDS -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div v-for="card in kpiCards" :key="card.label"
-        class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 relative overflow-hidden group hover:border-indigo-100 transition-colors">
-        <div v-if="loading" class="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20">
-          <div class="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        </div>
-        <div class="flex items-start justify-between relative z-10">
-          <div>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ card.label }}</p>
-            <p class="text-2xl font-black text-slate-800 mt-1">{{ card.value }}</p>
-          </div>
-          <div class="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center text-xl group-hover:rotate-12 transition-transform">
-            {{ card.icon }}
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- TODOS LOS PRODUCTOS — Gráfica de barras filtrable -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-6">
@@ -449,13 +430,6 @@ const exportarReporte = async (formato) => {
     if (data.success) window.open(data.data.url, '_blank')
   } catch (e) { console.error(e) }
 }
-
-const kpiCards = computed(() => [
-  { label: 'Ingresos', value: '$' + fm(kpiData.value.totales?.total_ventas), icon: '💰' },
-  { label: 'Órdenes',  value: String(kpiData.value.totales?.total_ordenes || 0), icon: '🧾' },
-  { label: 'Ticket Prom', value: '$' + fm(kpiData.value.totales?.promedio_por_orden), icon: '📈' },
-  { label: 'Top Plato', value: topProductos.value[0]?.nombre || '—', icon: '🏆' },
-])
 
 onMounted(() => setKpiPeriodo('total'))
 </script>
