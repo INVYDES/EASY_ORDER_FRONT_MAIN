@@ -401,6 +401,28 @@ const loadKpis = async () => {
       }
     } catch { /* fallback */ }
 
+    // Fallback: calcular inversión mano de obra desde salarios de empleados
+    if (!finanzasDia.value.inversionManoObra) {
+      try {
+        const eRes = await fetch(`${props.apiUrl}/empleados`, { headers })
+        const eData = await eRes.json()
+        if (eData.success && Array.isArray(eData.data)) {
+          const nominaMensual = eData.data
+            .filter(e => e.activo !== false)
+            .reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
+          finanzasDia.value.inversionManoObra = nominaMensual / 30
+        }
+      } catch { /* fallback */ }
+    }
+
+    // Fallback: calcular utilidad total desde ventas - costos
+    if (!finanzasDia.value.utilidadTotal && kpiData.value.totales?.total_ventas) {
+      const ventas = Number(kpiData.value.totales.total_ventas) || 0
+      finanzasDia.value.utilidadTotal = Math.max(0,
+        ventas - finanzasDia.value.inversionProducto - finanzasDia.value.inversionManoObra
+      )
+    }
+
     // Cargar propinas
     try {
       const pTipRes = await fetch(`${props.apiUrl}/reportes/propinas${params}`, { headers })
@@ -409,6 +431,12 @@ const loadKpis = async () => {
         finanzasDia.value.propinasDigitales = pTipData.data?.total_propinas || 0
       }
     } catch { /* fallback */ }
+
+    // Fallback: calcular propinas desde órdenes cerradas con propina
+    if (!finanzasDia.value.propinasDigitales && kpiData.value.ventas?.length) {
+      const totalTips = kpiData.value.ventas.reduce((s, v) => s + Number(v.total_propinas || v.propina || 0), 0)
+      finanzasDia.value.propinasDigitales = totalTips
+    }
 
     if (mostrarComparacion.value && kpiFechaInicio.value) {
       const d1 = new Date(kpiFechaInicio.value); const d2 = new Date(kpiFechaFin.value)

@@ -102,6 +102,34 @@
       </div>
     </div>
 
+    <!-- ══ LETRERO DE ESTACIONES ══ -->
+    <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-lg">
+      <div class="h-1 w-full bg-white/30"></div>
+      <div class="flex items-stretch">
+        <div class="shrink-0 flex flex-col items-center justify-center px-5 py-4 gap-1 border-r border-white/20 bg-white/5">
+          <span class="text-3xl leading-none">🍽️</span>
+          <span class="text-[11px] font-black uppercase tracking-widest leading-none">Menú</span>
+        </div>
+        <div class="flex-1 flex items-center justify-around gap-4 px-4 py-4">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🍕</span>
+            <span class="text-2xl font-black tracking-tight uppercase">ALIMENTOS</span>
+          </div>
+          <span class="text-4xl font-thin text-white/30">┃</span>
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🥤</span>
+            <span class="text-2xl font-black tracking-tight uppercase">BEBIDAS</span>
+          </div>
+          <span class="text-4xl font-thin text-white/30">┃</span>
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🍰</span>
+            <span class="text-2xl font-black tracking-tight uppercase">POSTRES</span>
+          </div>
+        </div>
+      </div>
+      <div class="h-0.5 w-full bg-white/20"></div>
+    </div>
+
     <!-- Layout Principal -->
     <div class="flex flex-1 overflow-hidden h-full">
 
