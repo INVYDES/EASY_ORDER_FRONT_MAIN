@@ -14,12 +14,6 @@
       <!-- Form Content -->
       <div class="flex-1 overflow-y-auto p-6 space-y-6">
         
-        <!-- Error local -->
-        <div v-if="localError" class="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-2xl animate-fade-in flex items-center justify-between">
-          <span>⚠️ {{ localError }}</span>
-          <button @click="localError = ''" class="text-red-400 hover:text-red-600">✕</button>
-        </div>
-        
         <!-- Información Básica -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
@@ -57,7 +51,10 @@
               <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
               <div v-else class="text-center p-4">
                 <span class="text-3xl block mb-2">🖼️</span>
-                <p class="text-[9px] text-gray-400 font-bold mt-1 uppercase" :class="localError?.includes('250KB') ? 'text-red-500' : ''">Máx. 250KB</p>
+                <p class="text-xs text-gray-400 font-medium">Click para subir imagen</p>
+              </div>
+              <div v-if="previewUrl" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <span class="text-white text-xs font-bold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">Cambiar Imagen</span>
               </div>
               <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFile" />
             </div>
@@ -262,7 +259,6 @@ const loading = ref(false)
 const searchProd = ref('')
 const isFocused = ref(false)
 const previewUrl = ref(null)
-const localError = ref('')
 
 const form = reactive({
   nombre: '',
@@ -367,14 +363,6 @@ const filteredProducts = computed(() => {
 const handleFile = (e) => {
   const file = e.target.files[0]
   if (!file) return
-  
-  if (file.size > 250 * 1024) {
-    localError.value = 'La imagen es demasiado pesada (' + (file.size/1024).toFixed(0) + 'KB). El límite es 250KB.'
-    if (fileInput.value) fileInput.value.value = ''
-    return
-  }
-  
-  localError.value = ''
   form.imagenFile = file
   previewUrl.value = URL.createObjectURL(file)
 }

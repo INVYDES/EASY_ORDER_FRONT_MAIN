@@ -117,7 +117,7 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="font-bold text-slate-800 text-lg">📊 Rentabilidad de Mayor a Menor</h3>
-          <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO Activa)</p>
+          <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
         </div>
       </div>
       <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
@@ -338,14 +338,7 @@ const setKpiPeriodo = (key) => {
 const loadTiemposRebase = async () => {
   try {
     const data = await apiClient.get(`/reportes/tiempos-rebase?periodo=${tiempoPeriodo.value}&limite=5`)
-    if (data.success && data.data) {
-      // Extraer el arreglo correspondiente al periodo seleccionado
-      const periodKey = tiempoPeriodo.value === 'hoy' ? 'hoy' : 
-                       (tiempoPeriodo.value === 'semana' ? 'ultimos_7_dias' : 'ultimo_mes')
-      productosRebase.value = data.data[periodKey] || []
-    } else {
-      productosRebase.value = []
-    }
+    if (data.success) productosRebase.value = data.data || []
   } catch { productosRebase.value = [] }
 }
 

@@ -55,15 +55,7 @@
     </div>
 
     <!-- Acción -->
-    <div class="px-3 pb-3 space-y-2">
-      <button
-        v-if="secondaryActionLabel"
-        @click="$emit('secondaryAction')"
-        class="w-full py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 text-[10px] font-bold rounded-lg transition border border-gray-600/50"
-      >
-        📖 {{ secondaryActionLabel }}
-      </button>
-
+    <div class="px-3 pb-3">
       <button @click="$emit('accion')" :disabled="procesando"
         :class="['w-full py-2.5 text-xs font-bold rounded-lg transition disabled:opacity-50', accionClass]">
         {{ procesando ? 'Actualizando...' : accionLabel }}
@@ -76,13 +68,12 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  order:                { type: Object,  required: true },
-  accionLabel:          { type: String,  default: '' },
-  accionClass:          { type: String,  default: '' },
-  secondaryActionLabel: { type: String,  default: '' },
-  procesando:           { type: Boolean, default: false },
+  order:       { type: Object,  required: true },
+  accionLabel: { type: String,  default: '' },
+  accionClass: { type: String,  default: '' },
+  procesando:  { type: Boolean, default: false },
 })
-defineEmits(['accion', 'secondaryAction'])
+defineEmits(['accion'])
 
 // ✅ Lógica de filtrado estricta: busca la categoría en el producto
 const esBarra = (detalle) => {

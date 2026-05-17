@@ -67,7 +67,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-              <tr v-for="m in meserosOrdenados" :key="m.id" class="hover:bg-indigo-50/30 transition-colors cursor-pointer" @click="filtros.mesero_id = m.id; loadKpis()">
+              <tr v-for="m in meseros" :key="m.id" class="hover:bg-indigo-50/30 transition-colors cursor-pointer" @click="filtros.mesero_id = m.id; loadKpis()">
                 <td class="px-8 py-5">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black">
@@ -158,10 +158,6 @@ const loadEmpleados = async () => {
   }
 }
 
-const meserosOrdenados = computed(() => {
-  return [...meseros.value].sort((a, b) => (Number(b.ventas_totales) || 0) - (Number(a.ventas_totales) || 0))
-})
-
 const loadKpis = async () => {
   try {
     const params = { ...filtros }
@@ -171,28 +167,12 @@ const loadKpis = async () => {
     if (res.success) {
       meseros.value = res.data.meseros
       tendenciaData.value = res.data.tendencia
-      
-      // Si hay un mesero seleccionado, buscamos sus datos específicos para las tarjetas
-      const selectedId = filtros.mesero_id
-      const selectedMesero = selectedId ? meseros.value.find(m => m.id == selectedId) : null
-
-      if (selectedMesero) {
-        resumen.value = {
-          total_ventas: selectedMesero.ventas_totales,
-          promedio_ticket: selectedMesero.promedio_ticket,
-          items_por_ticket: Number(selectedMesero.items_por_ticket || 0).toFixed(1),
-          tiempo_servicio_avg: Number(selectedMesero.tiempo_servicio_avg || 0).toFixed(1)
-        }
-      } else {
-        // Si es "Todo el equipo", usamos el resumen global de la API
-        resumen.value = {
-          total_ventas: res.data.resumen.total_ventas,
-          promedio_ticket: res.data.resumen.promedio_ticket,
-          items_por_ticket: (meseros.value.reduce((s, m) => s + (Number(m.items_por_ticket) || 0), 0) / (meseros.value.length || 1)).toFixed(1),
-          tiempo_servicio_avg: (meseros.value.reduce((s, m) => s + (Number(m.tiempo_servicio_avg) || 0), 0) / (meseros.value.length || 1)).toFixed(1)
-        }
+      resumen.value = {
+        total_ventas: res.data.resumen.total_ventas,
+        promedio_ticket: res.data.resumen.promedio_ticket,
+        items_por_ticket: (meseros.value.reduce((s, m) => s + (Number(m.items_por_ticket) || 0), 0) / (meseros.value.length || 1)).toFixed(1),
+        tiempo_servicio_avg: (meseros.value.reduce((s, m) => s + (Number(m.tiempo_servicio_avg) || 0), 0) / (meseros.value.length || 1)).toFixed(1)
       }
-      
       initTrendChart()
     }
   } catch (e) {
