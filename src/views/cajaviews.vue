@@ -48,6 +48,9 @@ const transferSales = ref(0)
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
 
+const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
+let pollTimer = null
+
 // ── Propinas (Oficiales de API) ──
 const propinasEfectivo = ref(0)
 const propinasTarjeta = ref(0)
@@ -467,14 +470,24 @@ const handleMovimientoSaved = async ({ monto, tipo }) => {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
   await loadAllData()
+  
+  // Polling de seguridad
+  pollTimer = setInterval(loadAllData, POLL_INTERVAL)
+
   try {
     const data = await apiClient.get('/me')
     if (data.success || data.data) {
       const user = data.data || data
       const ra = user?.restaurante_activo
-      restauranteActivo.value = typeof ra === 'object' && ra !== null ? ra.id : (ra ?? null)
+      if (ra) {
+        restauranteActivo.value = (typeof ra === 'object' && ra !== null) ? ra.id : ra
+      }
     }
   } catch { }
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 <template>

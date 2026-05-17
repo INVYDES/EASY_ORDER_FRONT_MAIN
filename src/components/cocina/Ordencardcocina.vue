@@ -60,8 +60,16 @@
       </span>
     </div>
 
-    <!-- Botón de acción -->
-    <div class="px-3 pb-3">
+    <!-- Botones de acción -->
+    <div class="px-3 pb-3 space-y-2">
+      <button
+        v-if="secondaryActionLabel"
+        @click="$emit('secondaryAction')"
+        class="w-full py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 text-[10px] font-bold rounded-lg transition border border-gray-600/50"
+      >
+        📖 {{ secondaryActionLabel }}
+      </button>
+      
       <button
         @click="$emit('accion')"
         :disabled="procesando"
@@ -78,13 +86,14 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  order:       { type: Object,  required: true },
-  accionLabel: { type: String,  required: true },
-  accionClass: { type: String,  required: true },
-  procesando:  { type: Boolean, default: false }
+  order:                { type: Object,  required: true },
+  accionLabel:          { type: String,  required: true },
+  accionClass:          { type: String,  required: true },
+  secondaryActionLabel: { type: String,  default: '' },
+  procesando:           { type: Boolean, default: false }
 })
 
-defineEmits(['accion'])
+defineEmits(['accion', 'secondaryAction'])
 
 // --- Cálculo de Tiempo ---
 const minutosTranscurridos = computed(() => {

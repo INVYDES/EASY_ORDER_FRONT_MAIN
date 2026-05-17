@@ -41,7 +41,7 @@
           <p class="text-indigo-200 text-sm mt-1">{{ licenciaActiva.licencia?.tipo || licenciaActiva.tipo }}</p>
         </div>
         <span class="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full">
-          {{ licenciaActiva.dias_restantes }} días restantes
+          {{ Math.round(licenciaActiva.dias_restantes) }} días restantes
         </span>
       </div>
 

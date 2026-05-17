@@ -31,14 +31,25 @@
           <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wider">Vista previa (Menú Digital)</h3>
         </div>
         <div class="flex items-center gap-4">
-          <div class="hidden">
-             <button @click="previewTipo = 'cliente'">CLIENTE</button>
-             <button @click="previewTipo = 'interno'">MENÚ DIGITAL</button>
+          <div class="flex bg-gray-100 p-1 rounded-xl">
+             <button @click="previewTipo = 'cliente'" 
+               :class="['px-3 py-1 text-[9px] font-black rounded-lg transition-all', 
+                 previewTipo === 'cliente' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600']">
+               CLIENTES
+             </button>
+             <button @click="previewTipo = 'interno'"
+               :class="['px-3 py-1 text-[9px] font-black rounded-lg transition-all', 
+                 previewTipo === 'interno' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600']">
+               MENÚ DIGITAL
+             </button>
           </div>
-          <div v-for="v in ['dark', 'light', 'color', 'amber']" :key="v" 
-            @click="previewVariant = v"
-            :class="['w-4 h-4 rounded-full cursor-pointer border', previewVariant === v ? 'ring-2 ring-offset-2 ring-indigo-500' : '']"
-            :style="{ backgroundColor: v === 'dark' ? '#030712' : v === 'amber' ? '#f59e0b' : v === 'color' ? '#6366f1' : '#f8fafc' }">
+          <div class="flex gap-1.5 border-l border-gray-100 pl-4">
+            <div v-for="v in ['dark', 'light', 'color', 'amber']" :key="v" 
+              @click="previewVariant = v"
+              :class="['w-4 h-4 rounded-full cursor-pointer border transition-all hover:scale-110', 
+                previewVariant === v ? 'ring-2 ring-offset-2 ring-indigo-500' : 'border-gray-200']"
+              :style="{ backgroundColor: v === 'dark' ? '#030712' : v === 'amber' ? '#f59e0b' : v === 'color' ? '#6366f1' : '#f8fafc' }">
+            </div>
           </div>
         </div>
       </div>
@@ -496,10 +507,20 @@ const cargar = async () => {
 
     const data = await apiClient.get('/admin/anuncios')
     if (data.success) {
-      anuncios.value = data.data.map(a => ({
-        ...a,
-        vigente: a.activo && (!a.fecha_fin || new Date(a.fecha_fin) >= new Date())
-      }))
+      const hoy = new Date()
+      anuncios.value = data.data.map(a => {
+        let esVigente = a.activo
+        if (a.fecha_inicio) {
+          const inicio = new Date(a.fecha_inicio)
+          if (hoy < inicio) esVigente = false
+        }
+        if (a.fecha_fin) {
+          const fin = new Date(a.fecha_fin)
+          fin.setHours(23, 59, 59, 999) // Hacer fin de día inclusivo
+          if (hoy > fin) esVigente = false
+        }
+        return { ...a, vigente: esVigente }
+      })
     }
   } catch (err) {
     showToast('Error al conectar con el servidor', 'error')

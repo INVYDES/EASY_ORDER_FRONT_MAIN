@@ -556,7 +556,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
@@ -584,6 +584,9 @@ const mesasAsignadas  = ref([])
 const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
 const totalMesasRestaurante = ref(0)
 const ultimaActualizacion = ref(null)
+
+const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
+let pollTimer = null
 
 const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
 
@@ -1085,12 +1088,17 @@ onMounted(async () => {
     if (esMesero.value) await cargarMisMesas()
   }
   
+  // Polling de seguridad
+  pollTimer = setInterval(cargarOrdenes, POLL_INTERVAL)
+
   // Sincronizar restaurante activo para WS si no estaba en localStorage
   if (!restauranteActivo.value) {
     try {
       const data = await apiClient.get('/me')
       const ra = data.data?.restaurante_activo || data.restaurante_activo
-      restauranteActivo.value = typeof ra === 'object' ? ra.id : ra
+      if (ra) {
+        restauranteActivo.value = (typeof ra === 'object' && ra !== null && ra !== undefined) ? ra.id : ra
+      }
     } catch {}
   }
 
@@ -1109,6 +1117,10 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 

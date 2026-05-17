@@ -25,6 +25,7 @@ import Perfilview         from "../views/perfilview.vue";
 import LicenciasView      from "../views/LicenciasView.vue";
 import Menuview           from "../views/menuview.vue";
 import NominaView         from "../views/NominaView.vue";
+import PlataformaView     from "../views/PlataformaView.vue";
 
 const routes = [
 
@@ -144,6 +145,13 @@ const routes = [
         meta: { roles: ["PROPIETARIO", "ADMIN"] }
       },
 
+      {
+        path: "plataforma",
+        name: "plataforma",
+        component: PlataformaView,
+        meta: { roles: ["SUPER_ADMIN"] }
+      },
+
       // Redirección por defecto al entrar a /panel
       {
         path: "",
@@ -155,8 +163,13 @@ const routes = [
 
 
   // -------------------------
-  // 404
+  // LEGAL
   // -------------------------
+  {
+    path: "/terminos-y-condiciones",
+    name: "Terms",
+    component: () => import("../views/Legal/TermsView.vue")
+  },
 
   { path: "/:pathMatch(.*)*", redirect: "/" }
 
@@ -189,6 +202,7 @@ const defaultRouteForRole = (role?: string): string => {
     ADMIN:       "/panel/Gestion",
     PROPIETARIO: "/panel/Gestion",
     CLIENTE:     "/panel/cliente",   // ← directo al menú
+    SUPER_ADMIN: "/panel/plataforma",
   };
   return map[role ?? ""] ?? "/panel/Gestion";
 };
@@ -201,6 +215,7 @@ const PUBLIC_PATHS = [
   "/registro/cliente",
   "/recuperar-contrasena",
   "/reset-password",
+  "/terminos-y-condiciones",
 ];
 
 

@@ -15,9 +15,22 @@ export interface ApiResponse<T = any> {
 
 export async function request<T = any>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit & { params?: Record<string, any> } = {}
 ): Promise<ApiResponse<T>> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+    let url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+
+    if (options.params) {
+        const queryParams = new URLSearchParams();
+        Object.entries(options.params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                queryParams.append(key, String(value));
+            }
+        });
+        const queryString = queryParams.toString();
+        if (queryString) {
+            url += (url.includes('?') ? '&' : '?') + queryString;
+        }
+    }
 
     const defaultHeaders = getHeaders();
     const headers = {
@@ -35,7 +48,6 @@ export async function request<T = any>(
         const response = await fetch(url, {
             ...options,
             headers
-
         });
 
         const contentType = response.headers.get('content-type');

@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(() => ({
-  base: '/cws/eorder/',
+  base: '/cws/eorder_b/',
   plugins: [
     vue(),
     tailwindcss(),
@@ -27,7 +27,7 @@ export default defineConfig(() => ({
     },
     // 👇 Agrega esto
     proxy: {
-      '/cws/eorder/api': {
+      '/cws/eorder_b/api': {
         target: 'http://192.168.1.71:8000', // ← IP y puerto de tu backend Laravel
         changeOrigin: true,
         secure: false,

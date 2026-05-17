@@ -496,7 +496,14 @@ const loadConfig = async () => {
 const loadEmpleados = async () => {
   try {
     const resp = await apiClient.get('/empleados', { headers: getTenantHeader() })
-    if (resp.success) empleados.value = resp.data || []
+    if (resp.success) {
+      // Filtrar para excluir cuentas de menú (Rol ID 7) de la nómina
+      const data = resp.data || []
+      empleados.value = data.filter(emp => {
+        const rolId = emp.roles?.[0]?.id || emp.rol_id || emp.rol
+        return String(rolId) !== '7'
+      })
+    }
   } catch (err) { console.error(err) }
 }
 

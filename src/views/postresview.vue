@@ -106,8 +106,10 @@
             :order="order"
             accion-label="✅ Marcar como listo"
             accion-class="bg-rose-500 hover:bg-rose-400 text-white"
+            secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
             @accion="cambiarEstado(order.id, 'LISTO')"
+            @secondary-action="abrirModalIngredientes(order, null)"
           />
         </div>
       </div>
@@ -172,9 +174,11 @@
                 class="flex items-center gap-3 px-4 py-2.5">
 
                 <!-- Toggle checkbox -->
-                <button @click="ing.incluir = !ing.incluir"
+                <button 
+                  @click="modalIngredientes.nuevoEstado ? (ing.incluir = !ing.incluir) : null"
                   :class="['w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition',
-                    ing.incluir ? 'bg-pink-500 border-pink-500' : 'border-gray-600 bg-transparent']">
+                    ing.incluir ? 'bg-pink-500 border-pink-500' : 'border-gray-600 bg-transparent',
+                    !modalIngredientes.nuevoEstado ? 'cursor-default' : '']">
                   <span v-if="ing.incluir" class="text-white text-xs font-black">✓</span>
                 </button>
 
@@ -208,9 +212,10 @@
         <div class="px-5 py-4 border-t border-gray-800 flex items-center gap-3">
           <button @click="cerrarModal"
             class="flex-1 py-2.5 text-sm text-gray-400 bg-gray-800 rounded-xl hover:bg-gray-700 transition">
-            Cancelar
+            {{ modalIngredientes.nuevoEstado ? 'Cancelar' : 'Cerrar' }}
           </button>
-          <button @click="confirmarYCambiarEstado"
+          <button v-if="modalIngredientes.nuevoEstado"
+            @click="confirmarYCambiarEstado"
             :disabled="modalIngredientes.guardando"
             class="flex-1 py-2.5 text-sm font-bold text-white bg-pink-600 hover:bg-pink-500 rounded-xl transition disabled:opacity-50">
             {{ modalIngredientes.guardando ? 'Iniciando...' : '🍰 Iniciar preparación' }}
@@ -230,7 +235,7 @@ import OrdenCardPostres from '../components/postres/OrdenCardPostres.vue'
 import { apiClient } from '@/utils/apiClient'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
-const POLL_INTERVAL = 5000
+const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
@@ -461,7 +466,9 @@ onMounted(async () => {
     if (data.success || data.data) {
       const user = data.data || data
       const ra = user?.restaurante_activo
-      restauranteActivo.value = typeof ra === 'object' && ra !== null ? ra.id : (ra ?? null)
+      if (ra) {
+        restauranteActivo.value = (typeof ra === 'object' && ra !== null) ? ra.id : ra
+      }
     }
   } catch {}
 })

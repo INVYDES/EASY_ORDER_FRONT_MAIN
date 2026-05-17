@@ -15,8 +15,8 @@ if (!cleanBase) {
 export const API_BASE_URL = cleanBase;
 export const API_URL = `${cleanBase}/api`;
 
-// URL para imágenes y archivos (quitamos index.php si existe para apuntar a la carpeta física)
-export const STORAGE_URL = `${base.replace(/\/index\.php$/, '').replace(/\/api$/, '').replace(/\/+$/, '')}/storage/`;
+// URL para imágenes y archivos (quitamos index.php y /api para apuntar a la carpeta física)
+export const STORAGE_URL = `${base.replace(/\/index\.php(\/.*)?$/, '').replace(/\/api$/, '').replace(/\/+$/, '')}/storage/`;
 
 export const getHeaders = (customHeaders: Record<string, string> = {}) => {
     const token = localStorage.getItem('token') ?? sessionStorage.getItem('token');

@@ -61,7 +61,7 @@
                     Sin Imagen
                   </div>
                   <p class="text-sm font-bold text-gray-600">Arrastra una imagen o haz clic</p>
-                  <p class="text-xs mt-1">JPG, PNG, WebP · máx. 2MB</p>
+                  <p class="text-xs mt-1 font-bold" :class="errorMessage?.includes('250KB') ? 'text-red-500' : ''">JPG, PNG, WebP · máx. 250KB</p>
                 </div>
               </div>
               <label v-if="product?.tiene_imagen && !newImageFile" class="flex items-center gap-2 mt-3 text-sm text-gray-600 cursor-pointer p-2 bg-red-50 rounded-lg w-fit">
@@ -623,8 +623,8 @@ const handleDrop = (e: DragEvent) => {
 }
 
 const setImage = (file: File) => {
-  if (file.size > 2 * 1024 * 1024) {
-    errorMessage.value = 'La imagen no puede superar 2MB'
+  if (file.size > 250 * 1024) {
+    errorMessage.value = 'La imagen es demasiado pesada (' + (file.size/1024).toFixed(0) + 'KB). El límite es 250KB.'
     return
   }
   newImageFile.value   = file
