@@ -586,7 +586,7 @@ const totalMesasRestaurante = ref(0)
 const ultimaActualizacion = ref(null)
 
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
-let pollTimer = null
+
 
 const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
 
@@ -633,7 +633,7 @@ const esMesero   = computed(() => {
 
 const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebida','cerveza','agua','trago','coctel','limonada','naranjada']
 
-const POLL_INTERVAL = 5000
+
 let pollTimer = null
 let pollingEnProgreso = false
 
