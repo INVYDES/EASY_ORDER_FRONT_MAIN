@@ -8,15 +8,15 @@
 
       <!-- Label lateral fijo -->
       <div
-        class="shrink-0 flex flex-col items-center justify-center px-6 py-3 gap-1 border-r"
+        class="shrink-0 flex flex-col items-center justify-center px-8 py-5 gap-1.5 border-r"
         :class="labelClass"
       >
-        <span class="text-4xl leading-none animate-bounce-slow">{{ labelEmoji }}</span>
-        <span class="text-xs font-black uppercase tracking-widest leading-none">{{ labelTexto }}</span>
+        <span class="text-5xl leading-none animate-bounce-slow">{{ labelEmoji }}</span>
+        <span class="text-sm font-black uppercase tracking-widest leading-none">{{ labelTexto }}</span>
       </div>
 
       <!-- Track deslizante -->
-      <div class="flex-1 overflow-hidden relative flex items-center py-2.5">
+      <div class="flex-1 overflow-hidden relative flex items-center py-4">
         <div
           ref="track"
           class="flex items-center gap-0 whitespace-nowrap"
@@ -29,24 +29,24 @@
             class="inline-flex items-center shrink-0"
           >
             <!-- IMAGEN DEL PRODUCTO / COMBO O EMOJI -->
-            <div v-if="(a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
+            <div v-if="(a.producto || a.paquete)?.imagen" class="w-20 h-20 ml-6 rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
               <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" class="w-full h-full object-cover" @error="onImageError" />
             </div>
-            <span v-else class="text-4xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
+            <span v-else class="text-5xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
 
-            <div class="flex flex-col justify-center ml-4">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-xl tracking-tight uppercase">{{ a.titulo }}</span>
-                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-2 py-0.5 rounded-lg text-xs font-black shadow-sm border border-black/5">
+            <div class="flex flex-col justify-center ml-5">
+              <div class="flex items-center gap-3">
+                <span class="font-black text-2xl tracking-tight uppercase">{{ a.titulo }}</span>
+                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-3 py-1 rounded-xl text-sm font-black shadow-sm border border-black/5">
                   ${{ Number(a.precio_promo).toFixed(2) }}
                 </span>
-                <span v-if="a.tipo === 'promo'" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black animate-pulse">PROMO</span>
+                <span v-if="a.tipo === 'promo'" class="bg-red-500 text-white px-3 py-1 rounded text-xs font-black animate-pulse">PROMO</span>
               </div>
-              <p v-if="a.contenido" class="text-sm opacity-90 font-bold leading-none mt-1 max-w-[350px] truncate">{{ a.contenido }}</p>
+              <p v-if="a.contenido" class="text-base opacity-90 font-bold leading-none mt-2 max-w-[500px] truncate">{{ a.contenido }}</p>
             </div>
 
             <!-- SEPARADOR -->
-            <div class="mx-6 text-white/30 text-xs">✦</div>
+            <div class="mx-8 text-white/30 text-lg">✦</div>
           </span>
         </div>
       </div>
@@ -195,7 +195,7 @@ const fetchAnuncios = async () => {
       params.restaurante_id = props.restauranteId
     }
 
-    const response = await apiClient.get('/anuncios', params)
+    const response = await apiClient.get('/anuncios', { params })
     const data = response?.data || response
     
     if (data && (data.success || data.data)) {

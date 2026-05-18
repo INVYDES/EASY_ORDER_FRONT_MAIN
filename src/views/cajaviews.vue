@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Layout
@@ -47,6 +47,7 @@ const cardSales = ref(0)
 const transferSales = ref(0)
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
+const firstLoadDone = ref(false)
 
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 let pollTimer = null
@@ -294,15 +295,15 @@ const loadOrders = async () => {
     }
 
     const fetches = [
-      apiClient.get(`/ordenes?estado=ABIERTA&per_page=100`),
-      apiClient.get(`/ordenes?estado=POR_PREPARAR&per_page=100`),
-      apiClient.get(`/ordenes?estado=EN_PREPARACION&per_page=100`),
-      apiClient.get(`/ordenes?estado=LISTA&per_page=100`),
-      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`)
+      apiClient.get(`/ordenes?estado=ABIERTA&per_page=100`).catch(() => null),
+      apiClient.get(`/ordenes?estado=POR_PREPARAR&per_page=100`).catch(() => null),
+      apiClient.get(`/ordenes?estado=EN_PREPARACION&per_page=100`).catch(() => null),
+      apiClient.get(`/ordenes?estado=LISTA&per_page=100`).catch(() => null),
+      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`).catch(() => null)
     ];
     
     if (closedOrdersQuery) {
-      fetches.push(apiClient.get(closedOrdersQuery));
+      fetches.push(apiClient.get(closedOrdersQuery).catch(() => null));
     }
 
     const jsonResults = await Promise.all(fetches)
@@ -311,7 +312,7 @@ const loadOrders = async () => {
     const rid = restauranteActivo.value?.id || localStorage.getItem('restaurante_id_activo')
 
     jsonResults.forEach(r => {
-      if (r.success || r.data) {
+      if (r && (r.success || r.data)) {
         const items = Array.isArray(r.data) ? r.data : (r.data?.data || [])
         items.forEach(o => {
           if (!o.restaurante_id && rid) o.restaurante_id = rid
@@ -349,7 +350,9 @@ const loadAllData = async () => {
     router.push('/')
     return
   }
-  loading.general = true
+  if (!firstLoadDone.value) {
+    loading.general = true
+  }
   await loadCajaEstado()
   await Promise.all([
     loadOrders(),
@@ -357,6 +360,7 @@ const loadAllData = async () => {
     !cajaAbierta.value ? loadHistorial() : Promise.resolve(),
   ])
   loading.general = false
+  firstLoadDone.value = true
   await nextTick()
   if (cajaAbierta.value) initChart()
 }
@@ -484,6 +488,10 @@ onMounted(async () => {
       }
     }
   } catch { }
+})
+
+watch(selectedTab, () => {
+  loadAllData()
 })
 
 onUnmounted(() => {

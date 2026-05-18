@@ -350,19 +350,34 @@ const setKpiPeriodo = (key) => {
 
 const loadTiemposRebase = async () => {
   try {
-    const data = await apiClient.get(`/reportes/tiempos-rebase?periodo=${tiempoPeriodo.value}&limite=5`)
-    if (data.success) productosRebase.value = data.data || []
-  } catch { productosRebase.value = [] }
+    const data = await apiClient.get(`/reportes/tiempos-rebase`)
+    if (data.success && data.data) {
+      const periodo = tiempoPeriodo.value
+      if (periodo === 'hoy') {
+        productosRebase.value = data.data.hoy || []
+      } else if (periodo === '7dias') {
+        productosRebase.value = data.data.semana || []
+      } else if (periodo === 'mes') {
+        productosRebase.value = data.data.mes || []
+      } else {
+        productosRebase.value = []
+      }
+    } else {
+      productosRebase.value = []
+    }
+  } catch (e) {
+    console.error('Error al cargar tiempos de rebase:', e)
+    productosRebase.value = []
+  }
 }
 
 const loadKpis = async () => {
   loading.value = true
   try {
-    const params = {
-      fecha_inicio: kpiFechaInicio.value || null,
-      fecha_fin:    kpiFechaFin.value || null,
-      user_id:      kpiMeseroId.value || null
-    }
+    const params = {}
+    if (kpiFechaInicio.value) params.fecha_inicio = kpiFechaInicio.value
+    if (kpiFechaFin.value) params.fecha_fin = kpiFechaFin.value
+    if (kpiMeseroId.value) params.user_id = kpiMeseroId.value
 
     const [vData, pData, pmData, iData, nData, devData] = await Promise.all([
       apiClient.get(`/reportes/ventas`, { params: { ...params, grupo: kpiGrupo.value } }),

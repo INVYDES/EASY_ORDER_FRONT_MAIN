@@ -85,7 +85,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Servicios (agua, luz, internet)</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Servicios (Asesoría Fiscal/Legal)</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_servicios" type="number" min="0" step="0.01"
@@ -94,7 +94,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Software / Apps</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Costo de las licencias</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_software" type="number" min="0" step="0.01"
@@ -103,7 +103,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Marketing / Publicidad</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Servicios no identificados u otros servicios</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_marketing" type="number" min="0" step="0.01"

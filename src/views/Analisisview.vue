@@ -60,22 +60,32 @@
           :ordenes-por-estado="dashData.ordenes_por_estado"
         />
 
-        <!-- Gráficas de Hoy -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
-          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
-        </div>
-
-        <!-- Gráficas de Operación -->
+        <!-- Fila 1: Ventas por Hora + Métodos de Pago -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-          <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
-          <CanalVentasChart :data="salesChannels" />
+          <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
+          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
         </div>
 
-        <!-- Gráficas de Rendimiento -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
+        <!-- Fila 2: Platos Estrella (Top Ventas) -->
+        <div class="grid grid-cols-1 gap-6 mb-6">
           <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
+        </div>
+
+        <!-- Fila 3: Gráficas de Análisis con Filtros Individuales (Movidas al fondo) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
+          <PedidosEstadoChart
+            :api-url="API_URL"
+            :get-headers="getHeaders"
+            :ordenes-por-estado="dashData.ordenes_por_estado"
+            :server-date="serverDate"
+          />
+          <CanalVentasChart
+            :api-url="API_URL"
+            :get-headers="getHeaders"
+            :data="salesChannels"
+            :server-date="serverDate"
+          />
         </div>
       </template>
     </template>
@@ -358,7 +368,11 @@ const loadData = async () => {
       const eData = await apiClient.get('/empleados')
       if (eData.success) {
         const raw = eData.data
-        empleados.value = Array.isArray(raw) ? raw : (raw?.data || [])
+        const lista = Array.isArray(raw) ? raw : (raw?.data || [])
+        empleados.value = lista.filter(emp => {
+          const userRoles = emp.roles || []
+          return !userRoles.some(r => r.id === 7 || r.nombre?.toUpperCase() === 'MENU')
+        })
       }
     } catch (e) {
       console.error('Error al cargar empleados:', e)

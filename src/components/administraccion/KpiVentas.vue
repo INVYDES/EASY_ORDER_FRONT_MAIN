@@ -408,7 +408,7 @@ const loadKpis = async () => {
         const eData = await eRes.json()
         if (eData.success && Array.isArray(eData.data)) {
           const nominaMensual = eData.data
-            .filter(e => e.activo !== false)
+            .filter(e => e.activo !== false && !e.roles?.some(r => r.id === 7 || r.nombre === 'MENU'))
             .reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
           finanzasDia.value.inversionManoObra = nominaMensual / 30
         }

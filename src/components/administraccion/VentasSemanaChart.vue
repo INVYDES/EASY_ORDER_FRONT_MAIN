@@ -1,16 +1,9 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-5">
+  <div class="bg-white rounded-xl shadow-sm p-5 flex flex-col justify-between">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="font-semibold text-gray-800">Tendencia de ventas</h3>
         <p class="text-xs text-gray-400 mt-0.5">Solo órdenes cerradas</p>
-      </div>
-      <div class="flex gap-1">
-        <button v-for="p in periodos" :key="p.value" @click="cambiarPeriodo(p.value)"
-          :class="['px-3 py-1 text-xs rounded-full font-medium transition',
-            periodoActivo===p.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">
-          {{ p.label }}
-        </button>
       </div>
     </div>
     <div class="relative h-52">
@@ -43,6 +36,15 @@
         <p class="text-sm font-bold text-gray-800">${{ fm(totales.promedio_por_orden) }}</p>
       </div>
     </div>
+    
+    <!-- Botones de búsqueda rápida (abajo) -->
+    <div class="flex justify-center gap-2 mt-4 pt-4 border-t border-gray-100">
+      <button v-for="p in periodos" :key="p.value" @click="cambiarPeriodo(p.value)"
+        :class="['px-5 py-2 text-xs rounded-xl font-bold transition shadow-sm border',
+          periodoActivo===p.value ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-100' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200']">
+        {{ p.label }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -65,7 +67,7 @@ let   chartInst   = null
 
 const periodos = [
   { label: '7d',  value: 7  },
-  { label: '14d', value: 14 },
+  { label: '15d', value: 15 },
   { label: '30d', value: 30 },
 ]
 
