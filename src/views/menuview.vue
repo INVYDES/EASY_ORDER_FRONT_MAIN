@@ -544,7 +544,8 @@ const categorias = computed(() => {
   productos.value.forEach(p => {
     const catData = p.categoria || { id: 0, nombre: 'Otros', color: '#6366f1', icono: '📦', orden: 99 }
     const id = catData.id
-    if (!mapa.has(id)) mapa.set(id, { id, nombre:catData.nombre, color:catData.color||'#6366f1', icono:catData.icono||'📦', orden:catData.orden??99, productos:[] })
+    const nombreCat = catData.nombre.toUpperCase() === 'COCINA' ? 'Alimentos' : (catData.nombre.toUpperCase() === 'BARRA' ? 'Bebidas' : catData.nombre)
+    if (!mapa.has(id)) mapa.set(id, { id, nombre:nombreCat, color:catData.color||'#6366f1', icono:catData.icono||'📦', orden:catData.orden??99, productos:[] })
     mapa.get(id).productos.push(p)
   })
   return [...mapa.values()].sort((a,b) => a.orden - b.orden)
@@ -572,7 +573,7 @@ const normalizar = (p) => {
       bajo_stock:  p.bajo_stock ?? false,
       categoria:   p.categoria ? {
         id:     p.categoria.id,
-        nombre: p.categoria.nombre,
+        nombre: p.categoria.nombre.toUpperCase() === 'COCINA' ? 'Alimentos' : (p.categoria.nombre.toUpperCase() === 'BARRA' ? 'Bebidas' : p.categoria.nombre),
         color:  p.categoria.color  || '#6366f1',
         icono:  p.categoria.icono  || '📦',
         orden:  p.categoria.orden  ?? 99,

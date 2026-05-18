@@ -8,11 +8,11 @@
 
       <!-- Label lateral fijo -->
       <div
-        class="shrink-0 flex flex-col items-center justify-center px-4 py-2 gap-1 border-r"
+        class="shrink-0 flex flex-col items-center justify-center px-6 py-3 gap-1 border-r"
         :class="labelClass"
       >
-        <span class="text-2xl leading-none animate-bounce-slow">{{ labelEmoji }}</span>
-        <span class="text-[10px] font-black uppercase tracking-widest leading-none">{{ labelTexto }}</span>
+        <span class="text-4xl leading-none animate-bounce-slow">{{ labelEmoji }}</span>
+        <span class="text-xs font-black uppercase tracking-widest leading-none">{{ labelTexto }}</span>
       </div>
 
       <!-- Track deslizante -->
@@ -29,20 +29,20 @@
             class="inline-flex items-center shrink-0"
           >
             <!-- IMAGEN DEL PRODUCTO / COMBO O EMOJI -->
-            <div v-if="(a.producto || a.paquete)?.imagen" class="w-9 h-9 ml-5 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
+            <div v-if="(a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
               <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" class="w-full h-full object-cover" @error="onImageError" />
             </div>
-            <span v-else class="text-2xl ml-5 drop-shadow-md">{{ a.emoji || '📢' }}</span>
+            <span v-else class="text-4xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
 
-            <div class="flex flex-col justify-center ml-3">
+            <div class="flex flex-col justify-center ml-4">
               <div class="flex items-center gap-2">
-                <span class="font-black text-sm tracking-tight uppercase">{{ a.titulo }}</span>
-                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-2 py-0.5 rounded-lg text-[10px] font-black shadow-sm border border-black/5">
+                <span class="font-black text-xl tracking-tight uppercase">{{ a.titulo }}</span>
+                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-2 py-0.5 rounded-lg text-xs font-black shadow-sm border border-black/5">
                   ${{ Number(a.precio_promo).toFixed(2) }}
                 </span>
-                <span v-if="a.tipo === 'promo'" class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black animate-pulse">PROMO</span>
+                <span v-if="a.tipo === 'promo'" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black animate-pulse">PROMO</span>
               </div>
-              <p v-if="a.contenido" class="text-[10px] opacity-90 font-bold leading-none mt-0.5 max-w-[200px] truncate">{{ a.contenido }}</p>
+              <p v-if="a.contenido" class="text-sm opacity-90 font-bold leading-none mt-1 max-w-[350px] truncate">{{ a.contenido }}</p>
             </div>
 
             <!-- SEPARADOR -->
@@ -184,22 +184,21 @@ const startAnimation = () => {
 // ── FETCH ──────────────────────────────────────────────────
 const fetchAnuncios = async () => {
   try {
-    let endpoint = '/anuncios?'
-    
-    // Si es tipo cliente, filtramos por mostrar_cliente, de lo contrario por mostrar_interno (Menú Digital)
+    const params = {}
     if (props.tipo === 'cliente') {
-      endpoint += 'mostrar_cliente=1&'
+      params.mostrar_cliente = 1
     } else {
-      endpoint += 'mostrar_interno=1&'
+      params.mostrar_interno = 1
     }
 
     if (props.restauranteId) {
-      endpoint += `restaurante_id=${props.restauranteId}&`
+      params.restaurante_id = props.restauranteId
     }
 
-    const data = await apiClient.get(endpoint.replace(/&$/, ''))
+    const response = await apiClient.get('/anuncios', params)
+    const data = response?.data || response
     
-    if (data.success || data.data) {
+    if (data && (data.success || data.data)) {
       const lista = data.data || data || []
       if (Array.isArray(lista)) {
         anuncios.value = lista.filter(a => {
@@ -214,7 +213,9 @@ const fetchAnuncios = async () => {
         setTimeout(() => { calculateWidth(); offsetPx.value = 0; startAnimation() }, 60)
       }
     }
-  } catch {}
+  } catch (err) {
+    console.error('Error al cargar la marquesina:', err)
+  }
 }
 
 // ── RESIZE ─────────────────────────────────────────────────
