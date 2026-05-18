@@ -44,8 +44,23 @@ export async function request<T = any>(
         delete headers['Content-Type'];
     }
 
+    let finalUrl = url;
+    if (options.params) {
+        const urlParams = new URLSearchParams();
+        Object.entries(options.params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '') {
+                urlParams.append(key, String(value));
+            }
+        });
+        const qs = urlParams.toString();
+        if (qs) {
+            finalUrl = finalUrl.includes('?') ? `${finalUrl}&${qs}` : `${finalUrl}?${qs}`;
+        }
+        delete options.params;
+    }
+
     try {
-        const response = await fetch(url, {
+        const response = await fetch(finalUrl, {
             ...options,
             headers
         });
@@ -70,7 +85,7 @@ export async function request<T = any>(
 
         return data;
     } catch (error: any) {
-        console.error(`API Request Error [${url}]:`, error);
+        console.error(`API Request Error [${finalUrl}]:`, error);
         if (error instanceof SyntaxError) {
             const err = new Error('Respuesta inválida del servidor');
             throw err;
@@ -80,30 +95,30 @@ export async function request<T = any>(
 }
 
 export const apiClient = {
-    get: <T = any>(endpoint: string, options?: RequestInit) =>
+    get: <T = any>(endpoint: string, options?: RequestInit & { params?: Record<string, any> }) =>
         request<T>(endpoint, { ...options, method: 'GET' }),
 
-    post: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+    post: <T = any>(endpoint: string, body?: any, options?: RequestInit & { params?: Record<string, any> }) =>
         request<T>(endpoint, {
             ...options,
             method: 'POST',
             body: body instanceof FormData ? body : JSON.stringify(body)
         }),
 
-    put: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+    put: <T = any>(endpoint: string, body?: any, options?: RequestInit & { params?: Record<string, any> }) =>
         request<T>(endpoint, {
             ...options,
             method: 'PUT',
             body: body instanceof FormData ? body : JSON.stringify(body)
         }),
 
-    patch: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+    patch: <T = any>(endpoint: string, body?: any, options?: RequestInit & { params?: Record<string, any> }) =>
         request<T>(endpoint, {
             ...options,
             method: 'PATCH',
             body: body instanceof FormData ? body : JSON.stringify(body)
         }),
 
-    delete: <T = any>(endpoint: string, options?: RequestInit) =>
+    delete: <T = any>(endpoint: string, options?: RequestInit & { params?: Record<string, any> }) =>
         request<T>(endpoint, { ...options, method: 'DELETE' }),
 };

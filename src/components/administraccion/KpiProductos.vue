@@ -91,6 +91,12 @@
             <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0" :class="rankClass(i)">
               {{ i + 1 }}
             </div>
+
+            <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
+              <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
+              <i v-else class="fa-solid fa-image text-slate-300"></i>
+            </div>
+
             <div class="flex-1 min-w-0">
               <div class="flex justify-between mb-1">
                 <p class="text-sm font-bold text-slate-700 truncate">{{ p.nombre }}</p>
@@ -233,6 +239,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { apiClient } from '@/utils/apiClient'
+import { STORAGE_URL } from '@/config/api'
 
 const props = defineProps({
   apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },
@@ -279,6 +286,12 @@ const di = (a, b) => Number(a||0) >= Number(b||0) ? '↑' : '↓'
 const dp = (a, b) => { const bVal = Number(b||0); if(!bVal) return '0'; return Math.abs(((Number(a||0)-bVal)/bVal)*100).toFixed(1) }
 
 const totalMermas = computed(() => productosDevueltos.value.reduce((s, d) => s + Number(d.subtotal || 0), 0))
+
+const getImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${STORAGE_URL}${path}`
+}
 
 const rankClass = (i) => [
   'bg-amber-400 text-white shadow-md shadow-amber-100',

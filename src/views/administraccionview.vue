@@ -73,7 +73,7 @@
           </nav>
         </div>
 
-        <!-- Tabla empleados (Personal) -->
+        <!-- Tabla empleados -->
         <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
           <!-- ... (Contenido de tabla empleados se mantiene igual) ... -->
           <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando empleados...</div>
@@ -276,7 +276,7 @@
       <MeserosManager />
     </template>
 
-    <!-- ══ MODAL EMPLEADO / CUENTA MENÚ ══ -->
+    <!-- ══ MODAL EMPLEADO (Componente Nuevo) ══ -->
     <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalEmpleado">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
@@ -350,10 +350,11 @@
                     Quitar
                   </button>
                 </div>
-                <div v-if="formError" class="mt-4 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
-                  <span class="font-medium text-xs">{{ formError }}</span>
+                <div v-if="errorMsg" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
+                  <i class="fa-solid fa-circle-exclamation text-red-400"></i>
+                  <span class="font-medium">{{ typeof errorMsg === 'object' ? Object.values(errorMsg)[0][0] : errorMsg }}</span>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-2 font-bold" :class="formError?.includes('250KB') ? 'text-red-500' : ''">JPG, PNG o WebP. Máx 250KB.</p>
+                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 5MB.</p>
               </div>
             </div>
           </div>
@@ -463,13 +464,15 @@ const crudTabs = computed(() => [
 ])
 
 const personalNomina = computed(() => empleados.value.filter(e => {
-  const rolId = getRolId(e)
-  return rolId !== '7'
+  const rolId = String(getRolId(e)).toLowerCase()
+  const rolName = String(getRolNombre(e)).toLowerCase()
+  return rolId !== '7' && rolId !== 'menu' && !rolName.includes('menu') && !rolName.includes('cliente')
 }))
 
 const cuentasMenu = computed(() => empleados.value.filter(e => {
-  const rolId = getRolId(e)
-  return rolId === '7'
+  const rolId = String(getRolId(e)).toLowerCase()
+  const rolName = String(getRolNombre(e)).toLowerCase()
+  return rolId === '7' || rolId === 'menu' || rolName.includes('menu') || rolName.includes('cliente')
 }))
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -668,9 +671,7 @@ const handleGuardarEmpleado = async (payload) => {
       formEmpleadoRef.value?.setError(msg)
     }
   } catch (err) {
-    console.error('Error en handleGuardarEmpleado:', err)
-    const msg = err.response?.data?.message || err.message || 'Error de conexión con el servidor'
-    formEmpleadoRef.value?.setError(msg)
+    formEmpleadoRef.value?.setError('Error de conexión con el servidor')
   } finally {
     loading.guardando = false
   }
@@ -761,14 +762,6 @@ const cerrarModalRestaurante = () => {
 
 const onFileChange = (e) => {
   const file = e.target.files[0]; if (!file) return
-  
-  if (file.size > 250 * 1024) {
-    formError.value = 'El logo es demasiado pesado (' + (file.size/1024).toFixed(0) + 'KB). El límite es 250KB.'
-    if (fileInput.value) fileInput.value.value = ''
-    return
-  }
-  
-  formError.value = ''
   restForm.imagen = file; restForm.eliminar_imagen = false
   const reader = new FileReader()
   reader.onload = (ev) => imgPreview.value = ev.target.result
