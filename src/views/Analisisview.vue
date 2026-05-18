@@ -66,39 +66,16 @@
           <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
 
+        <!-- Gráficas de Operación -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+          <PedidosEstadoChart :ordenes-por-estado="dashData.ordenes_por_estado" />
+          <CanalVentasChart :data="salesChannels" />
+        </div>
+
         <!-- Gráficas de Rendimiento -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
           <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
-        </div>
-
-        <!-- Filtro por fechas para Canal de Ventas y Pedidos por Estado -->
-        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
-          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Filtrar por fecha</h4>
-          <div class="flex items-center gap-2">
-            <label class="text-xs font-bold text-gray-400">Desde:</label>
-            <input type="date" v-model="fechaDesde"
-              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none" />
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="text-xs font-bold text-gray-400">Hasta:</label>
-            <input type="date" v-model="fechaHasta"
-              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none" />
-          </div>
-          <button @click="loadFilteredData"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
-            <i class="fa-solid fa-filter mr-1"></i> Filtrar
-          </button>
-          <button @click="resetFilter"
-            class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold transition-all">
-            <i class="fa-solid fa-rotate-left mr-1"></i> Hoy
-          </button>
-        </div>
-
-        <!-- Gráficas de Operación -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PedidosEstadoChart :ordenes-por-estado="filteredOrdenesPorEstado" />
-          <CanalVentasChart :data="filteredSalesChannels" />
         </div>
       </template>
     </template>
@@ -112,7 +89,7 @@
       <div v-else class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />
 
-        <!-- Secciones de rentabilidad, paquetes y canales eliminadas por petición del usuario -->
+
 
       </div>
     </template>
@@ -179,15 +156,12 @@ import PedidosEstadoChart   from '../components/administraccion/PedidosEstadoCha
 import EmpleadosRolChart    from '../components/administraccion/EmpleadosRolChart.vue'
 import KpiVentas            from '../components/administraccion/KpiVentas.vue'
 import KpiProductos         from '../components/administraccion/KpiProductos.vue'
-import RoiChart             from '../components/RoiChart.vue'
 import MetricasMeseros      from '../components/administraccion/MetricasMeseros.vue'
 import KpiMeserosModule    from '../components/administraccion/KpiMeserosModule.vue'
 import KpiCocinaModule     from '../components/administraccion/KpiCocinaModule.vue'
 import KpiCajaModule       from '../components/administraccion/KpiCajaModule.vue'
 import FinancialMetricsGrid from '../components/administraccion/FinancialMetricsGrid.vue'
 import CanalVentasChart     from '../components/administraccion/CanalVentasChart.vue'
-import TopMarginList        from '../components/administraccion/TopMarginList.vue'
-import BundleStrategyCard   from '../components/administraccion/BundleStrategyCard.vue'
 import { API_URL }          from '@/config/api'
 import { apiClient }        from '@/utils/apiClient'
 
