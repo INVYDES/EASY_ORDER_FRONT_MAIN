@@ -276,6 +276,11 @@
       <MeserosManager />
     </template>
 
+    <!-- ══ TAB NOMINA ══ -->
+    <template v-if="mainTab === 'nomina'">
+      <NominaView />
+    </template>
+
     <!-- ══ MODAL EMPLEADO (Componente Nuevo) ══ -->
     <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalEmpleado">
@@ -413,6 +418,7 @@ import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
 import GastoView           from './GastoView.vue'
 import FinancieroView      from './FinancieroView.vue'
+import NominaView          from './NominaView.vue'
 import MeserosManager      from '../components/administraccion/MeserosManager.vue'
 import FormularioTrabajador from '../components/administraccion/FormularioTrabajador.vue'
 import { apiClient } from '@/utils/apiClient'
@@ -452,6 +458,7 @@ const sucursalesDueno = ref([])
 const mainTabs = [
   { key:'resumen',  label:'🏢 Sucursales y Personal' },
   { key:'meseros',  label:'👥 Meseros'               },
+  { key:'nomina',   label:'💸 Nóminas'               },
   { key:'anuncios', label:'📢 Marquesina'            },
   { key:'gastos',   label:'🧾 Gastos'                },
   { key:'financiero', label:'💰 Financiero'           },
