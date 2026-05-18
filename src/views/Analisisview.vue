@@ -66,14 +66,18 @@
           <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
         </div>
 
-        <!-- Fila 2: Platos Estrella (Top Ventas) -->
+        <!-- Fila 2: Tendencia de Ventas (Subida y Ancha en el medio) -->
+        <div class="grid grid-cols-1 gap-6 mb-6">
+          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
+        </div>
+
+        <!-- Fila 3: Platos Estrella (Top Ventas) -->
         <div class="grid grid-cols-1 gap-6 mb-6">
           <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
 
-        <!-- Fila 3: Gráficas de Análisis con Filtros Individuales (Movidas al fondo) -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
+        <!-- Fila 4: Gráficas de Análisis con Filtros Individuales (Pedidos por Estado y Canal de Ventas) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <PedidosEstadoChart
             :api-url="API_URL"
             :get-headers="getHeaders"

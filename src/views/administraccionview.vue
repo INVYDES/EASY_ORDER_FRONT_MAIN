@@ -458,7 +458,6 @@ const sucursalesDueno = ref([])
 const mainTabs = [
   { key:'resumen',  label:'🏢 Sucursales y Personal' },
   { key:'meseros',  label:'👥 Meseros'               },
-  { key:'nomina',   label:'💸 Nóminas'               },
   { key:'anuncios', label:'📢 Marquesina'            },
   { key:'gastos',   label:'🧾 Gastos'                },
   { key:'financiero', label:'💰 Financiero'           },
