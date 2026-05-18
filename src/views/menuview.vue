@@ -338,6 +338,104 @@
       </div>
     </div>
 
+    <!-- Modal carrito móvil MEJORADO -->
+    <div v-if="showCarritoMobile" class="sm:hidden fixed inset-0 bg-slate-900/40 z-50 flex items-end backdrop-blur-sm transition-all duration-300"
+      @click.self="showCarritoMobile = false">
+      <div class="bg-white w-full rounded-t-[2.5rem] p-6 max-h-[85vh] flex flex-col shadow-2xl transform transition-transform duration-300 animate-slide-up">
+        
+        <!-- Header más limpio y botón cerrar -->
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex flex-col">
+            <h3 class="font-black text-slate-900 text-2xl tracking-tight">Tu Orden</h3>
+            <span class="text-indigo-600 text-xs font-black uppercase tracking-widest mt-1">{{ totalItems }} Platillos</span>
+          </div>
+          <button @click="showCarritoMobile = false" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors shadow-sm">✕</button>
+        </div>
+        
+        <!-- Selector de comensales estilo píldora -->
+        <div class="flex items-center justify-between bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 mb-5 shadow-sm">
+          <span class="text-[11px] font-black text-indigo-800 uppercase tracking-widest ml-2 flex items-center gap-2">
+            👥 Comensales:
+          </span>
+          <div class="flex items-center bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
+            <button @click="numeroComensales = Math.max(1, numeroComensales - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">-</button>
+            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-10 h-8 text-center text-sm font-black text-slate-800 outline-none bg-transparent" />
+            <button @click="numeroComensales++" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">+</button>
+          </div>
+        </div>
+
+        <!-- Lista de Comensales -->
+        <div class="flex-1 overflow-y-auto space-y-5 mb-4 pr-2 custom-scrollbar">
+          <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center py-12 opacity-40">
+            <span class="text-6xl mb-4">🍽️</span>
+            <p class="text-slate-900 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
+          </div>
+          
+          <div v-else class="space-y-5">
+            <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
+                 class="border-2 rounded-[1.5rem] overflow-hidden transition-all duration-300 bg-white"
+                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-lg shadow-indigo-100/50' : 'border-slate-100'">
+              
+              <!-- Header Comensal -->
+              <div class="p-3.5 flex justify-between items-center cursor-pointer transition-colors" 
+                   :class="comensalActivoIndex === cIdx ? 'bg-indigo-50/30' : 'bg-slate-50/50 hover:bg-slate-50'"
+                   @click="comensalActivoIndex = cIdx">
+                <div class="flex items-center gap-3">
+                   <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm border border-white transition-colors"
+                        :class="comensalActivoIndex === cIdx ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'">
+                     {{ comensalActivoIndex === cIdx ? '👤' : '👥' }}
+                   </div>
+                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
+                </div>
+                <div v-if="comensalActivoIndex === cIdx" class="w-2.5 h-2.5 bg-indigo-500 rounded-full shadow-sm animate-pulse"></div>
+              </div>
+
+              <!-- Items Comensal -->
+              <div class="p-3 space-y-3 bg-white border-t border-slate-50">
+                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
+                  Agrega platillos
+                </div>
+                
+                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm relative group transition-all">
+                  <button @click="eliminarDelPedido(item.cartId)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-[10px] font-black border border-white shadow-sm hover:bg-red-500 hover:text-white transition-colors">✕</button>
+                  <div class="flex flex-col mb-3">
+                    <p class="text-xs font-black text-slate-800 uppercase tracking-tighter leading-tight pr-4">{{ item.nombre }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 mt-1">${{ Number(item.precio).toFixed(2) }} c/u</p>
+                  </div>
+                  <div class="mb-3">
+                    <input v-model="item.notas" type="text" placeholder="📝 Agregar notas (ej: sin cebolla)" class="w-full px-3 py-2 text-[10px] font-bold border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-400" />
+                  </div>
+                  <div class="flex items-center justify-between pt-2 border-t border-slate-50">
+                    <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
+                      <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
+                      <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
+                      <button @click="incrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors">+</button>
+                    </div>
+                    <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-5 border-t border-slate-100 space-y-4 shrink-0 bg-white">
+          <div class="flex justify-between items-end px-1">
+            <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Total Orden</span>
+            <span class="text-3xl font-black text-indigo-600 leading-none tracking-tighter">${{ totalPedido.toFixed(2) }}</span>
+          </div>
+          <button @click="showCheckout = true; showCarritoMobile = false" :disabled="pedido.length === 0"
+            class="w-full py-4 bg-slate-900 text-white text-sm font-black rounded-2xl hover:bg-slate-800 active:scale-95 transition-all disabled:opacity-40 uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center justify-center gap-2">
+            Confirmar Pedido <span class="text-lg">✨</span>
+          </button>
+          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest text-center transition-colors">
+            Vaciar todo el carrito
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Botón flotante móvil -->
     <div v-if="pedido.length > 0" class="sm:hidden fixed bottom-6 left-6 right-6 z-20">
       <button @click="showCarritoMobile = true"
