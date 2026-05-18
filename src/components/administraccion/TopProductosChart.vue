@@ -33,6 +33,11 @@
           {{ i + 1 }}
         </div>
 
+        <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
+          <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
+          <i v-else class="fa-solid fa-image text-slate-300"></i>
+        </div>
+
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-end mb-1.5">
             <span class="font-bold text-slate-700 text-sm truncate pr-2">{{ p.nombre }}</span>
@@ -58,6 +63,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { STORAGE_URL } from '@/config/api'
 
 const props = defineProps({
   apiUrl:     { type: String,   required: true },
@@ -78,6 +84,12 @@ const periodos = [
 
 // Formateo de moneda (con comas para miles)
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
+
+const getImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${STORAGE_URL}${path}`
+}
 
 // Porcentaje relativo al #1 para que la barra del primero siempre esté al 100%
 const pct = (v) => {

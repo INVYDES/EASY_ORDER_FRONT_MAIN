@@ -27,6 +27,10 @@
           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
           <span>👤</span> Nuevo Empleado
         </button>
+        <button @click="abrirModalCuentaMenu()"
+          class="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition">
+          <span>🛒</span> Nueva Cuenta de Menú
+        </button>
         <button @click="abrirModalRestaurante()"
           class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition">
           <span>🏪</span> Nuevo Restaurante
@@ -86,10 +90,10 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <tr v-if="empleados.length===0">
-                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados</td>
+                <tr v-if="personalNomina.length===0">
+                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados registrados</td>
                 </tr>
-                <tr v-for="emp in empleados" :key="emp.id" class="hover:bg-gray-50">
+                <tr v-for="emp in personalNomina" :key="emp.id" class="hover:bg-gray-50">
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-3">
                       <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
@@ -126,6 +130,65 @@
                   <td class="px-5 py-4 text-right">
                     <div class="flex justify-end gap-2">
                       <button @click="editarEmpleado(emp)"
+                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
+                        ✏️ Editar
+                      </button>
+                      <button @click="eliminarEmpleado(emp)"
+                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabla Cuentas de Menú -->
+        <div v-if="activeTab === 'menu'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+          <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando cuentas...</div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nombre de Cuenta</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Cadena de Acceso</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-if="cuentasMenu.length===0">
+                  <td colspan="5" class="px-5 py-10 text-center text-gray-400 italic">No hay cuentas de menú creadas</td>
+                </tr>
+                <tr v-for="emp in cuentasMenu" :key="emp.id" class="hover:bg-gray-50">
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                        🛒
+                      </div>
+                      <span class="font-bold text-gray-900 text-sm">{{ emp.name }}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                      {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-2">
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                      </label>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4 text-sm font-mono text-indigo-600 font-bold">{{ emp.username }}</td>
+                  <td class="px-5 py-4 text-right">
+                    <div class="flex justify-end gap-2">
+                      <button @click="editarCuentaMenu(emp)"
                         class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
                         ✏️ Editar
                       </button>
@@ -224,6 +287,7 @@
           ref="formEmpleadoRef"
           :empleado="empleadoEditando"
           :restaurantes="restaurantes"
+          :es-cuenta-menu="esModoMenu"
           @guardar="handleGuardarEmpleado"
           @cancelar="cerrarModalEmpleado"
         />
@@ -372,6 +436,7 @@ const idToDelete           = ref(null)
 const nameToDelete         = ref(null)
 const empleadoEditando     = ref(null)
 const restauranteEditando  = ref(null)
+const esModoMenu           = ref(false)
 
 const dashData           = reactive({ ventas_hoy: 0, ordenes_hoy: 0, ordenes_por_estado: [] })
 const ordenesCerradasHoy = ref([])
@@ -393,9 +458,22 @@ const mainTabs = [
 ]
 
 const crudTabs = computed(() => [
-  { key:'empleados',    label:'Empleados',    count: empleados.value.length    },
-  { key:'restaurantes', label:'Restaurantes', count: restaurantes.value.length },
+  { key:'empleados',    label:'Personal de Nómina', count: personalNomina.value.length },
+  { key:'menu',         label:'Cuentas de Menú',   count: cuentasMenu.value.length    },
+  { key:'restaurantes', label:'Restaurantes',      count: restaurantes.value.length   },
 ])
+
+const personalNomina = computed(() => empleados.value.filter(e => {
+  const rolId = String(getRolId(e)).toLowerCase()
+  const rolName = String(getRolNombre(e)).toLowerCase()
+  return rolId !== '7' && rolId !== 'menu' && !rolName.includes('menu') && !rolName.includes('cliente')
+}))
+
+const cuentasMenu = computed(() => empleados.value.filter(e => {
+  const rolId = String(getRolId(e)).toLowerCase()
+  const rolName = String(getRolNombre(e)).toLowerCase()
+  return rolId === '7' || rolId === 'menu' || rolName.includes('menu') || rolName.includes('cliente')
+}))
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const getHeaders = () => {
@@ -520,21 +598,42 @@ const cargarSucursalesDueno = async () => {
 
 // ── Modales empleado ───────────────────────────────────────────────────────────
 const abrirModalEmpleado = () => {
-  empleadoEditando.value = null; formError.value = ''
+  empleadoEditando.value = null; formError.value = ''; esModoMenu.value = false
   const rActivo = currentUser.value?.restaurante_activo
   const rId = (rActivo && typeof rActivo === 'object') ? Number(rActivo.id) : (rActivo ? Number(rActivo) : null)
   Object.assign(empForm, { nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', restaurante_activo: rId })
   showModalEmpleado.value = true
 }
 
+const abrirModalCuentaMenu = () => {
+  empleadoEditando.value = null; formError.value = ''; esModoMenu.value = true
+  const rActivo = currentUser.value?.restaurante_activo
+  const rId = (rActivo && typeof rActivo === 'object') ? Number(rActivo.id) : (rActivo ? Number(rActivo) : null)
+  Object.assign(empForm, { nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'7', restaurante_activo: rId })
+  showModalEmpleado.value = true
+}
+
 const editarEmpleado = (emp) => {
-  empleadoEditando.value = emp; formError.value = ''
+  empleadoEditando.value = emp; formError.value = ''; esModoMenu.value = false
   const parts = (emp.name || '').split(' ')
   Object.assign(empForm, {
     nombre: parts[0] || '', apellidos: parts.slice(1).join(' ') || '',
     email: emp.email || '', usuario: emp.username || '',
     password: '', password_confirmation: '',
     rol: getRolId(emp),
+    restaurante_id: (emp.restaurante_activo && typeof emp.restaurante_activo === 'object')
+      ? Number(emp.restaurante_activo.id) : (emp.restaurante_activo ? Number(emp.restaurante_activo) : null)
+  })
+  showModalEmpleado.value = true
+}
+
+const editarCuentaMenu = (emp) => {
+  empleadoEditando.value = emp; formError.value = ''; esModoMenu.value = true
+  Object.assign(empForm, {
+    nombre: emp.name || '', apellidos: '',
+    email: emp.email || '', usuario: emp.username || '',
+    password: '', password_confirmation: '',
+    rol: '7',
     restaurante_id: (emp.restaurante_activo && typeof emp.restaurante_activo === 'object')
       ? Number(emp.restaurante_activo.id) : (emp.restaurante_activo ? Number(emp.restaurante_activo) : null)
   })

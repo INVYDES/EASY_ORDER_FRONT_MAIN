@@ -117,13 +117,13 @@
         <div class="space-y-1">
           <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-utensils text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Cocina</span>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Alimentos</span>
             <span v-if="pendingCounts.cocina > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.cocina }}</span>
           </RouterLink>
           
           <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Barra</span>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Bebidas</span>
             <span v-if="pendingCounts.barra > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.barra }}</span>
           </RouterLink>
           
