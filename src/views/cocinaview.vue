@@ -81,6 +81,7 @@
             accion-class="bg-orange-500 hover:bg-orange-400 text-white"
             :procesando="procesando === order.id"
             :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="PENDIENTE"
             @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
             @secondary-action="abrirModalIngredientes(order, null)"
           />
@@ -111,6 +112,7 @@
             secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
             :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="EN_PREPARACION"
             @accion="cambiarEstado(order.id, 'LISTO')"
             @secondary-action="abrirModalIngredientes(order, null)"
           />

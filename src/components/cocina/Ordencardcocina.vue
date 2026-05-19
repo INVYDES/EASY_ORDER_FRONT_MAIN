@@ -99,7 +99,8 @@ const props = defineProps({
   accionClass: { type: String,  required: true },
   procesando:  { type: Boolean, default: false },
   esAdminOPropietario: { type: Boolean, default: false },
-  secondaryActionLabel: { type: String, default: '' }
+  secondaryActionLabel: { type: String, default: '' },
+  estadoFiltro: { type: String, default: '' }
 })
 
 defineEmits(['accion', 'secondary-action'])
@@ -142,7 +143,11 @@ const getNombreProducto = (detalle) => {
 
 const detallesComida = computed(() => {
   if (!props.order.detalles) return []
-  return props.order.detalles.filter(d => esProductoCocina(d))
+  let list = props.order.detalles.filter(d => esProductoCocina(d))
+  if (props.estadoFiltro) {
+    list = list.filter(d => (d.estado_preparacion || d.estado) === props.estadoFiltro)
+  }
+  return list
 })
 
 const tiempoEstimadoTotal = computed(() => {
