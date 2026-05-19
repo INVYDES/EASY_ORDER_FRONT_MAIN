@@ -447,7 +447,19 @@ const cerrarModal = () => {
 const confirmarYCambiarEstado = async () => {
   modalIngredientes.value.guardando = true
   try {
-    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado)
+    const excluidos = []
+    modalIngredientes.value.items.forEach(item => {
+      item.ingredientes.forEach(ing => {
+        if (!ing.incluir) {
+          excluidos.push({
+            producto_id: item.producto_id,
+            ingrediente_id: ing.id
+          })
+        }
+      })
+    })
+
+    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado, excluidos)
     modalIngredientes.value.visible = false
   } finally {
     modalIngredientes.value.guardando = false
@@ -455,12 +467,13 @@ const confirmarYCambiarEstado = async () => {
 }
 
 // ── Cambiar estado ─────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstadoDetalle) => {
+const cambiarEstado = async (id, nuevoEstadoDetalle, ingredientesExcluidos = []) => {
   procesando.value = id
   try {
     const data = await apiClient.post(`/ordenes/${id}/actualizar-estado-estacion`, {
       estacion: 'cocina',
-      estado: nuevoEstadoDetalle 
+      estado: nuevoEstadoDetalle,
+      ingredientes_excluidos: ingredientesExcluidos
     })
     
     if (data.success || data.data) {
