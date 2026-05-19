@@ -121,7 +121,7 @@ const g = (s) => localOrdenesPorEstado.value.find(x => x.estado === s)?.total ||
 const items = computed(() => [
   { label: 'Abierta',       value: g('ABIERTA')         },
   { label: 'En prep.',      value: g('EN_PREPARACION')  },
-  { label: 'Lista',         value: g('LISTA')           },
+  { label: 'Entregada',     value: g('ENTREGADA')       },
   { label: 'Cerrada',       value: g('CERRADA')         },
 ])
 
