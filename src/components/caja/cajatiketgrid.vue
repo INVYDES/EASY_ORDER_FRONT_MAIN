@@ -290,23 +290,36 @@
 
         <!-- Detalles -->
         <div class="px-5 py-4 space-y-3">
-          <div class="space-y-1.5 bg-slate-50 rounded-2xl p-3">
-            <div v-for="d in (order.detalles || [])" :key="d.id"
-              class="flex justify-between items-center text-xs font-bold gap-2"
-              :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
-              <span class="truncate flex-1">
-                {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
-                <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
-                <p v-else-if="d.notas" class="text-[9px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
-              </span>
-              <div class="flex items-center gap-2">
-                <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
-                <!-- Botón eliminar producto en caja -->
-                <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
-                  class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
-                  title="Eliminar Producto">
-                  <span class="text-[10px]">🗑️</span>
-                </button>
+          <div class="space-y-3">
+            <div v-for="(detalles, nomComensal) in agruparDetallesPorComensal(order.detalles)" :key="nomComensal"
+              class="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 space-y-2">
+              
+              <!-- Encabezado del Comensal -->
+              <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                <span class="text-[10px]">👤</span>
+                <span class="text-[10px] font-black text-indigo-600 uppercase tracking-wider">{{ nomComensal }}</span>
+              </div>
+
+              <!-- Lista de Productos -->
+              <div class="space-y-1.5">
+                <div v-for="d in detalles" :key="d.id"
+                  class="flex justify-between items-center text-xs font-bold gap-2"
+                  :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
+                  <span class="truncate flex-1">
+                    {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
+                    <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
+                    <p v-else-if="d.notas" class="text-[9px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                    <!-- Botón eliminar producto en caja -->
+                    <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
+                      class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
+                      title="Eliminar Producto">
+                      <span class="text-[10px]">🗑️</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -491,6 +504,17 @@ const filteredOrders = computed(() => {
     }
   })
 })
+
+const agruparDetallesPorComensal = (detalles) => {
+  const grupos = {}
+  if (!detalles) return grupos
+  detalles.forEach(d => {
+    const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
+    if (!grupos[nom]) grupos[nom] = []
+    grupos[nom].push(d)
+  })
+  return grupos
+}
 
 // ── Estado Cobrar ──────────────────────────────────────────────────────────
 const ordenCobrar    = ref(null)
