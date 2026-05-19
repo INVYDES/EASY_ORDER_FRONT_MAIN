@@ -82,8 +82,8 @@
             :procesando="procesando === order.id"
             :es-admin-o-propietario="esAdminOPropietario"
             estado-filtro="PENDIENTE"
-            @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
-            @secondary-action="abrirModalIngredientes(order, null)"
+            @accion="abrirModalIngredientes(order, 'EN_PREPARACION', 'PENDIENTE')"
+            @secondary-action="abrirModalIngredientes(order, null, 'PENDIENTE')"
           />
         </div>
       </div>
@@ -114,7 +114,7 @@
             :es-admin-o-propietario="esAdminOPropietario"
             estado-filtro="EN_PREPARACION"
             @accion="cambiarEstado(order.id, 'LISTO')"
-            @secondary-action="abrirModalIngredientes(order, null)"
+            @secondary-action="abrirModalIngredientes(order, null, 'EN_PREPARACION')"
           />
         </div>
       </div>
@@ -391,7 +391,13 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 })
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
-const abrirModalIngredientes = async (orden, nuevoEstado) => {
+const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
+  // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina) y coincida con el filtro
+  let detallesCocina = (orden.detalles ?? []).filter(esCocina)
+  if (estadoFiltro) {
+    detallesCocina = detallesCocina.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+  }
+
   modalIngredientes.value = {
     visible:        true,
     loading:        true,
@@ -399,13 +405,10 @@ const abrirModalIngredientes = async (orden, nuevoEstado) => {
     orden,
     nuevoEstado,
     items:          [],
-    productosTotal: orden.detalles?.length ?? 0,
+    productosTotal: detallesCocina.length,
   }
 
   try {
-    // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina)
-    const detallesCocina = (orden.detalles ?? []).filter(esCocina)
-    
     const resultados = await Promise.all(
       detallesCocina.map(d =>
         apiClient.get(`/ingredientes/producto/${d.producto_id}`)

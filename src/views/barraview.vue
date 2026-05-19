@@ -82,8 +82,8 @@
             :procesando="procesando === order.id"
             :es-admin-o-propietario="esAdminOPropietario"
             estado-filtro="PENDIENTE"
-            @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
-            @secondary-action="abrirModalIngredientes(order, null)"
+            @accion="abrirModalIngredientes(order, 'EN_PREPARACION', 'PENDIENTE')"
+            @secondary-action="abrirModalIngredientes(order, null, 'PENDIENTE')"
           />
         </div>
       </div>
@@ -114,7 +114,7 @@
             :es-admin-o-propietario="esAdminOPropietario"
             estado-filtro="EN_PREPARACION"
             @accion="cambiarEstado(order.id, 'LISTO')"
-            @secondary-action="abrirModalIngredientes(order, null)"
+            @secondary-action="abrirModalIngredientes(order, null, 'EN_PREPARACION')"
           />
         </div>
       </div>
@@ -375,9 +375,12 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 })
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
-const abrirModalIngredientes = async (orden, nuevoEstado) => {
-  // Solo los detalles que son bebidas (barra)
-  const detallesBebida = (orden.detalles ?? []).filter(esBarra)
+const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
+  // Solo los detalles que son bebidas (barra) y coinciden con el filtro
+  let detallesBebida = (orden.detalles ?? []).filter(esBarra)
+  if (estadoFiltro) {
+    detallesBebida = detallesBebida.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+  }
 
   modalIngredientes.value = {
     visible:        true,

@@ -113,6 +113,14 @@ const tiempoEstimadoTotal = computed(() => {
 })
 
 const minutosTranscurridos = computed(() => {
+  if (postresFiltrados.value.length > 0) {
+    const timestamps = postresFiltrados.value
+      .map(d => d.created_at ? new Date(d.created_at).getTime() : null)
+      .filter(t => t !== null)
+    if (timestamps.length > 0) {
+      return Math.floor((Date.now() - Math.min(...timestamps)) / 60000)
+    }
+  }
   if (!props.order.created_at) return 0
   return Math.floor((Date.now() - new Date(props.order.created_at)) / 60000)
 })
