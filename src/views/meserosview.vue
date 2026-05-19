@@ -740,7 +740,23 @@ const subOrdenesFiltradas = computed(() => {
       .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
       .map(o => ({ ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }))
   }
-  return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
+  return subOrdenes.value
+    .filter(s => s.estado_estacion === tabActivo.value)
+    .map(s => {
+      let targetState = ''
+      if (tabActivo.value === 'POR_PREPARAR') targetState = 'PENDIENTE'
+      else if (tabActivo.value === 'EN_PREPARACION') targetState = 'EN_PREPARACION'
+      else if (tabActivo.value === 'LISTA') targetState = 'LISTO'
+      
+      const filtered = (s.detalles_estacion || []).filter(d => 
+        (d.estado_preparacion || d.estado) === targetState || d.cancelado
+      )
+      
+      return {
+        ...s,
+        detalles_estacion: filtered
+      }
+    })
 })
 
 const ordenesParaCobrar = computed(() =>
