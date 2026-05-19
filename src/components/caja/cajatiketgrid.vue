@@ -445,6 +445,23 @@
           </div>
         </div>
         <div class="p-6">
+          <!-- Selector de Cantidad a Cancelar (solo si max > 1) -->
+          <div v-if="cancelacionModal.cantidadMaxima > 1" class="mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center">Cantidad a Cancelar</label>
+            <div class="flex items-center justify-center gap-4">
+              <button @click="cancelacionModal.cantidadCancelar > 1 ? cancelacionModal.cantidadCancelar-- : null"
+                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 font-black transition active:scale-95 text-sm">
+                −
+              </button>
+              <span class="text-lg font-black text-slate-800 w-12 text-center">{{ cancelacionModal.cantidadCancelar }}</span>
+              <button @click="cancelacionModal.cantidadCancelar < cancelacionModal.cantidadMaxima ? cancelacionModal.cantidadCancelar++ : null"
+                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-indigo-600 hover:bg-indigo-50 font-black transition active:scale-95 text-sm">
+                +
+              </button>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center mt-1">De un total de {{ cancelacionModal.cantidadMaxima }} unidades</p>
+          </div>
+
           <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Selecciona o escribe el motivo</label>
           <div class="grid grid-cols-1 gap-2 mb-4">
             <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
@@ -526,7 +543,7 @@ const montoRecibido  = ref(0)
 const folio          = ref('')
 const errorCobro     = ref('')
 
-const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
+const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '', cantidadMaxima: 1, cantidadCancelar: 1 })
 
 const metodos = [
   { key: 'efectivo',      label: 'Efectivo',      icon: '💵' },
@@ -838,21 +855,32 @@ const cobrarOrden = async () => {
 }
 
 const eliminarProductoDeOrden = (detalleId, ordenId) => {
+  let maxCant = 1;
+  const order = props.orders.find(o => o.id === ordenId) || ordenCobrar.value;
+  if (order && order.detalles) {
+    const d = order.detalles.find(item => item.id === detalleId);
+    if (d) {
+      maxCant = Number(d.cantidad || 1);
+    }
+  }
+
   cancelacionModal.value = {
     visible: true,
     detalleId,
     ordenId,
-    motivo: ''
+    motivo: '',
+    cantidadMaxima: maxCant,
+    cantidadCancelar: maxCant
   }
 }
 
 const confirmarCancelacion = async () => {
-  const { detalleId, ordenId, motivo } = cancelacionModal.value
+  const { detalleId, ordenId, motivo, cantidadCancelar } = cancelacionModal.value
   if (!motivo) return
   
   cobrando.value = true
   try {
-    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}`)
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}&cantidad_cancelar=${cantidadCancelar || 1}`)
     if (data.success || data.data) {
       // Actualizar ordenCobrar.detalles localmente
       if (ordenCobrar.value && ordenCobrar.value.id === ordenId) {
