@@ -149,7 +149,10 @@
               <div v-for="c in comensalesAuto" :key="c.nombre" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:border-indigo-200 transition">
                 <div class="flex-1">
                   <p class="text-sm font-black text-slate-800">{{ c.nombre }}</p>
-                  <p class="text-[10px] font-bold text-slate-400">{{ c.detalles.length }} platillos - ${{ c.subtotal.toFixed(2) }}</p>
+                  <p class="text-[10px] font-bold text-slate-400">
+                    {{ c.detalles.map(d => `${Number(d.cantidad)}x ${d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'}`).join(', ') }}
+                    - ${{ c.subtotal.toFixed(2) }}
+                  </p>
                 </div>
                 <div>
                   <select v-model="c.ticketId" class="pl-3 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-black bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none text-indigo-700 shadow-sm">
