@@ -49,16 +49,36 @@
         👤 {{ order.user?.name || order.usuario?.name }}
       </span>
       <span v-else class="opacity-0">—</span>
-      <span class="text-[10px] text-gray-600">
-        {{ bebidasFiltradas.length }} bebida{{ bebidasFiltradas.length !== 1 ? 's' : '' }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span v-if="tiempoEstimadoTotal > 0" class="text-indigo-400 font-bold">⏱️ Est: {{ tiempoEstimadoTotal }} min</span>
+        <span>
+          {{ bebidasFiltradas.length }} bebida{{ bebidasFiltradas.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
     </div>
 
-    <!-- Acción -->
-    <div class="px-3 pb-3">
-      <button @click="$emit('accion')" :disabled="procesando"
-        :class="['w-full py-2.5 text-xs font-bold rounded-lg transition disabled:opacity-50', accionClass]">
-        {{ procesando ? 'Actualizando...' : accionLabel }}
+    <!-- Botones de acción -->
+    <div class="px-3 pb-3 flex flex-col gap-2">
+      <!-- Botón de Receta (siempre interactivo para admin/owner, o secundario para todos) -->
+      <button
+        v-if="esAdminOPropietario || secondaryActionLabel"
+        @click="$emit('secondary-action')"
+        class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-black/20 flex items-center justify-center gap-1.5"
+      >
+        <span>👁️</span> {{ secondaryActionLabel || 'Receta' }}
+      </button>
+
+      <!-- Botón Principal de Estado (bloqueado para admin/owner) -->
+      <button
+        @click="$emit('accion')"
+        :disabled="procesando || esAdminOPropietario"
+        :class="[
+          esAdminOPropietario ? 'bg-gray-700 text-gray-500 cursor-not-allowed shadow-none' : accionClass,
+          'w-full py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20'
+        ]"
+      >
+        <span v-if="procesando" class="inline-block animate-spin mr-2">⏳</span>
+        {{ esAdminOPropietario ? '🚫 Bloqueado' : (procesando ? 'Actualizando...' : accionLabel) }}
       </button>
     </div>
   </div>
@@ -72,8 +92,10 @@ const props = defineProps({
   accionLabel: { type: String,  default: '' },
   accionClass: { type: String,  default: '' },
   procesando:  { type: Boolean, default: false },
+  esAdminOPropietario: { type: Boolean, default: false },
+  secondaryActionLabel: { type: String, default: '' }
 })
-defineEmits(['accion'])
+defineEmits(['accion', 'secondary-action'])
 
 // ✅ Lógica de filtrado estricta: busca la categoría en el producto
 const esBarra = (detalle) => {
@@ -90,6 +112,10 @@ const getNombreProducto = (detalle) => {
 const bebidasFiltradas = computed(() =>
   (props.order.detalles || []).filter(esBarra)
 )
+
+const tiempoEstimadoTotal = computed(() => {
+  return bebidasFiltradas.value.reduce((sum, d) => sum + ((parseFloat(d.minutos_produccion) || 0) * d.cantidad), 0)
+})
 
 const minutosTranscurridos = computed(() => {
   if (!props.order.created_at) return 0

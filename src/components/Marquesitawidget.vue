@@ -6,16 +6,7 @@
 
     <div class="flex items-stretch">
 
-      <!-- Label lateral fijo -->
-      <div
-        class="shrink-0 flex flex-col items-center justify-center px-6 py-3 gap-1 border-r"
-        :class="labelClass"
-      >
-        <span class="text-4xl leading-none animate-bounce-slow">{{ labelEmoji }}</span>
-        <span class="text-xs font-black uppercase tracking-widest leading-none">{{ labelTexto }}</span>
-      </div>
-
-      <!-- Track deslizante -->
+      <!-- Track deslizante (Ocupa todo el ancho) -->
       <div class="flex-1 overflow-hidden relative flex items-center py-2.5">
         <div
           ref="track"
@@ -40,7 +31,13 @@
                 <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-2 py-0.5 rounded-lg text-xs font-black shadow-sm border border-black/5">
                   ${{ Number(a.precio_promo).toFixed(2) }}
                 </span>
-                <span v-if="a.tipo === 'promo'" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black animate-pulse">PROMO</span>
+                <!-- BADGE DYNAMIC COLOR FOR TYPE -->
+                <span 
+                  class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shadow-sm animate-pulse"
+                  :class="getAnuncioColorClass(a.color)"
+                >
+                  {{ a.tipo === 'producto' ? 'PLATO' : a.tipo }}
+                </span>
               </div>
               <p v-if="a.contenido" class="text-sm opacity-90 font-bold leading-none mt-1 max-w-[350px] truncate">{{ a.contenido }}</p>
             </div>
@@ -104,13 +101,6 @@ const accentClass = computed(() => ({
   amber: 'bg-white/40',
 }[props.variant] || 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'))
 
-const labelClass = computed(() => ({
-  dark:  'border-white/10 bg-white/5 text-white',
-  light: 'border-indigo-200 bg-indigo-100/60 text-indigo-700',
-  color: 'border-white/20 bg-white/10 text-white',
-  amber: 'border-white/20 bg-white/10 text-white',
-}[props.variant] || 'border-white/10 bg-white/5 text-white'))
-
 const badgePrecioClass = computed(() => ({
   dark:  'bg-yellow-400 text-black border-yellow-300',
   light: 'bg-indigo-600 text-white border-indigo-500',
@@ -118,13 +108,18 @@ const badgePrecioClass = computed(() => ({
   amber: 'bg-white text-orange-700 border-white/50',
 }[props.variant] || 'bg-yellow-400 text-black border-yellow-300'))
 
-const labelEmoji = computed(() => ({
-  dark: '📢', light: '🎉', color: '✨', amber: '🔥',
-}[props.variant] || '📢'))
-
-const labelTexto = computed(() => ({
-  dark: 'Avisos', light: 'Novedades', color: 'Promos', amber: 'Ofertas',
-}[props.variant] || 'Avisos'))
+// Mapeo del color del badge de cada anuncio individual según lo seleccionado en el formulario
+const getAnuncioColorClass = (color) => {
+  const map = {
+    indigo:  'bg-indigo-500 text-white shadow-sm border border-indigo-400',
+    emerald: 'bg-emerald-500 text-white shadow-sm border border-emerald-400',
+    amber:   'bg-amber-500 text-white shadow-sm border border-amber-400',
+    rose:    'bg-rose-500 text-white shadow-sm border border-rose-400',
+    blue:    'bg-blue-500 text-white shadow-sm border border-blue-400',
+    purple:  'bg-purple-500 text-white shadow-sm border border-purple-400',
+  }
+  return map[color] || 'bg-indigo-500 text-white shadow-sm border border-indigo-400'
+}
 
 const badgeTipoClass = (tipo) => {
   const base = {
@@ -195,23 +190,28 @@ const fetchAnuncios = async () => {
       params.restaurante_id = props.restauranteId
     }
 
-    const response = await apiClient.get('/anuncios', params)
-    const data = response?.data || response
+    const response = await apiClient.get('/anuncios', { params })
     
-    if (data && (data.success || data.data)) {
-      const lista = data.data || data || []
-      if (Array.isArray(lista)) {
-        anuncios.value = lista.filter(a => {
-          const esVigente = a.activo && a.vigente;
-          if (props.tipo === 'cliente') {
-            return esVigente && a.mostrar_cliente;
-          } else {
-            return esVigente && a.mostrar_interno;
-          }
-        })
-        await nextTick()
-        setTimeout(() => { calculateWidth(); offsetPx.value = 0; startAnimation() }, 60)
+    let lista = []
+    if (response) {
+      if (Array.isArray(response)) {
+        lista = response
+      } else if (Array.isArray(response.data)) {
+        lista = response.data
       }
+    }
+
+    if (Array.isArray(lista)) {
+      anuncios.value = lista.filter(a => {
+        const esVigente = a.activo && (a.vigente !== false && a.es_vigente !== false);
+        if (props.tipo === 'cliente') {
+          return esVigente && a.mostrar_cliente;
+        } else {
+          return esVigente && a.mostrar_interno;
+        }
+      })
+      await nextTick()
+      setTimeout(() => { calculateWidth(); offsetPx.value = 0; startAnimation() }, 60)
     }
   } catch (err) {
     console.error('Error al cargar la marquesina:', err)
@@ -225,6 +225,10 @@ const handleResize = () => {
 }
 
 watch(() => props.restauranteId, () => {
+  fetchAnuncios()
+})
+
+watch(() => props.tipo, () => {
   fetchAnuncios()
 })
 

@@ -55,20 +55,36 @@
         👤 {{ order.user?.name || order.usuario?.name }}
       </span>
       <span v-else class="opacity-0">—</span>
-      <span>
-        {{ detallesComida.length }} producto{{ detallesComida.length !== 1 ? 's' : '' }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span v-if="tiempoEstimadoTotal > 0" class="text-indigo-400 font-bold">⏱️ Est: {{ tiempoEstimadoTotal }} min</span>
+        <span>
+          {{ detallesComida.length }} producto{{ detallesComida.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
     </div>
 
-    <!-- Botón de acción -->
-    <div class="px-3 pb-3">
+    <!-- Botones de acción -->
+    <div class="px-3 pb-3 flex flex-col gap-2">
+      <!-- Botón de Receta (siempre interactivo para admin/owner, o secundario para todos) -->
+      <button
+        v-if="esAdminOPropietario || secondaryActionLabel"
+        @click="$emit('secondary-action')"
+        class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-black/20 flex items-center justify-center gap-1.5"
+      >
+        <span>👁️</span> {{ secondaryActionLabel || 'Receta' }}
+      </button>
+
+      <!-- Botón Principal de Estado (bloqueado para admin/owner) -->
       <button
         @click="$emit('accion')"
-        :disabled="procesando"
-        :class="[accionClass, 'w-full py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20']"
+        :disabled="procesando || esAdminOPropietario"
+        :class="[
+          esAdminOPropietario ? 'bg-gray-700 text-gray-500 cursor-not-allowed shadow-none' : accionClass,
+          'w-full py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20'
+        ]"
       >
         <span v-if="procesando" class="inline-block animate-spin mr-2">⏳</span>
-        {{ procesando ? 'Actualizando...' : accionLabel }}
+        {{ esAdminOPropietario ? '🚫 Bloqueado' : (procesando ? 'Actualizando...' : accionLabel) }}
       </button>
     </div>
   </div>
@@ -81,10 +97,12 @@ const props = defineProps({
   order:       { type: Object,  required: true },
   accionLabel: { type: String,  required: true },
   accionClass: { type: String,  required: true },
-  procesando:  { type: Boolean, default: false }
+  procesando:  { type: Boolean, default: false },
+  esAdminOPropietario: { type: Boolean, default: false },
+  secondaryActionLabel: { type: String, default: '' }
 })
 
-defineEmits(['accion'])
+defineEmits(['accion', 'secondary-action'])
 
 // --- Cálculo de Tiempo ---
 const minutosTranscurridos = computed(() => {
@@ -125,6 +143,10 @@ const getNombreProducto = (detalle) => {
 const detallesComida = computed(() => {
   if (!props.order.detalles) return []
   return props.order.detalles.filter(d => esProductoCocina(d))
+})
+
+const tiempoEstimadoTotal = computed(() => {
+  return detallesComida.value.reduce((sum, d) => sum + ((parseFloat(d.minutos_produccion) || 0) * d.cantidad), 0)
 })
 </script>
 

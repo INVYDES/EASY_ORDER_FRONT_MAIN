@@ -25,6 +25,19 @@ import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
 // ── UI ────────────────────────────────────────────────────────────────────────
 const selectedTab = ref('open')
 const showCloseModal = ref(false)
@@ -78,7 +91,12 @@ const openOrders = computed(() => {
     return s === 'ENTREGADA' || s === 'ENTREGADO'
   })
 })
-const closedOrders = computed(() => orders.value.filter(o => (o.estado || '').toUpperCase() === 'CERRADA'))
+const closedOrders = computed(() => {
+  return orders.value.filter(o => {
+    const s = (o.estado || '').toUpperCase()
+    return s === 'CERRADA' || s === 'CANCELADA' || (o.detalles || []).some(d => !!d.cancelado)
+  })
+})
 const ordenesListas = computed(() => openOrders.value.length)
 const ordenesEnProceso = computed(() => {
   return orders.value.filter(o => {
@@ -133,9 +151,9 @@ const toLocalTime = (dateStr) => {
     if (dateStr.includes('/')) {
       const [fecha, hora] = dateStr.split(' ');
       const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
     } else {
-      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+      d = new Date(dateStr.replace(' ', 'T'));
     }
     if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -286,11 +304,14 @@ const loadOrders = async () => {
   try {
     const today = new Date().toLocaleDateString('en-CA')
     let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
       closedOrdersQuery = `/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
     } else if (!cajaAbierta.value) {
       closedOrdersQuery = null;
+      cancelledOrdersQuery = null;
     }
 
     const fetches = [
@@ -303,6 +324,9 @@ const loadOrders = async () => {
     
     if (closedOrdersQuery) {
       fetches.push(apiClient.get(closedOrdersQuery));
+    }
+    if (cancelledOrdersQuery) {
+      fetches.push(apiClient.get(cancelledOrdersQuery));
     }
 
     const jsonResults = await Promise.all(fetches)
@@ -543,8 +567,12 @@ onUnmounted(() => {
               <h2>Caja cerrada</h2>
               <p>Inicia una nueva jornada para registrar ventas y movimientos.</p>
             </div>
-            <button @click="showOpenModal = true" class="btn-primary-action">
-              🔓 Abrir Caja Ahora
+            <button
+              :disabled="esAdminOPropietario"
+              @click="showOpenModal = true"
+              :class="['btn-primary-action', esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none hover:bg-slate-300 hover:transform-none' : '']"
+            >
+              {{ esAdminOPropietario ? '🚫 Apertura Bloqueada' : '🔓 Abrir Caja Ahora' }}
             </button>
           </div>
 
@@ -586,6 +614,7 @@ onUnmounted(() => {
               :ordenes-en-proceso="ordenesEnProceso"
               :closed-orders-count="closedOrders.length"
               :total-ordenes="orders.length"
+              :es-admin-o-propietario="esAdminOPropietario"
               @movimiento="showMovimientoModal = true"
               @corte-x="showCorteXModal = true"
               @exportar="exportarCorte"

@@ -350,8 +350,12 @@ const formError = ref('')
 const filtroActivo = ref('todos')
 const dropdownOpen = ref(false)
 const searchTerm = ref('')
-const previewVariant = ref('dark')
+const previewVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 const previewTipo = ref('interno')
+
+watch(previewVariant, (newVal) => {
+  localStorage.setItem('marquesina_variant', newVal)
+})
 
 // Variable reactiva para el ID del restaurante - esto asegura que el Widget se entere del cambio
 const restauranteId = ref(localStorage.getItem('restaurante_id_activo'))
@@ -535,6 +539,12 @@ const abrirModal = (a = null) => {
   
   if (a) {
     form.value = { ...defaultForm(), ...a }
+    // Asignar IDs de producto o paquete vinculados
+    if (a.producto_id) form.value.producto_id = a.producto_id
+    else if (a.producto && a.producto.id) form.value.producto_id = a.producto.id
+
+    if (a.paquete_id) form.value.paquete_id = a.paquete_id
+    else if (a.paquete && a.paquete.id) form.value.paquete_id = a.paquete.id
     // Formatear fechas para input type="date"
     if(a.fecha_inicio) form.value.fecha_inicio = a.fecha_inicio.split(' ')[0]
     if(a.fecha_fin) form.value.fecha_fin = a.fecha_fin.split(' ')[0]

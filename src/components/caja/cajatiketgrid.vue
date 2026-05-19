@@ -26,8 +26,8 @@
               <span :class="{'line-through': d.cancelado}">
                 ${{ Number(d.subtotal || 0).toFixed(2) }}
               </span>
-              <button v-if="!d.cancelado" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
-                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-red-100">
+              <button v-if="!d.cancelado && !esMesero" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
+                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all">
                 <span class="text-xs">🗑️</span>
               </button>
             </div>
@@ -103,11 +103,12 @@
 
           <!-- Botones de acción -->
           <div class="flex gap-3">
-            <button @click="abrirDividirCuenta"
-              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2">
+            <button :disabled="esAdminOPropietario || Object.keys(itemsByComensal).length <= 1" @click="abrirDividirCuenta"
+              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              :title="Object.keys(itemsByComensal).length <= 1 ? 'No se puede dividir una cuenta con un solo comensal' : ''">
               ✂️ Dividir cuenta
             </button>
-            <button @click="cobrarOrden" :disabled="cobrando || !canPay"
+            <button @click="cobrarOrden" :disabled="cobrando || !canPay || esAdminOPropietario"
               class="flex-1 py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
               <div v-if="cobrando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               {{ cobrando ? 'Procesando...' : '💳 Cobrar' }}
@@ -242,7 +243,7 @@
           <div v-if="errorDividir" class="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-700">
             {{ errorDividir }}
           </div>
-          <button @click="cobrarDividido" :disabled="cobrando || !canPayDividido"
+          <button @click="cobrarDividido" :disabled="cobrando || !canPayDividido || esAdminOPropietario"
             class="w-full py-3.5 text-sm font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
             <div v-if="cobrando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             {{ cobrando ? 'Procesando e Imprimiendo...' : `💳 Cobrar y Emitir ${ticketsAgrupados.length || numComensales} Tickets` }}
@@ -265,14 +266,16 @@
 
         <!-- Header ticket -->
         <div class="px-5 py-4 flex items-center justify-between"
-          :class="type === 'open' ? 'bg-emerald-50' : 'bg-slate-50'">
+          :class="type === 'open' ? 'bg-emerald-50' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'bg-red-50/50' : 'bg-slate-50')">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm"
-              :class="type === 'open' ? 'bg-emerald-100' : 'bg-slate-100'">
-              {{ type === 'open' ? '💳' : '✓' }}
+              :class="type === 'open' ? 'bg-emerald-100' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'bg-red-100' : 'bg-slate-100')">
+              {{ type === 'open' ? '💳' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫' : '✓') }}
             </div>
             <div>
-              <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">{{ type === 'open' ? 'Por cobrar' : 'Cerrada' }}</p>
+              <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">
+                {{ type === 'open' ? 'Por cobrar' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'Cancelada' : 'Cerrada') }}
+              </p>
               <p class="text-base font-black text-slate-800 leading-none">{{ order.folio || '#' + order.id }}</p>
               <p v-if="type === 'open'" class="text-[10px] font-bold text-indigo-600 mt-1">Estado: {{ order.estado }}</p>
             </div>
@@ -284,19 +287,25 @@
 
         <!-- Detalles -->
         <div class="px-5 py-4 space-y-3">
-          <div class="space-y-1 bg-slate-50 rounded-2xl p-3">
-            <div v-for="d in (order.detalles || []).slice(0, 4)" :key="d.id"
-              class="flex justify-between text-xs font-bold"
+          <div class="space-y-1.5 bg-slate-50 rounded-2xl p-3">
+            <div v-for="d in (order.detalles || [])" :key="d.id"
+              class="flex justify-between items-center text-xs font-bold gap-2"
               :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
               <span class="truncate flex-1">
                 {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
                 <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
+                <p v-else-if="d.notas" class="text-[9px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
               </span>
-              <span class="text-slate-400 ml-2">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                <!-- Botón eliminar producto en caja -->
+                <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
+                  class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
+                  title="Eliminar Producto">
+                  <span class="text-[10px]">🗑️</span>
+                </button>
+              </div>
             </div>
-            <p v-if="(order.detalles || []).length > 4" class="text-[10px] text-slate-400 font-black pt-1">
-              +{{ order.detalles.length - 4 }} producto(s) más
-            </p>
           </div>
 
           <div class="flex items-center justify-between">
@@ -321,12 +330,15 @@
             <span class="text-xl font-black text-slate-800">${{ Number(order.total || 0).toFixed(2) }}</span>
           </div>
           <button v-if="type === 'open'"
+            :disabled="esAdminOPropietario"
             @click="abrirCobrar(order)"
-            class="w-full py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 active:scale-95">
-            💳 Cobrar orden
+            :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
+                     esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
+            {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
           </button>
-          <div v-else class="w-full py-2.5 text-center text-[10px] font-black text-slate-400 bg-slate-50 rounded-2xl uppercase tracking-widest">
-            ✓ Pagada · {{ order.metodo_pago || 'efectivo' }}
+          <div v-else class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"
+            :class="(order.estado || '').toUpperCase() === 'CANCELADA' ? 'text-red-500 bg-red-50 border border-red-100' : 'text-slate-400 bg-slate-50'">
+            {{ (order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫 Cancelada completamente' : `✓ Pagada · ${order.metodo_pago || 'efectivo'}` }}
           </div>
         </div>
       </div>
@@ -405,6 +417,7 @@
           <p style="margin-top: 2mm; font-size: 8px; color: #666;">*** EASY ORDER SYSTEM ***</p>
         </div>
       </div>
+    </div>
     <!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
     <div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4" @click.self="cancelacionModal.visible = false">
       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100">
@@ -439,7 +452,6 @@
             {{ cobrando ? '...' : 'Confirmar' }}
           </button>
         </div>
-      </div>
       </div>
     </div>
   </div>
@@ -500,6 +512,25 @@ const cambio = computed(() => {
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const user = JSON.parse(userRaw)
 const userName = computed(() => user.name || 'Personal')
+
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
+const esMesero = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
+    return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
+})
 
 const nombreSucursal = ref('RESTAURANTE E-ORDER')
 const datosSucursal  = ref({ direccion: '', telefono: '', propietario_id: '' })

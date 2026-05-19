@@ -80,7 +80,9 @@
             accion-label="🍹 Comenzar a preparar"
             accion-class="bg-blue-600 hover:bg-blue-500 text-white"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
             @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
+            @secondary-action="abrirModalIngredientes(order, null)"
           />
         </div>
       </div>
@@ -108,6 +110,7 @@
             accion-class="bg-emerald-600 hover:bg-emerald-500 text-white"
             secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
             @accion="cambiarEstado(order.id, 'LISTO')"
             @secondary-action="abrirModalIngredientes(order, null)"
           />
@@ -224,6 +227,19 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
 const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
+
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
 
 const BEBIDA_CATEGORIA_IDS = [7]
 

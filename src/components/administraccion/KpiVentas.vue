@@ -25,7 +25,7 @@
     </div>
 
     <!-- ══ KPI CARDS ══ -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div v-for="card in kpiCards" :key="card.label"
         class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative">
         <div class="flex items-start justify-between">
@@ -45,25 +45,19 @@
       </div>
     </div>
 
-    <!-- ══ INVERSIÓN / MANO DE OBRA / UTILIDAD + PROPINAS ══ -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- ══ INVERSIÓN / UTILIDAD + PROPINAS ══ -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">📦</span>
         <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
         <p class="text-2xl font-black text-red-600 mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
-        <p class="text-xs text-gray-400 mt-1">costo de insumos vendidos</p>
-      </div>
-      <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-5 relative overflow-hidden">
-        <span class="absolute right-3 top-2 text-4xl opacity-10">👷</span>
-        <p class="text-xs font-bold text-amber-500 uppercase tracking-wider">Inversión Mano de Obra</p>
-        <p class="text-2xl font-black text-amber-600 mt-1">${{ fm(finanzasDia.inversionManoObra) }}</p>
-        <p class="text-xs text-gray-400 mt-1">nómina proporcional del día</p>
+        <p class="text-xs text-gray-400 mt-1">costo de insumos + MO</p>
       </div>
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
         <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Utilidad Total del Día</p>
         <p class="text-2xl font-black text-emerald-700 mt-1">${{ fm(finanzasDia.utilidadTotal) }}</p>
-        <p class="text-xs text-emerald-500 mt-1">ventas − costos − MO</p>
+        <p class="text-xs text-emerald-500 mt-1">Utilidad bruta del dia no se consideran salidad de efectivo del dia</p>
       </div>
       <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
@@ -173,27 +167,8 @@
     <!-- ══ SEGUNDA FILA: CANAL DE VENTAS + MARGEN FUERA DE TOP 5 ══ -->
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-      <!-- DONUT Canal de Ventas -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h3 class="font-bold text-gray-800 mb-1 flex items-center gap-2">
-          <span>🛵</span> Canal de Ventas
-        </h3>
-        <p class="text-xs text-gray-400 mb-4">Local · Pickup · Delivery</p>
-        <div class="relative h-52 flex items-center justify-center">
-          <canvas ref="chartCanal"></canvas>
-          <!-- Total central -->
-          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span class="text-3xl font-black text-gray-800">{{ totalPedidosCanal }}</span>
-            <span class="text-xs text-gray-400 font-medium">pedidos</span>
-          </div>
-        </div>
-        <div class="flex justify-center gap-6 mt-4">
-          <div v-for="c in canalLeyenda" :key="c.label" class="flex items-center gap-1.5">
-            <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: c.color }"></div>
-            <span class="text-xs text-gray-500 font-medium">{{ c.label }}: <strong>{{ c.valor }}</strong></span>
-          </div>
-        </div>
-      </div>
+      <!-- DONUT Canal de Ventas (Con selectores de período independientes) -->
+      <CanalVentasChart :api-url="apiUrl" :get-headers="getHeaders" :refresh-key="refreshKey" :server-date="serverDate" />
 
       <!-- Productos mayor margen FUERA del Top 5 -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -239,6 +214,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 import Chart from 'chart.js/auto'
+import CanalVentasChart from './CanalVentasChart.vue'
 
 const props = defineProps({
   apiUrl: { type: String, default: '/api' },

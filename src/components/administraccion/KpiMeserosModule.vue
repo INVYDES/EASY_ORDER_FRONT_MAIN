@@ -142,7 +142,7 @@ const metricCards = computed(() => [
   { label: 'Ventas Totales', value: fm(resumen.value.total_ventas), prefix: '$', sub: 'Subtotal sin propina', icon: '💰' },
   { label: 'Ticket Promedio', value: fm(resumen.value.promedio_ticket), prefix: '$', sub: 'Gasto medio por orden', icon: '🎫' },
   { label: 'Eficiencia de Items', value: resumen.value.items_por_ticket, suffix: ' uds', sub: 'Promedio de productos', icon: '📦' },
-  { label: 'Tiempo de Servicio', value: resumen.value.tiempo_servicio_avg, suffix: ' min', sub: 'Desde pedido a entrega', icon: '⏱️' },
+  { label: 'Tiempo de Servicio', value: resumen.value.tiempo_servicio_avg, suffix: ' min', sub: 'Desde lista a entrega', icon: '⏱️' },
 ])
 
 let trendChart = null
@@ -165,13 +165,37 @@ const loadKpis = async () => {
 
     const res = await apiClient.get('/kpis/meseros', { params })
     if (res.success) {
-      meseros.value = res.data.meseros
+      // 1. Ordenar de mayor a menor ventas
+      const sortedMeseros = [...res.data.meseros].sort((a, b) => (Number(b.ventas_totales) || 0) - (Number(a.ventas_totales) || 0))
+      meseros.value = sortedMeseros
       tendenciaData.value = res.data.tendencia
-      resumen.value = {
-        total_ventas: res.data.resumen.total_ventas,
-        promedio_ticket: res.data.resumen.promedio_ticket,
-        items_por_ticket: (meseros.value.reduce((s, m) => s + (Number(m.items_por_ticket) || 0), 0) / (meseros.value.length || 1)).toFixed(1),
-        tiempo_servicio_avg: (meseros.value.reduce((s, m) => s + (Number(m.tiempo_servicio_avg) || 0), 0) / (meseros.value.length || 1)).toFixed(1)
+
+      // 2. Si hay un mesero seleccionado en particular, mostrar sus KPI individuales.
+      if (filtros.mesero_id) {
+        const sel = sortedMeseros.find(m => m.id === filtros.mesero_id)
+        if (sel) {
+          resumen.value = {
+            total_ventas: sel.ventas_totales,
+            promedio_ticket: sel.ticket_promedio,
+            items_por_ticket: Number(sel.items_por_ticket || 0).toFixed(1),
+            tiempo_servicio_avg: Number(sel.tiempo_servicio_avg || 0).toFixed(1)
+          }
+        } else {
+          resumen.value = {
+            total_ventas: 0,
+            promedio_ticket: 0,
+            items_por_ticket: '0.0',
+            tiempo_servicio_avg: '0.0'
+          }
+        }
+      } else {
+        // Mostrar resumen general del equipo
+        resumen.value = {
+          total_ventas: res.data.resumen.total_ventas,
+          promedio_ticket: res.data.resumen.promedio_ticket,
+          items_por_ticket: (sortedMeseros.reduce((s, m) => s + (Number(m.items_por_ticket) || 0), 0) / (sortedMeseros.length || 1)).toFixed(1),
+          tiempo_servicio_avg: (sortedMeseros.reduce((s, m) => s + (Number(m.tiempo_servicio_avg) || 0), 0) / (sortedMeseros.length || 1)).toFixed(1)
+        }
       }
       initTrendChart()
     }

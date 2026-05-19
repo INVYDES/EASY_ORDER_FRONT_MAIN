@@ -71,7 +71,7 @@
         :api-url="API_URL" 
         :get-headers="getHeaders" 
         tipo="interno"
-        variant="amber" 
+        :variant="marquesinaVariant" 
         :restaurante-id="restauranteSeleccionado?.id"
         class="border-y border-white/5"
       />
@@ -266,7 +266,10 @@
               <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-2">
                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                   <div class="flex flex-col">
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                   </div>
                 </div>
                 <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
                 <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
@@ -385,7 +388,10 @@
                         :class="comensalActivoIndex === cIdx ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'">
                      {{ comensalActivoIndex === cIdx ? '👤' : '👥' }}
                    </div>
-                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
+                   <div class="flex flex-col">
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                   </div>
                 </div>
                 <div v-if="comensalActivoIndex === cIdx" class="w-2.5 h-2.5 bg-indigo-500 rounded-full shadow-sm animate-pulse"></div>
               </div>
@@ -478,7 +484,10 @@
               <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-2">
                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-24 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                   <div class="flex flex-col">
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-24 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                   </div>
                 </div>
                 <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
               </div>
@@ -566,6 +575,7 @@ const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const paquetes                = ref([])
 const sidebarAbierta          = ref(true)
+const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'dark')
 
 // --- ESTADO COMENSALES ---
 const numeroComensales    = ref(1)
@@ -594,6 +604,10 @@ watch(numeroComensales, (newVal) => {
 })
 
 const getItemsForComensal = (cIdx) => pedido.value.filter(i => i.comensalIndex === cIdx)
+
+const tiempoPorComensal = (cIdx) => {
+  return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
+}
 
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
@@ -652,6 +666,7 @@ const normalizar = (p) => {
       stock:       parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
       agotado:     parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
       bajo_stock:  p.bajo_stock ?? false,
+      minutos_produccion: parseFloat(p.minutos_produccion || 0),
       categoria:   p.categoria ? {
         id:     p.categoria.id,
         nombre: p.categoria.nombre.toUpperCase() === 'COCINA' ? 'Alimentos' : (p.categoria.nombre.toUpperCase() === 'BARRA' ? 'Bebidas' : p.categoria.nombre),
@@ -790,7 +805,8 @@ const agregarAlPedido = (p) => {
       cantidad: 1, 
       stock_maximo: p.stock,
       notas: '',
-      comensalIndex: cIdx
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(p.minutos_produccion || 0)
     }) 
   }
 }
@@ -812,7 +828,8 @@ const agregarOfertaAlPedido = (oferta) => {
       es_oferta: true, 
       oferta_id: oferta.id,
       notas: '',
-      comensalIndex: cIdx
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(oferta.producto?.minutos_produccion || oferta.minutos_produccion || 0)
     })
   }
 }
@@ -833,7 +850,8 @@ const agregarPaqueteAlPedido = (pkg) => {
       cantidad: 1, 
       es_paquete: true,
       notas: '',
-      comensalIndex: cIdx
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(pkg.minutos_produccion || 0)
     })
   }
 }

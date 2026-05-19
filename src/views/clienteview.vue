@@ -6,7 +6,7 @@
       :api-url="API_URL"
       :get-headers="getHeaders"
       tipo="cliente"
-      :variant="vista === 'menu' ? 'color' : 'light'"
+      :variant="marquesinaVariant"
       :restaurante-id="restauranteSeleccionado?.id || authStore?.restauranteId || null"
     />
 
@@ -372,6 +372,7 @@ const showCheckout            = ref(false)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const loadingOfertas          = ref(false)
+const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'light')
 
 // Datos del usuario
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'

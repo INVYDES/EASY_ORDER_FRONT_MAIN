@@ -167,6 +167,9 @@
             <div>
               <h4 class="text-sm font-black text-indigo-900 uppercase tracking-wider">💰 Análisis Financiero del Paquete</h4>
             </div>
+            <div class="px-3 py-1 bg-white border border-indigo-100 rounded-lg text-[10px] font-bold text-indigo-500 shadow-sm flex items-center gap-1">
+              <span>⏱️</span> Tiempo Prod: {{ minutosProduccionTotal }} min
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -301,6 +304,12 @@ const cargarNominaReal = async () => {
     }
   } catch (err) { console.error('Error nómina:', err) }
 }
+
+const minutosProduccionTotal = computed(() => {
+  return form.productos.reduce((sum, p) => {
+    return sum + (parseFloat(p.minutos_produccion || 0) * p.cantidad)
+  }, 0)
+})
 
 const costoInsumosTotal = computed(() => {
   return form.productos.reduce((sum, p) => {

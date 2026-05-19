@@ -80,7 +80,9 @@
             accion-label="🔥 Iniciar preparación"
             accion-class="bg-orange-500 hover:bg-orange-400 text-white"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
             @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
+            @secondary-action="abrirModalIngredientes(order, null)"
           />
         </div>
       </div>
@@ -108,6 +110,7 @@
             accion-class="bg-emerald-500 hover:bg-emerald-400 text-white"
             secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
             @accion="cambiarEstado(order.id, 'LISTO')"
             @secondary-action="abrirModalIngredientes(order, null)"
           />
@@ -237,6 +240,19 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
 const POLL_INTERVAL = 15000 // Aumentamos intervalo ya que tenemos WS
 const router        = useRouter()
+
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const orders     = ref([])

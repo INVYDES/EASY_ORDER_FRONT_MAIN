@@ -68,7 +68,7 @@
               :class="['py-4 px-1 border-b-2 font-medium text-sm transition',
                 activeTab===tab.key ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
               {{ tab.label }}
-              <span class="ml-1.5 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-semibold">{{ tab.count }}</span>
+              <span v-if="tab.key !== 'sesiones'" class="ml-1.5 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-semibold">{{ tab.count }}</span>
             </button>
           </nav>
         </div>
@@ -204,6 +204,111 @@
           </div>
         </div>
 
+        <!-- Tabla Entradas y Salidas (Sesiones) -->
+        <div v-if="activeTab === 'sesiones'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 animate-fade-in">
+          <!-- Filtros de Sesiones y Botón Imprimir -->
+          <div class="flex flex-wrap items-center justify-between gap-4 bg-gray-50 p-4 border-b border-gray-100">
+            <div class="flex items-center gap-4 flex-wrap">
+              <!-- Filtro por Rango de Fechas -->
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-gray-700">Filtrar por:</span>
+                <div class="relative">
+                  <select v-model="filtroSesiones" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition">
+                    <option value="hoy">📅 Hoy</option>
+                    <option value="7d">📅 Últimos 7 días</option>
+                    <option value="14d">📅 Últimos 14 días</option>
+                    <option value="30d">📅 Últimos 30 días</option>
+                    <option value="todos">📅 Todos los registros</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                    ▼
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filtro por Empleado -->
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-gray-700">Empleado:</span>
+                <div class="relative">
+                  <select v-model="filtroEmpleadoId" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition">
+                    <option value="todos">👥 Todos los empleados</option>
+                    <option v-for="emp in empleadosFiltrados" :key="emp.id" :value="emp.id">
+                      👤 {{ emp.name }}
+                    </option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                    ▼
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón Imprimir -->
+            <button @click="imprimirTablaSesiones" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition shadow-sm">
+              🖨️ Imprimir Reporte
+            </button>
+          </div>
+
+          <div v-if="loading.general" class="text-center py-12 text-gray-400">
+            <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
+            Cargando historial de entradas y salidas...
+          </div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Hora Entrada</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Hora Salida / Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Duración</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-if="sesionesFiltradas.length===0">
+                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay registros de entradas y salidas en esta sucursal</td>
+                </tr>
+                <tr v-for="ses in sesionesFiltradas" :key="ses.id" class="hover:bg-gray-50">
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                        {{ getInitials(ses.user?.name) }}
+                      </div>
+                      <span class="font-bold text-gray-900 text-sm">{{ ses.user?.name || 'Empleado Eliminado' }}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                      {{ ses.user ? getRolNombre(ses.user) : '—' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                      {{ ses.restaurante?.nombre || '—' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-sm text-gray-600 font-medium">
+                    {{ formatDateTime(ses.hora_entrada) }}
+                  </td>
+                  <td class="px-5 py-4">
+                    <span v-if="!ses.hora_salida" class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1.5 animate-pulse">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      En línea / Activo
+                    </span>
+                    <span v-else class="text-sm text-gray-600 font-medium">
+                      {{ formatDateTime(ses.hora_salida) }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-sm font-semibold text-indigo-600">
+                    {{ calcularDuracion(ses.hora_entrada, ses.hora_salida) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Tabla restaurantes -->
         <div v-if="activeTab === 'restaurantes'" class="bg-white rounded-xl shadow-sm overflow-hidden">
           <div v-if="loading.restaurantes" class="text-center py-12 text-gray-400">Cargando restaurantes...</div>
@@ -256,10 +361,7 @@
     </template>
 
 
-    <!-- ══ TAB MARQUESINA ══ -->
-    <template v-if="mainTab === 'anuncios'">
-      <AnunciosView />
-    </template>
+
 
     <!-- ══ TAB GASTOS ══ -->
     <template v-if="mainTab === 'gastos'">
@@ -430,10 +532,33 @@ const router = useRouter()
 const mainTab   = ref('resumen')
 const activeTab = ref('empleados')
 const empleados    = ref([])
+const sesiones     = ref([])
+const filtroSesiones = ref('hoy')
+const filtroEmpleadoId = ref('todos')
 const restaurantes = ref([])
 const currentUser  = ref(null)
 const toasts       = ref([])
 const formError    = ref('')
+
+const esRolIgnorado = (emp) => {
+  if (!emp) return true
+  const rol = String(getRolNombre(emp)).toLowerCase()
+  return rol.includes('propietario') || rol.includes('owner') || rol.includes('menu') || rol.includes('kiosk')
+}
+
+const empleadosFiltrados = computed(() => {
+  return empleados.value.filter(emp => !esRolIgnorado(emp))
+})
+
+const sesionesFiltradas = computed(() => {
+  let list = sesiones.value
+  list = list.filter(s => s.user && !esRolIgnorado(s.user))
+  
+  if (filtroEmpleadoId.value === 'todos') {
+    return list
+  }
+  return list.filter(s => s.user_id === Number(filtroEmpleadoId.value))
+})
 
 const showModalEmpleado    = ref(false)
 const showModalRestaurante = ref(false)
@@ -459,7 +584,6 @@ const mainTabs = [
   { key:'resumen',  label:'🏢 Sucursales y Personal' },
   { key:'meseros',  label:'👥 Meseros'               },
   { key:'nomina',   label:'💸 Nóminas'               },
-  { key:'anuncios', label:'📢 Marquesina'            },
   { key:'gastos',   label:'🧾 Gastos'                },
   { key:'financiero', label:'💰 Financiero'           },
 ]
@@ -467,6 +591,7 @@ const mainTabs = [
 const crudTabs = computed(() => [
   { key:'empleados',    label:'Personal de Nómina', count: personalNomina.value.length },
   { key:'menu',         label:'Cuentas de Menú',   count: cuentasMenu.value.length    },
+  { key:'sesiones',     label:'Entradas y Salidas', count: sesiones.value.length       },
   { key:'restaurantes', label:'Restaurantes',      count: restaurantes.value.length   },
 ])
 
@@ -589,6 +714,9 @@ const loadData = async () => {
     // Cargar empleados desde /empleados para tener el campo activo correcto
     await cargarEmpleados()
     await cargarSucursalesDueno()
+    if (activeTab.value === 'sesiones') {
+      await cargarSesiones()
+    }
 
   } catch(e) { console.error('Error loadData:', e) }
   finally { loading.general = false }
@@ -601,6 +729,195 @@ const cargarSucursalesDueno = async () => {
     if (r.success || r.data) sucursalesDueno.value = r.data || r
   } catch(err) { console.error('Error sucursales:', err) }
   finally { loading.sucursales = false }
+}
+
+const cargarSesiones = async () => {
+  loading.general = true
+  try {
+    const fechaDesde = getFechaDesdeFiltro(filtroSesiones.value)
+    let url = '/empleados/sesiones'
+    if (fechaDesde) {
+      url += `?fecha_desde=${fechaDesde}`
+    }
+    const r = await apiClient.get(url)
+    if (r.success) {
+      sesiones.value = r.data || []
+    }
+  } catch(e) {
+    console.error('Error cargando sesiones:', e)
+  } finally {
+    loading.general = false
+  }
+}
+
+const getFechaDesdeFiltro = (filtro) => {
+  const d = new Date()
+  if (filtro === 'hoy') {
+    return d.toLocaleDateString('en-CA') // YYYY-MM-DD
+  } else if (filtro === '7d') {
+    d.setDate(d.getDate() - 7)
+    return d.toLocaleDateString('en-CA')
+  } else if (filtro === '14d') {
+    d.setDate(d.getDate() - 14)
+    return d.toLocaleDateString('en-CA')
+  } else if (filtro === '30d') {
+    d.setDate(d.getDate() - 30)
+    return d.toLocaleDateString('en-CA')
+  }
+  return ''
+}
+
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return '—'
+  const cleanStr = dateStr.replace('T', ' ').replace(/\..+/, '').replace('Z', '').trim()
+  const parts = cleanStr.split(' ')
+  if (parts.length < 2) return dateStr
+  
+  const dateParts = parts[0].split('-')
+  const timeParts = parts[1].split(':')
+  
+  const year = dateParts[0]
+  const month = dateParts[1]
+  const day = dateParts[2]
+  
+  let hours = parseInt(timeParts[0], 10)
+  const minutes = timeParts[1]
+  const ampm = hours >= 12 ? 'p.m.' : 'a.m.'
+  hours = hours % 12
+  hours = hours ? hours : 12
+  
+  return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`
+}
+
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return new Date()
+  const cleanStr = dateStr.replace('T', ' ').replace(/\..+/, '').replace('Z', '').trim()
+  const parts = cleanStr.split(' ')
+  const dateParts = parts[0].split('-')
+  const timeParts = parts[1].split(':')
+  return new Date(
+    parseInt(dateParts[0], 10),
+    parseInt(dateParts[1], 10) - 1,
+    parseInt(dateParts[2], 10),
+    parseInt(timeParts[0], 10),
+    parseInt(timeParts[1], 10),
+    parseInt(timeParts[2], 10)
+  )
+}
+
+const calcularDuracion = (entrada, salida) => {
+  const start = parseLocalDate(entrada)
+  const end = salida ? parseLocalDate(salida) : new Date()
+  const diffMs = end - start
+  if (diffMs < 0) return '0 min'
+  
+  const diffMins = Math.round(diffMs / 60000)
+  if (diffMins === 0 && diffMs > 0) {
+    return '1 min'
+  }
+  
+  const hrs = Math.floor(diffMins / 60)
+  const mins = diffMins % 60
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`
+  }
+  return `${mins} min`
+}
+
+const imprimirTablaSesiones = () => {
+  // Resolver el nombre real de la sucursal desde diferentes orígenes
+  let restNombre = 'Mi Sucursal'
+  const activeId = restauranteActivoId.value
+  if (activeId) {
+    const found = restaurantes.value.find(r => Number(r.id) === Number(activeId))
+    if (found?.nombre) restNombre = found.nombre
+  }
+  if (restNombre === 'Mi Sucursal') {
+    const rActivo = currentUser.value?.restaurante_activo
+    if (rActivo && typeof rActivo === 'object' && rActivo.nombre) {
+      restNombre = rActivo.nombre
+    } else {
+      const conRest = sesionesFiltradas.value.find(s => s.restaurante?.nombre)
+      if (conRest?.restaurante?.nombre) {
+        restNombre = conRest.restaurante.nombre
+      }
+    }
+  }
+
+  const printWindow = window.open('', '_blank')
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Reporte de Entradas y Salidas - ${restNombre}</title>
+        <style>
+          body { font-family: system-ui, sans-serif; padding: 25px; color: #1f2937; }
+          .header { border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px; }
+          h2 { color: #111827; margin: 0 0 5px 0; font-size: 22px; }
+          .meta { color: #4b5563; font-size: 13px; margin: 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+          th, td { border-bottom: 1px solid #e5e7eb; padding: 10px 8px; text-align: left; font-size: 12px; }
+          th { background-color: #f9fafb; color: #374151; font-weight: 600; text-transform: uppercase; font-size: 10px; }
+          .badge { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; background-color: #e0e7ff; color: #4338ca; }
+          .badge-active { background-color: #d1fae5; color: #065f46; }
+          .duration { font-weight: 600; color: #4f46e5; }
+          @media print {
+            body { padding: 0; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>Reporte de Entradas y Salidas de Personal</h2>
+          <p class="meta">Sucursal: <strong>${restNombre}</strong> | Generado el: ${new Date().toLocaleDateString('es-MX')} a las ${new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute:'2-digit', hour12: true})}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Empleado</th>
+              <th>Rol</th>
+              <th>Hora Entrada</th>
+              <th>Hora Salida / Estado</th>
+              <th>Duración</th>
+            </tr>
+          </thead>
+          <tbody>
+  `)
+
+  sesionesFiltradas.value.forEach(ses => {
+    const empName = ses.user?.name || 'Empleado Eliminado'
+    const rol = ses.user ? getRolNombre(ses.user) : '—'
+    const entrada = formatDateTime(ses.hora_entrada)
+    const salida = ses.hora_salida ? formatDateTime(ses.hora_salida) : 'En línea / Activo'
+    const duracion = calcularDuracion(ses.hora_entrada, ses.hora_salida)
+    const activeClass = !ses.hora_salida ? 'badge-active' : ''
+    
+    printWindow.document.write(`
+      <tr>
+        <td><strong>${empName}</strong></td>
+        <td><span class="badge ${activeClass}">${rol}</span></td>
+        <td>${entrada}</td>
+        <td>${salida}</td>
+        <td class="duration">${duracion}</td>
+      </tr>
+    `)
+  })
+
+  printWindow.document.write(`
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              window.close();
+            }, 500);
+          }
+        </` + `script>
+      </body>
+    </html>
+  `)
+  printWindow.document.close()
 }
 
 // ── Modales empleado ───────────────────────────────────────────────────────────
@@ -843,6 +1160,8 @@ const eliminarRestaurante = async (id) => {
   
 }
 
+watch(filtroSesiones, () => { cargarSesiones() })
+watch(activeTab, (val) => { if (val === 'sesiones') cargarSesiones() })
 watch(mainTab, (val) => { if (val === 'resumen') loadData() })
 onMounted(loadData)
 </script>

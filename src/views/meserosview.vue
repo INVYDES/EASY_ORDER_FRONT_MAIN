@@ -86,8 +86,14 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-[10px] font-black uppercase">Caja abierta</span>
           </div>
-          <button @click="vistaActual = 'nueva'" class="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95">
-            <span class="text-lg leading-none">＋</span> Nueva Orden
+          <button
+            :disabled="esAdminOPropietario"
+            @click="vistaActual = 'nueva'"
+            :class="['flex items-center gap-2 px-5 py-3 text-sm font-bold rounded-2xl transition shadow-lg active:scale-95',
+                     esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100']"
+          >
+            <span class="text-lg leading-none">{{ esAdminOPropietario ? '🚫' : '＋' }}</span>
+            {{ esAdminOPropietario ? 'Nueva Orden Bloqueada' : 'Nueva Orden' }}
           </button>
         </div>
       </div>
@@ -146,7 +152,7 @@
                   </div>
                 </div>
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
-                  {{ ['ABIERTA','ENTREGADA','CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
+                  {{ ['ABIERTA','ENTREGADA','CERRADA','CANCELADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
                 </span>
               </div>
 
@@ -168,6 +174,7 @@
                     <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-100">
                       <span class="text-[10px]">👤</span>
                       <span class="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{{ nomComensal }}</span>
+                      <span v-if="calcularTiempoSubOrdenComensal(detalles) >= 0 && detalles.length > 0" class="text-[9px] text-slate-500 font-bold ml-auto">⏱️ {{ calcularTiempoSubOrdenComensal(detalles) }} min</span>
                     </div>
 
                     <!-- Lista de Productos -->
@@ -192,8 +199,8 @@
                             </p>
                           </div>
 
-                          <!-- Acciones rápidas (Solo si no está cancelado y la orden no está cerrada) -->
-                          <div v-if="!detalle.cancelado && !['CERRADA', 'PAGADA', 'CANCELADA'].includes(sub.estado_estacion)" class="flex items-center gap-2">
+                          <!-- Acciones rápidas (Solo si no está cancelado y la orden está ABIERTA) -->
+                          <div v-if="!detalle.cancelado && sub.estado_estacion === 'ABIERTA' && !esAdminOPropietario" class="flex items-center gap-2">
                             <button @click="abrirEditorNotas(detalle, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100 active:scale-90 transition-all">
                               <span class="text-base">📝</span>
                             </button>
@@ -211,7 +218,7 @@
                         </div>
 
                         <!-- Controles de Cantidad (Solo en ABIERTAS y no cancelados) -->
-                        <div v-if="sub.estado_estacion === 'ABIERTA' && !detalle.cancelado" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
+                        <div v-if="sub.estado_estacion === 'ABIERTA' && !detalle.cancelado && !esAdminOPropietario" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
                           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-auto">Cantidad:</span>
                           <div class="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-100">
                             <button @click="actualizarCantidadItem(detalle, sub.id, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-red-500 font-black text-base shadow-sm active:scale-90 transition-all">−</button>
@@ -229,13 +236,13 @@
                 <button
                   v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
                   @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
-                  :disabled="cambiando === sub.uid"
+                  :disabled="cambiando === sub.uid || esAdminOPropietario"
                   class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
-                  :class="btnEstado(sub.estado_estacion)">
-                  {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
+                  :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : btnEstado(sub.estado_estacion)">
+                  {{ esAdminOPropietario ? '🚫 Acciones Bloqueadas' : (cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion)) }}
                 </button>
                 <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
-                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Cobrada' : 'En proceso' }}
+                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Cobrada' : sub.estado_estacion === 'CANCELADA' ? '🚫 Cancelada' : 'En proceso' }}
                 </div>
               </div>
             </div>
@@ -254,14 +261,7 @@
           <!-- Formulario y Catálogo -->
           <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cliente (Opcional)</label>
-                  <select v-model="nuevaOrden.clienteId" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold">
-                    <option :value="null">— Sin cliente registrado —</option>
-                    <option v-for="c in clientes" :key="c.value" :value="c.value">{{ c.label }}</option>
-                  </select>
-                </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
                   <input v-model="numeroComensales" type="number" min="1" max="50" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold" />
@@ -418,7 +418,10 @@
                       <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                         <div class="flex items-center gap-2">
                            <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                           <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                           <div class="flex flex-col">
+                             <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                             <span v-if="tiempoPorComensal(cIdx) > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                           </div>
                         </div>
                         <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
                         <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
@@ -464,15 +467,15 @@
                     </div>
                   </div>
 
-                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa"
+                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa || esAdminOPropietario"
                     class="w-full py-4 font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs text-white"
-                    :class="mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'">
+                    :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : (mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100')">
                     <template v-if="creando">
                       <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Enviando...
                     </template>
                     <template v-else>
-                      {{ mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀' }}
+                      {{ esAdminOPropietario ? '🚫 PEDIDO BLOQUEADO' : (mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀') }}
                     </template>
                   </button>
                   <p v-if="!nuevaOrden.mesa && carrito.length > 0" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
@@ -621,6 +624,16 @@ watch(numeroComensales, (newVal) => {
 
 const getItemsForComensal = (cIdx) => carrito.value.filter(i => i.comensalIndex === cIdx)
 
+const tiempoPorComensal = (cIdx) => {
+  return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
+}
+
+const calcularTiempoSubOrdenComensal = (detalles) => {
+  return detalles.reduce((total, d) => {
+    return total + ((d.minutos_produccion || 0) * d.cantidad)
+  }, 0)
+}
+
 const userRaw    = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const userActual = JSON.parse(userRaw)
 const esMesero   = computed(() => {
@@ -628,6 +641,17 @@ const esMesero   = computed(() => {
   return roles.some(r => {
     if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
     return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
+})
+
+const esAdminOPropietario = computed(() => {
+  const roles = userActual.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
   })
 })
 
@@ -741,11 +765,11 @@ const paquetesFiltrados = computed(() => {
 })
 
 // ── Estilos ────────────────────────────────────────────────────────────────
-const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50' }[e] || 'bg-slate-50')
-const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200' }[e] || 'border-slate-100')
-const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300' }[e] || 'bg-slate-100 text-slate-500')
-const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋')
-const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada' }[e] || e)
+const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50', CANCELADA:'bg-red-50' }[e] || 'bg-slate-50')
+const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200', CANCELADA:'border-red-200' }[e] || 'border-slate-100')
+const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300', CANCELADA:'bg-red-100 text-red-700 border-red-200' }[e] || 'bg-slate-100 text-slate-500')
+const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒', CANCELADA:'🚫' }[e] || '📋')
+const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
 const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregada' }[e] || '')
 const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
@@ -937,7 +961,8 @@ const agregarAlCarrito = (item, tipo) => {
       cantidad: 1, 
       tipo, 
       notas: '', 
-      comensalIndex: cIdx 
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(item.minutos_produccion || 0)
     })
   }
 }
@@ -1045,7 +1070,7 @@ const guardarNota = async () => {
 }
 
 const actualizarCantidadItem = async (detalle, ordenId, delta) => {
-  const nuevaCantidad = detalle.cantidad + delta
+  const nuevaCantidad = parseFloat(detalle.cantidad) + delta
   if (nuevaCantidad < 1) {
     return eliminarProductoDeOrden(detalle.id, ordenId)
   }
