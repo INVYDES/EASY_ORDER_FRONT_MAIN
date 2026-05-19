@@ -296,7 +296,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isBarraOrder(o)) return false
     const detalles = getDetallesBarra(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION')
   })
 })
 

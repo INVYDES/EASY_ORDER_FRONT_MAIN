@@ -88,7 +88,9 @@ const loading = reactive({
 const openOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    return s === 'ENTREGADA' || s === 'ENTREGADO'
+    return s === 'ENTREGADA' || s === 'ENTREGADO' ||
+      (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(s) && 
+       (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
   })
 })
 const closedOrders = computed(() => {

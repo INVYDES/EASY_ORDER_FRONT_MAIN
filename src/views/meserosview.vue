@@ -744,7 +744,11 @@ const subOrdenesFiltradas = computed(() => {
 })
 
 const ordenesParaCobrar = computed(() =>
-  ordenes.value.filter(o => o.estado === 'ENTREGADA')
+  ordenes.value.filter(o => 
+    o.estado === 'ENTREGADA' ||
+    (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado) && 
+     (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
+  )
 )
 
 const contarOrdenes = (key) => {

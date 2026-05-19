@@ -253,7 +253,7 @@
     </div>
 
     <!-- ══ GRID DE TICKETS ══ -->
-    <div v-if="orders.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+    <div v-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
       <span class="text-5xl mb-4 opacity-20">{{ type === 'open' ? '🎫' : '🗂️' }}</span>
       <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">
         {{ type === 'open' ? 'Sin órdenes por cobrar' : 'Sin órdenes cerradas' }}
@@ -261,7 +261,7 @@
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-      <div v-for="order in orders" :key="order.id"
+      <div v-for="order in filteredOrders" :key="order.id"
         class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
 
         <!-- Header ticket -->
@@ -467,6 +467,27 @@ const props = defineProps({
   type:   { type: String, default: 'open' }, // 'open' | 'closed'
 })
 const emit = defineEmits(['order-paid', 'refresh'])
+
+const filteredOrders = computed(() => {
+  return props.orders.map(o => {
+    if (props.type !== 'open') return o
+    
+    // Only keep details that are ENTREGADO or cancelado
+    const deliveredDetalles = (o.detalles || []).filter(d => 
+      d.cancelado || d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'
+    )
+    
+    // Recalculate subtotal and total based on delivered items
+    const subtotal = deliveredDetalles.reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
+    const total = subtotal + parseFloat(o.propina || 0)
+    
+    return {
+      ...o,
+      detalles: deliveredDetalles,
+      total: total
+    }
+  })
+})
 
 // ── Estado Cobrar ──────────────────────────────────────────────────────────
 const ordenCobrar    = ref(null)
