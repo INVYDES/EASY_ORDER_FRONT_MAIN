@@ -300,7 +300,9 @@
                     <div class="flex items-center gap-2 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
                       <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
                       <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)" class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors">+</button>
+                      <button @click="incrementar(item.cartId)"
+                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
@@ -415,7 +417,9 @@
                     <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
                       <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
                       <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors">+</button>
+                      <button @click="incrementar(item.cartId)"
+                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
@@ -509,7 +513,9 @@
                     <div class="flex items-center gap-1 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
                       <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500">−</button>
                       <span class="text-[10px] font-black w-4 text-center">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)" class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center">+</button>
+                      <button @click="incrementar(item.cartId)"
+                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
@@ -788,9 +794,23 @@ const cargarPaquetes = async (restauranteId) => {
   } catch {}
 }
 
+const totalEnPedidoPorId = (productId) => {
+  return pedido.value
+    .filter(i => i.id === productId && !i.es_paquete)
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
+
+  if (p.stock !== undefined && p.stock !== null) {
+    if (totalEnPedidoPorId(p.id) >= p.stock) {
+      mostrarError(`No hay suficiente stock para "${p.nombre}". Límite: ${p.stock} uds`)
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const existe = pedido.value.find(i => i.id === p.id && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
   if (existe) { 
@@ -812,6 +832,16 @@ const agregarAlPedido = (p) => {
 }
 
 const agregarOfertaAlPedido = (oferta) => {
+  const p = productos.value.find(prod => prod.id === oferta.producto_id)
+  const stockLimit = p ? p.stock : 99999
+
+  if (stockLimit !== undefined && stockLimit !== null) {
+    if (totalEnPedidoPorId(oferta.producto_id) >= stockLimit) {
+      mostrarError(`No hay suficiente stock para "${oferta.nombre}". Límite: ${stockLimit} uds`)
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const existe = pedido.value.find(i => i.id === oferta.producto_id && i.comensalIndex === cIdx && !i.notas && i.es_oferta)
   if (existe) { 
@@ -827,6 +857,7 @@ const agregarOfertaAlPedido = (oferta) => {
       cantidad: 1, 
       es_oferta: true, 
       oferta_id: oferta.id,
+      stock_maximo: stockLimit,
       notas: '',
       comensalIndex: cIdx,
       minutos_produccion: parseFloat(oferta.producto?.minutos_produccion || oferta.minutos_produccion || 0)
@@ -856,7 +887,18 @@ const agregarPaqueteAlPedido = (pkg) => {
   }
 }
 
-const incrementar = (cartId) => { const item = pedido.value.find(i => i.cartId === cartId); if (item) item.cantidad++ }
+const incrementar = (cartId) => {
+  const item = pedido.value.find(i => i.cartId === cartId)
+  if (item) {
+    if (!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null) {
+      if (totalEnPedidoPorId(item.id) >= item.stock_maximo) {
+        mostrarError(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock_maximo} uds`)
+        return
+      }
+    }
+    item.cantidad++
+  }
+}
 const decrementar = (cartId) => {
   const idx = pedido.value.findIndex(i => i.cartId === cartId)
   if (idx !== -1) { pedido.value[idx].cantidad > 1 ? pedido.value[idx].cantidad-- : pedido.value.splice(idx, 1) }

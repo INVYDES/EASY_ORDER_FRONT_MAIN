@@ -447,7 +447,9 @@
                             <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-100">
                               <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
                               <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                              <button @click="incrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black">+</button>
+                              <button @click="incrementar(item.cartId)"
+                                :disabled="item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo"
+                                class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                             </div>
                             <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
                           </div>
@@ -946,8 +948,20 @@ const handleOrderPaid = async () => {
   tabActivo.value = 'todas'
 }
 
-// ── Carrito ────────────────────────────────────────────────────────────────
+const totalEnCarritoPorId = (productId) => {
+  return carrito.value
+    .filter(i => i.id === productId && i.tipo === 'producto')
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
 const agregarAlCarrito = (item, tipo) => {
+  if (tipo === 'producto' && item.stock !== undefined && item.stock !== null) {
+    if (totalEnCarritoPorId(item.id) >= item.stock) {
+      showToast(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock} uds`, 'error')
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.comensalIndex === cIdx && !i.notas)
   if (e) {
@@ -960,13 +974,25 @@ const agregarAlCarrito = (item, tipo) => {
       precio: Number(item.precio), 
       cantidad: 1, 
       tipo, 
+      stock_maximo: item.stock,
       notas: '', 
       comensalIndex: cIdx,
       minutos_produccion: parseFloat(item.minutos_produccion || 0)
     })
   }
 }
-const incrementar        = (cartId) => { const i = carrito.value.find(x => x.cartId === cartId); if (i) i.cantidad++ }
+const incrementar = (cartId) => {
+  const i = carrito.value.find(x => x.cartId === cartId)
+  if (i) {
+    if (i.tipo === 'producto' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
+      if (totalEnCarritoPorId(i.id) >= i.stock_maximo) {
+        showToast(`No hay suficiente stock para "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
+        return
+      }
+    }
+    i.cantidad++
+  }
+}
 const decrementar        = (cartId) => { const idx = carrito.value.findIndex(x => x.cartId === cartId); if (idx !== -1) { if (carrito.value[idx].cantidad > 1) carrito.value[idx].cantidad--; else carrito.value.splice(idx, 1) } }
 const eliminarDelCarrito = (cartId) => { carrito.value = carrito.value.filter(x => x.cartId !== cartId) }
 
