@@ -111,7 +111,7 @@ const getNombreProducto = (detalle) => {
 }
 
 const bebidasFiltradas = computed(() => {
-  let list = (props.order.detalles || []).filter(esBarra)
+  let list = (props.order.detalles || []).filter(d => esBarra(d) && !d.cancelado)
   if (props.estadoFiltro) {
     list = list.filter(d => (d.estado_preparacion || d.estado) === props.estadoFiltro)
   }

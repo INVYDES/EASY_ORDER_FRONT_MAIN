@@ -101,7 +101,7 @@ const getNombreProducto = (detalle) => {
 }
 
 const postresFiltrados = computed(() => {
-  let list = (props.order.detalles || []).filter(esProductoPostre)
+  let list = (props.order.detalles || []).filter(d => esProductoPostre(d) && !d.cancelado)
   if (props.estadoFiltro) {
     list = list.filter(d => (d.estado_preparacion || d.estado) === props.estadoFiltro)
   }

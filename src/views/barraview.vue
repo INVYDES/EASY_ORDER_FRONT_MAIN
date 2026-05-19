@@ -279,10 +279,10 @@ const esBarra = (detalle) => {
   const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
   return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
 }
-const tieneBarra = (orden) => (orden.detalles || []).some(esBarra)
+const tieneBarra = (orden) => (orden.detalles || []).some(d => esBarra(d) && !d.cancelado)
 
 const isBarraOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
-const getDetallesBarra = (o) => (o.detalles || []).filter(esBarra)
+const getDetallesBarra = (o) => (o.detalles || []).filter(d => esBarra(d) && !d.cancelado)
 
 const pendingOrders = computed(() => {
   return orders.value.filter(o => {
@@ -313,7 +313,7 @@ const readyOrders = computed(() => {
 
 const totalBarra    = computed(() =>
   [...pendingOrders.value, ...preparingOrders.value]
-    .flatMap(o => (o.detalles || []).filter(esBarra))
+    .flatMap(o => (o.detalles || []).filter(d => esBarra(d) && !d.cancelado))
     .reduce((s, d) => s + Number(d.cantidad || 1), 0)
 )
 
@@ -377,7 +377,7 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
 const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
   // Solo los detalles que son bebidas (barra) y coinciden con el filtro
-  let detallesBebida = (orden.detalles ?? []).filter(esBarra)
+  let detallesBebida = (orden.detalles ?? []).filter(d => esBarra(d) && !d.cancelado)
   if (estadoFiltro) {
     detallesBebida = detallesBebida.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
   }
