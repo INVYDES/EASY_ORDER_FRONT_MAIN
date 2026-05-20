@@ -100,7 +100,7 @@
             <span class="text-lg animate-bounce inline-block" style="animation-duration: 2s;">🍳</span>
             <div>
               <p class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Cocina</p>
-              <p class="text-sm font-black text-amber-800 mt-1">{{ tiempoCocinaActual }} min</p>
+              <p class="text-sm font-black text-amber-800 mt-1">{{ formatTiempo(tiempoCocinaActual) }}</p>
             </div>
           </div>
 
@@ -109,7 +109,7 @@
             <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.2s;">🍹</span>
             <div>
               <p class="text-[8px] font-black text-indigo-500 uppercase tracking-widest leading-none">Barra</p>
-              <p class="text-sm font-black text-indigo-800 mt-1">{{ tiempoBarraActual }} min</p>
+              <p class="text-sm font-black text-indigo-800 mt-1">{{ formatTiempo(tiempoBarraActual) }}</p>
             </div>
           </div>
 
@@ -118,7 +118,7 @@
             <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.4s;">🍰</span>
             <div>
               <p class="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">Postres</p>
-              <p class="text-sm font-black text-rose-800 mt-1">{{ tiempoPostresActual }} min</p>
+              <p class="text-sm font-black text-rose-800 mt-1">{{ formatTiempo(tiempoPostresActual) }}</p>
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@
                   </div>
                 </div>
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
-                  {{ ['ABIERTA','ENTREGADA','CERRADA','CANCELADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
+                  {{ labelEstado(sub.estado_estacion).toUpperCase() }}
                 </span>
               </div>
 
@@ -830,78 +830,96 @@ const tiempoPostresActual = computed(() => {
   })
   return Math.round(total)
 })
-const calcularEstadoEstacion = (detalles, estadoOrden) => {
-  if (['CERRADA', 'PAGADA', 'CANCELADA'].includes(estadoOrden)) return estadoOrden
-  
-  const validos = detalles?.filter(d => !d.cancelado) || []
-  if (!validos.length) return 'ENTREGADA'
-  
-  const total      = validos.length
-  const entregados = validos.filter(d => (d.estado_preparacion || d.estado) === 'ENTREGADO').length
-  const listos     = validos.filter(d => (d.estado_preparacion || d.estado) === 'LISTO').length
-  const enPrep     = validos.filter(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION').length
-  
-  if (entregados === total) return 'ENTREGADA'
-  if (listos > 0) return 'LISTA'
-  if (enPrep > 0) return 'EN_PREPARACION'
-  return 'POR_PREPARAR'
+// Formatea minutos: si < 60 muestra 'X min', si >= 60 muestra 'X hrs' o 'X:30 hrs'
+const formatTiempo = (min) => {
+  if (!min || min <= 0) return '0 min'
+  if (min < 60) return `${min} min`
+  const horas = Math.floor(min / 60)
+  const resto = min % 60
+  if (resto === 0) return `${horas} hrs`
+  const minStr = String(resto).padStart(2, '0')
+  return `${horas}:${minStr} hrs`
 }
+
+const epToEstacion = (ep) => ({
+  'PENDIENTE':      'POR_PREPARAR',
+  'EN_PREPARACION': 'EN_PREPARACION',
+  'LISTO':          'LISTA',
+  'ENTREGADO':      'ENTREGADA'
+})[ep] || 'POR_PREPARAR'
 
 const subOrdenes = computed(() => {
   const list = []
   ordenes.value.forEach(o => {
+    if (['CERRADA', 'PAGADA', 'CANCELADA'].includes(o.estado)) return
+
     const todos   = o.detalles || []
-    const barra   = todos.filter(d => esBebida(d))
-    const postres = todos.filter(d => esPostre(d) && !esBebida(d))
-    const cocina  = todos.filter(d => !esBebida(d) && !esPostre(d))
-    if (cocina.length)   list.push({ ...o, uid: `${o.id}-COCINA`,  detalles_estacion: cocina,  estado_estacion: calcularEstadoEstacion(cocina, o.estado) })
-    if (barra.length)    list.push({ ...o, uid: `${o.id}-BARRA`,   detalles_estacion: barra,   estado_estacion: calcularEstadoEstacion(barra, o.estado) })
-    if (postres.length)  list.push({ ...o, uid: `${o.id}-POSTRES`, detalles_estacion: postres, estado_estacion: calcularEstadoEstacion(postres, o.estado) })
+    // Separar por estación (excluyendo cancelados para clasificación)
+    const estaciones = [
+      { nombre: 'COCINA',  detalles: todos.filter(d => !esBebida(d) && !esPostre(d)) },
+      { nombre: 'BARRA',   detalles: todos.filter(d => esBebida(d)) },
+      { nombre: 'POSTRES', detalles: todos.filter(d => esPostre(d) && !esBebida(d)) },
+    ]
+
+    estaciones.forEach(({ nombre, detalles }) => {
+      if (!detalles.length) return
+
+      // Agrupar los detalles NO cancelados por su estado de preparación
+      const grupos = {}
+      detalles.forEach(d => {
+        if (d.cancelado) return
+        const ep = d.estado_preparacion || d.estado || 'PENDIENTE'
+        if (ep === 'ABIERTA') return // productos sin enviar, los maneja la pestaña NUEVAS
+        if (!grupos[ep]) grupos[ep] = []
+        grupos[ep].push(d)
+      })
+
+      // Generar una tarjeta independiente por cada estado encontrado
+      Object.entries(grupos).forEach(([ep, items]) => {
+        list.push({
+          ...o,
+          uid: `${o.id}-${nombre}-${ep}`,
+          detalles_estacion: items,
+          estado_estacion: epToEstacion(ep),
+          _estacion: nombre,
+          _ep: ep
+        })
+      })
+    })
   })
   return list
 })
 
 const subOrdenesFiltradas = computed(() => {
   if (tabActivo.value === 'cobrar') return []
+
   if (tabActivo.value === 'ABIERTA') {
     return ordenes.value
       .filter(o => o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA'))
       .map(o => {
-        // Solo mostrar detalles que están en estado ABIERTA (los nuevos sin enviar)
         const detallesAbiertos = (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
-        return { 
-          ...o, 
-          uid: `${o.id}-ABIERTA-APPEND`, 
-          estado_estacion: 'ABIERTA', 
-          detalles_estacion: detallesAbiertos 
+        return {
+          ...o,
+          uid: `${o.id}-ABIERTA-APPEND`,
+          estado_estacion: 'ABIERTA',
+          detalles_estacion: detallesAbiertos
         }
       })
       .filter(o => o.detalles_estacion.length > 0)
   }
-  if (['todas','ENTREGADA'].includes(tabActivo.value)) {
-    return ordenes.value
-      .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
-      .map(o => {
-        return { ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }
-      })
+
+  if (tabActivo.value === 'todas') {
+    return ordenes.value.map(o => ({
+      ...o,
+      uid: `${o.id}-JOINT`,
+      estado_estacion: o.estado,
+      detalles_estacion: o.detalles || []
+    }))
   }
-  return subOrdenes.value
-    .filter(s => s.estado_estacion === tabActivo.value)
-    .map(s => {
-      let validStates = []
-      if (tabActivo.value === 'POR_PREPARAR') validStates = ['PENDIENTE']
-      else if (tabActivo.value === 'EN_PREPARACION') validStates = ['PENDIENTE', 'EN_PREPARACION']
-      else if (tabActivo.value === 'LISTA') validStates = ['PENDIENTE', 'EN_PREPARACION', 'LISTO']
-      
-      const filtered = (s.detalles_estacion || []).filter(d => 
-        validStates.includes(d.estado_preparacion || d.estado) || d.cancelado
-      )
-      
-      return {
-        ...s,
-        detalles_estacion: filtered
-      }
-    })
+
+  // Para POR_PREPARAR, EN_PREPARACION, LISTA y ENTREGADA:
+  // Cada tarjeta ya contiene solo productos del mismo estado, filtrar directamente.
+  return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
 })
 
 const ordenesParaCobrar = computed(() =>
@@ -920,7 +938,6 @@ const contarOrdenes = (key) => {
       o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
     ).length
   }
-  if (key === 'ENTREGADA') return ordenes.value.filter(o => o.estado === key).length
   return subOrdenes.value.filter(s => s.estado_estacion === key).length
 }
 
@@ -957,7 +974,7 @@ const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e)
 const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200', CANCELADA:'border-red-200' }[e] || 'border-slate-100')
 const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300', CANCELADA:'bg-red-100 text-red-700 border-red-200' }[e] || 'bg-slate-100 text-slate-500')
 const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒', CANCELADA:'🚫' }[e] || '📋')
-const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
+const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
 const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregada' }[e] || '')
 const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
