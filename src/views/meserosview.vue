@@ -87,44 +87,44 @@
       </div>
 
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
-        <div class="flex flex-wrap items-center gap-6">
-          <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
-            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
+        <!-- Izquierda: Título y Fecha -->
+        <div class="shrink-0">
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
+        </div>
+
+        <!-- Centro: Indicadores de tiempo estimados por estación -->
+        <div class="flex flex-wrap items-center justify-center gap-3 flex-1">
+          <!-- Cocina -->
+          <div class="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/80 border border-amber-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+            <span class="text-lg animate-bounce inline-block" style="animation-duration: 2s;">🍳</span>
+            <div>
+              <p class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Cocina</p>
+              <p class="text-sm font-black text-amber-800 mt-1">{{ tiempoCocinaActual }} min</p>
+            </div>
           </div>
 
-          <!-- Indicadores de tiempo estimados por estación -->
-          <div class="flex flex-wrap items-center gap-3">
-            <!-- Cocina -->
-            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/80 border border-amber-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
-              <span class="text-lg animate-bounce inline-block" style="animation-duration: 2s;">🍳</span>
-              <div>
-                <p class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Cocina</p>
-                <p class="text-sm font-black text-amber-800 mt-1">{{ tiempoCocinaActual }} min</p>
-              </div>
+          <!-- Barra -->
+          <div class="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-50/80 border border-indigo-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+            <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.2s;">🍹</span>
+            <div>
+              <p class="text-[8px] font-black text-indigo-500 uppercase tracking-widest leading-none">Barra</p>
+              <p class="text-sm font-black text-indigo-800 mt-1">{{ tiempoBarraActual }} min</p>
             </div>
+          </div>
 
-            <!-- Barra -->
-            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-50/80 border border-indigo-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
-              <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.2s;">🍹</span>
-              <div>
-                <p class="text-[8px] font-black text-indigo-500 uppercase tracking-widest leading-none">Barra</p>
-                <p class="text-sm font-black text-indigo-800 mt-1">{{ tiempoBarraActual }} min</p>
-              </div>
-            </div>
-
-            <!-- Postres -->
-            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-rose-50/80 border border-rose-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
-              <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.4s;">🍰</span>
-              <div>
-                <p class="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">Postres</p>
-                <p class="text-sm font-black text-rose-800 mt-1">{{ tiempoPostresActual }} min</p>
-              </div>
+          <!-- Postres -->
+          <div class="flex items-center gap-2.5 px-4 py-2.5 bg-rose-50/80 border border-rose-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+            <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.4s;">🍰</span>
+            <div>
+              <p class="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">Postres</p>
+              <p class="text-sm font-black text-rose-800 mt-1">{{ tiempoPostresActual }} min</p>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-3 self-end lg:self-auto">
+        <!-- Derecha: Botón de Nueva Orden e Indicador de Caja -->
+        <div class="flex items-center gap-3 shrink-0 self-end lg:self-auto">
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-[10px] font-black uppercase">Caja abierta</span>
@@ -191,7 +191,17 @@
                   </div>
                   <div>
                     <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">Orden</p>
-                    <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
+                      <button 
+                        v-if="!['CERRADA','CANCELADA','PAGADA'].includes(sub.estado)" 
+                        @click.stop="prepararEdicionOrden(sub)" 
+                        title="Agregar productos / comensales"
+                        class="w-6 h-6 rounded-lg bg-white/90 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 flex items-center justify-center text-[10px] shadow-sm hover:scale-110 active:scale-95 transition-all duration-200"
+                      >
+                        ✏️
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
@@ -1125,6 +1135,34 @@ const enviarOrden = async () => {
   } finally {
     creando.value = false
   }
+}
+
+const prepararEdicionOrden = (sub) => {
+  if (!sub) return
+  carrito.value = []
+  
+  // Establecer el número de mesa
+  if (sub.mesa !== undefined && sub.mesa !== null) {
+    nuevaOrden.value.mesa = Number(sub.mesa)
+  } else {
+    nuevaOrden.value.mesa = null
+  }
+  
+  // Extraer comensales únicos de la orden existente
+  const nombresUnicos = [...new Set((sub.detalles || [])
+    .map(d => d.nom_comensal || d.comensal)
+    .filter(Boolean))]
+    
+  if (nombresUnicos.length > 0) {
+    comensalesNombres.value = [...nombresUnicos]
+    numeroComensales.value = nombresUnicos.length
+  } else {
+    comensalesNombres.value = ['Comensal 1']
+    numeroComensales.value = 1
+  }
+  
+  comensalActivoIndex.value = 0
+  vistaActual.value = 'nueva'
 }
 
 const handleOrderPaid = async () => {
