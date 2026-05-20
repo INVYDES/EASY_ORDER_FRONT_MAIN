@@ -973,7 +973,7 @@ const detalleSeleccionado = ref(null)
 const detallesSinAsignar = computed(() => {
   if (!ordenCobrar.value?.detalles) return []
   const asignados = comensalesManual.value.flatMap(c => c.detalles.map(d => d.id))
-  return ordenCobrar.value.detalles.filter(d => !asignados.includes(d.id))
+  return ordenCobrar.value.detalles.filter(d => !d.cancelado && !asignados.includes(d.id))
 })
 
 const subtotalComensal = (idx) => {
@@ -992,8 +992,8 @@ const montoPorComensal = (n) => {
 const abrirDividirCuenta = () => {
   if (!ordenCobrar.value) return
   
-  // Analizar comensales de los detalles para modo automático
-  const detalles = ordenCobrar.value.detalles || []
+  // Analizar comensales de los detalles para modo automático (excluyendo cancelados)
+  const detalles = (ordenCobrar.value.detalles || []).filter(d => !d.cancelado)
   const grupos = {}
   detalles.forEach(d => {
     const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
