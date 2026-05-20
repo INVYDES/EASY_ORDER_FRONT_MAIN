@@ -353,20 +353,9 @@ const onOrdenWS = async (evento) => {
   const { accion, orden } = evento
   console.log('📡 WS Postres:', accion, orden.id)
   
-  if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
-    if (!isPostreOrder(orden)) {
-      orders.value = orders.value.filter(o => o.id !== orden.id)
-      return
-    }
-
-    const idx = orders.value.findIndex(o => o.id === orden.id)
-    if (idx !== -1) {
-      orders.value[idx] = { ...orders.value[idx], ...orden }
-    } else {
-      orders.value.push(orden)
-      orders.value.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      showToast(`Nueva orden #${orden.id} para postres`, 'info')
-    }
+  if (['creada', 'actualizada', 'estado_cambiado', 'productos_agregados', 'productos_agregados_a_estacion'].includes(accion)) {
+    if (accion === 'creada') showToast(`Nueva orden #${orden.id} para postres`, 'info')
+    await loadOrders(true)
   } else if (accion === 'cerrada' || accion === 'eliminada') {
     orders.value = orders.value.filter(o => o.id !== orden.id)
   }

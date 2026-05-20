@@ -202,7 +202,7 @@
                         </button>
                         <div class="relative flex-1">
                           <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                          <input type="number" v-model.number="getPagoTicket(t.id).propina" 
+                          <input type="number" v-model.number="getPagoTicket(t.id).propina" min="0"
                             @focus="getPagoTicket(t.id).propinaPct = null; getPagoTicket(t.id).propinaManual = true"
                             class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20" />
                         </div>
@@ -212,7 +212,7 @@
                       <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
                       <div class="relative">
                         <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" 
+                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" min="0"
                           class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
                         <input v-else v-model="getPagoTicket(t.id).referencia" 
                           placeholder="Folio..."
@@ -1104,7 +1104,7 @@ const cobrarDividido = async () => {
       return {
         monto: t.total,
         metodo: p.metodo,
-        propina: p.propina || 0,
+        propina: Math.max(0, parseFloat(p.propina) || 0),
         referencia: p.referencia || '',
         comensal: t.nombres.join(', '),
         detalles: t.detalles.map(d => d.id)

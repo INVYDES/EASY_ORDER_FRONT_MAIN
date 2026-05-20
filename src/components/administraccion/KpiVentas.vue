@@ -61,9 +61,9 @@
       </div>
       <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
-        <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas Digitales</p>
+        <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas</p>
         <p class="text-2xl font-black text-violet-700 mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
-        <p class="text-xs text-gray-400 mt-1">Terminal + Transferencia</p>
+        <p class="text-xs text-gray-400 mt-1">Efectivo + Terminal + Transferencia</p>
       </div>
     </div>
 

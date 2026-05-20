@@ -369,20 +369,20 @@ const loadHistorial = async () => {
   }
 }
 
-const loadAllData = async () => {
+const loadAllData = async (silent = true) => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   if (!token) {
     router.push('/')
     return
   }
-  loading.general = true
+  if (!silent) loading.general = true
   await loadCajaEstado()
   await Promise.all([
     loadOrders(),
     loadMovements(),
     !cajaAbierta.value ? loadHistorial() : Promise.resolve(),
   ])
-  loading.general = false
+  if (!silent) loading.general = false
   await nextTick()
   if (cajaAbierta.value) initChart()
 }
@@ -464,7 +464,7 @@ const abrirDetalle = (id) => {
 const handleAlreadyOpen = async () => {
   cajaAbierta.value = true
   showOpenModal.value = false
-  await loadAllData()
+  await loadAllData(false)
 }
 
 const handleOpenCaja = async (amount) => {
@@ -472,7 +472,7 @@ const handleOpenCaja = async (amount) => {
   cashInRegister.value = amount
   cajaAbierta.value = true
   showOpenModal.value = false
-  await loadAllData()
+  await loadAllData(false)
   showToast('Caja abierta correctamente', 'success')
 }
 
@@ -480,7 +480,7 @@ const handleCloseCaja = async () => {
   cajaAbierta.value = false
   showCloseModal.value = false
   if (chartInstance) chartInstance.destroy()
-  await loadAllData()
+  await loadAllData(false)
   await loadHistorial()
   showToast('Caja cerrada. Historial actualizado.', 'success')
 }
@@ -495,10 +495,15 @@ const handleMovimientoSaved = async ({ monto, tipo }) => {
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  await loadAllData()
+  // Primera carga explícita no silenciosa para mostrar el spinner inicial
+  await loadAllData(false)
   
-  // Polling de seguridad
-  pollTimer = setInterval(loadAllData, POLL_INTERVAL)
+  // Polling silencioso de seguridad
+  const poll = async () => {
+    await loadAllData(true)
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
 
   try {
     const data = await apiClient.get('/me')
@@ -513,7 +518,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  if (pollTimer) clearTimeout(pollTimer)
 })
 </script>
 <template>

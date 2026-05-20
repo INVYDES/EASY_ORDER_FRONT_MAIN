@@ -181,8 +181,13 @@
               {{ t.label }}
             </button>
           </div>
-          <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
-             Total Mermas: ${{ fm(totalMermas) }}
+          <div class="flex items-center gap-2">
+            <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
+              🔥 Merma Real: ${{ fm(totalMermas) }}
+            </div>
+            <div v-if="totalCancelacionesSinMerma > 0" class="px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest border border-slate-200">
+              ↩️ Cancelaciones: ${{ fm(totalCancelacionesSinMerma) }}
+            </div>
           </div>
         </div>
       </div>
@@ -196,24 +201,30 @@
               <th class="py-3 px-2">Cant</th>
               <th class="py-3 px-2">Subtotal</th>
               <th class="py-3 px-2">Motivo</th>
+              <th class="py-3 px-2">Tipo</th>
               <th class="py-3 px-2">Autorizó</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50">
             <tr v-if="productosDevueltos.length === 0">
-              <td colspan="6" class="py-10 text-center text-slate-300 italic text-sm">No hay devoluciones registradas en este periodo</td>
+              <td colspan="7" class="py-10 text-center text-slate-300 italic text-sm">No hay devoluciones registradas en este periodo</td>
             </tr>
-            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-slate-50 transition-colors group">
+            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-slate-50 transition-colors group"
+              :class="d.es_merma ? 'bg-red-50/30' : ''">
               <td class="py-4 px-2 font-bold text-slate-500">
                 {{ d.fecha ? new Date(d.fecha.replace(' ', 'T')).toLocaleString('es-MX', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: true }) : '—' }}
               </td>
               <td class="py-4 px-2 font-black text-slate-800 uppercase tracking-tight">{{ d.producto || d.producto_nombre || d.nombre || 'Producto' }}</td>
               <td class="py-4 px-2 font-black text-slate-600">{{ d.cantidad }}</td>
-              <td class="py-4 px-2 font-black text-red-600">${{ fm(d.subtotal) }}</td>
+              <td class="py-4 px-2 font-black" :class="d.es_merma ? 'text-red-600' : 'text-slate-400'">${{ fm(d.subtotal) }}</td>
               <td class="py-4 px-2">
                 <span class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold border border-red-100 text-[10px]">
                   {{ d.motivo || d.motivo_cancelacion || 'Sin motivo' }}
                 </span>
+              </td>
+              <td class="py-4 px-2">
+                <span v-if="d.es_merma" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg font-black text-[9px] uppercase">🔥 Merma</span>
+                <span v-else class="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-black text-[9px] uppercase">↩️ Cancelado</span>
               </td>
               <td class="py-4 px-2">
                 <div class="flex items-center gap-2">
@@ -282,7 +293,8 @@ const dc = (a, b) => Number(a||0) >= Number(b||0) ? 'bg-emerald-50 text-emerald-
 const di = (a, b) => Number(a||0) >= Number(b||0) ? '↑' : '↓'
 const dp = (a, b) => { const bVal = Number(b||0); if(!bVal) return '0'; return Math.abs(((Number(a||0)-bVal)/bVal)*100).toFixed(1) }
 
-const totalMermas = computed(() => productosDevueltos.value.reduce((s, d) => s + Number(d.subtotal || 0), 0))
+const totalMermas = ref(0)
+const totalCancelacionesSinMerma = ref(0)
 
 const getImageUrl = (path) => {
   if (!path) return null
@@ -458,6 +470,8 @@ const loadDevueltos = async () => {
     const res = await apiClient.get(`/reportes/platillos-devueltos`, { params })
     if (res.success) {
       productosDevueltos.value = res.data || []
+      totalMermas.value = res.total_mermas || 0
+      totalCancelacionesSinMerma.value = res.total_cancelaciones_sin_merma || 0
     }
   } catch (e) {
     console.error(e)

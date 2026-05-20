@@ -76,6 +76,16 @@
 
     <!-- ══ CONTENIDO PRINCIPAL ══ -->
     <template v-else>
+      <!-- Marquesina de Anuncios General -->
+      <div class="rounded-3xl overflow-hidden shadow-sm border border-slate-100 mb-6">
+        <Marquesitawidget 
+          :apiUrl="API_URL" 
+          :getHeaders="() => ({})" 
+          tipo="interno" 
+          :variant="marquesinaVariant" 
+        />
+      </div>
+
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
@@ -200,7 +210,7 @@
                           </div>
 
                           <!-- Acciones rápidas (Solo si no está cancelado y la orden está ABIERTA) -->
-                          <div v-if="!detalle.cancelado && sub.estado_estacion === 'ABIERTA' && !esAdminOPropietario" class="flex items-center gap-2">
+                          <div v-if="!detalle.cancelado && sub.estado_estacion === 'ABIERTA' && detalle.estado_preparacion === 'ABIERTA' && !esAdminOPropietario" class="flex items-center gap-2">
                             <button @click="abrirEditorNotas(detalle, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100 active:scale-90 transition-all">
                               <span class="text-base">📝</span>
                             </button>
@@ -218,10 +228,9 @@
                         </div>
 
                         <!-- Controles de Cantidad (Solo en ABIERTAS y no cancelados) -->
-                        <div v-if="sub.estado_estacion === 'ABIERTA' && !detalle.cancelado && !esAdminOPropietario" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
+                        <div v-if="sub.estado_estacion === 'ABIERTA' && detalle.estado_preparacion === 'ABIERTA' && !detalle.cancelado && !esAdminOPropietario" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
                           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-auto">Cantidad:</span>
                           <div class="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                            <button @click="actualizarCantidadItem(detalle, sub.id, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-red-500 font-black text-base shadow-sm active:scale-90 transition-all">−</button>
                             <span class="text-sm font-black text-slate-800 min-w-[20px] text-center">{{ detalle.cantidad }}</span>
                             <button @click="actualizarCantidadItem(detalle, sub.id, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-indigo-600 font-black text-base shadow-sm active:scale-90 transition-all">+</button>
                           </div>
@@ -310,14 +319,22 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                   <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
                     <button @click="subTabActiva = 'productos'"
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest',
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'productos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🍽️ PRODUCTOS
+                      <span v-if="tieneProductoNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
                     </button>
                     <button @click="subTabActiva = 'paquetes'"
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest',
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🎁 PAQUETES
+                      <span v-if="tienePaqueteNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
                     </button>
                   </div>
                   <div class="relative flex-1 max-w-xs">
@@ -582,6 +599,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
+import Marquesitawidget from '../components/Marquesitawidget.vue'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
 const vistaActual  = ref('ordenes')
@@ -593,6 +611,7 @@ const paquetes     = ref([])
 const clientes     = ref([])
 const carrito      = ref([])
 const busqueda     = ref('')
+const marquesinaVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 
 const loading         = ref(true)
 const loadingCaja     = ref(true)
@@ -752,21 +771,42 @@ const subOrdenes = computed(() => {
 
 const subOrdenesFiltradas = computed(() => {
   if (tabActivo.value === 'cobrar') return []
-  if (['todas','ABIERTA','ENTREGADA'].includes(tabActivo.value)) {
+  if (tabActivo.value === 'ABIERTA') {
+    return ordenes.value
+      .filter(o => o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA'))
+      .map(o => {
+        // Solo mostrar detalles que están en estado ABIERTA (los nuevos sin enviar)
+        const detallesAbiertos = (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
+        return { 
+          ...o, 
+          uid: `${o.id}-ABIERTA-APPEND`, 
+          estado_estacion: 'ABIERTA', 
+          detalles_estacion: detallesAbiertos 
+        }
+      })
+      .filter(o => o.detalles_estacion.length > 0)
+  }
+  if (['todas','ENTREGADA'].includes(tabActivo.value)) {
     return ordenes.value
       .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
-      .map(o => ({ ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }))
+      .map(o => {
+        // Si la orden es ABIERTA (tiene productos nuevos sin enviar), solo mostrar los nuevos
+        const detalles = o.estado === 'ABIERTA'
+          ? (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
+          : (o.detalles || [])
+        return { ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: detalles }
+      })
   }
   return subOrdenes.value
     .filter(s => s.estado_estacion === tabActivo.value)
     .map(s => {
-      let targetState = ''
-      if (tabActivo.value === 'POR_PREPARAR') targetState = 'PENDIENTE'
-      else if (tabActivo.value === 'EN_PREPARACION') targetState = 'EN_PREPARACION'
-      else if (tabActivo.value === 'LISTA') targetState = 'LISTO'
+      let validStates = []
+      if (tabActivo.value === 'POR_PREPARAR') validStates = ['PENDIENTE']
+      else if (tabActivo.value === 'EN_PREPARACION') validStates = ['PENDIENTE', 'EN_PREPARACION']
+      else if (tabActivo.value === 'LISTA') validStates = ['PENDIENTE', 'EN_PREPARACION', 'LISTO']
       
       const filtered = (s.detalles_estacion || []).filter(d => 
-        (d.estado_preparacion || d.estado) === targetState || d.cancelado
+        validStates.includes(d.estado_preparacion || d.estado) || d.cancelado
       )
       
       return {
@@ -780,14 +820,19 @@ const ordenesParaCobrar = computed(() =>
   ordenes.value.filter(o => 
     o.estado === 'ENTREGADA' ||
     (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado) && 
-     (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
+      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
   )
 )
 
 const contarOrdenes = (key) => {
   if (key === 'cobrar')   return ordenesParaCobrar.value.length
   if (key === 'todas')    return ordenes.value.length
-  if (['ABIERTA','ENTREGADA'].includes(key)) return ordenes.value.filter(o => o.estado === key).length
+  if (key === 'ABIERTA') {
+    return ordenes.value.filter(o => 
+      o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
+    ).length
+  }
+  if (key === 'ENTREGADA') return ordenes.value.filter(o => o.estado === key).length
   return subOrdenes.value.filter(s => s.estado_estacion === key).length
 }
 
@@ -803,6 +848,22 @@ const paquetesFiltrados = computed(() => {
   return b ? paquetes.value.filter(p => p.nombre.toLowerCase().includes(b)) : paquetes.value
 })
 
+const tieneProductoNuevoHoy = computed(() => {
+  const hoy = new Date().toLocaleDateString('en-CA')
+  return productos.value.some(p => {
+    if (!p.created_at) return false
+    return p.created_at.substring(0, 10) === hoy
+  })
+})
+
+const tienePaqueteNuevoHoy = computed(() => {
+  const hoy = new Date().toLocaleDateString('en-CA')
+  return paquetes.value.some(p => {
+    if (!p.created_at) return false
+    return p.created_at.substring(0, 10) === hoy
+  })
+})
+
 // ── Estilos ────────────────────────────────────────────────────────────────
 const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50', CANCELADA:'bg-red-50' }[e] || 'bg-slate-50')
 const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200', CANCELADA:'border-red-200' }[e] || 'border-slate-100')
@@ -815,7 +876,7 @@ const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-
 
 // ── API ────────────────────────────────────────────────────────────────────
 
-const cargarOrdenes = async (silent = false) => {
+const cargarOrdenes = async (silent = true) => {
   if (!silent) loading.value = true
   try {
     const d = new Date()
@@ -1180,15 +1241,21 @@ const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usua
 const showToast        = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3500) }
 const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
 
+const handleStorageEvent = (e) => {
+  if (e.key === 'marquesina_variant') {
+    marquesinaVariant.value = e.newValue || 'dark'
+  }
+}
+
 onMounted(async () => {
+  marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'dark'
+  window.addEventListener('storage', handleStorageEvent)
   await verificarCaja()
   if (cajaAbierta.value) {
-    await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes(), cargarCapacidadRestaurante()])
+    // Primera carga explícita no silenciosa para mostrar el spinner inicial
+    await Promise.all([cargarOrdenes(false), cargarProductos(), cargarClientes(), cargarCapacidadRestaurante()])
     if (esMesero.value) await cargarMisMesas()
   }
-  
-  // Polling de seguridad
-  pollTimer = setInterval(cargarOrdenes, POLL_INTERVAL)
 
   // Sincronizar restaurante activo para WS si no estaba en localStorage
   if (!restauranteActivo.value) {
@@ -1201,13 +1268,10 @@ onMounted(async () => {
     } catch {}
   }
 
-  // Iniciar polling silencioso independiente del rol
+  // Iniciar un único polling silencioso de seguridad
   const poll = async () => {
-    if (pollingEnProgreso) { pollTimer = setTimeout(poll, POLL_INTERVAL); return }
     if (cajaAbierta.value) {
-      pollingEnProgreso = true
       await cargarOrdenes(true)
-      pollingEnProgreso = false
     }
     pollTimer = setTimeout(poll, POLL_INTERVAL)
   }
@@ -1216,6 +1280,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
+  window.removeEventListener('storage', handleStorageEvent)
 })
 
 onUnmounted(() => {

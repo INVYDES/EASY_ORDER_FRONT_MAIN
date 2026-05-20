@@ -556,7 +556,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarquesitaWidget from '../components/Marquesitawidget.vue'
 import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
@@ -582,6 +582,8 @@ const ofertasProductos        = ref([])
 const paquetes                = ref([])
 const sidebarAbierta          = ref(true)
 const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'dark')
+let pollTimer = null
+const POLL_INTERVAL = 5000 // 5 segundos
 
 // --- ESTADO COMENSALES ---
 const numeroComensales    = ref(1)
@@ -735,8 +737,10 @@ const cargarRestauranteActivo = async () => {
   }
 }
 
-const cargarProductos = async (restauranteId) => {
-  loading.value.productos = true
+const cargarProductos = async (restauranteId, silent = true) => {
+  if (!silent) {
+    loading.value.productos = true
+  }
   try {
     console.log('📡 [KIOSKO] Pidiendo productos disponibles...');
     const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
@@ -763,7 +767,9 @@ const cargarProductos = async (restauranteId) => {
   } catch (err) {
     console.error('❌ [KIOSKO] Error en cargarProductos:', err);
   } finally { 
-    loading.value.productos = false 
+    if (!silent) {
+      loading.value.productos = false 
+    }
   }
 }
 
@@ -929,6 +935,10 @@ const handleCheckout = async (checkoutData) => {
       comensalesNombres.value = ['Comensal 1'];
       comensalActivoIndex.value = 0;
       mostrarExito() 
+      // Recargar productos de inmediato de forma silenciosa para actualizar stock
+      if (restauranteSeleccionado.value?.id) {
+        cargarProductos(restauranteSeleccionado.value.id, true)
+      }
     } 
     else { checkoutRef.value?.setError(data.message || 'Error al enviar') }
   } catch { checkoutRef.value?.setError('Error de conexión') }
@@ -942,7 +952,7 @@ onMounted(async () => {
     
     if (restId) { 
       console.log('🔄 [KIOSKO] Cargando productos para ID:', restId);
-      await cargarProductos(restId).catch(e => console.error('❌ [KIOSKO] Error productos:', e))
+      await cargarProductos(restId, false).catch(e => console.error('❌ [KIOSKO] Error productos:', e))
       
       console.log('🔄 [KIOSKO] Cargando ofertas y paquetes...');
       cargarOfertas(restId).catch(e => console.error('❌ [KIOSKO] Error ofertas:', e))
@@ -955,6 +965,34 @@ onMounted(async () => {
   } finally {
     loading.value.productos = false
     console.log('✅ [KIOSKO] Carga finalizada.');
+  }
+
+  // Polling silencioso y limpio cada 5 segundos para mantener el stock al día en el Kiosco
+  const poll = async () => {
+    marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'dark'
+    if (restauranteSeleccionado.value?.id) {
+      await cargarProductos(restauranteSeleccionado.value.id, true)
+    }
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
+
+  // Escuchar cambios de color de la marquesina en caliente
+  const handleStorageEvent = (e) => {
+    if (e.key === 'marquesina_variant') {
+      marquesinaVariant.value = e.newValue || 'dark'
+    }
+  }
+  window.addEventListener('storage', handleStorageEvent)
+  
+  // Guardamos la referencia para poder limpiar el listener al desmontar
+  onMounted._handleStorage = handleStorageEvent
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearTimeout(pollTimer)
+  if (onMounted._handleStorage) {
+    window.removeEventListener('storage', onMounted._handleStorage)
   }
 })
 </script>
