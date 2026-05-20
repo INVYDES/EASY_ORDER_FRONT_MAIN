@@ -194,7 +194,7 @@
                     <div class="flex items-center gap-2 mt-0.5">
                       <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
                       <button 
-                        v-if="!['CERRADA','CANCELADA','PAGADA'].includes(sub.estado)" 
+                        v-if="['ENTREGADA', 'ABIERTA'].includes(sub.estado_estacion) && !['CERRADA','CANCELADA','PAGADA'].includes(sub.estado)" 
                         @click.stop="prepararEdicionOrden(sub)" 
                         title="Agregar productos / comensales"
                         class="w-6 h-6 rounded-lg bg-white/90 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 flex items-center justify-center text-[10px] shadow-sm hover:scale-110 active:scale-95 transition-all duration-200"
@@ -831,7 +831,7 @@ const tiempoPostresActual = computed(() => {
   return Math.round(total)
 })
 const calcularEstadoEstacion = (detalles, estadoOrden) => {
-  if (['ABIERTA', 'ENTREGADA', 'CERRADA', 'PAGADA', 'CANCELADA'].includes(estadoOrden)) return estadoOrden
+  if (['CERRADA', 'PAGADA', 'CANCELADA'].includes(estadoOrden)) return estadoOrden
   
   const validos = detalles?.filter(d => !d.cancelado) || []
   if (!validos.length) return 'ENTREGADA'
@@ -882,11 +882,7 @@ const subOrdenesFiltradas = computed(() => {
     return ordenes.value
       .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
       .map(o => {
-        // Si la orden es ABIERTA (tiene productos nuevos sin enviar), solo mostrar los nuevos
-        const detalles = o.estado === 'ABIERTA'
-          ? (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
-          : (o.detalles || [])
-        return { ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: detalles }
+        return { ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }
       })
   }
   return subOrdenes.value
