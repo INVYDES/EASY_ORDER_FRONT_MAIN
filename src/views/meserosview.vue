@@ -463,12 +463,7 @@
               </div>
 
               <div class="p-6">
-                <div v-if="carrito.length === 0" class="flex flex-col items-center justify-center py-20 text-center opacity-30">
-                  <div class="text-5xl mb-4">🛒</div>
-                  <p class="text-xs font-black uppercase tracking-widest">Carrito Vacío</p>
-                </div>
-
-                <div v-else class="animate-fade-in">
+                <div class="animate-fade-in">
                   <div class="space-y-4 mb-8 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
                     <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
                          class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
@@ -489,8 +484,8 @@
 
                       <!-- Box Items -->
                       <div class="p-3 space-y-3 bg-white">
-                        <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-2xl">
-                          Caja Vacía
+                        <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-6 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
+                          CAJA VACÍA
                         </div>
                         <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:border-indigo-200 group transition-all">
                           <div class="flex justify-between items-start gap-3 mb-2">
@@ -540,7 +535,7 @@
                       {{ esAdminOPropietario ? '🚫 PEDIDO BLOQUEADO' : (mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀') }}
                     </template>
                   </button>
-                  <p v-if="!nuevaOrden.mesa && carrito.length > 0" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
+                  <p v-if="!nuevaOrden.mesa" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
                 </div>
               </div>
             </div>
