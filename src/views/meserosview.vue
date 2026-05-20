@@ -86,12 +86,45 @@
         />
       </div>
 
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
-          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+        <div class="flex flex-wrap items-center gap-6">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
+          </div>
+
+          <!-- Indicadores de tiempo estimados por estación -->
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Cocina -->
+            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/80 border border-amber-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+              <span class="text-lg animate-bounce inline-block" style="animation-duration: 2s;">🍳</span>
+              <div>
+                <p class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Cocina</p>
+                <p class="text-sm font-black text-amber-800 mt-1">{{ tiempoCocinaActual }} min</p>
+              </div>
+            </div>
+
+            <!-- Barra -->
+            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-50/80 border border-indigo-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+              <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.2s;">🍹</span>
+              <div>
+                <p class="text-[8px] font-black text-indigo-500 uppercase tracking-widest leading-none">Barra</p>
+                <p class="text-sm font-black text-indigo-800 mt-1">{{ tiempoBarraActual }} min</p>
+              </div>
+            </div>
+
+            <!-- Postres -->
+            <div class="flex items-center gap-2.5 px-4 py-2.5 bg-rose-50/80 border border-rose-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+              <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.4s;">🍰</span>
+              <div>
+                <p class="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">Postres</p>
+                <p class="text-sm font-black text-rose-800 mt-1">{{ tiempoPostresActual }} min</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
+
+        <div class="flex items-center gap-3 self-end lg:self-auto">
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-[10px] font-black uppercase">Caja abierta</span>
@@ -99,7 +132,7 @@
           <button
             :disabled="esAdminOPropietario"
             @click="vistaActual = 'nueva'"
-            :class="['flex items-center gap-2 px-5 py-3 text-sm font-bold rounded-2xl transition shadow-lg active:scale-95',
+            :class="['flex items-center gap-2 px-5 py-3.5 text-sm font-bold rounded-2xl transition shadow-lg active:scale-95',
                      esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100']"
           >
             <span class="text-lg leading-none">{{ esAdminOPropietario ? '🚫' : '＋' }}</span>
@@ -725,7 +758,6 @@ const mesaConOrden = (m) => ordenes.value.some(o =>
   Number(o.mesa) === Number(m) && !['CERRADA','CANCELADA','PAGADA'].includes(o.estado)
 )
 
-// ── Lógica de sub-órdenes (sin cambios) ────────────────────────────────────
 const esBebida = (d) => {
   if (!d) return false
   const prodRaw = d.producto
@@ -738,6 +770,61 @@ const esPostre = (d) => {
   const cat = (prodRaw?.categoria?.nombre || d.categoria || '').toLowerCase()
   return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
 }
+const esCocina = (d) => {
+  return !esBebida(d) && !esPostre(d)
+}
+
+// Tiempos estimados acumulados en preparación por estación para el mesero
+const tiempoCocinaActual = computed(() => {
+  let total = 0
+  ordenes.value.forEach(o => {
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
+    (o.detalles || []).forEach(d => {
+      if (d.cancelado) return
+      const estado = d.estado_preparacion || d.estado
+      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
+        if (esCocina(d)) {
+          total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
+        }
+      }
+    })
+  })
+  return Math.round(total)
+})
+
+const tiempoBarraActual = computed(() => {
+  let total = 0
+  ordenes.value.forEach(o => {
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
+    (o.detalles || []).forEach(d => {
+      if (d.cancelado) return
+      const estado = d.estado_preparacion || d.estado
+      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
+        if (esBebida(d)) {
+          total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
+        }
+      }
+    })
+  })
+  return Math.round(total)
+})
+
+const tiempoPostresActual = computed(() => {
+  let total = 0
+  ordenes.value.forEach(o => {
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
+    (o.detalles || []).forEach(d => {
+      if (d.cancelado) return
+      const estado = d.estado_preparacion || d.estado
+      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
+        if (esPostre(d) && !esBebida(d)) {
+          total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
+        }
+      }
+    })
+  })
+  return Math.round(total)
+})
 const calcularEstadoEstacion = (detalles, estadoOrden) => {
   if (['ABIERTA', 'ENTREGADA', 'CERRADA', 'PAGADA', 'CANCELADA'].includes(estadoOrden)) return estadoOrden
   
