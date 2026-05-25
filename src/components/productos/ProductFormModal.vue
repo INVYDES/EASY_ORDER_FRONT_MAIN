@@ -15,6 +15,33 @@
         <button @click="$emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">✕</button>
       </div>
 
+      <!-- ══ INSTRUCCIONES PARA NUEVO PRODUCTO ══ -->
+      <div v-if="!product && !productoCreado" class="mx-6 mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
+        <p class="text-xs font-black text-indigo-700 uppercase tracking-widest mb-2">Pasos para crear un producto</p>
+        <div class="flex items-start gap-3">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">1</span>
+            <span class="text-xs font-bold text-indigo-800">Llena la info y presiona "Crear Producto"</span>
+          </div>
+          <span class="text-indigo-300">→</span>
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black">2</span>
+            <span class="text-xs font-bold text-indigo-800">Asigna la receta</span>
+          </div>
+          <span class="text-indigo-300">→</span>
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black">3</span>
+            <span class="text-xs font-bold text-indigo-800">Guardar Receta</span>
+          </div>
+        </div>
+      </div>
+      <div v-if="productoCreado && !recetaGuardada" class="mx-6 mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+        <p class="text-xs font-black text-emerald-700 uppercase tracking-widest">Producto creado · Ahora asigna la receta y presiona "Guardar Receta"</p>
+      </div>
+      <div v-if="productoCreado && recetaGuardada" class="mx-6 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+        <p class="text-xs font-black text-blue-700 uppercase tracking-widest">Receta guardada · Ahora presiona "Guardar Información" para finalizar</p>
+      </div>
+
       <div class="flex-1 overflow-y-auto p-6">
         <!-- Error general -->
         <div v-if="errorMessage" class="mb-6 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">
@@ -136,6 +163,12 @@
                 </label>
               </div>
             </div>
+
+            <!-- Botón Crear Producto (solo en modo creación, antes de crear) -->
+            <button v-if="!product && !productoCreado" @click="crearProducto" :disabled="loading" type="button"
+              class="w-full py-4 text-sm font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition disabled:opacity-50 mt-2">
+              {{ loading ? 'Creando...' : '🚀 Crear Producto' }}
+            </button>
           </div>
 
           <!-- ══ COLUMNA DERECHA: RECETA Y COSTOS ══ -->
@@ -143,6 +176,7 @@
             <div class="flex items-center gap-2 mb-2">
               <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">2</span>
               <h3 class="font-bold text-gray-800">Receta e Insumos</h3>
+              <span v-if="!product && !productoCreado" class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 ml-auto">⚠️ Crea el producto primero</span>
             </div>
 
             <!-- Loading Receta -->
@@ -150,6 +184,15 @@
               <div class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
               <p class="text-sm text-gray-500 font-medium">Analizando ingredientes...</p>
             </div>
+
+            <template v-else-if="!product && !productoCreado">
+              <!-- Sección deshabilitada hasta crear producto -->
+              <div class="py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                <p class="text-3xl mb-3">🔒</p>
+                <p class="text-sm font-bold text-gray-500">Primero crea el producto</p>
+                <p class="text-xs text-gray-400 mt-1">Después podrás asignar ingredientes a la receta</p>
+              </div>
+            </template>
 
             <template v-else>
               <!-- ── PANEL DE COSTOS Y MÁRGENES ── -->
@@ -325,13 +368,13 @@
 
       <!-- Botones de Acción Final -->
       <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-4">
-        <button @click="$emit('close')" type="button"
+        <button @click="productoCreado ? (emit('saved'), emit('close')) : emit('close')" type="button"
           class="flex-1 py-4 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition">
-          Cerrar sin guardar
+          {{ productoCreado ? 'Cerrar' : 'Cerrar sin guardar' }}
         </button>
-        <button @click="save" :disabled="loading" type="button"
+        <button v-if="product || productoCreado" @click="save" :disabled="loading" type="button"
           class="flex-[2] py-4 text-sm font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition disabled:opacity-50">
-          {{ loading ? 'Sincronizando...' : (product ? 'Guardar Información' : 'Crear Producto') }}
+          {{ loading ? 'Sincronizando...' : 'Guardar Información' }}
         </button>
       </div>
     </div>
@@ -360,7 +403,10 @@ const imageInput   = ref<HTMLInputElement | null>(null)
 const imagePreview = ref<string | null>(null)
 const newImageFile = ref<File | null>(null)
 const categorias   = ref<any[]>(props.categorias || [])
-const activeTab    = ref<'info' | 'receta'>('info') // Mantenemos el estado interno pero quitamos los botones de tab
+const activeTab    = ref<'info' | 'receta'>('info')
+const productoCreado = ref(false)
+const productoId     = ref<number | null>(null)
+const recetaGuardada = ref(false)
 
 const form = reactive({
   nombre: '', descripcion: '', precio: 0, costo: 0, stock: 0,
@@ -586,7 +632,8 @@ const quitarDeReceta = (idx: number) => {
 
 // ── Guardar receta ────────────────────────────────────────────────────────────
 const guardarReceta = async () => {
-  if (!props.product?.id) return
+  const pid = props.product?.id || productoId.value
+  if (!pid) return
   guardandoReceta.value = true
 
   try {
@@ -596,10 +643,11 @@ const guardarReceta = async () => {
         cantidad: Number(i.cantidad_receta),
       })),
     }
-    const data = await apiClient.post(`/ingredientes/producto/${props.product.id}/sync`, payload)
+    const data = await apiClient.post(`/ingredientes/producto/${pid}/sync`, payload)
 
     if (data.success || data.data) {
       recetaModificada.value = false
+      recetaGuardada.value = true
     } else {
       errorMessage.value = data.message || 'Error al guardar receta'
     }
@@ -663,6 +711,9 @@ const resetForm = () => {
   receta.value          = []
   recetaModificada.value = false
   activeTab.value        = 'info'
+  productoCreado.value   = false
+  productoId.value       = null
+  recetaGuardada.value   = false
 }
 
 watch(() => props.product, resetForm, { immediate: true })
@@ -675,17 +726,16 @@ const validate = () => {
   return !errors.nombre && !errors.precio && !errors.categoria_id
 }
 
-const save = async () => {
+// ── Crear Producto (Paso 1) ───────────────────────────────────────────────────
+const crearProducto = async () => {
   if (!validate()) return
   loading.value      = true
   errorMessage.value = ''
 
   try {
-    const endpoint = props.product ? `/productos/${props.product.id}` : `/productos`
     let data: any;
 
     if (newImageFile.value) {
-      // Con imagen: multipart/form-data
       const fd = new FormData()
       fd.append('nombre',       form.nombre)
       fd.append('descripcion',  form.descripcion || '')
@@ -697,12 +747,71 @@ const save = async () => {
       fd.append('activo',             form.activo ? '1' : '0')
       fd.append('minutos_produccion', String(form.minutos_produccion))
       fd.append('imagen',             newImageFile.value)
-      if (props.product) fd.append('_method', 'PUT')
+
+      data = await apiClient.post('/productos', fd)
+    } else {
+      data = await apiClient.post('/productos', {
+        nombre:          form.nombre,
+        descripcion:     form.descripcion,
+        precio:          form.precio,
+        costo:           form.costo,
+        stock:           form.stock,
+        stock_minimo:    form.stock_minimo,
+        categoria_id:    form.categoria_id,
+        activo:             form.activo,
+        minutos_produccion: form.minutos_produccion,
+      })
+    }
+
+    if (data.success || data.data) {
+      // Extraer el ID del producto creado
+      const newProduct = data.data || data
+      productoId.value = newProduct.id
+      productoCreado.value = true
+      errorMessage.value = ''
+
+      // Cargar ingredientes para poder asignar receta
+      await loadTodosIngredientes()
+      await cargarNominaReal()
+    } else {
+      errorMessage.value = data.errors
+        ? Object.values(data.errors).flat().join(' · ')
+        : data.message || 'Error al crear producto'
+    }
+  } catch {
+    errorMessage.value = 'Error de conexión'
+  } finally {
+    loading.value = false
+  }
+}
+
+const save = async () => {
+  if (!validate()) return
+  loading.value      = true
+  errorMessage.value = ''
+
+  try {
+    const pid = props.product?.id || productoId.value
+    const endpoint = pid ? `/productos/${pid}` : `/productos`
+    let data: any;
+
+    if (newImageFile.value) {
+      const fd = new FormData()
+      fd.append('nombre',       form.nombre)
+      fd.append('descripcion',  form.descripcion || '')
+      fd.append('precio',       String(form.precio))
+      fd.append('costo',        String(form.costo))
+      fd.append('stock',        String(form.stock))
+      fd.append('stock_minimo', String(form.stock_minimo))
+      if (form.categoria_id) fd.append('categoria_id', String(form.categoria_id))
+      fd.append('activo',             form.activo ? '1' : '0')
+      fd.append('minutos_produccion', String(form.minutos_produccion))
+      fd.append('imagen',             newImageFile.value)
+      if (pid) fd.append('_method', 'PUT')
 
       data = await apiClient.post(endpoint, fd)
     } else {
-      // Sin imagen: JSON
-      const method = props.product ? 'put' : 'post'
+      const method = pid ? 'put' : 'post'
       data = await apiClient[method](endpoint, {
         nombre:          form.nombre,
         descripcion:     form.descripcion,

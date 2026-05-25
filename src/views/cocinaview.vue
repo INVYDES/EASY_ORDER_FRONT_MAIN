@@ -80,7 +80,10 @@
             accion-label="🔥 Iniciar preparación"
             accion-class="bg-orange-500 hover:bg-orange-400 text-white"
             :procesando="procesando === order.id"
-            @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
+            :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="PENDIENTE"
+            @accion="abrirModalIngredientes(order, 'EN_PREPARACION', 'PENDIENTE')"
+            @secondary-action="abrirModalIngredientes(order, null, 'PENDIENTE')"
           />
         </div>
       </div>
@@ -108,8 +111,10 @@
             accion-class="bg-emerald-500 hover:bg-emerald-400 text-white"
             secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="EN_PREPARACION"
             @accion="cambiarEstado(order.id, 'LISTO')"
-            @secondary-action="abrirModalIngredientes(order, null)"
+            @secondary-action="abrirModalIngredientes(order, null, 'EN_PREPARACION')"
           />
         </div>
       </div>
@@ -238,6 +243,19 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 const POLL_INTERVAL = 15000 // Aumentamos intervalo ya que tenemos WS
 const router        = useRouter()
 
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const orders     = ref([])
 const loading    = ref(false)
@@ -299,7 +317,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isCocinaOrder(o)) return false
     const detalles = getDetallesCocina(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION')
   })
 })
 
@@ -348,21 +366,9 @@ const onOrdenWS = async (evento) => {
   const { accion, orden } = evento
   console.log('📡 WS Kitchen:', accion, orden.id)
   
-  if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
-    if (!isCocinaOrder(orden)) {
-      // Si ya no es de cocina (ej: se canceló o se cerró), la quitamos si estaba
-      orders.value = orders.value.filter(o => o.id !== orden.id)
-      return
-    }
-
-    const idx = orders.value.findIndex(o => o.id === orden.id)
-    if (idx !== -1) {
-      orders.value[idx] = { ...orders.value[idx], ...orden }
-    } else {
-      orders.value.push(orden)
-      orders.value.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      showToast(`Nueva orden #${orden.id} recibida`, 'info')
-    }
+  if (['creada', 'actualizada', 'estado_cambiado', 'productos_agregados', 'productos_agregados_a_estacion'].includes(accion)) {
+    if (accion === 'creada') showToast(`Nueva orden #${orden.id} recibida`, 'info')
+    await loadOrders(true)
   } else if (accion === 'cerrada' || accion === 'eliminada') {
     orders.value = orders.value.filter(o => o.id !== orden.id)
   }
@@ -373,7 +379,13 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 })
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
-const abrirModalIngredientes = async (orden, nuevoEstado) => {
+const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
+  // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina) y coincida con el filtro
+  let detallesCocina = (orden.detalles ?? []).filter(esCocina)
+  if (estadoFiltro) {
+    detallesCocina = detallesCocina.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+  }
+
   modalIngredientes.value = {
     visible:        true,
     loading:        true,
@@ -381,13 +393,10 @@ const abrirModalIngredientes = async (orden, nuevoEstado) => {
     orden,
     nuevoEstado,
     items:          [],
-    productosTotal: orden.detalles?.length ?? 0,
+    productosTotal: detallesCocina.length,
   }
 
   try {
-    // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina)
-    const detallesCocina = (orden.detalles ?? []).filter(esCocina)
-    
     const resultados = await Promise.all(
       detallesCocina.map(d =>
         apiClient.get(`/ingredientes/producto/${d.producto_id}`)
@@ -431,7 +440,19 @@ const cerrarModal = () => {
 const confirmarYCambiarEstado = async () => {
   modalIngredientes.value.guardando = true
   try {
-    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado)
+    const excluidos = []
+    modalIngredientes.value.items.forEach(item => {
+      item.ingredientes.forEach(ing => {
+        if (!ing.incluir) {
+          excluidos.push({
+            producto_id: item.producto_id,
+            ingrediente_id: ing.id
+          })
+        }
+      })
+    })
+
+    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado, excluidos)
     modalIngredientes.value.visible = false
   } finally {
     modalIngredientes.value.guardando = false
@@ -439,12 +460,13 @@ const confirmarYCambiarEstado = async () => {
 }
 
 // ── Cambiar estado ─────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstadoDetalle) => {
+const cambiarEstado = async (id, nuevoEstadoDetalle, ingredientesExcluidos = []) => {
   procesando.value = id
   try {
     const data = await apiClient.post(`/ordenes/${id}/actualizar-estado-estacion`, {
       estacion: 'cocina',
-      estado: nuevoEstadoDetalle 
+      estado: nuevoEstadoDetalle,
+      ingredientes_excluidos: ingredientesExcluidos
     })
     
     if (data.success || data.data) {

@@ -59,7 +59,7 @@ const cards = computed(() => [
     value:  '$' + fm(props.utilidadHoy),
     icon:   '🏆',
     border: 'border-teal-500',
-    sub:    'Bruta - Retiros de caja',
+    sub:    'Utilidad Bruta - Retiros de caja',
     subColor: 'text-teal-500 font-medium',
   },
 ])

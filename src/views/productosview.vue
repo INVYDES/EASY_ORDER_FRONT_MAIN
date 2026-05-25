@@ -61,11 +61,31 @@
     </div>
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
-    <div v-if="activeTab === 'paquetes'" class="space-y-6">
-      <div class="flex justify-end">
+    <div v-if="activeTab === 'paquetes'" class="space-y-4">
+      <div class="flex items-center gap-4">
+        <!-- Buscador de paquetes -->
+        <div class="relative flex-1 max-w-md">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            v-model="searchTermPaquetes"
+            @input="debouncedSearchPaquetes"
+            type="text"
+            placeholder="Buscar paquete por nombre..."
+            class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm"
+          />
+          <button
+            v-if="searchTermPaquetes"
+            @click="searchTermPaquetes = ''; loadPaquetes(1)"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition text-xs"
+          >✕</button>
+        </div>
         <button
           @click="openCreatePaquete"
-          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
+          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition ml-auto"
         >
           <span class="text-base leading-none">＋</span> Nuevo Paquete
         </button>
@@ -82,8 +102,30 @@
       />
     </div>
 
-    <!-- ── PRODUCTOS ──────────────────────────────────────── -->
+    <!-- ══ PRODUCTOS ═════════════════════════════════════════ -->
     <div v-if="activeTab === 'productos'">
+      <!-- Buscador de productos -->
+      <div class="mb-4">
+        <div class="relative max-w-md">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            v-model="searchTerm"
+            @input="debouncedSearch"
+            type="text"
+            placeholder="Buscar producto por nombre..."
+            class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm"
+          />
+          <button
+            v-if="searchTerm"
+            @click="searchTerm = ''; loadProducts(1)"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition text-xs"
+          >✕</button>
+        </div>
+      </div>
       <ProductsTable
         :products="products"
         :pagination="pagination"
@@ -321,6 +363,7 @@ const selectedCategoria = ref(null)
 const selectedPaquete = ref(null)
 const suggestedProductsForNewPaquete = ref([])
 const searchTerm = ref('')
+const searchTermPaquetes = ref('')
 const toasts = ref([])
 
 // ✅ PAGINACIÓN - AGREGADA
@@ -437,7 +480,7 @@ const loadProducts = async (page = 1) => {
   if (!checkAuth()) return
   loading.products = true
   try {
-    const data = await apiClient.get(`/productos?page=${page}&per_page=15&_t=${Date.now()}`)
+    const data = await apiClient.get(`/productos?page=${page}&per_page=15&buscar=${encodeURIComponent(searchTerm.value)}&_t=${Date.now()}`)
     if (data.success || data.data) {
       products.value = data.data || []
       if (data.pagination) {
@@ -461,6 +504,15 @@ const loadProducts = async (page = 1) => {
   } finally { 
     loading.products = false 
   }
+}
+
+// Debounce para búsqueda
+let searchTimeout = null
+const debouncedSearch = () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadProducts(1)
+  }, 400)
 }
 
 const loadAllProductsForSelection = async () => {
@@ -630,7 +682,7 @@ const loadPaquetes = async (page = 1) => {
   if (!checkAuth()) return
   loading.paquetes = true
   try {
-    const data = await apiClient.get(`/paquetes?page=${page}&per_page=10&_t=${Date.now()}`)
+    const data = await apiClient.get(`/paquetes?page=${page}&per_page=10&buscar=${encodeURIComponent(searchTermPaquetes.value)}&_t=${Date.now()}`)
     if (data.success || data.data) {
       paquetes.value = data.data || []
       if (data.pagination) {
@@ -657,6 +709,15 @@ const loadPaquetes = async (page = 1) => {
 const changePagePaquetes = (page) => {
   if (page < 1 || page > paginationPaquetes.value.last_page) return
   loadPaquetes(page)
+}
+
+// Debounce para búsqueda de paquetes
+let searchPaquetesTimeout = null
+const debouncedSearchPaquetes = () => {
+  clearTimeout(searchPaquetesTimeout)
+  searchPaquetesTimeout = setTimeout(() => {
+    loadPaquetes(1)
+  }, 400)
 }
 
 const openCreatePaquete = () => {

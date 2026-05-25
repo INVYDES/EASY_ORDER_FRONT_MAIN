@@ -26,8 +26,8 @@
               <span :class="{'line-through': d.cancelado}">
                 ${{ Number(d.subtotal || 0).toFixed(2) }}
               </span>
-              <button v-if="!d.cancelado" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
-                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-red-100">
+              <button v-if="!d.cancelado && !esMesero" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
+                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all">
                 <span class="text-xs">🗑️</span>
               </button>
             </div>
@@ -103,11 +103,12 @@
 
           <!-- Botones de acción -->
           <div class="flex gap-3">
-            <button @click="abrirDividirCuenta"
-              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2">
+            <button :disabled="esAdminOPropietario || Object.keys(itemsByComensal).length <= 1" @click="abrirDividirCuenta"
+              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              :title="Object.keys(itemsByComensal).length <= 1 ? 'No se puede dividir una cuenta con un solo comensal' : ''">
               ✂️ Dividir cuenta
             </button>
-            <button @click="cobrarOrden" :disabled="cobrando || !canPay"
+            <button @click="cobrarOrden" :disabled="cobrando || !canPay || esAdminOPropietario"
               class="flex-1 py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
               <div v-if="cobrando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               {{ cobrando ? 'Procesando...' : '💳 Cobrar' }}
@@ -148,7 +149,10 @@
               <div v-for="c in comensalesAuto" :key="c.nombre" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:border-indigo-200 transition">
                 <div class="flex-1">
                   <p class="text-sm font-black text-slate-800">{{ c.nombre }}</p>
-                  <p class="text-[10px] font-bold text-slate-400">{{ c.detalles.length }} platillos - ${{ c.subtotal.toFixed(2) }}</p>
+                  <p class="text-[10px] font-bold text-slate-400">
+                    {{ c.detalles.map(d => `${Number(d.cantidad)}x ${d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'}`).join(', ') }}
+                    - ${{ c.subtotal.toFixed(2) }}
+                  </p>
                 </div>
                 <div>
                   <select v-model="c.ticketId" class="pl-3 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-black bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none text-indigo-700 shadow-sm">
@@ -198,7 +202,7 @@
                         </button>
                         <div class="relative flex-1">
                           <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                          <input type="number" v-model.number="getPagoTicket(t.id).propina" 
+                          <input type="number" v-model.number="getPagoTicket(t.id).propina" min="0"
                             @focus="getPagoTicket(t.id).propinaPct = null; getPagoTicket(t.id).propinaManual = true"
                             class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20" />
                         </div>
@@ -208,7 +212,7 @@
                       <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
                       <div class="relative">
                         <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" 
+                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" min="0"
                           class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
                         <input v-else v-model="getPagoTicket(t.id).referencia" 
                           placeholder="Folio..."
@@ -242,7 +246,7 @@
           <div v-if="errorDividir" class="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-700">
             {{ errorDividir }}
           </div>
-          <button @click="cobrarDividido" :disabled="cobrando || !canPayDividido"
+          <button @click="cobrarDividido" :disabled="cobrando || !canPayDividido || esAdminOPropietario"
             class="w-full py-3.5 text-sm font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
             <div v-if="cobrando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             {{ cobrando ? 'Procesando e Imprimiendo...' : `💳 Cobrar y Emitir ${ticketsAgrupados.length || numComensales} Tickets` }}
@@ -252,7 +256,7 @@
     </div>
 
     <!-- ══ GRID DE TICKETS ══ -->
-    <div v-if="orders.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+    <div v-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
       <span class="text-5xl mb-4 opacity-20">{{ type === 'open' ? '🎫' : '🗂️' }}</span>
       <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">
         {{ type === 'open' ? 'Sin órdenes por cobrar' : 'Sin órdenes cerradas' }}
@@ -260,19 +264,21 @@
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-      <div v-for="order in orders" :key="order.id"
+      <div v-for="order in filteredOrders" :key="order.id"
         class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
 
         <!-- Header ticket -->
         <div class="px-5 py-4 flex items-center justify-between"
-          :class="type === 'open' ? 'bg-emerald-50' : 'bg-slate-50'">
+          :class="type === 'open' ? 'bg-emerald-50' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'bg-red-50/50' : 'bg-slate-50')">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm"
-              :class="type === 'open' ? 'bg-emerald-100' : 'bg-slate-100'">
-              {{ type === 'open' ? '💳' : '✓' }}
+              :class="type === 'open' ? 'bg-emerald-100' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'bg-red-100' : 'bg-slate-100')">
+              {{ type === 'open' ? '💳' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫' : '✓') }}
             </div>
             <div>
-              <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">{{ type === 'open' ? 'Por cobrar' : 'Cerrada' }}</p>
+              <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">
+                {{ type === 'open' ? 'Por cobrar' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'Cancelada' : 'Cerrada') }}
+              </p>
               <p class="text-base font-black text-slate-800 leading-none">{{ order.folio || '#' + order.id }}</p>
               <p v-if="type === 'open'" class="text-[10px] font-bold text-indigo-600 mt-1">Estado: {{ order.estado }}</p>
             </div>
@@ -284,19 +290,38 @@
 
         <!-- Detalles -->
         <div class="px-5 py-4 space-y-3">
-          <div class="space-y-1 bg-slate-50 rounded-2xl p-3">
-            <div v-for="d in (order.detalles || []).slice(0, 4)" :key="d.id"
-              class="flex justify-between text-xs font-bold"
-              :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
-              <span class="truncate flex-1">
-                {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
-                <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
-              </span>
-              <span class="text-slate-400 ml-2">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+          <div class="space-y-3">
+            <div v-for="(detalles, nomComensal) in agruparDetallesPorComensal(order.detalles)" :key="nomComensal"
+              class="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 space-y-2">
+              
+              <!-- Encabezado del Comensal -->
+              <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                <span class="text-[10px]">👤</span>
+                <span class="text-[10px] font-black text-indigo-600 uppercase tracking-wider">{{ nomComensal }}</span>
+              </div>
+
+              <!-- Lista de Productos -->
+              <div class="space-y-1.5">
+                <div v-for="d in detalles" :key="d.id"
+                  class="flex justify-between items-center text-xs font-bold gap-2"
+                  :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
+                  <span class="truncate flex-1">
+                    {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
+                    <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
+                    <p v-else-if="d.notas" class="text-[9px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                    <!-- Botón eliminar producto en caja -->
+                    <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
+                      class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
+                      title="Eliminar Producto">
+                      <span class="text-[10px]">🗑️</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p v-if="(order.detalles || []).length > 4" class="text-[10px] text-slate-400 font-black pt-1">
-              +{{ order.detalles.length - 4 }} producto(s) más
-            </p>
           </div>
 
           <div class="flex items-center justify-between">
@@ -321,12 +346,15 @@
             <span class="text-xl font-black text-slate-800">${{ Number(order.total || 0).toFixed(2) }}</span>
           </div>
           <button v-if="type === 'open'"
+            :disabled="esAdminOPropietario"
             @click="abrirCobrar(order)"
-            class="w-full py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 active:scale-95">
-            💳 Cobrar orden
+            :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
+                     esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
+            {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
           </button>
-          <div v-else class="w-full py-2.5 text-center text-[10px] font-black text-slate-400 bg-slate-50 rounded-2xl uppercase tracking-widest">
-            ✓ Pagada · {{ order.metodo_pago || 'efectivo' }}
+          <div v-else class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"
+            :class="(order.estado || '').toUpperCase() === 'CANCELADA' ? 'text-red-500 bg-red-50 border border-red-100' : 'text-slate-400 bg-slate-50'">
+            {{ (order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫 Cancelada completamente' : `✓ Pagada · ${order.metodo_pago || 'efectivo'}` }}
           </div>
         </div>
       </div>
@@ -405,6 +433,7 @@
           <p style="margin-top: 2mm; font-size: 8px; color: #666;">*** EASY ORDER SYSTEM ***</p>
         </div>
       </div>
+    </div>
     <!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
     <div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4" @click.self="cancelacionModal.visible = false">
       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100">
@@ -416,6 +445,23 @@
           </div>
         </div>
         <div class="p-6">
+          <!-- Selector de Cantidad a Cancelar (solo si max > 1) -->
+          <div v-if="cancelacionModal.cantidadMaxima > 1" class="mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center">Cantidad a Cancelar</label>
+            <div class="flex items-center justify-center gap-4">
+              <button @click="cancelacionModal.cantidadCancelar > 1 ? cancelacionModal.cantidadCancelar-- : null"
+                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 font-black transition active:scale-95 text-sm">
+                −
+              </button>
+              <span class="text-lg font-black text-slate-800 w-12 text-center">{{ cancelacionModal.cantidadCancelar }}</span>
+              <button @click="cancelacionModal.cantidadCancelar < cancelacionModal.cantidadMaxima ? cancelacionModal.cantidadCancelar++ : null"
+                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-indigo-600 hover:bg-indigo-50 font-black transition active:scale-95 text-sm">
+                +
+              </button>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center mt-1">De un total de {{ cancelacionModal.cantidadMaxima }} unidades</p>
+          </div>
+
           <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Selecciona o escribe el motivo</label>
           <div class="grid grid-cols-1 gap-2 mb-4">
             <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
@@ -440,7 +486,6 @@
           </button>
         </div>
       </div>
-      </div>
     </div>
   </div>
 </template>
@@ -456,6 +501,38 @@ const props = defineProps({
 })
 const emit = defineEmits(['order-paid', 'refresh'])
 
+const filteredOrders = computed(() => {
+  return props.orders.map(o => {
+    if (props.type !== 'open') return o
+    
+    // Only keep details that are ENTREGADO or cancelado
+    const deliveredDetalles = (o.detalles || []).filter(d => 
+      d.cancelado || d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'
+    )
+    
+    // Recalculate subtotal and total based on delivered items
+    const subtotal = deliveredDetalles.reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
+    const total = subtotal + parseFloat(o.propina || 0)
+    
+    return {
+      ...o,
+      detalles: deliveredDetalles,
+      total: total
+    }
+  })
+})
+
+const agruparDetallesPorComensal = (detalles) => {
+  const grupos = {}
+  if (!detalles) return grupos
+  detalles.forEach(d => {
+    const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
+    if (!grupos[nom]) grupos[nom] = []
+    grupos[nom].push(d)
+  })
+  return grupos
+}
+
 // ── Estado Cobrar ──────────────────────────────────────────────────────────
 const ordenCobrar    = ref(null)
 const metodoPago     = ref('efectivo')
@@ -466,7 +543,7 @@ const montoRecibido  = ref(0)
 const folio          = ref('')
 const errorCobro     = ref('')
 
-const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
+const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '', cantidadMaxima: 1, cantidadCancelar: 1 })
 
 const metodos = [
   { key: 'efectivo',      label: 'Efectivo',      icon: '💵' },
@@ -500,6 +577,25 @@ const cambio = computed(() => {
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const user = JSON.parse(userRaw)
 const userName = computed(() => user.name || 'Personal')
+
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
+const esMesero = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
+    return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
+})
 
 const nombreSucursal = ref('RESTAURANTE E-ORDER')
 const datosSucursal  = ref({ direccion: '', telefono: '', propietario_id: '' })
@@ -759,21 +855,32 @@ const cobrarOrden = async () => {
 }
 
 const eliminarProductoDeOrden = (detalleId, ordenId) => {
+  let maxCant = 1;
+  const order = props.orders.find(o => o.id === ordenId) || ordenCobrar.value;
+  if (order && order.detalles) {
+    const d = order.detalles.find(item => item.id === detalleId);
+    if (d) {
+      maxCant = Number(d.cantidad || 1);
+    }
+  }
+
   cancelacionModal.value = {
     visible: true,
     detalleId,
     ordenId,
-    motivo: ''
+    motivo: '',
+    cantidadMaxima: maxCant,
+    cantidadCancelar: maxCant
   }
 }
 
 const confirmarCancelacion = async () => {
-  const { detalleId, ordenId, motivo } = cancelacionModal.value
+  const { detalleId, ordenId, motivo, cantidadCancelar } = cancelacionModal.value
   if (!motivo) return
   
   cobrando.value = true
   try {
-    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}`)
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}&cantidad_cancelar=${cantidadCancelar || 1}`)
     if (data.success || data.data) {
       // Actualizar ordenCobrar.detalles localmente
       if (ordenCobrar.value && ordenCobrar.value.id === ordenId) {
@@ -997,7 +1104,7 @@ const cobrarDividido = async () => {
       return {
         monto: t.total,
         metodo: p.metodo,
-        propina: p.propina || 0,
+        propina: Math.max(0, parseFloat(p.propina) || 0),
         referencia: p.referencia || '',
         comensal: t.nombres.join(', '),
         detalles: t.detalles.map(d => d.id)

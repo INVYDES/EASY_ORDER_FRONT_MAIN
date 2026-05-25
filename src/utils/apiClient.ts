@@ -71,7 +71,13 @@ export async function request<T = any>(
         let data;
 
         if (isJson) {
-            const text = await response.text();
+            let text = await response.text();
+            // Corrección global de zona horaria: El backend de Laravel envía la hora local pero 
+            // le añade una 'Z' al final (indicando UTC). Esto causaba que el frontend restara 6 horas.
+            // Al remover la 'Z' antes de parsear, el frontend respeta la hora tal cual viene.
+            if (text) {
+                text = text.replace(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?)Z/g, '$1');
+            }
             data = text ? JSON.parse(text) : {};
         } else {
             data = {};

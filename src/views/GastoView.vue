@@ -25,42 +25,7 @@
       </button>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl shrink-0">🧾</div>
-        <div>
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Gastos</p>
-          <p class="text-xl font-bold text-red-600 mt-0.5">${{ formatMoney(totalGastos) }}</p>
-        </div>
-      </div>
-      <div class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-2xl shrink-0">💵</div>
-        <div>
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Ventas del Período</p>
-          <p class="text-xl font-bold text-emerald-600 mt-0.5">${{ formatMoney(resumenData.ventas) }}</p>
-        </div>
-      </div>
-      <div class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-          :class="resumenData.utilidad_bruta >= 0 ? 'bg-blue-100' : 'bg-red-100'">
-          {{ resumenData.utilidad_bruta >= 0 ? '📈' : '📉' }}
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Utilidad Bruta</p>
-          <p class="text-xl font-bold mt-0.5" :class="resumenData.utilidad_bruta >= 0 ? 'text-blue-600' : 'text-red-600'">
-            ${{ formatMoney(resumenData.utilidad_bruta) }}
-          </p>
-        </div>
-      </div>
-      <div class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl shrink-0">🎯</div>
-        <div>
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">ROI Operativo</p>
-          <p class="text-xl font-bold text-amber-600 mt-0.5">{{ roiPorcentaje }}</p>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Filtros -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -84,14 +49,10 @@
             <option v-for="(label, value) in categorias" :key="value" :value="value">{{ label }}</option>
           </select>
         </div>
-        <div class="flex items-end gap-2">
+        <div class="flex items-end">
           <button @click="limpiarFiltros"
-            class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition">
+            class="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition">
             Limpiar
-          </button>
-          <button @click="abrirResumenCompleto"
-            class="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
-            Ver ROI
           </button>
         </div>
       </div>
@@ -401,6 +362,11 @@ const roiPorcentaje = computed(() => {
 
 // ── API ────────────────────────────────────────────────────
 const cargarGastos = async () => {
+  if (!filtros.fecha_desde || !filtros.fecha_hasta) {
+    gastos.value = []
+    showToast('Falta seleccionar fechas', 'error')
+    return
+  }
   loading.value.gastos = true
   try {
     const params = new URLSearchParams()

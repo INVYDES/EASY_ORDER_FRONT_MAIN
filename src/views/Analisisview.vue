@@ -60,36 +60,22 @@
           :ordenes-por-estado="dashData.ordenes_por_estado"
         />
 
-        <!-- Fila 1: Ventas por Hora + Métodos de Pago -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        <!-- Gráficas de Hoy -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <VentasPorHoraChart :ordenes-cerradas="ordenesCerradasHoy" />
-          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
-        </div>
-
-        <!-- Fila 2: Tendencia de Ventas (Subida y Ancha en el medio) -->
-        <div class="grid grid-cols-1 gap-6 mb-6">
           <VentasSemanaChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
 
-        <!-- Fila 3: Platos Estrella (Top Ventas) -->
-        <div class="grid grid-cols-1 gap-6 mb-6">
-          <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
+        <!-- Gráficas de Operación (Con selectores de período independientes) -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+          <PedidosEstadoChart :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
+          <CanalVentasChart   :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
 
-        <!-- Fila 4: Gráficas de Análisis con Filtros Individuales (Pedidos por Estado y Canal de Ventas) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <PedidosEstadoChart
-            :api-url="API_URL"
-            :get-headers="getHeaders"
-            :ordenes-por-estado="dashData.ordenes_por_estado"
-            :server-date="serverDate"
-          />
-          <CanalVentasChart
-            :api-url="API_URL"
-            :get-headers="getHeaders"
-            :data="salesChannels"
-            :server-date="serverDate"
-          />
+        <!-- Gráficas de Rendimiento -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <MetodoPagoChart    :ordenes-cerradas="ordenesCerradasHoy" />
+          <TopProductosChart  :api-url="API_URL" :get-headers="getHeaders" :refresh-key="refreshCounter" :server-date="serverDate" />
         </div>
       </template>
     </template>
@@ -200,6 +186,14 @@ const dashData = reactive({
   ordenes_por_estado: []
 })
 
+const filteredDashData = reactive({
+  ventas_hoy: 0,
+  ordenes_hoy: 0,
+  utilidad_hoy: 0,
+  utilidad_bruta_hoy: 0,
+  ordenes_por_estado: []
+})
+
 const financialData = reactive({
   utilidadObjetivo:    0,
   utilidadReal:        0,
@@ -266,15 +260,16 @@ const loadData = async () => {
   const fetchServerDate = async () => {
     try {
       const res = await apiClient.get('/server-time');
-      if (res.success && res.data?.current_time) {
+      const timeStr = res.current_time || res.data?.current_time;
+      if (res.success && timeStr) {
         // current_time format: 'YYYY-MM-DD HH:MM:SS'
-        return res.data.current_time.split(' ')[0];
+        return timeStr.split(' ')[0];
       }
     } catch (e) {
       console.error('Error fetching server time', e);
     }
-    // Fallback to client date if server fails
-    return new Date().toISOString().split('T')[0];
+    // Fallback to client local date if server fails (avoiding UTC next-day shift)
+    return new Date().toLocaleDateString('en-CA');
   };
 
   const today = await fetchServerDate();
@@ -325,6 +320,12 @@ const loadData = async () => {
       console.error('Error al cargar canales:', e)
     }
     // Sincronizar datos filtrados con los iniciales
+    filteredDashData.ventas_hoy         = dashData.ventas_hoy
+    filteredDashData.ordenes_hoy        = dashData.ordenes_hoy
+    filteredDashData.utilidad_hoy       = dashData.utilidad_hoy
+    filteredDashData.utilidad_bruta_hoy = dashData.utilidad_bruta_hoy
+    filteredDashData.ordenes_por_estado = [...(dashData.ordenes_por_estado || [])]
+
     filteredOrdenesPorEstado.value = [...(dashData.ordenes_por_estado || [])]
     filteredSalesChannels.Local = salesChannels.Local
     filteredSalesChannels.Pickup = salesChannels.Pickup
@@ -372,11 +373,7 @@ const loadData = async () => {
       const eData = await apiClient.get('/empleados')
       if (eData.success) {
         const raw = eData.data
-        const lista = Array.isArray(raw) ? raw : (raw?.data || [])
-        empleados.value = lista.filter(emp => {
-          const userRoles = emp.roles || []
-          return !userRoles.some(r => r.id === 7 || r.nombre?.toUpperCase() === 'MENU')
-        })
+        empleados.value = Array.isArray(raw) ? raw : (raw?.data || [])
       }
     } catch (e) {
       console.error('Error al cargar empleados:', e)
@@ -405,14 +402,36 @@ const loadData = async () => {
 
 // ── Carga filtrada por fechas ──────────────────────────────────────────────────
 const loadFilteredData = async () => {
+  loading.value = true
   try {
     const [dData, cData] = await Promise.all([
       apiClient.get(`/reportes/dashboard?fecha_inicio=${fechaDesde.value}&fecha_fin=${fechaHasta.value}`),
       apiClient.get(`/reportes/ventas-por-canal-tipo?fecha_inicio=${fechaDesde.value}&fecha_fin=${fechaHasta.value}`)
     ])
-    if (dData.success) {
-      filteredOrdenesPorEstado.value = dData.data?.ordenes_por_estado || []
+    
+    if (dData.success && dData.data) {
+      filteredDashData.ventas_hoy         = dData.data.ventas_hoy || 0
+      filteredDashData.ordenes_por_estado = dData.data.ordenes_por_estado || []
+      filteredDashData.ordenes_hoy        = (dData.data.ordenes_hoy 
+        ?? dData.data.ordenes_por_estado?.reduce((s, x) => s + Number(x.total || 0), 0)) 
+        || 0
+
+      // Cargar utilidad filtrada usando inversion-utilidad (rango)
+      try {
+        const uRes = await apiClient.get(`/reportes/inversion-utilidad?fecha_inicio=${fechaDesde.value}&fecha_fin=${fechaHasta.value}`)
+        if (uRes.success && uRes.data) {
+          filteredDashData.utilidad_bruta_hoy = uRes.data.utilidad_bruta || 0
+          filteredDashData.utilidad_hoy       = uRes.data.utilidad_neta || uRes.data.utilidad_bruta || 0
+        }
+      } catch (e) {
+        console.error('Error al cargar utilidad filtrada:', e)
+        filteredDashData.utilidad_bruta_hoy = 0
+        filteredDashData.utilidad_hoy       = dData.data.utilidad_neta_hoy || 0
+      }
+      
+      filteredOrdenesPorEstado.value = dData.data.ordenes_por_estado || []
     }
+    
     if (cData.success && cData.data) {
       filteredSalesChannels.Local = cData.data.Local || 0
       filteredSalesChannels.Pickup = cData.data.Pickup || 0
@@ -420,12 +439,21 @@ const loadFilteredData = async () => {
     }
   } catch (e) {
     console.error('Error al cargar datos filtrados:', e)
+  } finally {
+    loading.value = false
   }
 }
 
 const resetFilter = () => {
   fechaDesde.value = serverDate.value
   fechaHasta.value = serverDate.value
+  
+  filteredDashData.ventas_hoy         = dashData.ventas_hoy
+  filteredDashData.ordenes_hoy        = dashData.ordenes_hoy
+  filteredDashData.utilidad_hoy       = dashData.utilidad_hoy
+  filteredDashData.utilidad_bruta_hoy = dashData.utilidad_bruta_hoy
+  filteredDashData.ordenes_por_estado = [...(dashData.ordenes_por_estado || [])]
+  
   filteredOrdenesPorEstado.value = [...(dashData.ordenes_por_estado || [])]
   filteredSalesChannels.Local = salesChannels.Local
   filteredSalesChannels.Pickup = salesChannels.Pickup

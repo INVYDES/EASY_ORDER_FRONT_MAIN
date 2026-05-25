@@ -76,6 +76,16 @@
 
     <!-- ══ CONTENIDO PRINCIPAL ══ -->
     <template v-else>
+      <!-- Marquesina de Anuncios General -->
+      <div class="rounded-3xl overflow-hidden shadow-sm border border-slate-100 mb-6">
+        <Marquesitawidget 
+          :apiUrl="API_URL" 
+          :getHeaders="() => ({})" 
+          tipo="interno" 
+          :variant="marquesinaVariant" 
+        />
+      </div>
+
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
@@ -86,8 +96,14 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-[10px] font-black uppercase">Caja abierta</span>
           </div>
-          <button @click="vistaActual = 'nueva'" class="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95">
-            <span class="text-lg leading-none">＋</span> Nueva Orden
+          <button
+            :disabled="esAdminOPropietario"
+            @click="vistaActual = 'nueva'"
+            :class="['flex items-center gap-2 px-5 py-3 text-sm font-bold rounded-2xl transition shadow-lg active:scale-95',
+                     esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100']"
+          >
+            <span class="text-lg leading-none">{{ esAdminOPropietario ? '🚫' : '＋' }}</span>
+            {{ esAdminOPropietario ? 'Nueva Orden Bloqueada' : 'Nueva Orden' }}
           </button>
         </div>
       </div>
@@ -146,7 +162,7 @@
                   </div>
                 </div>
                 <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
-                  {{ ['ABIERTA','ENTREGADA','CERRADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
+                  {{ ['ABIERTA','ENTREGADA','CERRADA','CANCELADA'].includes(sub.estado_estacion) ? labelEstado(sub.estado_estacion).toUpperCase() : 'ESPERANDO...' }}
                 </span>
               </div>
 
@@ -168,6 +184,7 @@
                     <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-100">
                       <span class="text-[10px]">👤</span>
                       <span class="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{{ nomComensal }}</span>
+                      <span v-if="calcularTiempoSubOrdenComensal(detalles) >= 0 && detalles.length > 0" class="text-[9px] text-slate-500 font-bold ml-auto">⏱️ {{ calcularTiempoSubOrdenComensal(detalles) }} min</span>
                     </div>
 
                     <!-- Lista de Productos -->
@@ -192,8 +209,8 @@
                             </p>
                           </div>
 
-                          <!-- Acciones rápidas (Solo si no está cancelado y la orden no está cerrada) -->
-                          <div v-if="!detalle.cancelado && !['CERRADA', 'PAGADA', 'CANCELADA'].includes(sub.estado_estacion)" class="flex items-center gap-2">
+                          <!-- Acciones rápidas (Solo si no está cancelado y la orden está ABIERTA) -->
+                          <div v-if="!detalle.cancelado && sub.estado_estacion === 'ABIERTA' && detalle.estado_preparacion === 'ABIERTA' && !esAdminOPropietario" class="flex items-center gap-2">
                             <button @click="abrirEditorNotas(detalle, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100 active:scale-90 transition-all">
                               <span class="text-base">📝</span>
                             </button>
@@ -211,10 +228,9 @@
                         </div>
 
                         <!-- Controles de Cantidad (Solo en ABIERTAS y no cancelados) -->
-                        <div v-if="sub.estado_estacion === 'ABIERTA' && !detalle.cancelado" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
+                        <div v-if="sub.estado_estacion === 'ABIERTA' && detalle.estado_preparacion === 'ABIERTA' && !detalle.cancelado && !esAdminOPropietario" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
                           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-auto">Cantidad:</span>
                           <div class="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                            <button @click="actualizarCantidadItem(detalle, sub.id, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-red-500 font-black text-base shadow-sm active:scale-90 transition-all">−</button>
                             <span class="text-sm font-black text-slate-800 min-w-[20px] text-center">{{ detalle.cantidad }}</span>
                             <button @click="actualizarCantidadItem(detalle, sub.id, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-indigo-600 font-black text-base shadow-sm active:scale-90 transition-all">+</button>
                           </div>
@@ -229,13 +245,13 @@
                 <button
                   v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
                   @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
-                  :disabled="cambiando === sub.uid"
+                  :disabled="cambiando === sub.uid || esAdminOPropietario"
                   class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
-                  :class="btnEstado(sub.estado_estacion)">
-                  {{ cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion) }}
+                  :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : btnEstado(sub.estado_estacion)">
+                  {{ esAdminOPropietario ? '🚫 Acciones Bloqueadas' : (cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion)) }}
                 </button>
                 <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
-                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Cobrada' : 'En proceso' }}
+                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Cobrada' : sub.estado_estacion === 'CANCELADA' ? '🚫 Cancelada' : 'En proceso' }}
                 </div>
               </div>
             </div>
@@ -254,14 +270,7 @@
           <!-- Formulario y Catálogo -->
           <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cliente (Opcional)</label>
-                  <select v-model="nuevaOrden.clienteId" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold">
-                    <option :value="null">— Sin cliente registrado —</option>
-                    <option v-for="c in clientes" :key="c.value" :value="c.value">{{ c.label }}</option>
-                  </select>
-                </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
                   <input v-model="numeroComensales" type="number" min="1" max="50" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold" />
@@ -310,14 +319,22 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                   <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
                     <button @click="subTabActiva = 'productos'"
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest',
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'productos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🍽️ PRODUCTOS
+                      <span v-if="tieneProductoNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
                     </button>
                     <button @click="subTabActiva = 'paquetes'"
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest',
+                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🎁 PAQUETES
+                      <span v-if="tienePaqueteNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
                     </button>
                   </div>
                   <div class="relative flex-1 max-w-xs">
@@ -418,7 +435,10 @@
                       <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                         <div class="flex items-center gap-2">
                            <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                           <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                           <div class="flex flex-col">
+                             <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                             <span v-if="tiempoPorComensal(cIdx) > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                           </div>
                         </div>
                         <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
                         <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
@@ -444,7 +464,9 @@
                             <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-100">
                               <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
                               <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                              <button @click="incrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black">+</button>
+                              <button @click="incrementar(item.cartId)"
+                                :disabled="item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo"
+                                class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                             </div>
                             <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
                           </div>
@@ -464,15 +486,15 @@
                     </div>
                   </div>
 
-                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa"
+                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa || esAdminOPropietario"
                     class="w-full py-4 font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs text-white"
-                    :class="mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'">
+                    :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : (mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100')">
                     <template v-if="creando">
                       <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Enviando...
                     </template>
                     <template v-else>
-                      {{ mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀' }}
+                      {{ esAdminOPropietario ? '🚫 PEDIDO BLOQUEADO' : (mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀') }}
                     </template>
                   </button>
                   <p v-if="!nuevaOrden.mesa && carrito.length > 0" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
@@ -527,6 +549,23 @@
           </div>
         </div>
         <div class="p-6">
+          <!-- Selector de Cantidad a Cancelar (solo si max > 1) -->
+          <div v-if="cancelacionModal.cantidadMaxima > 1" class="mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center">Cantidad a Cancelar</label>
+            <div class="flex items-center justify-center gap-4">
+              <button @click="cancelacionModal.cantidadCancelar > 1 ? cancelacionModal.cantidadCancelar-- : null"
+                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 font-black transition active:scale-95 text-sm">
+                −
+              </button>
+              <span class="text-lg font-black text-slate-800 w-12 text-center">{{ cancelacionModal.cantidadCancelar }}</span>
+              <button @click="cancelacionModal.cantidadCancelar < cancelacionModal.cantidadMaxima ? cancelacionModal.cantidadCancelar++ : null"
+                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-indigo-600 hover:bg-indigo-50 font-black transition active:scale-95 text-sm">
+                +
+              </button>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center mt-1">De un total de {{ cancelacionModal.cantidadMaxima }} unidades</p>
+          </div>
+
           <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">¿Por qué se cancela este producto?</label>
           <div class="grid grid-cols-1 gap-2 mb-4">
             <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
@@ -560,6 +599,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
+import Marquesitawidget from '../components/Marquesitawidget.vue'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
 const vistaActual  = ref('ordenes')
@@ -571,6 +611,7 @@ const paquetes     = ref([])
 const clientes     = ref([])
 const carrito      = ref([])
 const busqueda     = ref('')
+const marquesinaVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 
 const loading         = ref(true)
 const loadingCaja     = ref(true)
@@ -588,7 +629,7 @@ const ultimaActualizacion = ref(null)
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 
 
-const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
+const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '', cantidadMaxima: 1, cantidadCancelar: 1 })
 
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
 const ordenExistente = ref(null)   // se muestra el modal de confirmación
@@ -621,6 +662,16 @@ watch(numeroComensales, (newVal) => {
 
 const getItemsForComensal = (cIdx) => carrito.value.filter(i => i.comensalIndex === cIdx)
 
+const tiempoPorComensal = (cIdx) => {
+  return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
+}
+
+const calcularTiempoSubOrdenComensal = (detalles) => {
+  return detalles.reduce((total, d) => {
+    return total + ((d.minutos_produccion || 0) * d.cantidad)
+  }, 0)
+}
+
 const userRaw    = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const userActual = JSON.parse(userRaw)
 const esMesero   = computed(() => {
@@ -628,6 +679,17 @@ const esMesero   = computed(() => {
   return roles.some(r => {
     if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
     return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
+})
+
+const esAdminOPropietario = computed(() => {
+  const roles = userActual.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
   })
 })
 
@@ -709,22 +771,68 @@ const subOrdenes = computed(() => {
 
 const subOrdenesFiltradas = computed(() => {
   if (tabActivo.value === 'cobrar') return []
-  if (['todas','ABIERTA','ENTREGADA'].includes(tabActivo.value)) {
+  if (tabActivo.value === 'ABIERTA') {
+    return ordenes.value
+      .filter(o => o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA'))
+      .map(o => {
+        // Solo mostrar detalles que están en estado ABIERTA (los nuevos sin enviar)
+        const detallesAbiertos = (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
+        return { 
+          ...o, 
+          uid: `${o.id}-ABIERTA-APPEND`, 
+          estado_estacion: 'ABIERTA', 
+          detalles_estacion: detallesAbiertos 
+        }
+      })
+      .filter(o => o.detalles_estacion.length > 0)
+  }
+  if (['todas','ENTREGADA'].includes(tabActivo.value)) {
     return ordenes.value
       .filter(o => tabActivo.value === 'todas' ? true : o.estado === tabActivo.value)
-      .map(o => ({ ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: o.detalles || [] }))
+      .map(o => {
+        // Si la orden es ABIERTA (tiene productos nuevos sin enviar), solo mostrar los nuevos
+        const detalles = o.estado === 'ABIERTA'
+          ? (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
+          : (o.detalles || [])
+        return { ...o, uid: `${o.id}-JOINT`, estado_estacion: o.estado, detalles_estacion: detalles }
+      })
   }
-  return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
+  return subOrdenes.value
+    .filter(s => s.estado_estacion === tabActivo.value)
+    .map(s => {
+      let validStates = []
+      if (tabActivo.value === 'POR_PREPARAR') validStates = ['PENDIENTE']
+      else if (tabActivo.value === 'EN_PREPARACION') validStates = ['PENDIENTE', 'EN_PREPARACION']
+      else if (tabActivo.value === 'LISTA') validStates = ['PENDIENTE', 'EN_PREPARACION', 'LISTO']
+      
+      const filtered = (s.detalles_estacion || []).filter(d => 
+        validStates.includes(d.estado_preparacion || d.estado) || d.cancelado
+      )
+      
+      return {
+        ...s,
+        detalles_estacion: filtered
+      }
+    })
 })
 
 const ordenesParaCobrar = computed(() =>
-  ordenes.value.filter(o => o.estado === 'ENTREGADA')
+  ordenes.value.filter(o => 
+    o.estado === 'ENTREGADA' ||
+    (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado) && 
+      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
+  )
 )
 
 const contarOrdenes = (key) => {
   if (key === 'cobrar')   return ordenesParaCobrar.value.length
   if (key === 'todas')    return ordenes.value.length
-  if (['ABIERTA','ENTREGADA'].includes(key)) return ordenes.value.filter(o => o.estado === key).length
+  if (key === 'ABIERTA') {
+    return ordenes.value.filter(o => 
+      o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
+    ).length
+  }
+  if (key === 'ENTREGADA') return ordenes.value.filter(o => o.estado === key).length
   return subOrdenes.value.filter(s => s.estado_estacion === key).length
 }
 
@@ -740,19 +848,35 @@ const paquetesFiltrados = computed(() => {
   return b ? paquetes.value.filter(p => p.nombre.toLowerCase().includes(b)) : paquetes.value
 })
 
+const tieneProductoNuevoHoy = computed(() => {
+  const hoy = new Date().toLocaleDateString('en-CA')
+  return productos.value.some(p => {
+    if (!p.created_at) return false
+    return p.created_at.substring(0, 10) === hoy
+  })
+})
+
+const tienePaqueteNuevoHoy = computed(() => {
+  const hoy = new Date().toLocaleDateString('en-CA')
+  return paquetes.value.some(p => {
+    if (!p.created_at) return false
+    return p.created_at.substring(0, 10) === hoy
+  })
+})
+
 // ── Estilos ────────────────────────────────────────────────────────────────
-const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50' }[e] || 'bg-slate-50')
-const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200' }[e] || 'border-slate-100')
-const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300' }[e] || 'bg-slate-100 text-slate-500')
-const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒' }[e] || '📋')
-const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada' }[e] || e)
+const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50', CANCELADA:'bg-red-50' }[e] || 'bg-slate-50')
+const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200', CANCELADA:'border-red-200' }[e] || 'border-slate-100')
+const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300', CANCELADA:'bg-red-100 text-red-700 border-red-200' }[e] || 'bg-slate-100 text-slate-500')
+const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒', CANCELADA:'🚫' }[e] || '📋')
+const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Cocina', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
 const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregada' }[e] || '')
 const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
 
 // ── API ────────────────────────────────────────────────────────────────────
 
-const cargarOrdenes = async (silent = false) => {
+const cargarOrdenes = async (silent = true) => {
   if (!silent) loading.value = true
   try {
     const d = new Date()
@@ -922,8 +1046,20 @@ const handleOrderPaid = async () => {
   tabActivo.value = 'todas'
 }
 
-// ── Carrito ────────────────────────────────────────────────────────────────
+const totalEnCarritoPorId = (productId) => {
+  return carrito.value
+    .filter(i => i.id === productId && i.tipo === 'producto')
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
 const agregarAlCarrito = (item, tipo) => {
+  if (tipo === 'producto' && item.stock !== undefined && item.stock !== null) {
+    if (totalEnCarritoPorId(item.id) >= item.stock) {
+      showToast(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock} uds`, 'error')
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.comensalIndex === cIdx && !i.notas)
   if (e) {
@@ -936,12 +1072,25 @@ const agregarAlCarrito = (item, tipo) => {
       precio: Number(item.precio), 
       cantidad: 1, 
       tipo, 
+      stock_maximo: item.stock,
       notas: '', 
-      comensalIndex: cIdx 
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(item.minutos_produccion || 0)
     })
   }
 }
-const incrementar        = (cartId) => { const i = carrito.value.find(x => x.cartId === cartId); if (i) i.cantidad++ }
+const incrementar = (cartId) => {
+  const i = carrito.value.find(x => x.cartId === cartId)
+  if (i) {
+    if (i.tipo === 'producto' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
+      if (totalEnCarritoPorId(i.id) >= i.stock_maximo) {
+        showToast(`No hay suficiente stock para "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
+        return
+      }
+    }
+    i.cantidad++
+  }
+}
 const decrementar        = (cartId) => { const idx = carrito.value.findIndex(x => x.cartId === cartId); if (idx !== -1) { if (carrito.value[idx].cantidad > 1) carrito.value[idx].cantidad--; else carrito.value.splice(idx, 1) } }
 const eliminarDelCarrito = (cartId) => { carrito.value = carrito.value.filter(x => x.cartId !== cartId) }
 
@@ -981,21 +1130,32 @@ const agruparPorComensal = (detalles) => {
 }
 
 const eliminarProductoDeOrden = (detalleId, ordenId) => {
+  let maxCant = 1;
+  const orden = ordenes.value.find(o => o.id === ordenId);
+  if (orden && orden.detalles) {
+    const d = orden.detalles.find(item => item.id === detalleId);
+    if (d) {
+      maxCant = Number(d.cantidad || 1);
+    }
+  }
+
   cancelacionModal.value = {
     visible: true,
     detalleId,
     ordenId,
-    motivo: ''
+    motivo: '',
+    cantidadMaxima: maxCant,
+    cantidadCancelar: maxCant
   }
 }
 
 const confirmarCancelacion = async () => {
-  const { detalleId, ordenId, motivo } = cancelacionModal.value
+  const { detalleId, ordenId, motivo, cantidadCancelar } = cancelacionModal.value
   if (!motivo) return
   
   creando.value = true
   try {
-    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}`)
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}&cantidad_cancelar=${cantidadCancelar || 1}`)
     if (data.success || data.data) {
       showToast('Producto cancelado correctamente', 'success')
       cancelacionModal.value.visible = false
@@ -1045,7 +1205,7 @@ const guardarNota = async () => {
 }
 
 const actualizarCantidadItem = async (detalle, ordenId, delta) => {
-  const nuevaCantidad = detalle.cantidad + delta
+  const nuevaCantidad = parseFloat(detalle.cantidad) + delta
   if (nuevaCantidad < 1) {
     return eliminarProductoDeOrden(detalle.id, ordenId)
   }
@@ -1081,15 +1241,21 @@ const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usua
 const showToast        = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3500) }
 const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
 
+const handleStorageEvent = (e) => {
+  if (e.key === 'marquesina_variant') {
+    marquesinaVariant.value = e.newValue || 'dark'
+  }
+}
+
 onMounted(async () => {
+  marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'dark'
+  window.addEventListener('storage', handleStorageEvent)
   await verificarCaja()
   if (cajaAbierta.value) {
-    await Promise.all([cargarOrdenes(), cargarProductos(), cargarClientes(), cargarCapacidadRestaurante()])
+    // Primera carga explícita no silenciosa para mostrar el spinner inicial
+    await Promise.all([cargarOrdenes(false), cargarProductos(), cargarClientes(), cargarCapacidadRestaurante()])
     if (esMesero.value) await cargarMisMesas()
   }
-  
-  // Polling de seguridad
-  pollTimer = setInterval(cargarOrdenes, POLL_INTERVAL)
 
   // Sincronizar restaurante activo para WS si no estaba en localStorage
   if (!restauranteActivo.value) {
@@ -1102,13 +1268,10 @@ onMounted(async () => {
     } catch {}
   }
 
-  // Iniciar polling silencioso independiente del rol
+  // Iniciar un único polling silencioso de seguridad
   const poll = async () => {
-    if (pollingEnProgreso) { pollTimer = setTimeout(poll, POLL_INTERVAL); return }
     if (cajaAbierta.value) {
-      pollingEnProgreso = true
       await cargarOrdenes(true)
-      pollingEnProgreso = false
     }
     pollTimer = setTimeout(poll, POLL_INTERVAL)
   }
@@ -1117,6 +1280,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
+  window.removeEventListener('storage', handleStorageEvent)
 })
 
 onUnmounted(() => {

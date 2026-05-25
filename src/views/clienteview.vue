@@ -6,7 +6,7 @@
       :api-url="API_URL"
       :get-headers="getHeaders"
       tipo="cliente"
-      :variant="vista === 'menu' ? 'color' : 'light'"
+      :variant="marquesinaVariant"
       :restaurante-id="restauranteSeleccionado?.id || authStore?.restauranteId || null"
     />
 
@@ -344,7 +344,7 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import MarquesitaWidget       from '../components/MarquesitaWidget.vue'
 import ClienteCheckoutModal from '../components/cliente/Clientecheckoutmodal.vue'
 
@@ -372,6 +372,9 @@ const showCheckout            = ref(false)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const loadingOfertas          = ref(false)
+const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'light')
+let pollTimer = null
+const POLL_INTERVAL = 5000 // 5 segundos
 
 // Datos del usuario
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
@@ -456,9 +459,11 @@ const cargarRestaurantes = async () => {
   finally { loading.value.restaurantes = false }
 }
 
-const cargarProductos = async (restauranteId) => {
-  loading.value.productos = true
-  productos.value = []
+const cargarProductos = async (restauranteId, silent = true) => {
+  if (!silent) {
+    loading.value.productos = true
+    productos.value = []
+  }
   debugMsg.value  = ''
   try {
     const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
@@ -485,7 +490,9 @@ const cargarProductos = async (restauranteId) => {
     console.error('Error cargarProductos:', e)
     mostrarError('Error de conexión al cargar el menú')
   } finally {
-    loading.value.productos = false
+    if (!silent) {
+      loading.value.productos = false
+    }
   }
 }
 
@@ -666,6 +673,8 @@ const handleCheckout = async (checkoutData) => {
       notaGeneral.value       = ''
       showCarritoMobile.value = false
       mostrarExito()
+      // Recargar productos de inmediato de forma silenciosa para actualizar stock
+      cargarProductos(restauranteSeleccionado.value.id, true)
     } else {
       const msg = data.errors
         ? Object.values(data.errors).flat().join('. ')
@@ -682,6 +691,33 @@ onMounted(async () => {
   // Intentar restaurar restaurante seleccionado si el usuario recargó la página
   if (restaurantes.value.length > 0) {
     await cargarRestauranteDesdeLocalStorage()
+  }
+
+  // Polling silencioso para actualizar stocks periódicamente en el Kiosco
+  const poll = async () => {
+    marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'light'
+    if (restauranteSeleccionado.value?.id) {
+      await cargarProductos(restauranteSeleccionado.value.id, true)
+    }
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
+
+  // Escuchar cambios de color de la marquesina en caliente
+  const handleStorageEvent = (e) => {
+    if (e.key === 'marquesina_variant') {
+      marquesinaVariant.value = e.newValue || 'light'
+    }
+  }
+  window.addEventListener('storage', handleStorageEvent)
+  
+  onMounted._handleStorage = handleStorageEvent
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearTimeout(pollTimer)
+  if (onMounted._handleStorage) {
+    window.removeEventListener('storage', onMounted._handleStorage)
   }
 })
 </script>

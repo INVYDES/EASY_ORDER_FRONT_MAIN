@@ -60,27 +60,29 @@
           <table class="w-full">
             <thead class="bg-gray-50/50">
               <tr class="text-[10px] uppercase tracking-widest text-gray-400">
-                <th class="px-8 py-4 text-left font-black">Colaborador</th>
-                <th class="px-4 py-4 text-right font-black">Ventas</th>
-                <th class="px-4 py-4 text-right font-black">Órdenes</th>
-                <th class="px-8 py-4 text-right font-black">Eficiencia</th>
+                <th class="px-4 py-3 text-left font-black">Colaborador</th>
+                <th class="px-3 py-3 text-right font-black">Ventas</th>
+                <th class="px-3 py-3 text-right font-black">Propinas</th>
+                <th class="px-3 py-3 text-right font-black">Órdenes</th>
+                <th class="px-4 py-3 text-right font-black">Eficiencia</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
               <tr v-for="m in meseros" :key="m.id" class="hover:bg-indigo-50/30 transition-colors cursor-pointer" @click="filtros.mesero_id = m.id; loadKpis()">
-                <td class="px-8 py-5">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black">
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0">
                       {{ m.nombre.charAt(0) }}
                     </div>
-                    <span class="font-black text-gray-700">{{ m.nombre }}</span>
+                    <span class="font-black text-gray-700 text-xs truncate max-w-[90px]" :title="m.nombre">{{ m.nombre }}</span>
                   </div>
                 </td>
-                <td class="px-4 py-5 text-right font-black text-gray-900">${{ fm(m.ventas_totales) }}</td>
-                <td class="px-4 py-5 text-right font-bold text-gray-500">{{ m.ordenes }}</td>
-                <td class="px-8 py-5 text-right">
-                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase" :class="getSemaforo(m.ventas_totales)">
-                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                <td class="px-3 py-3.5 text-right font-black text-gray-900 text-xs">${{ fm(m.ventas_totales) }}</td>
+                <td class="px-3 py-3.5 text-right font-black text-gray-900 text-xs">${{ fm(m.propinas) }}</td>
+                <td class="px-3 py-3.5 text-right font-bold text-gray-500 text-xs">{{ m.ordenes }}</td>
+                <td class="px-4 py-3.5 text-right">
+                  <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase shrink-0" :class="getSemaforo(m.ventas_totales)">
+                    <span class="w-1 h-1 rounded-full bg-current"></span>
                     {{ getEficienciaLabel(m.ventas_totales) }}
                   </div>
                 </td>
@@ -142,7 +144,7 @@ const metricCards = computed(() => [
   { label: 'Ventas Totales', value: fm(resumen.value.total_ventas), prefix: '$', sub: 'Subtotal sin propina', icon: '💰' },
   { label: 'Ticket Promedio', value: fm(resumen.value.promedio_ticket), prefix: '$', sub: 'Gasto medio por orden', icon: '🎫' },
   { label: 'Eficiencia de Items', value: resumen.value.items_por_ticket, suffix: ' uds', sub: 'Promedio de productos', icon: '📦' },
-  { label: 'Tiempo de Servicio', value: resumen.value.tiempo_servicio_avg, suffix: ' min', sub: 'Desde pedido a entrega', icon: '⏱️' },
+  { label: 'Tiempo de Servicio', value: resumen.value.tiempo_servicio_avg, suffix: ' min', sub: 'Desde lista a entrega', icon: '⏱️' },
 ])
 
 let trendChart = null
@@ -165,13 +167,37 @@ const loadKpis = async () => {
 
     const res = await apiClient.get('/kpis/meseros', { params })
     if (res.success) {
-      meseros.value = res.data.meseros
+      // 1. Ordenar de mayor a menor ventas
+      const sortedMeseros = [...res.data.meseros].sort((a, b) => (Number(b.ventas_totales) || 0) - (Number(a.ventas_totales) || 0))
+      meseros.value = sortedMeseros
       tendenciaData.value = res.data.tendencia
-      resumen.value = {
-        total_ventas: res.data.resumen.total_ventas,
-        promedio_ticket: res.data.resumen.promedio_ticket,
-        items_por_ticket: (meseros.value.reduce((s, m) => s + (Number(m.items_por_ticket) || 0), 0) / (meseros.value.length || 1)).toFixed(1),
-        tiempo_servicio_avg: (meseros.value.reduce((s, m) => s + (Number(m.tiempo_servicio_avg) || 0), 0) / (meseros.value.length || 1)).toFixed(1)
+
+      // 2. Si hay un mesero seleccionado en particular, mostrar sus KPI individuales.
+      if (filtros.mesero_id) {
+        const sel = sortedMeseros.find(m => m.id === filtros.mesero_id)
+        if (sel) {
+          resumen.value = {
+            total_ventas: sel.ventas_totales,
+            promedio_ticket: sel.ticket_promedio,
+            items_por_ticket: Number(sel.items_por_ticket || 0).toFixed(1),
+            tiempo_servicio_avg: Number(sel.tiempo_servicio_avg || 0).toFixed(1)
+          }
+        } else {
+          resumen.value = {
+            total_ventas: 0,
+            promedio_ticket: 0,
+            items_por_ticket: '0.0',
+            tiempo_servicio_avg: '0.0'
+          }
+        }
+      } else {
+        // Mostrar resumen general del equipo
+        resumen.value = {
+          total_ventas: res.data.resumen.total_ventas,
+          promedio_ticket: res.data.resumen.promedio_ticket,
+          items_por_ticket: (sortedMeseros.reduce((s, m) => s + (Number(m.items_por_ticket) || 0), 0) / (sortedMeseros.length || 1)).toFixed(1),
+          tiempo_servicio_avg: (sortedMeseros.reduce((s, m) => s + (Number(m.tiempo_servicio_avg) || 0), 0) / (sortedMeseros.length || 1)).toFixed(1)
+        }
       }
       initTrendChart()
     }

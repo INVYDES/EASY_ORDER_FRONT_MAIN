@@ -78,13 +78,13 @@ const toLocalTime = (dateStr) => {
     if (dateStr.includes('/')) {
       const [fecha, hora] = dateStr.split(' ');
       const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
     } else if (dateStr.includes(':') && !dateStr.includes('-') && !dateStr.includes('/')) {
       // Si solo es la hora, asumimos la fecha de hoy
       const hoy = new Date().toLocaleDateString('en-CA');
-      d = new Date(`${hoy}T${dateStr}Z`);
+      d = new Date(`${hoy}T${dateStr}`);
     } else {
-      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+      d = new Date(dateStr.replace(' ', 'T'));
     }
     if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });

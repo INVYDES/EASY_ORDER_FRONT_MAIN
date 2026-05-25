@@ -71,7 +71,7 @@
         :api-url="API_URL" 
         :get-headers="getHeaders" 
         tipo="interno"
-        variant="amber" 
+        :variant="marquesinaVariant" 
         :restaurante-id="restauranteSeleccionado?.id"
         class="border-y border-white/5"
       />
@@ -266,7 +266,10 @@
               <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-2">
                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                   <div class="flex flex-col">
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                   </div>
                 </div>
                 <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
                 <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
@@ -297,7 +300,9 @@
                     <div class="flex items-center gap-2 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
                       <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
                       <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)" class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors">+</button>
+                      <button @click="incrementar(item.cartId)"
+                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
@@ -385,7 +390,10 @@
                         :class="comensalActivoIndex === cIdx ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'">
                      {{ comensalActivoIndex === cIdx ? '👤' : '👥' }}
                    </div>
-                   <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
+                   <div class="flex flex-col">
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                   </div>
                 </div>
                 <div v-if="comensalActivoIndex === cIdx" class="w-2.5 h-2.5 bg-indigo-500 rounded-full shadow-sm animate-pulse"></div>
               </div>
@@ -409,7 +417,9 @@
                     <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
                       <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
                       <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors">+</button>
+                      <button @click="incrementar(item.cartId)"
+                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
@@ -446,7 +456,91 @@
       </button>
     </div>
 
+    <!-- Modal carrito móvil -->
+    <div v-if="showCarritoMobile" class="sm:hidden fixed inset-0 bg-black/50 z-30 flex items-end animate-fade-in"
+      @click.self="showCarritoMobile = false">
+      <div class="bg-white w-full rounded-t-3xl p-5 max-h-[85vh] flex flex-col animate-slide-up">
+        
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-black text-slate-800 text-lg">Tu Pedido</h3>
+            <span class="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">{{ totalItems }} items</span>
+          </div>
+          <button @click="showCarritoMobile = false" class="text-slate-400 text-xl hover:text-slate-600">✕</button>
+        </div>
+        
+        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-2 border border-slate-100 shadow-sm mb-4">
+          <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
+          <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
+        </div>
 
+        <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
+          <div v-if="pedido.length === 0" class="text-center py-10 opacity-50">
+            <span class="text-5xl mb-4 block">🍽️</span>
+            <p class="text-slate-900 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
+          </div>
+          
+          <div v-else class="space-y-4">
+            <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
+                 class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
+                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+              
+              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                <div class="flex items-center gap-2">
+                   <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
+                   <div class="flex flex-col">
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-24 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                   </div>
+                </div>
+                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+              </div>
+
+              <div class="p-3 space-y-3 bg-white">
+                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-2 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
+                  Caja Vacía
+                </div>
+                
+                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                  <div class="flex items-center justify-between mb-2">
+                    <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none flex-1">{{ item.nombre }}</p>
+                    <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
+                  </div>
+                  <div class="mb-2">
+                    <input v-model="item.notas" type="text" placeholder="Notas" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
+                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500">−</button>
+                      <span class="text-[10px] font-black w-4 text-center">{{ item.cantidad }}</span>
+                      <button @click="incrementar(item.cartId)"
+                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                    </div>
+                    <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 space-y-3 shrink-0">
+          <div class="flex justify-between items-end">
+            <span class="text-sm font-black text-slate-900 uppercase tracking-widest">Total</span>
+            <span class="text-2xl font-black text-indigo-600 leading-none">${{ totalPedido.toFixed(2) }}</span>
+          </div>
+          <button @click="showCheckout = true; showCarritoMobile = false" :disabled="pedido.length === 0"
+            class="w-full py-4 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-40 uppercase tracking-widest shadow-lg shadow-indigo-100">
+            Confirmar Orden ✨
+          </button>
+          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest text-center">
+            Limpiar Carrito
+          </button>
+        </div>
+
+      </div>
+    </div>
 
     <!-- Modal Checkout -->
     <MenuCheckoutModal
@@ -462,7 +556,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarquesitaWidget from '../components/Marquesitawidget.vue'
 import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
@@ -487,6 +581,9 @@ const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const paquetes                = ref([])
 const sidebarAbierta          = ref(true)
+const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'dark')
+let pollTimer = null
+const POLL_INTERVAL = 5000 // 5 segundos
 
 // --- ESTADO COMENSALES ---
 const numeroComensales    = ref(1)
@@ -515,6 +612,10 @@ watch(numeroComensales, (newVal) => {
 })
 
 const getItemsForComensal = (cIdx) => pedido.value.filter(i => i.comensalIndex === cIdx)
+
+const tiempoPorComensal = (cIdx) => {
+  return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
+}
 
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
@@ -546,8 +647,7 @@ const categorias = computed(() => {
   productos.value.forEach(p => {
     const catData = p.categoria || { id: 0, nombre: 'Otros', color: '#6366f1', icono: '📦', orden: 99 }
     const id = catData.id
-    const upperNombre = catData.nombre.toUpperCase()
-    const nombreCat = upperNombre === 'COCINA' || upperNombre === 'ALIMENTOS' ? 'ALIMENTOS' : (upperNombre === 'BARRA' || upperNombre === 'BEBIDAS' ? 'BEBIDAS' : (upperNombre === 'POSTRES' ? 'POSTRES' : catData.nombre))
+    const nombreCat = catData.nombre.toUpperCase() === 'COCINA' ? 'Alimentos' : (catData.nombre.toUpperCase() === 'BARRA' ? 'Bebidas' : catData.nombre)
     if (!mapa.has(id)) mapa.set(id, { id, nombre:nombreCat, color:catData.color||'#6366f1', icono:catData.icono||'📦', orden:catData.orden??99, productos:[] })
     mapa.get(id).productos.push(p)
   })
@@ -574,9 +674,10 @@ const normalizar = (p) => {
       stock:       parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
       agotado:     parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
       bajo_stock:  p.bajo_stock ?? false,
+      minutos_produccion: parseFloat(p.minutos_produccion || 0),
       categoria:   p.categoria ? {
         id:     p.categoria.id,
-        nombre: p.categoria.nombre.toUpperCase() === 'COCINA' || p.categoria.nombre.toUpperCase() === 'ALIMENTOS' ? 'ALIMENTOS' : (p.categoria.nombre.toUpperCase() === 'BARRA' || p.categoria.nombre.toUpperCase() === 'BEBIDAS' ? 'BEBIDAS' : (p.categoria.nombre.toUpperCase() === 'POSTRES' ? 'POSTRES' : p.categoria.nombre)),
+        nombre: p.categoria.nombre.toUpperCase() === 'COCINA' ? 'Alimentos' : (p.categoria.nombre.toUpperCase() === 'BARRA' ? 'Bebidas' : p.categoria.nombre),
         color:  p.categoria.color  || '#6366f1',
         icono:  p.categoria.icono  || '📦',
         orden:  p.categoria.orden  ?? 99,
@@ -636,8 +737,10 @@ const cargarRestauranteActivo = async () => {
   }
 }
 
-const cargarProductos = async (restauranteId) => {
-  loading.value.productos = true
+const cargarProductos = async (restauranteId, silent = true) => {
+  if (!silent) {
+    loading.value.productos = true
+  }
   try {
     console.log('📡 [KIOSKO] Pidiendo productos disponibles...');
     const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
@@ -664,7 +767,9 @@ const cargarProductos = async (restauranteId) => {
   } catch (err) {
     console.error('❌ [KIOSKO] Error en cargarProductos:', err);
   } finally { 
-    loading.value.productos = false 
+    if (!silent) {
+      loading.value.productos = false 
+    }
   }
 }
 
@@ -695,9 +800,23 @@ const cargarPaquetes = async (restauranteId) => {
   } catch {}
 }
 
+const totalEnPedidoPorId = (productId) => {
+  return pedido.value
+    .filter(i => i.id === productId && !i.es_paquete)
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
+
+  if (p.stock !== undefined && p.stock !== null) {
+    if (totalEnPedidoPorId(p.id) >= p.stock) {
+      mostrarError(`No hay suficiente stock para "${p.nombre}". Límite: ${p.stock} uds`)
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const existe = pedido.value.find(i => i.id === p.id && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
   if (existe) { 
@@ -712,12 +831,23 @@ const agregarAlPedido = (p) => {
       cantidad: 1, 
       stock_maximo: p.stock,
       notas: '',
-      comensalIndex: cIdx
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(p.minutos_produccion || 0)
     }) 
   }
 }
 
 const agregarOfertaAlPedido = (oferta) => {
+  const p = productos.value.find(prod => prod.id === oferta.producto_id)
+  const stockLimit = p ? p.stock : 99999
+
+  if (stockLimit !== undefined && stockLimit !== null) {
+    if (totalEnPedidoPorId(oferta.producto_id) >= stockLimit) {
+      mostrarError(`No hay suficiente stock para "${oferta.nombre}". Límite: ${stockLimit} uds`)
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const existe = pedido.value.find(i => i.id === oferta.producto_id && i.comensalIndex === cIdx && !i.notas && i.es_oferta)
   if (existe) { 
@@ -733,8 +863,10 @@ const agregarOfertaAlPedido = (oferta) => {
       cantidad: 1, 
       es_oferta: true, 
       oferta_id: oferta.id,
+      stock_maximo: stockLimit,
       notas: '',
-      comensalIndex: cIdx
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(oferta.producto?.minutos_produccion || oferta.minutos_produccion || 0)
     })
   }
 }
@@ -755,12 +887,24 @@ const agregarPaqueteAlPedido = (pkg) => {
       cantidad: 1, 
       es_paquete: true,
       notas: '',
-      comensalIndex: cIdx
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(pkg.minutos_produccion || 0)
     })
   }
 }
 
-const incrementar = (cartId) => { const item = pedido.value.find(i => i.cartId === cartId); if (item) item.cantidad++ }
+const incrementar = (cartId) => {
+  const item = pedido.value.find(i => i.cartId === cartId)
+  if (item) {
+    if (!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null) {
+      if (totalEnPedidoPorId(item.id) >= item.stock_maximo) {
+        mostrarError(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock_maximo} uds`)
+        return
+      }
+    }
+    item.cantidad++
+  }
+}
 const decrementar = (cartId) => {
   const idx = pedido.value.findIndex(i => i.cartId === cartId)
   if (idx !== -1) { pedido.value[idx].cantidad > 1 ? pedido.value[idx].cantidad-- : pedido.value.splice(idx, 1) }
@@ -791,6 +935,10 @@ const handleCheckout = async (checkoutData) => {
       comensalesNombres.value = ['Comensal 1'];
       comensalActivoIndex.value = 0;
       mostrarExito() 
+      // Recargar productos de inmediato de forma silenciosa para actualizar stock
+      if (restauranteSeleccionado.value?.id) {
+        cargarProductos(restauranteSeleccionado.value.id, true)
+      }
     } 
     else { checkoutRef.value?.setError(data.message || 'Error al enviar') }
   } catch { checkoutRef.value?.setError('Error de conexión') }
@@ -804,7 +952,7 @@ onMounted(async () => {
     
     if (restId) { 
       console.log('🔄 [KIOSKO] Cargando productos para ID:', restId);
-      await cargarProductos(restId).catch(e => console.error('❌ [KIOSKO] Error productos:', e))
+      await cargarProductos(restId, false).catch(e => console.error('❌ [KIOSKO] Error productos:', e))
       
       console.log('🔄 [KIOSKO] Cargando ofertas y paquetes...');
       cargarOfertas(restId).catch(e => console.error('❌ [KIOSKO] Error ofertas:', e))
@@ -817,6 +965,34 @@ onMounted(async () => {
   } finally {
     loading.value.productos = false
     console.log('✅ [KIOSKO] Carga finalizada.');
+  }
+
+  // Polling silencioso y limpio cada 5 segundos para mantener el stock al día en el Kiosco
+  const poll = async () => {
+    marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'dark'
+    if (restauranteSeleccionado.value?.id) {
+      await cargarProductos(restauranteSeleccionado.value.id, true)
+    }
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
+
+  // Escuchar cambios de color de la marquesina en caliente
+  const handleStorageEvent = (e) => {
+    if (e.key === 'marquesina_variant') {
+      marquesinaVariant.value = e.newValue || 'dark'
+    }
+  }
+  window.addEventListener('storage', handleStorageEvent)
+  
+  // Guardamos la referencia para poder limpiar el listener al desmontar
+  onMounted._handleStorage = handleStorageEvent
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearTimeout(pollTimer)
+  if (onMounted._handleStorage) {
+    window.removeEventListener('storage', onMounted._handleStorage)
   }
 })
 </script>

@@ -80,7 +80,10 @@
             accion-label="🍹 Comenzar a preparar"
             accion-class="bg-blue-600 hover:bg-blue-500 text-white"
             :procesando="procesando === order.id"
-            @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
+            :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="PENDIENTE"
+            @accion="abrirModalIngredientes(order, 'EN_PREPARACION', 'PENDIENTE')"
+            @secondary-action="abrirModalIngredientes(order, null, 'PENDIENTE')"
           />
         </div>
       </div>
@@ -108,8 +111,10 @@
             accion-class="bg-emerald-600 hover:bg-emerald-500 text-white"
             secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="EN_PREPARACION"
             @accion="cambiarEstado(order.id, 'LISTO')"
-            @secondary-action="abrirModalIngredientes(order, null)"
+            @secondary-action="abrirModalIngredientes(order, null, 'EN_PREPARACION')"
           />
         </div>
       </div>
@@ -225,6 +230,19 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
 
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
 const BEBIDA_CATEGORIA_IDS = [7]
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
@@ -261,10 +279,10 @@ const esBarra = (detalle) => {
   const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
   return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
 }
-const tieneBarra = (orden) => (orden.detalles || []).some(esBarra)
+const tieneBarra = (orden) => (orden.detalles || []).some(d => esBarra(d) && !d.cancelado)
 
 const isBarraOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
-const getDetallesBarra = (o) => (o.detalles || []).filter(esBarra)
+const getDetallesBarra = (o) => (o.detalles || []).filter(d => esBarra(d) && !d.cancelado)
 
 const pendingOrders = computed(() => {
   return orders.value.filter(o => {
@@ -278,7 +296,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isBarraOrder(o)) return false
     const detalles = getDetallesBarra(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION')
   })
 })
 
@@ -295,7 +313,7 @@ const readyOrders = computed(() => {
 
 const totalBarra    = computed(() =>
   [...pendingOrders.value, ...preparingOrders.value]
-    .flatMap(o => (o.detalles || []).filter(esBarra))
+    .flatMap(o => (o.detalles || []).filter(d => esBarra(d) && !d.cancelado))
     .reduce((s, d) => s + Number(d.cantidad || 1), 0)
 )
 
@@ -333,20 +351,9 @@ const onOrdenWS = async (evento) => {
   const { accion, orden } = evento
   console.log('📡 WS Barra:', accion, orden.id)
   
-  if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
-    if (!tieneBarra(orden)) {
-      orders.value = orders.value.filter(o => o.id !== orden.id)
-      return
-    }
-
-    const idx = orders.value.findIndex(o => o.id === orden.id)
-    if (idx !== -1) {
-      orders.value[idx] = { ...orders.value[idx], ...orden }
-    } else {
-      orders.value.push(orden)
-      orders.value.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      showToast(`Nueva orden #${orden.id} para barra`, 'info')
-    }
+  if (['creada', 'actualizada', 'estado_cambiado', 'productos_agregados', 'productos_agregados_a_estacion'].includes(accion)) {
+    if (accion === 'creada') showToast(`Nueva orden #${orden.id} para barra`, 'info')
+    await loadOrders(true)
   } else if (accion === 'cerrada' || accion === 'eliminada') {
     orders.value = orders.value.filter(o => o.id !== orden.id)
   }
@@ -357,9 +364,12 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 })
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
-const abrirModalIngredientes = async (orden, nuevoEstado) => {
-  // Solo los detalles que son bebidas (barra)
-  const detallesBebida = (orden.detalles ?? []).filter(esBarra)
+const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
+  // Solo los detalles que son bebidas (barra) y coinciden con el filtro
+  let detallesBebida = (orden.detalles ?? []).filter(d => esBarra(d) && !d.cancelado)
+  if (estadoFiltro) {
+    detallesBebida = detallesBebida.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+  }
 
   modalIngredientes.value = {
     visible:        true,
@@ -412,7 +422,19 @@ const cerrarModal = () => {
 const confirmarYCambiarEstado = async () => {
   modalIngredientes.value.guardando = true
   try {
-    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado)
+    const excluidos = []
+    modalIngredientes.value.items.forEach(item => {
+      item.ingredientes.forEach(ing => {
+        if (!ing.incluir) {
+          excluidos.push({
+            producto_id: item.producto_id,
+            ingrediente_id: ing.id
+          })
+        }
+      })
+    })
+
+    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado, excluidos)
     modalIngredientes.value.visible = false
   } finally {
     modalIngredientes.value.guardando = false
@@ -420,12 +442,13 @@ const confirmarYCambiarEstado = async () => {
 }
 
 // ── Cambiar estado ─────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstadoDetalle) => {
+const cambiarEstado = async (id, nuevoEstadoDetalle, ingredientesExcluidos = []) => {
   procesando.value = id
   try {
     const data = await apiClient.post(`/ordenes/${id}/actualizar-estado-estacion`, {
       estacion: 'barra',
-      estado: nuevoEstadoDetalle 
+      estado: nuevoEstadoDetalle,
+      ingredientes_excluidos: ingredientesExcluidos
     })
     
     if (data.success || data.data) {

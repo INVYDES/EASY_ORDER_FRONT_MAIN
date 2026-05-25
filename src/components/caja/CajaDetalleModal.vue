@@ -210,17 +210,18 @@ const toLocalTime = (dateStr) => {
     let d;
     // Si ya es un ISO string completo (trae T o Z)
     if (dateStr.includes('T') || dateStr.endsWith('Z')) {
-      d = new Date(dateStr);
+      // Si el string termina en Z pero queremos que sea local, se la quitamos
+      d = new Date(dateStr.replace(/Z$/, ''));
     } 
     // Si el formato es DD/MM/YYYY HH:mm:ss
     else if (dateStr.includes('/')) {
       const [fecha, hora] = dateStr.split(' ');
       const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
     } 
     // Otros formatos (YYYY-MM-DD HH:mm:ss)
     else {
-      d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('T') ? '' : 'Z'));
+      d = new Date(dateStr.replace(' ', 'T'));
     }
 
     if (isNaN(d.getTime())) return dateStr;

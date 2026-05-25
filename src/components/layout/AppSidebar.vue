@@ -78,7 +78,7 @@
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-4">
 
       <!-- SELECTOR DE SUCURSAL -->
-      <div v-if="restaurantes && restaurantes.length > 1">
+      <div v-if="restaurantes && restaurantes.length > 1 && !isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-1">
           <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sucursal</p>
         </div>
@@ -92,8 +92,21 @@
         </div>
       </div>
 
+      <!-- SECCIÓN: PLATAFORMA (SUPER ADMIN ONLY) -->
+      <div v-if="isSuperAdmin">
+        <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Plataforma</p>
+        </div>
+        <div class="space-y-1">
+          <RouterLink to="/panel/plataforma" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/plataforma', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+            <i class="fa-solid fa-screwdriver-wrench text-lg w-6 text-center text-indigo-600"></i>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Plataforma</span>
+          </RouterLink>
+        </div>
+      </div>
+
       <!-- SECCIÓN: OPERACIONES -->
-      <div>
+      <div v-if="!isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
         </div>
@@ -110,7 +123,7 @@
       </div>
 
       <!-- SECCIÓN: ESTACIONES -->
-      <div>
+      <div v-if="!isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
         </div>
@@ -136,7 +149,7 @@
       </div>
 
       <!-- SECCIÓN: ADMINISTRACIÓN -->
-      <div v-if="isAdminOrOwner">
+      <div v-if="isAdminOrOwner && !isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Administración</p>
         </div>
@@ -153,10 +166,7 @@
             <i class="fa-solid fa-box text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
           </RouterLink>
-          <RouterLink to="/panel/nomina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/nomina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
-            <i class="fa-solid fa-file-invoice-dollar text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Nóminas</span>
-          </RouterLink>
+
         </div>
       </div>
 
@@ -229,6 +239,15 @@ const isAdminOrOwner = computed(() => {
            name.includes('ADMIN') || 
            name.includes('ADMINISTRADOR') ||
            name.includes('DUEÑO')
+  })
+})
+
+// Verificar si es super admin
+const isSuperAdmin = computed(() => {
+  if (!props.user?.roles) return false
+  return props.user.roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('SUPER_ADMIN') || name.includes('SUPER')
   })
 })
 

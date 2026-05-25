@@ -49,18 +49,6 @@
       </div>
 
       <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-slate-50 pt-4">
-        <!-- Atajos de Periodo -->
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-400 uppercase">Periodo:</span>
-          <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
-            <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
-              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700']">
-              {{ p.label }}
-            </button>
-          </div>
-        </div>
-
         <!-- Botones de Exportación -->
         <div class="flex gap-2 ml-auto">
           <button @click="exportarReporte('pdf')"
@@ -144,11 +132,11 @@
       </div>
     </div>
 
-    <!-- TOP 5 QUE REBASAN TIEMPO ESTIMADO -->
+    <!-- PLATILLOS QUE REBASAN TIEMPO ESTIMADO -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">🔴 Top 5 — Rebasan Tiempo de Preparación</h3>
+          <h3 class="font-bold text-slate-800 text-lg">🔴 Platillos con Retraso en Preparación</h3>
           <p class="text-xs text-slate-400">Productos que superaron el tiempo estimado en receta</p>
         </div>
         <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
@@ -159,7 +147,7 @@
           </button>
         </div>
       </div>
-      <div class="space-y-3">
+      <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
         <div v-if="productosRebase.length === 0" class="text-center py-8 text-slate-300 text-sm italic">Sin incidencias en el período</div>
         <div v-for="(p, i) in productosRebase" :key="i"
           class="flex items-center justify-between p-4 rounded-xl bg-rose-50 border border-rose-200">
@@ -172,7 +160,7 @@
           </div>
           <div class="text-right">
             <p class="text-base font-black text-rose-600">+{{ p.exceso }} min</p>
-            <p class="text-[10px] text-slate-400">{{ p.veces }} veces</p>
+            <p class="text-[10px] text-slate-400">{{ p.orden_id ? 'Orden #' + p.orden_id : p.veces + ' veces' }}</p>
           </div>
         </div>
       </div>
@@ -180,13 +168,27 @@
 
     <!-- ══ SECCIÓN: PLATILLOS DEVUELTOS / CANCELADOS ══ -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h3 class="font-bold text-slate-800 text-lg">📉 Platillos Devueltos / Cancelados</h3>
           <p class="text-xs text-slate-400 font-medium">Historial de productos eliminados con motivo de cancelación</p>
         </div>
-        <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
-           Total Mermas: ${{ fm(totalMermas) }}
+        <div class="flex flex-wrap items-center gap-3 ml-auto sm:ml-0">
+          <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+            <button v-for="t in tiempoFiltros" :key="t.key" @click="devueltosPeriodo = t.key; loadDevueltos()"
+              :class="['px-3 py-1.5 text-xs font-bold rounded-lg transition',
+                devueltosPeriodo === t.key ? 'bg-white shadow-sm text-rose-600' : 'text-slate-500 hover:text-slate-700']">
+              {{ t.label }}
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
+              🔥 Merma Real: ${{ fm(totalMermas) }}
+            </div>
+            <div v-if="totalCancelacionesSinMerma > 0" class="px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest border border-slate-200">
+              ↩️ Cancelaciones: ${{ fm(totalCancelacionesSinMerma) }}
+            </div>
+          </div>
         </div>
       </div>
       
@@ -199,24 +201,30 @@
               <th class="py-3 px-2">Cant</th>
               <th class="py-3 px-2">Subtotal</th>
               <th class="py-3 px-2">Motivo</th>
+              <th class="py-3 px-2">Tipo</th>
               <th class="py-3 px-2">Autorizó</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50">
             <tr v-if="productosDevueltos.length === 0">
-              <td colspan="6" class="py-10 text-center text-slate-300 italic text-sm">No hay devoluciones registradas en este periodo</td>
+              <td colspan="7" class="py-10 text-center text-slate-300 italic text-sm">No hay devoluciones registradas en este periodo</td>
             </tr>
-            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-slate-50 transition-colors group">
+            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-slate-50 transition-colors group"
+              :class="d.es_merma ? 'bg-red-50/30' : ''">
               <td class="py-4 px-2 font-bold text-slate-500">
-                {{ d.fecha ? new Date(d.fecha.replace(' ', 'T') + 'Z').toLocaleString('es-MX', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: true }) : '—' }}
+                {{ d.fecha ? new Date(d.fecha.replace(' ', 'T')).toLocaleString('es-MX', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: true }) : '—' }}
               </td>
               <td class="py-4 px-2 font-black text-slate-800 uppercase tracking-tight">{{ d.producto || d.producto_nombre || d.nombre || 'Producto' }}</td>
               <td class="py-4 px-2 font-black text-slate-600">{{ d.cantidad }}</td>
-              <td class="py-4 px-2 font-black text-red-600">${{ fm(d.subtotal) }}</td>
+              <td class="py-4 px-2 font-black" :class="d.es_merma ? 'text-red-600' : 'text-slate-400'">${{ fm(d.subtotal) }}</td>
               <td class="py-4 px-2">
                 <span class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold border border-red-100 text-[10px]">
                   {{ d.motivo || d.motivo_cancelacion || 'Sin motivo' }}
                 </span>
+              </td>
+              <td class="py-4 px-2">
+                <span v-if="d.es_merma" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg font-black text-[9px] uppercase">🔥 Merma</span>
+                <span v-else class="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-black text-[9px] uppercase">↩️ Cancelado</span>
               </td>
               <td class="py-4 px-2">
                 <div class="flex items-center gap-2">
@@ -248,10 +256,10 @@ const props = defineProps({
 })
 
 const loading = ref(false)
-const kpiPeriodo = ref('total')
+const kpiPeriodo = ref('hoy')
 const kpiFechaInicio = ref('')
 const kpiFechaFin = ref('')
-const kpiGrupo = ref('mes')
+const kpiGrupo = ref('dia')
 const kpiData = ref({ ventas: [], totales: null })
 const kpiAnterior = ref({ ventas: [], totales: null })
 const topProductos = ref([])
@@ -259,6 +267,7 @@ const productosRentabilidad = ref([])
 const productosRebase = ref([])
 const productosDevueltos = ref([])
 const tiempoPeriodo = ref('hoy')
+const devueltosPeriodo = ref('hoy')
 const kpiMeseroId = ref('')
 
 // Datos para cálculos de rentabilidad
@@ -267,7 +276,6 @@ const ingredientesGlobales = ref([])
 const nominaMensual = ref(0)
 
 const kpiPeriodos = [
-  { key: 'total', label: 'Todo' },
   { key: 'hoy',   label: 'Hoy' },
   { key: 'semana', label: '7D' },
   { key: 'mes',   label: '30D' },
@@ -285,7 +293,8 @@ const dc = (a, b) => Number(a||0) >= Number(b||0) ? 'bg-emerald-50 text-emerald-
 const di = (a, b) => Number(a||0) >= Number(b||0) ? '↑' : '↓'
 const dp = (a, b) => { const bVal = Number(b||0); if(!bVal) return '0'; return Math.abs(((Number(a||0)-bVal)/bVal)*100).toFixed(1) }
 
-const totalMermas = computed(() => productosDevueltos.value.reduce((s, d) => s + Number(d.subtotal || 0), 0))
+const totalMermas = ref(0)
+const totalCancelacionesSinMerma = ref(0)
 
 const getImageUrl = (path) => {
   if (!path) return null
@@ -350,47 +359,39 @@ const setKpiPeriodo = (key) => {
 
 const loadTiemposRebase = async () => {
   try {
-    const data = await apiClient.get(`/reportes/tiempos-rebase`)
+    const data = await apiClient.get(`/reportes/tiempos-rebase?periodo=${tiempoPeriodo.value}&limite=100`)
     if (data.success && data.data) {
-      const periodo = tiempoPeriodo.value
-      if (periodo === 'hoy') {
-        productosRebase.value = data.data.hoy || []
-      } else if (periodo === '7dias') {
-        productosRebase.value = data.data.semana || []
-      } else if (periodo === 'mes') {
-        productosRebase.value = data.data.mes || []
+      const periodoKey = tiempoPeriodo.value === '7dias' ? 'semana' : tiempoPeriodo.value
+      if (data.data.hoy !== undefined || data.data.semana !== undefined || data.data.mes !== undefined) {
+        productosRebase.value = data.data[periodoKey] || []
       } else {
-        productosRebase.value = []
+        productosRebase.value = Array.isArray(data.data) ? data.data : []
       }
     } else {
       productosRebase.value = []
     }
-  } catch (e) {
-    console.error('Error al cargar tiempos de rebase:', e)
-    productosRebase.value = []
-  }
+  } catch { productosRebase.value = [] }
 }
 
 const loadKpis = async () => {
   loading.value = true
   try {
-    const params = {}
-    if (kpiFechaInicio.value) params.fecha_inicio = kpiFechaInicio.value
-    if (kpiFechaFin.value) params.fecha_fin = kpiFechaFin.value
-    if (kpiMeseroId.value) params.user_id = kpiMeseroId.value
+    const params = {
+      fecha_inicio: kpiFechaInicio.value || null,
+      fecha_fin:    kpiFechaFin.value || null,
+      user_id:      kpiMeseroId.value || null
+    }
 
-    const [vData, pData, pmData, iData, nData, devData] = await Promise.all([
+    const [vData, pData, pmData, iData, nData] = await Promise.all([
       apiClient.get(`/reportes/ventas`, { params: { ...params, grupo: kpiGrupo.value } }),
       apiClient.get(`/reportes/productos-mas-vendidos`, { params: { ...params, limite: 200 } }),
       apiClient.get(`/productos`, { params: { per_page: 1000 } }),
       apiClient.get(`/ingredientes`),
       apiClient.get(`/empleados`),
-      apiClient.get(`/reportes/platillos-devueltos`, { params }),
     ])
 
     if (vData.success) kpiData.value = vData.data
     if (pData.success) topProductos.value = pData.data || []
-    if (devData.success) productosDevueltos.value = devData.data || []
     
     // Cargar datos para cálculos
     if (iData.success || iData.data) ingredientesGlobales.value = iData.data || iData || []
@@ -436,8 +437,46 @@ const loadKpis = async () => {
         productosRentabilidad.value = calculados.sort((a, b) => b.margen_real - a.margen_real)
     }
 
+    await loadDevueltos()
     await loadTiemposRebase()
   } catch (e) { console.error(e) } finally { loading.value = false }
+}
+
+const loadDevueltos = async () => {
+  try {
+    const hoy = new Date()
+    const fmt = (d) => d.toLocaleDateString('en-CA')
+    let inicio = ''
+    let fin = fmt(hoy)
+    
+    if (devueltosPeriodo.value === 'hoy') {
+      inicio = fmt(hoy)
+    } else if (devueltosPeriodo.value === '7dias') {
+      const d = new Date()
+      d.setDate(d.getDate() - 6)
+      inicio = fmt(d)
+    } else if (devueltosPeriodo.value === 'mes') {
+      const d = new Date()
+      d.setDate(d.getDate() - 29)
+      inicio = fmt(d)
+    }
+
+    const params = {
+      fecha_inicio: inicio || null,
+      fecha_fin:    fin || null,
+      user_id:      kpiMeseroId.value || null
+    }
+
+    const res = await apiClient.get(`/reportes/platillos-devueltos`, { params })
+    if (res.success) {
+      productosDevueltos.value = res.data || []
+      totalMermas.value = res.total_mermas || 0
+      totalCancelacionesSinMerma.value = res.total_cancelaciones_sin_merma || 0
+    }
+  } catch (e) {
+    console.error(e)
+    productosDevueltos.value = []
+  }
 }
 
 const exportarReporte = async (formato) => {
@@ -452,5 +491,5 @@ const exportarReporte = async (formato) => {
   } catch (e) { console.error(e) }
 }
 
-onMounted(() => setKpiPeriodo('total'))
+onMounted(() => setKpiPeriodo('hoy'))
 </script>

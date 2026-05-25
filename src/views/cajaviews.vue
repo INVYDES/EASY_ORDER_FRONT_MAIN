@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Layout
@@ -25,6 +25,19 @@ import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
 // ── UI ────────────────────────────────────────────────────────────────────────
 const selectedTab = ref('open')
 const showCloseModal = ref(false)
@@ -47,7 +60,6 @@ const cardSales = ref(0)
 const transferSales = ref(0)
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
-const firstLoadDone = ref(false)
 
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 let pollTimer = null
@@ -76,10 +88,17 @@ const loading = reactive({
 const openOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    return s === 'ENTREGADA' || s === 'ENTREGADO'
+    return s === 'ENTREGADA' || s === 'ENTREGADO' ||
+      (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(s) && 
+       (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
   })
 })
-const closedOrders = computed(() => orders.value.filter(o => (o.estado || '').toUpperCase() === 'CERRADA'))
+const closedOrders = computed(() => {
+  return orders.value.filter(o => {
+    const s = (o.estado || '').toUpperCase()
+    return s === 'CERRADA' || s === 'CANCELADA' || (o.detalles || []).some(d => !!d.cancelado)
+  })
+})
 const ordenesListas = computed(() => openOrders.value.length)
 const ordenesEnProceso = computed(() => {
   return orders.value.filter(o => {
@@ -134,9 +153,9 @@ const toLocalTime = (dateStr) => {
     if (dateStr.includes('/')) {
       const [fecha, hora] = dateStr.split(' ');
       const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
     } else {
-      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+      d = new Date(dateStr.replace(' ', 'T'));
     }
     if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -287,23 +306,29 @@ const loadOrders = async () => {
   try {
     const today = new Date().toLocaleDateString('en-CA')
     let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
       closedOrdersQuery = `/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
     } else if (!cajaAbierta.value) {
       closedOrdersQuery = null;
+      cancelledOrdersQuery = null;
     }
 
     const fetches = [
-      apiClient.get(`/ordenes?estado=ABIERTA&per_page=100`).catch(() => null),
-      apiClient.get(`/ordenes?estado=POR_PREPARAR&per_page=100`).catch(() => null),
-      apiClient.get(`/ordenes?estado=EN_PREPARACION&per_page=100`).catch(() => null),
-      apiClient.get(`/ordenes?estado=LISTA&per_page=100`).catch(() => null),
-      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`).catch(() => null)
+      apiClient.get(`/ordenes?estado=ABIERTA&per_page=100`),
+      apiClient.get(`/ordenes?estado=POR_PREPARAR&per_page=100`),
+      apiClient.get(`/ordenes?estado=EN_PREPARACION&per_page=100`),
+      apiClient.get(`/ordenes?estado=LISTA&per_page=100`),
+      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`)
     ];
     
     if (closedOrdersQuery) {
-      fetches.push(apiClient.get(closedOrdersQuery).catch(() => null));
+      fetches.push(apiClient.get(closedOrdersQuery));
+    }
+    if (cancelledOrdersQuery) {
+      fetches.push(apiClient.get(cancelledOrdersQuery));
     }
 
     const jsonResults = await Promise.all(fetches)
@@ -312,7 +337,7 @@ const loadOrders = async () => {
     const rid = restauranteActivo.value?.id || localStorage.getItem('restaurante_id_activo')
 
     jsonResults.forEach(r => {
-      if (r && (r.success || r.data)) {
+      if (r.success || r.data) {
         const items = Array.isArray(r.data) ? r.data : (r.data?.data || [])
         items.forEach(o => {
           if (!o.restaurante_id && rid) o.restaurante_id = rid
@@ -344,23 +369,20 @@ const loadHistorial = async () => {
   }
 }
 
-const loadAllData = async () => {
+const loadAllData = async (silent = true) => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   if (!token) {
     router.push('/')
     return
   }
-  if (!firstLoadDone.value) {
-    loading.general = true
-  }
+  if (!silent) loading.general = true
   await loadCajaEstado()
   await Promise.all([
     loadOrders(),
     loadMovements(),
     !cajaAbierta.value ? loadHistorial() : Promise.resolve(),
   ])
-  loading.general = false
-  firstLoadDone.value = true
+  if (!silent) loading.general = false
   await nextTick()
   if (cajaAbierta.value) initChart()
 }
@@ -442,7 +464,7 @@ const abrirDetalle = (id) => {
 const handleAlreadyOpen = async () => {
   cajaAbierta.value = true
   showOpenModal.value = false
-  await loadAllData()
+  await loadAllData(false)
 }
 
 const handleOpenCaja = async (amount) => {
@@ -450,7 +472,7 @@ const handleOpenCaja = async (amount) => {
   cashInRegister.value = amount
   cajaAbierta.value = true
   showOpenModal.value = false
-  await loadAllData()
+  await loadAllData(false)
   showToast('Caja abierta correctamente', 'success')
 }
 
@@ -458,7 +480,7 @@ const handleCloseCaja = async () => {
   cajaAbierta.value = false
   showCloseModal.value = false
   if (chartInstance) chartInstance.destroy()
-  await loadAllData()
+  await loadAllData(false)
   await loadHistorial()
   showToast('Caja cerrada. Historial actualizado.', 'success')
 }
@@ -473,10 +495,15 @@ const handleMovimientoSaved = async ({ monto, tipo }) => {
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  await loadAllData()
+  // Primera carga explícita no silenciosa para mostrar el spinner inicial
+  await loadAllData(false)
   
-  // Polling de seguridad
-  pollTimer = setInterval(loadAllData, POLL_INTERVAL)
+  // Polling silencioso de seguridad
+  const poll = async () => {
+    await loadAllData(true)
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
 
   try {
     const data = await apiClient.get('/me')
@@ -490,12 +517,8 @@ onMounted(async () => {
   } catch { }
 })
 
-watch(selectedTab, () => {
-  loadAllData()
-})
-
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  if (pollTimer) clearTimeout(pollTimer)
 })
 </script>
 <template>
@@ -551,8 +574,12 @@ onUnmounted(() => {
               <h2>Caja cerrada</h2>
               <p>Inicia una nueva jornada para registrar ventas y movimientos.</p>
             </div>
-            <button @click="showOpenModal = true" class="btn-primary-action">
-              🔓 Abrir Caja Ahora
+            <button
+              :disabled="esAdminOPropietario"
+              @click="showOpenModal = true"
+              :class="['btn-primary-action', esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none hover:bg-slate-300 hover:transform-none' : '']"
+            >
+              {{ esAdminOPropietario ? '🚫 Apertura Bloqueada' : '🔓 Abrir Caja Ahora' }}
             </button>
           </div>
 
@@ -594,6 +621,7 @@ onUnmounted(() => {
               :ordenes-en-proceso="ordenesEnProceso"
               :closed-orders-count="closedOrders.length"
               :total-ordenes="orders.length"
+              :es-admin-o-propietario="esAdminOPropietario"
               @movimiento="showMovimientoModal = true"
               @corte-x="showCorteXModal = true"
               @exportar="exportarCorte"
