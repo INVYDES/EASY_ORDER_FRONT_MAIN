@@ -86,7 +86,7 @@
         />
       </div>
 
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
         <!-- Izquierda: Título y Fecha -->
         <div class="shrink-0">
           <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
@@ -124,7 +124,7 @@
         </div>
 
         <!-- Derecha: Botón de Nueva Orden e Indicador de Caja -->
-        <div class="flex items-center gap-3 shrink-0 self-end lg:self-auto">
+        <div class="flex items-center gap-3 shrink-0 self-end md:self-auto">
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-[10px] font-black uppercase">Caja abierta</span>
@@ -316,7 +316,30 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
-                  <input v-model="numeroComensales" type="number" min="1" max="50" class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold" />
+                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl p-1 h-[52px] w-full">
+                    <button 
+                      type="button"
+                      @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" 
+                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
+                    >
+                      −
+                    </button>
+                    <input 
+                      v-model="numeroComensales" 
+                      type="number" 
+                      min="1" 
+                      max="50" 
+                      @blur="if (!numeroComensales || numeroComensales < 1) numeroComensales = 1"
+                      class="flex-1 text-center text-sm font-black text-slate-800 outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                    />
+                    <button 
+                      type="button"
+                      @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" 
+                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
@@ -678,23 +701,26 @@ const comensalesNombres   = ref(['Comensal 1'])
 const comensalActivoIndex = ref(0)
 
 watch(numeroComensales, (newVal) => {
-  if (!newVal || newVal < 1) {
-    numeroComensales.value = 1
-    newVal = 1
+  if (newVal === '' || newVal === null || newVal === undefined) {
+    return
   }
-  const diff = newVal - comensalesNombres.value.length
+  const numVal = parseInt(newVal)
+  if (isNaN(numVal) || numVal < 1) {
+    return
+  }
+  const diff = numVal - comensalesNombres.value.length
   if (diff > 0) {
     for (let i = 0; i < diff; i++) {
       comensalesNombres.value.push(`Comensal ${comensalesNombres.value.length + 1}`)
     }
   } else if (diff < 0) {
-    comensalesNombres.value.splice(newVal)
+    comensalesNombres.value.splice(numVal)
     carrito.value.forEach(item => {
-      if (item.comensalIndex >= newVal) item.comensalIndex = 0
+      if (item.comensalIndex >= numVal) item.comensalIndex = 0
     })
   }
-  if (comensalActivoIndex.value >= newVal) {
-    comensalActivoIndex.value = newVal - 1
+  if (comensalActivoIndex.value >= numVal) {
+    comensalActivoIndex.value = numVal - 1
   }
 })
 

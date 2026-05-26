@@ -245,8 +245,7 @@
           <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Restaurant Kiosk System</p>
           
           <div class="flex items-center justify-between bg-white rounded-xl p-2 border border-slate-100 shadow-sm">
-            <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
+            <input v-model="numeroComensales" type="number" min="1" max="50" @blur="if (!numeroComensales || numeroComensales < 1) numeroComensales = 1" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
           </div>
         </div>
         
@@ -363,9 +362,9 @@
             👥 Comensales:
           </span>
           <div class="flex items-center bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
-            <button @click="numeroComensales = Math.max(1, numeroComensales - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">-</button>
-            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-10 h-8 text-center text-sm font-black text-slate-800 outline-none bg-transparent" />
-            <button @click="numeroComensales++" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">+</button>
+            <button @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">-</button>
+            <input v-model="numeroComensales" type="number" min="1" max="50" @blur="if (!numeroComensales || numeroComensales < 1) numeroComensales = 1" class="w-10 h-8 text-center text-sm font-black text-slate-800 outline-none bg-transparent" />
+            <button @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">+</button>
           </div>
         </div>
 
@@ -470,8 +469,7 @@
         </div>
         
         <div class="flex items-center justify-between bg-slate-50 rounded-xl p-2 border border-slate-100 shadow-sm mb-4">
-          <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-          <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
+          <input v-model="numeroComensales" type="number" min="1" max="50" @blur="if (!numeroComensales || numeroComensales < 1) numeroComensales = 1" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
         </div>
 
         <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
@@ -591,23 +589,26 @@ const comensalesNombres   = ref(['Comensal 1'])
 const comensalActivoIndex = ref(0)
 
 watch(numeroComensales, (newVal) => {
-  if (!newVal || newVal < 1) {
-    numeroComensales.value = 1
-    newVal = 1
+  if (newVal === '' || newVal === null || newVal === undefined) {
+    return
   }
-  const diff = newVal - comensalesNombres.value.length
+  const numVal = parseInt(newVal)
+  if (isNaN(numVal) || numVal < 1) {
+    return
+  }
+  const diff = numVal - comensalesNombres.value.length
   if (diff > 0) {
     for (let i = 0; i < diff; i++) {
       comensalesNombres.value.push(`Comensal ${comensalesNombres.value.length + 1}`)
     }
   } else if (diff < 0) {
-    comensalesNombres.value.splice(newVal)
+    comensalesNombres.value.splice(numVal)
     pedido.value.forEach(item => {
-      if (item.comensalIndex >= newVal) item.comensalIndex = 0
+      if (item.comensalIndex >= numVal) item.comensalIndex = 0
     })
   }
-  if (comensalActivoIndex.value >= newVal) {
-    comensalActivoIndex.value = newVal - 1
+  if (comensalActivoIndex.value >= numVal) {
+    comensalActivoIndex.value = numVal - 1
   }
 })
 
