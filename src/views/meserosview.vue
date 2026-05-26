@@ -433,8 +433,10 @@
                   <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
                     <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
                   </div>
-                  <button v-for="p in productosFiltrados" :key="'p-'+p.id" @click="agregarAlCarrito(p, 'producto')"
-                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-slate-50 border border-transparent hover:border-slate-100 bg-white active:scale-95 active:bg-slate-100/80 active:ring-4 active:ring-indigo-500/10 shadow-sm shadow-slate-100/50">
+                  <button v-for="p in productosFiltrados" :key="'p-'+p.id" 
+                    @click="agregarAlCarrito(p, 'producto')"
+                    :disabled="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock"
+                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group border border-transparent hover:border-slate-100 bg-white shadow-sm shadow-slate-100/50 hover:bg-slate-50 active:scale-95 active:bg-slate-100/80 active:ring-4 active:ring-indigo-500/10 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale">
                     <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform relative">
                       <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
                       <span v-else class="text-2xl">🍽️</span>
@@ -449,7 +451,8 @@
                     </div>
                     <div class="text-right">
                       <p class="font-black text-base md:text-lg text-slate-900">${{ Number(p.precio).toFixed(2) }}</p>
-                      <span class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-sm">+</span>
+                      <span v-if="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock" class="text-[10px] font-black text-red-500 bg-red-50 px-2.5 py-1 rounded-xl uppercase tracking-wider block mt-1">Sin Stock</span>
+                      <span v-else class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-sm">+</span>
                     </div>
                   </button>
                 </div>
