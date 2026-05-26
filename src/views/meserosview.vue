@@ -304,9 +304,20 @@
 
       <!-- ══ VISTA NUEVA ORDEN ══ -->
       <div v-else-if="vistaActual === 'nueva'" class="animate-fade-in">
-        <div class="flex items-center gap-3 mb-6">
-          <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
-          <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
+        <div class="flex items-center justify-between gap-3 mb-6">
+          <div class="flex items-center gap-3">
+            <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
+            <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
+          </div>
+          <!-- Botón fijo para ver el pedido actual en tablets y móviles -->
+          <button 
+            type="button"
+            @click="showCarritoFlotante = true" 
+            class="lg:hidden flex items-center gap-2.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-md transition active:scale-95 border border-indigo-500 font-black text-xs uppercase tracking-wider animate-fade-in"
+          >
+            <span>🛒 Ver Pedido</span>
+            <span class="bg-indigo-800 text-white px-2 py-0.5 rounded-full text-[10px] font-black">{{ carrito.length }}</span>
+          </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -423,10 +434,14 @@
                     <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
                   </div>
                   <button v-for="p in productosFiltrados" :key="'p-'+p.id" @click="agregarAlCarrito(p, 'producto')"
-                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-slate-50 border border-transparent hover:border-slate-100 bg-white">
-                    <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
+                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-slate-50 border border-transparent hover:border-slate-100 bg-white active:scale-95 active:bg-slate-100/80 active:ring-4 active:ring-indigo-500/10 shadow-sm shadow-slate-100/50">
+                    <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform relative">
                       <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
                       <span v-else class="text-2xl">🍽️</span>
+                      <!-- Indicador de cantidad agregada -->
+                      <div v-if="totalEnCarritoPorId(p.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop">
+                        {{ totalEnCarritoPorId(p.id) }}
+                      </div>
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="font-black text-slate-800 text-base md:text-lg truncate leading-tight">{{ p.nombre.toUpperCase() }}</p>
@@ -444,11 +459,15 @@
                     <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
                   </div>
                   <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')"
-                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-indigo-50/50 border border-transparent hover:border-indigo-100 bg-white shadow-sm shadow-slate-100">
+                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-indigo-50/50 border border-transparent hover:border-indigo-100 bg-white shadow-sm shadow-slate-100 active:scale-95 active:bg-indigo-100/50 active:ring-4 active:ring-indigo-500/10">
                     <div class="w-16 h-16 rounded-2xl overflow-hidden bg-indigo-50 shrink-0 flex items-center justify-center border border-indigo-100 shadow-sm relative group-hover:rotate-2 transition-transform">
                       <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover" />
                       <span v-else class="text-3xl">🎁</span>
                       <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm">COMBO</div>
+                      <!-- Indicador de cantidad agregada -->
+                      <div v-if="totalEnCarritoPorPaqueteId(paq.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop">
+                        {{ totalEnCarritoPorPaqueteId(paq.id) }}
+                      </div>
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="font-black text-slate-800 text-base md:text-lg leading-tight uppercase tracking-tight">{{ paq.nombre }}</p>
@@ -665,15 +684,6 @@
                 <p v-if="!nuevaOrden.mesa" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
               </div>
             </div>
-          </div>
-
-          <!-- Floating button to open cart on tablet/mobile -->
-          <div v-if="carrito.length > 0 && !showCarritoFlotante" class="lg:hidden fixed bottom-6 right-6 z-40">
-            <button @click="showCarritoFlotante = true" class="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-4 shadow-2xl transition active:scale-95 border border-indigo-500">
-              <span class="text-lg">🛒</span>
-              <span class="text-sm font-black uppercase tracking-wider">Ver Pedido</span>
-              <span class="bg-indigo-800 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black">{{ carrito.length }}</span>
-            </button>
           </div>
         </div>
       </div>
@@ -1324,6 +1334,12 @@ const totalEnCarritoPorId = (productId) => {
     .reduce((sum, i) => sum + i.cantidad, 0)
 }
 
+const totalEnCarritoPorPaqueteId = (paqueteId) => {
+  return carrito.value
+    .filter(i => i.id === paqueteId && i.tipo === 'paquete')
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
 const agregarAlCarrito = (item, tipo) => {
   if (tipo === 'producto' && item.stock !== undefined && item.stock !== null) {
     if (totalEnCarritoPorId(item.id) >= item.stock) {
@@ -1571,4 +1587,12 @@ onUnmounted(() => {
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
 </style>
