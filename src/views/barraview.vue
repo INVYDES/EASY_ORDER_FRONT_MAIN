@@ -160,11 +160,7 @@
                 <p class="text-sm font-bold text-white truncate">{{ item.producto_nombre }}</p>
                 <p class="text-xs text-gray-400">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
               </div>
-              <span v-if="item.ingredientes.some(i => i.sin_stock || i.insuficiente)"
-                class="text-xs font-bold px-2 py-0.5 rounded-full"
-                :class="item.ingredientes.some(i => i.sin_stock) ? 'bg-red-900 text-red-300' : 'bg-amber-900 text-amber-300'">
-                {{ item.ingredientes.some(i => i.sin_stock) ? '🚨 Sin stock' : '⚠️ Stock bajo' }}
-              </span>
+
             </div>
 
             <div class="divide-y divide-gray-700/30">
