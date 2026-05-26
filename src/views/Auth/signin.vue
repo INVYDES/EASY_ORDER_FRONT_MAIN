@@ -96,10 +96,10 @@
     </div>
 
     <!-- Panel derecho -->
-    <div class="hidden lg:flex w-1/2 relative items-center justify-center overflow-hidden">
+    <div class="hidden lg:flex w-1/2 bg-[#02050e] relative items-center justify-center overflow-hidden">
       <img 
         src="@/assets/imaguenes/fondo_login.jpg" 
-        class="absolute inset-0 w-full h-full object-cover" 
+        class="absolute inset-0 w-full h-full object-contain" 
         alt="Login Background"
       />
     </div>
