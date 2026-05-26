@@ -1,5 +1,25 @@
 <template>
   <div class="p-6 space-y-6">
+    <!-- Toasts -->
+    <div class="fixed top-4 right-4 z-[200] space-y-2">
+      <div
+        v-for="toast in toasts"
+        :key="toast.id"
+        :class="[
+          'px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md',
+          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' : '',
+          toast.type === 'error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800'             : '',
+          toast.type === 'info'    ? 'bg-blue-50 border-l-4 border-blue-500 text-blue-800'           : '',
+          toast.type === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800'        : '',
+        ]"
+      >
+        <span class="text-lg">
+          {{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}
+        </span>
+        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
+        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+      </div>
+    </div>
     <!-- Header -->
     <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
@@ -86,11 +106,19 @@
               <td class="px-6 py-4">
                 <div v-if="prop.licencia_actual" class="flex flex-col">
                   <span class="text-indigo-600 font-bold">{{ prop.licencia_actual.nombre }}</span>
+                  <span class="text-[10px] text-gray-400 italic">Inicio: {{ formatDate(prop.licencia_actual.inicio) }}</span>
                   <span class="text-[10px] text-gray-400 italic">Expira: {{ formatDate(prop.licencia_actual.expira) }}</span>
                 </div>
                 <span v-else class="text-red-400 text-xs font-medium">Sin licencia activa</span>
               </td>
               <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                <button
+                  v-if="prop.licencia_actual"
+                  @click="openEditLicencia(prop)"
+                  class="text-amber-600 hover:text-amber-900 font-semibold text-xs bg-amber-50 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors"
+                >
+                  Editar Licencia
+                </button>
                 <button 
                   @click="selectedPropietario = prop"
                   class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs bg-indigo-50 px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors"
@@ -225,6 +253,65 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Editar Licencia -->
+    <div v-if="editLicenciaModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] flex items-center justify-center p-4">
+      <div class="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl border border-gray-100">
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900">Editar Licencia</h3>
+            <button @click="editLicenciaModal.show = false" class="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <p class="text-sm text-gray-500 mb-6">
+            Propietario: <span class="font-semibold text-gray-800">{{ editLicenciaModal.propietario_nombre }}</span>
+            <br>
+            Licencia: <span class="font-semibold text-gray-800">{{ editLicenciaModal.licencia_nombre }}</span>
+          </p>
+
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Fecha de Inicio</label>
+              <input
+                v-model="editLicenciaModal.fecha_inicio"
+                type="date"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Fecha de Expiración</label>
+              <input
+                v-model="editLicenciaModal.fecha_expiracion"
+                type="date"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 mt-8">
+            <button
+              @click="updateLicencia"
+              :disabled="editLicenciaModal.loading"
+              class="w-full py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <span v-if="editLicenciaModal.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              {{ editLicenciaModal.loading ? 'Guardando...' : 'Guardar Cambios' }}
+            </button>
+            <button
+              @click="editLicenciaModal.show = false"
+              :disabled="editLicenciaModal.loading"
+              class="w-full py-3 bg-gray-50 text-gray-500 rounded-2xl font-bold text-sm hover:bg-gray-100 transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -237,6 +324,18 @@ const stats = ref({});
 const loading = ref(false);
 const searchQuery = ref('');
 const selectedPropietario = ref(null);
+const toasts = ref([]);
+
+const showToast = (message, type = 'info', duration = 5000) => {
+  const id = Date.now()
+  toasts.value.push({ id, message, type })
+  if (duration > 0) setTimeout(() => removeToast(id), duration)
+}
+
+const removeToast = (id) => {
+  const i = toasts.value.findIndex(t => t.id === id)
+  if (i !== -1) toasts.value.splice(i, 1)
+}
 
 // Modal de Confirmación
 const confirmModal = ref({
@@ -247,6 +346,52 @@ const confirmModal = ref({
   action: null,
   loading: false
 });
+
+// Modal Editar Licencia
+const editLicenciaModal = ref({
+  show: false,
+  loading: false,
+  id: null,
+  propietario_nombre: '',
+  licencia_nombre: '',
+  fecha_inicio: '',
+  fecha_expiracion: ''
+});
+
+const openEditLicencia = (prop) => {
+  const lic = prop.licencia_actual;
+  editLicenciaModal.value = {
+    show: true,
+    loading: false,
+    id: lic.id,
+    propietario_nombre: prop.nombre_completo,
+    licencia_nombre: lic.nombre || '',
+    fecha_inicio: lic.inicio ? lic.inicio.slice(0, 10) : '',
+    fecha_expiracion: lic.expira ? lic.expira.slice(0, 10) : ''
+  };
+};
+
+const updateLicencia = async () => {
+  if (!editLicenciaModal.value.id) return;
+  try {
+    editLicenciaModal.value.loading = true;
+    const body = {};
+    if (editLicenciaModal.value.fecha_inicio) body.fecha_inicio = editLicenciaModal.value.fecha_inicio;
+    if (editLicenciaModal.value.fecha_expiracion) body.fecha_expiracion = editLicenciaModal.value.fecha_expiracion;
+    const res = await apiClient.put(`/propietario-licencias/${editLicenciaModal.value.id}`, body);
+    if (res.success) {
+      showToast('Licencia actualizada correctamente', 'success');
+      editLicenciaModal.value.show = false;
+      fetchPlataformaData();
+    } else {
+      showToast(res.message || 'Error al actualizar la licencia', 'error');
+    }
+  } catch (error) {
+    showToast(error.message || 'Error al actualizar la licencia', 'error');
+  } finally {
+    editLicenciaModal.value.loading = false;
+  }
+};
 
 const fetchPlataformaData = async () => {
   try {

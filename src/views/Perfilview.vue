@@ -318,9 +318,7 @@ const loadLicencia = async () => {
         max_usuarios:     lic.licencia?.max_usuarios     ?? lic.max_usuarios,
         fecha_inicio:     lic.fecha_inicio,
         fecha_expiracion: lic.fecha_expiracion,
-        dias_restantes:   Math.max(0, Math.floor(
-          (new Date(lic.fecha_expiracion) - new Date()) / (1000 * 60 * 60 * 24)
-        )),
+        dias_restantes:   lic.dias_restantes,
       }
     } else {
       licenciaActiva.value = null
