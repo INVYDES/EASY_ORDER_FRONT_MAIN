@@ -197,17 +197,7 @@
                   </p>
                 </div>
 
-                <!-- Stock disponible -->
-                <div class="text-right shrink-0">
-                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    :class="ing.sin_stock    ? 'bg-red-900/60 text-red-400' :
-                            ing.insuficiente ? 'bg-amber-900/60 text-amber-400' :
-                                               'bg-gray-700 text-gray-400'">
-                    {{ ing.sin_stock ? 'Sin stock' :
-                       ing.insuficiente ? `Solo ${ing.stock_actual} ${ing.unidad}` :
-                       `${ing.stock_actual} ${ing.unidad}` }}
-                  </span>
-                </div>
+
               </div>
             </div>
           </div>
