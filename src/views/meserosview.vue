@@ -429,11 +429,11 @@
                       <span v-else class="text-2xl">🍽️</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="font-black text-slate-800 text-sm truncate leading-tight">{{ p.nombre.toUpperCase() }}</p>
-                      <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
+                      <p class="font-black text-slate-800 text-base md:text-lg truncate leading-tight">{{ p.nombre.toUpperCase() }}</p>
+                      <p class="text-[11px] md:text-xs text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
                     </div>
                     <div class="text-right">
-                      <p class="font-black text-sm text-slate-900">${{ Number(p.precio).toFixed(2) }}</p>
+                      <p class="font-black text-base md:text-lg text-slate-900">${{ Number(p.precio).toFixed(2) }}</p>
                       <span class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-sm">+</span>
                     </div>
                   </button>
@@ -451,11 +451,11 @@
                       <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm">COMBO</div>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="font-black text-slate-800 text-sm leading-tight uppercase tracking-tight">{{ paq.nombre }}</p>
-                      <p class="text-[9px] text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
+                      <p class="font-black text-slate-800 text-base md:text-lg leading-tight uppercase tracking-tight">{{ paq.nombre }}</p>
+                      <p class="text-[11px] md:text-xs text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
                     </div>
                     <div class="text-right">
-                      <p class="font-black text-sm text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</p>
+                      <p class="font-black text-base md:text-lg text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</p>
                       <span class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-lg shadow-indigo-200">+</span>
                     </div>
                   </button>
@@ -465,7 +465,7 @@
           </div>
 
           <!-- Carrito -->
-          <div class="lg:col-span-1">
+          <div class="hidden lg:block lg:col-span-1">
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden sticky top-6">
               <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
                 <div>
@@ -562,6 +562,118 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Sliding Cart Drawer (for tablets & mobile) -->
+          <div v-if="showCarritoFlotante" class="lg:hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex justify-end animate-fade-in" @click.self="showCarritoFlotante = false">
+            <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-left overflow-hidden">
+              <!-- Header -->
+              <div class="p-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                <div>
+                  <h3 class="font-black text-xs tracking-widest uppercase opacity-60">Resumen</h3>
+                  <p class="text-lg font-black leading-none mt-1">PEDIDO ACTUAL</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center font-black text-sm">
+                    {{ carrito.length }}
+                  </div>
+                  <button @click="showCarritoFlotante = false" class="text-white hover:text-slate-300 text-xl font-bold p-1">✕</button>
+                </div>
+              </div>
+
+              <!-- Banner: se agregará a orden existente -->
+              <div v-if="mesaTieneOrdenAbierta" class="px-6 pt-4 shrink-0">
+                <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <span class="text-amber-500">⚡</span>
+                  <p class="text-xs font-black text-amber-700">Se añadirán a {{ ordenAbiertaMesa?.folio }}</p>
+                </div>
+              </div>
+
+              <!-- Cuerpo del pedido -->
+              <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
+                <div class="space-y-4 mb-8">
+                  <div v-for="(nombre, cIdx) in comensalesNombres" :key="'flo-'+cIdx" 
+                       class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
+                       :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                    
+                    <!-- Box Header -->
+                    <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                      <div class="flex items-center gap-2">
+                         <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
+                         <div class="flex flex-col">
+                           <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                           <span v-if="tiempoPorComensal(cIdx) > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                         </div>
+                      </div>
+                      <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+                      <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
+                    </div>
+
+                    <!-- Box Items -->
+                    <div class="p-3 space-y-3 bg-white">
+                      <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-6 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
+                        CAJA VACÍA
+                      </div>
+                      <div v-for="item in getItemsForComensal(cIdx)" :key="'flo-'+item.cartId" class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:border-indigo-200 group transition-all">
+                        <div class="flex justify-between items-start gap-3 mb-2">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-lg bg-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
+                            <p class="text-[11px] font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
+                          </div>
+                          <button @click="eliminarDelCarrito(item.cartId)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
+                        </div>
+                        <div class="mb-3">
+                          <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                        </div>
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-100">
+                            <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
+                            <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
+                            <button @click="incrementar(item.cartId)"
+                              :disabled="item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo"
+                              class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                          </div>
+                          <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-3 pt-6 border-t border-slate-100">
+                  <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span>Subtotal</span>
+                    <span>${{ Number(totalCarrito).toFixed(2) }}</span>
+                  </div>
+                  <div class="flex justify-between items-end">
+                    <span class="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Total Final</span>
+                    <span class="text-2xl font-black text-indigo-600 leading-none">${{ Number(totalCarrito).toFixed(2) }}</span>
+                  </div>
+                </div>
+
+                <button @click="crearOrden(); showCarritoFlotante = false" :disabled="creando || !nuevaOrden.mesa || esAdminOPropietario"
+                  class="w-full py-4 font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs text-white"
+                  :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : (mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100')">
+                  <template v-if="creando">
+                    <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Enviando...
+                  </template>
+                  <template v-else>
+                    {{ esAdminOPropietario ? '🚫 PEDIDO BLOQUEADO' : (mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀') }}
+                  </template>
+                </button>
+                <p v-if="!nuevaOrden.mesa" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating button to open cart on tablet/mobile -->
+          <div v-if="carrito.length > 0 && !showCarritoFlotante" class="lg:hidden fixed bottom-6 right-6 z-40">
+            <button @click="showCarritoFlotante = true" class="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-4 shadow-2xl transition active:scale-95 border border-indigo-500">
+              <span class="text-lg">🛒</span>
+              <span class="text-sm font-black uppercase tracking-wider">Ver Pedido</span>
+              <span class="bg-indigo-800 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black">{{ carrito.length }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -699,6 +811,7 @@ const ordenExistente = ref(null)   // se muestra el modal de confirmación
 const numeroComensales    = ref(1)
 const comensalesNombres   = ref(['Comensal 1'])
 const comensalActivoIndex = ref(0)
+const showCarritoFlotante = ref(false)
 
 watch(numeroComensales, (newVal) => {
   if (newVal === '' || newVal === null || newVal === undefined) {
