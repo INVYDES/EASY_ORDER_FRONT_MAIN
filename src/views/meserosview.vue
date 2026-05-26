@@ -329,7 +329,7 @@
                       type="number" 
                       min="1" 
                       max="50" 
-                      @blur="if (!numeroComensales || numeroComensales < 1) numeroComensales = 1"
+                      @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales"
                       class="flex-1 text-center text-sm font-black text-slate-800 outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                     />
                     <button 
