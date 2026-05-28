@@ -1,24 +1,24 @@
 <template>
   <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
     @click.self="!procesando && $emit('close')">
-    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
+    <div class="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
 
       <!-- Header -->
-      <div class="sticky top-0 bg-white z-10 px-6 pt-5 pb-4 border-b border-gray-100">
+      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-bold text-gray-900">Finalizar pedido</h2>
-            <p class="text-xs text-gray-400 mt-0.5">{{ restauranteNombre }}</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Finalizar pedido</h2>
+            <p class="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-0.5">{{ restauranteNombre }}</p>
           </div>
-          <button @click="$emit('close')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">✕</button>
+          <button @click="$emit('close')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">✕</button>
         </div>
         <!-- Resumen rápido -->
-        <div class="mt-3 flex items-center justify-between bg-indigo-50 rounded-xl px-4 py-2.5">
-          <div class="flex items-center gap-2 text-sm text-indigo-700">
+        <div class="mt-3 flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 rounded-xl px-4 py-2.5">
+          <div class="flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
             <span>🛒</span>
             <span class="font-medium">{{ totalItems }} producto{{ totalItems !== 1 ? 's' : '' }}</span>
           </div>
-          <span class="text-base font-black text-indigo-700">${{ totalPedido.toFixed(2) }}</span>
+          <span class="text-base font-black text-indigo-700 dark:text-indigo-300">${{ totalPedido.toFixed(2) }}</span>
         </div>
       </div>
 
@@ -26,21 +26,21 @@
 
         <!-- ── 1. NÚMERO DE MESA ── -->
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Número de Mesa <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Número de Mesa <span class="text-red-500">*</span></label>
           <div class="relative">
             <span class="absolute left-4 top-3 text-xl">🍽️</span>
             <input v-model="numeroMesa" type="text" placeholder="Ej. 1, 5, Terraza 2"
               :class="['w-full pl-12 pr-4 py-3 border rounded-xl text-lg font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none',
-                !numeroMesa && intentoEnvio ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
+                !numeroMesa && intentoEnvio ? 'border-red-400 bg-red-50' : 'border-gray-200 dark:border-gray-700']" />
           </div>
           <p v-if="!numeroMesa && intentoEnvio" class="text-xs text-red-500 mt-1">Por favor, ingresa el número de mesa</p>
         </div>
 
         <!-- ── 2. NOTA ── -->
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Nota para el restaurante <span class="text-gray-400 font-normal">(opcional)</span></label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nota para el restaurante <span class="text-gray-400 dark:text-gray-500 dark:text-gray-400 font-normal">(opcional)</span></label>
           <textarea v-model="nota" rows="3" placeholder="Alergias, preferencias, sin cebolla..."
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
         </div>
 
         <!-- Error -->

@@ -2,39 +2,39 @@
   <div class="min-h-screen flex">
 
     <!-- IZQUIERDA -->
-    <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 px-6">
+    <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 dark:bg-gray-900 px-6">
       <div class="w-full max-w-md">
 
         <!-- Volver -->
         <router-link
           to="/"
-          class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition mb-8"
+          class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 transition mb-8"
         >
           ← Volver al inicio de sesión
         </router-link>
 
-        <h1 class="text-3xl font-semibold text-gray-800 mb-2">
+        <h1 class="text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Recuperar contraseña
         </h1>
-        <p class="text-gray-500 mb-8 text-sm">
+        <p class="text-gray-500 dark:text-gray-400 mb-8 text-sm">
           Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
         </p>
 
         <!-- ÉXITO -->
-        <div v-if="successMessage" class="mb-6 p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl">
+        <div v-if="successMessage" class="mb-6 p-4 text-sm text-green-700 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl">
           <p class="font-semibold mb-1">✅ Correo enviado</p>
           <p>{{ successMessage }}</p>
         </div>
 
         <!-- ERROR -->
-        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
+        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 rounded-lg">
           {{ errorMessage }}
         </div>
 
         <form v-if="!successMessage" @submit.prevent="handleSubmit" class="space-y-5">
 
           <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700">
+            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               Correo electrónico
             </label>
             <input
@@ -43,7 +43,7 @@
               required
               autocomplete="email"
               placeholder="info@gmail.com"
-              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-4 py-3 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -62,7 +62,7 @@
           <button
             @click="reenviar"
             :disabled="loading || reenviarCooldown > 0"
-            class="w-full py-3 text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition disabled:opacity-50 font-medium text-sm"
+            class="w-full py-3 text-indigo-600 border border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition disabled:opacity-50 font-medium text-sm"
           >
             {{ reenviarCooldown > 0 ? `Reenviar en ${reenviarCooldown}s` : 'Reenviar correo' }}
           </button>

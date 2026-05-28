@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-800/50 flex flex-col">
 
     <!-- Header Menú Kiosko -->
     <div class="bg-gradient-to-br from-indigo-600 to-purple-700 shadow-md">
       <div class="px-5 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <!-- Logo del Restaurante -->
-          <div v-if="restauranteSeleccionado?.imagen_url" class="w-12 h-12 rounded-2xl overflow-hidden bg-white shadow-sm border border-white/20 shrink-0">
+          <div v-if="restauranteSeleccionado?.imagen_url" class="w-12 h-12 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm border border-white/20 shrink-0">
             <img :src="getImageUrl(restauranteSeleccionado.imagen_url)" class="w-full h-full object-cover" />
           </div>
           <div>
@@ -18,7 +18,7 @@
             </p>
           </div>
         </div>
-        <button @click="cerrarSesion" class="bg-white/20 hover:bg-white/30 text-white text-[10px] font-black px-4 py-2 rounded-xl transition uppercase tracking-widest">
+        <button @click="cerrarSesion" class="bg-white dark:bg-gray-800/20 hover:bg-white dark:bg-gray-800/30 text-white text-[10px] font-black px-4 py-2 rounded-xl transition uppercase tracking-widest">
           Salir
         </button>
       </div>
@@ -35,7 +35,7 @@
               v-for="oferta in ofertasProductos" 
               :key="oferta.id"
               @click="agregarOfertaAlPedido(oferta)"
-              class="bg-white rounded-2xl shadow-md border border-amber-200 overflow-hidden flex-shrink-0 w-64 hover:shadow-xl transition-all group text-left"
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-amber-200 overflow-hidden flex-shrink-0 w-64 hover:shadow-xl transition-all group text-left"
             >
               <div class="relative h-24 bg-amber-50">
                 <img 
@@ -50,10 +50,10 @@
                 </div>
               </div>
               <div class="p-3">
-                <h4 class="text-slate-800 font-black text-xs truncate uppercase tracking-tighter">{{ oferta.nombre }}</h4>
+                <h4 class="text-slate-800 dark:text-gray-200 font-black text-xs truncate uppercase tracking-tighter">{{ oferta.nombre }}</h4>
                 <div class="flex items-center justify-between mt-2">
                   <div class="flex items-baseline gap-2">
-                    <span class="text-slate-400 text-[10px] line-through">${{ oferta.precio_original.toFixed(2) }}</span>
+                    <span class="text-slate-400 dark:text-gray-500 text-[10px] line-through">${{ oferta.precio_original.toFixed(2) }}</span>
                     <span class="text-amber-600 font-black text-base">${{ oferta.precio_oferta.toFixed(2) }}</span>
                   </div>
                   <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
@@ -77,25 +77,25 @@
       />
 
       <!-- Filtros de categoría (Sub-Tabs) -->
-      <div class="flex gap-2 px-5 py-4 overflow-x-auto scrollbar-hide bg-white shadow-sm border-b border-gray-100 items-center">
+      <div class="flex gap-2 px-5 py-4 overflow-x-auto scrollbar-hide bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700 items-center">
         <button @click="categoriaActiva = null"
           :class="['px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shrink-0',
-            categoriaActiva === null ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-400 hover:bg-slate-100']">
+            categoriaActiva === null ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-50 dark:bg-gray-800/50 text-slate-400 dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-700 dark:bg-gray-700']">
           Todos
         </button>
         
         <!-- Pestaña especial para Paquetes -->
         <button v-if="paquetes.length > 0" @click="categoriaActiva = 'paquetes'"
           :class="['px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shrink-0 border-2',
-            categoriaActiva === 'paquetes' ? 'bg-indigo-50 border-indigo-600 text-indigo-600 shadow-md' : 'bg-white border-transparent text-slate-400 hover:text-slate-600']">
+            categoriaActiva === 'paquetes' ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-600 text-indigo-600 dark:text-indigo-400 shadow-md' : 'bg-white dark:bg-gray-800 border-transparent text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:text-gray-400']">
           🎁 Paquetes
         </button>
 
-        <div class="h-6 w-px bg-slate-200 mx-1 shrink-0"></div>
+        <div class="h-6 w-px bg-slate-200 dark:bg-gray-600 mx-1 shrink-0"></div>
 
         <button v-for="cat in categorias" :key="cat.id" @click="categoriaActiva = cat.id"
           :class="['px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shrink-0 border-2',
-            categoriaActiva === cat.id ? 'text-white shadow-lg' : 'bg-white border-transparent text-slate-400']"
+            categoriaActiva === cat.id ? 'text-white shadow-lg' : 'bg-white dark:bg-gray-800 border-transparent text-slate-400 dark:text-gray-500']"
           :style="categoriaActiva === cat.id ? { backgroundColor: cat.color || '#6366f1', borderColor: cat.color || '#6366f1' } : {}">
           {{ cat.icono ? cat.icono + ' ' : '' }}{{ cat.nombre }}
         </button>
@@ -108,7 +108,7 @@
       <!-- Botón de Carrito (Toggle Sidebar) -->
       <button 
         @click="sidebarAbierta = !sidebarAbierta"
-        class="hidden sm:flex absolute z-30 bg-white border-2 border-indigo-600 text-indigo-600 shadow-xl w-14 h-14 rounded-2xl items-center justify-center hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all group overflow-hidden"
+        class="hidden sm:flex absolute z-30 bg-white dark:bg-gray-800 border-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 shadow-xl w-14 h-14 rounded-2xl items-center justify-center hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all group overflow-hidden"
         :class="sidebarAbierta ? 'right-[25rem] top-2' : 'right-4 top-2'"
       >
         <div class="relative">
@@ -119,7 +119,7 @@
           </span>
         </div>
         <!-- Tooltip -->
-        <div class="absolute -bottom-10 bg-slate-800 text-white text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
+        <div class="absolute -bottom-10 bg-slate-800 dark:bg-gray-900 text-white text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
           {{ sidebarAbierta ? 'Ocultar Pedido' : 'Ver Mi Pedido' }}
         </div>
       </button>
@@ -127,18 +127,15 @@
       <!-- Contenedor de Scroll de Productos -->
       <div class="flex-1 overflow-y-auto p-5 space-y-10 custom-scrollbar transition-all duration-700 ease-in-out">
         
-        <div v-if="loading.productos" class="flex flex-col items-center justify-center py-20 gap-3">
-          <div class="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Cargando catálogo...</p>
-        </div>
+        <LoadingSpinner v-if="loading.productos" text="Cargando catálogo..." />
 
         <template v-else>
           <!-- ══ SECCIÓN DE PAQUETES (Si está en 'Todos' o 'Paquetes') ══ -->
           <div v-if="(categoriaActiva === null || categoriaActiva === 'paquetes') && paquetes.length > 0" class="animate-fade-in">
             <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-xl shadow-sm border border-indigo-100">🎁</div>
-              <h3 class="font-black text-slate-800 text-xl tracking-tight uppercase">Combos y Paquetes</h3>
-              <div class="flex-1 h-px bg-slate-100"></div>
+              <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-xl shadow-sm border border-indigo-100">🎁</div>
+              <h3 class="font-black text-slate-800 dark:text-gray-200 text-xl tracking-tight uppercase">Combos y Paquetes</h3>
+              <div class="flex-1 h-px bg-slate-100 dark:bg-gray-700"></div>
             </div>
             
             <div class="grid grid-cols-1 gap-6 transition-all duration-700"
@@ -147,10 +144,10 @@
                 v-for="pkg in paquetes" 
                 :key="pkg.id"
                 @click="agregarPaqueteAlPedido(pkg)"
-                class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all group p-1"
+                class="bg-white dark:bg-gray-800 rounded-[2rem] border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all group p-1"
                 :class="{ 'p-2 scale-105': !sidebarAbierta }"
               >
-                <div class="relative rounded-[1.8rem] overflow-hidden bg-indigo-50"
+                <div class="relative rounded-[1.8rem] overflow-hidden bg-indigo-50 dark:bg-indigo-900/30"
                      :class="sidebarAbierta ? 'h-40' : 'h-64'">
                   <img 
                     v-if="pkg.imagen_url" 
@@ -165,15 +162,15 @@
                 </div>
                 
                 <div class="p-4 flex-1 flex flex-col">
-                  <h4 class="text-slate-800 font-black leading-tight uppercase mb-2"
+                  <h4 class="text-slate-800 dark:text-gray-200 font-black leading-tight uppercase mb-2"
                       :class="sidebarAbierta ? 'text-base' : 'text-2xl'">{{ pkg.nombre }}</h4>
                   <div class="flex flex-wrap gap-1.5 mb-4">
-                    <span v-for="p in pkg.productos" :key="p.id" class="text-[9px] bg-slate-50 text-slate-500 px-2 py-1 rounded-lg font-black border border-slate-100">
+                    <span v-for="p in pkg.productos" :key="p.id" class="text-[9px] bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 px-2 py-1 rounded-lg font-black border border-slate-100 dark:border-gray-700">
                       {{ p.pivot.cantidad }}× {{ p.nombre.toUpperCase() }}
                     </span>
                   </div>
-                  <div class="mt-auto flex items-center justify-between pt-3 border-t border-slate-50">
-                    <span class="text-indigo-600 font-black text-xl">${{ Number(pkg.precio).toFixed(2) }}</span>
+                  <div class="mt-auto flex items-center justify-between pt-3 border-t border-slate-50 dark:border-gray-700">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-black text-xl">${{ Number(pkg.precio).toFixed(2) }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-100 group-hover:rotate-12 transition-transform">
                       <span class="text-xl font-bold">+</span>
                     </div>
@@ -190,34 +187,34 @@
                 :style="{ backgroundColor: (cat.color||'#6366f1')+'11', borderColor:cat.color||'#6366f1' }">
                 {{ cat.icono || '🍽️' }}
               </div>
-              <h3 class="font-black text-slate-800 text-xl tracking-tight uppercase">{{ cat.nombre }}</h3>
-              <div class="flex-1 h-px bg-slate-100"></div>
+              <h3 class="font-black text-slate-800 dark:text-gray-200 text-xl tracking-tight uppercase">{{ cat.nombre }}</h3>
+              <div class="flex-1 h-px bg-slate-100 dark:bg-gray-700"></div>
             </div>
 
-            <div class="grid grid-cols-2 gap-6 transition-all duration-700"
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 transition-all duration-700"
                  :class="sidebarAbierta ? 'sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'">
               <button v-for="p in cat.productos" :key="p.id"
                 @click="agregarAlPedido(p)"
                 :disabled="p.agotado"
-                class="bg-white rounded-3xl border border-slate-50 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl transition-all group disabled:opacity-50 relative p-1">
-                <div class="w-full rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative transition-all duration-700"
+                class="bg-white dark:bg-gray-800 rounded-3xl border border-slate-50 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl transition-all group disabled:opacity-50 relative p-1">
+                <div class="w-full rounded-2xl overflow-hidden bg-slate-50 dark:bg-gray-800/50 flex items-center justify-center relative transition-all duration-700"
                      :class="sidebarAbierta ? 'h-28' : 'h-52'">
                   <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre"
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   <span v-else class="text-3xl">🍽️</span>
-                  <div v-if="p.agotado" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest">Agotado</div>
+                  <div v-if="p.agotado" class="absolute inset-0 bg-white dark:bg-gray-800/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest">Agotado</div>
                 </div>
                 <div class="p-3 flex-1 flex flex-col justify-between" :class="{ 'p-4': !sidebarAbierta }">
                   <div>
-                    <p class="font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2 transition-all"
+                    <p class="font-black text-slate-800 dark:text-gray-200 leading-tight uppercase tracking-tighter line-clamp-2 transition-all"
                        :class="sidebarAbierta ? 'text-xs' : 'text-xl'">{{ p.nombre }}</p>
                     <p v-if="p.bajo_stock && !p.agotado" class="font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded mt-1.5 inline-block uppercase transition-all"
                        :class="sidebarAbierta ? 'text-[8px]' : 'text-sm'">Últimas {{ p.stock }}</p>
                   </div>
-                  <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                    <span class="font-black text-slate-900 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
+                  <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50 dark:border-gray-700">
+                    <span class="font-black text-slate-900 dark:text-gray-100 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
                     <div class="w-7 h-7 rounded-xl flex items-center justify-center text-base font-bold transition-all shadow-sm"
-                      :class="!p.agotado ? 'bg-slate-900 text-white group-hover:scale-110' : 'bg-slate-100 text-slate-300'">
+                      :class="!p.agotado ? 'bg-slate-900 dark:bg-gray-950 text-white group-hover:scale-110' : 'bg-slate-100 dark:bg-gray-700 text-slate-300 dark:text-gray-600'">
                       {{ !p.agotado ? '+' : '✕' }}
                     </div>
                   </div>
@@ -229,82 +226,82 @@
           <!-- Mensaje cuando no hay productos -->
           <div v-if="productos.length === 0 && paquetes.length === 0" class="flex flex-col items-center justify-center py-20 text-center opacity-40">
             <span class="text-7xl mb-4">📭</span>
-            <h3 class="text-xl font-black text-slate-800 uppercase tracking-widest">Sin Productos Disponibles</h3>
-            <p class="text-slate-500 text-sm mt-2 font-medium">No se encontraron productos para este restaurante.</p>
+            <h3 class="text-xl font-black text-slate-800 dark:text-gray-200 uppercase tracking-widest">Sin Productos Disponibles</h3>
+            <p class="text-slate-500 dark:text-gray-400 text-sm mt-2 font-medium">No se encontraron productos para este restaurante.</p>
           </div>
         </template>
       </div>
 
       <!-- Carrito lateral (Escritorio) -->
-      <div v-show="sidebarAbierta" class="w-96 shrink-0 bg-white border-l border-slate-100 flex flex-col shadow-2xl z-10 hidden sm:flex animate-slide-left">
-        <div class="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
+      <div v-show="sidebarAbierta" class="w-96 shrink-0 bg-white dark:bg-gray-800 border-l border-slate-100 dark:border-gray-700 flex flex-col shadow-2xl z-10 hidden sm:flex animate-slide-left">
+        <div class="px-6 py-4 border-b border-slate-50 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/50/50">
           <div class="flex justify-between items-center mb-1">
-            <h3 class="font-black text-slate-900 text-xl tracking-tight">Tu Pedido</h3>
+            <h3 class="font-black text-slate-900 dark:text-gray-100 text-xl tracking-tight">Tu Pedido</h3>
             <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{{ totalItems }} items</span>
           </div>
-          <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Restaurant Kiosk System</p>
+          <p class="text-[10px] text-slate-400 dark:text-gray-500 font-black uppercase tracking-widest mb-3">Restaurant Kiosk System</p>
           
-          <div class="flex items-center justify-between bg-white rounded-xl p-2 border border-slate-100 shadow-sm">
-            <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
+          <div class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-2 border border-slate-100 dark:border-gray-700 shadow-sm">
+            <span class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-2">Comensales:</span>
+            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-lg text-sm bg-slate-50 dark:bg-gray-800/50 focus:bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
           </div>
         </div>
         
-        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-white custom-scrollbar">
+        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-white dark:bg-gray-800 custom-scrollbar">
           <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center h-full text-center opacity-20 py-20">
             <span class="text-7xl mb-6">🍽️</span>
-            <p class="text-slate-900 font-black text-xl uppercase tracking-widest">Orden Vacía</p>
-            <p class="text-sm text-slate-500 mt-2 font-medium">Toca los platos para agregarlos</p>
+            <p class="text-slate-900 dark:text-gray-100 font-black text-xl uppercase tracking-widest">Orden Vacía</p>
+            <p class="text-sm text-slate-500 dark:text-gray-400 mt-2 font-medium">Toca los platos para agregarlos</p>
           </div>
           
           <div v-else class="space-y-4">
             <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
                  class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100 dark:border-gray-700'">
               
               <!-- Box Header -->
-              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+              <div class="bg-slate-50 dark:bg-gray-800/50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-2">
                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
                    <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 dark:text-gray-200 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 dark:text-gray-400 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
                    </div>
                 </div>
-                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
-                <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
+                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-50 dark:bg-indigo-900/300 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+                <span v-else class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Inactivo</span>
               </div>
 
               <!-- Box Items -->
-              <div class="p-3 space-y-3 bg-white">
-                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
+              <div class="p-3 space-y-3 bg-white dark:bg-gray-800">
+                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 dark:text-gray-600 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 dark:border-gray-700 rounded-xl">
                   Caja Vacía
                 </div>
                 
                 <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" 
-                  class="p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:border-indigo-200 group transition-all">
+                  class="p-3 bg-slate-50 dark:bg-gray-800/50/50 border border-slate-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 group transition-all">
                   <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 flex items-center justify-center shadow-sm border border-slate-100">
+                    <div class="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shrink-0 flex items-center justify-center shadow-sm border border-slate-100 dark:border-gray-700">
                       <img v-if="item.imagen" :src="item.imagen" class="w-full h-full object-cover" />
                       <span v-else class="text-lg">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
                     </div>
                     <div class="flex-1 min-w-0 flex justify-between items-start">
-                      <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }}</p>
-                      <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
+                      <p class="text-[11px] font-black text-slate-800 dark:text-gray-200 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }}</p>
+                      <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 dark:text-gray-600 hover:text-red-500 transition-all ml-2">✕</button>
                     </div>
                   </div>
                   <div class="mb-2">
-                    <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                    <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
                   </div>
                   <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
-                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
-                      <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
+                    <div class="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-slate-100 dark:border-gray-700 shadow-sm">
+                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 dark:bg-gray-800/50 text-slate-400 dark:text-gray-500 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
+                      <span class="text-[10px] font-black w-4 text-center text-slate-700 dark:text-gray-300">{{ item.cantidad }}</span>
                       <button @click="incrementar(item.cartId)"
                         :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
-                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                        class="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
-                    <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                    <p class="text-xs font-black text-slate-900 dark:text-gray-100">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
                 </div>
               </div>
@@ -312,15 +309,15 @@
           </div>
         </div>
 
-        <div class="p-6 border-t border-slate-100 bg-slate-50/30 space-y-4">
+        <div class="p-6 border-t border-slate-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/50/30 space-y-4">
           <div v-if="pedido.length > 0" class="space-y-2">
-            <div class="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
+            <div class="flex justify-between text-xs font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">
               <span>Subtotal</span>
               <span>${{ totalPedido.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between items-end py-2">
-              <span class="text-sm font-black text-slate-900 uppercase tracking-widest">Total</span>
-              <span class="text-3xl font-black text-indigo-600 leading-none">${{ totalPedido.toFixed(2) }}</span>
+              <span class="text-sm font-black text-slate-900 dark:text-gray-100 uppercase tracking-widest">Total</span>
+              <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 leading-none">${{ totalPedido.toFixed(2) }}</span>
             </div>
           </div>
           
@@ -336,7 +333,7 @@
             {{ errorOrden }}
           </div>
           
-          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 hover:text-red-500 transition-colors uppercase tracking-widest">
+          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 dark:text-gray-500 hover:text-red-500 transition-colors uppercase tracking-widest">
             Limpiar Carrito
           </button>
         </div>
@@ -344,28 +341,28 @@
     </div>
 
     <!-- Modal carrito móvil MEJORADO -->
-    <div v-if="showCarritoMobile" class="sm:hidden fixed inset-0 bg-slate-900/40 z-50 flex items-end backdrop-blur-sm transition-all duration-300"
+    <div v-if="showCarritoMobile" class="sm:hidden fixed inset-0 bg-slate-900 dark:bg-gray-950/40 z-50 flex items-end backdrop-blur-sm transition-all duration-300"
       @click.self="showCarritoMobile = false">
-      <div class="bg-white w-full rounded-t-[2.5rem] p-6 max-h-[85vh] flex flex-col shadow-2xl transform transition-transform duration-300 animate-slide-up">
+      <div class="bg-white dark:bg-gray-800 w-full rounded-t-[2.5rem] p-6 max-h-[85vh] flex flex-col shadow-2xl transform transition-transform duration-300 animate-slide-up">
         
         <!-- Header más limpio y botón cerrar -->
         <div class="flex items-center justify-between mb-5">
           <div class="flex flex-col">
-            <h3 class="font-black text-slate-900 text-2xl tracking-tight">Tu Orden</h3>
-            <span class="text-indigo-600 text-xs font-black uppercase tracking-widest mt-1">{{ totalItems }} Platillos</span>
+            <h3 class="font-black text-slate-900 dark:text-gray-100 text-2xl tracking-tight">Tu Orden</h3>
+            <span class="text-indigo-600 dark:text-indigo-400 text-xs font-black uppercase tracking-widest mt-1">{{ totalItems }} Platillos</span>
           </div>
-          <button @click="showCarritoMobile = false" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors shadow-sm">✕</button>
+          <button @click="showCarritoMobile = false" class="w-10 h-10 bg-slate-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-slate-500 dark:text-gray-400 hover:bg-slate-200 dark:bg-gray-600 hover:text-slate-800 dark:text-gray-200 transition-colors shadow-sm">✕</button>
         </div>
         
         <!-- Selector de comensales estilo píldora -->
-        <div class="flex items-center justify-between bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 mb-5 shadow-sm">
-          <span class="text-[11px] font-black text-indigo-800 uppercase tracking-widest ml-2 flex items-center gap-2">
+        <div class="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30/50 rounded-2xl p-3 border border-indigo-100/50 mb-5 shadow-sm">
+          <span class="text-[11px] font-black text-indigo-800 dark:text-indigo-300 uppercase tracking-widest ml-2 flex items-center gap-2">
             👥 Comensales:
           </span>
-          <div class="flex items-center bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
-            <button @click="numeroComensales = Math.max(1, numeroComensales - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">-</button>
-            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-10 h-8 text-center text-sm font-black text-slate-800 outline-none bg-transparent" />
-            <button @click="numeroComensales++" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">+</button>
+          <div class="flex items-center bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
+            <button @click="numeroComensales = Math.max(1, numeroComensales - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:bg-indigo-900/30 transition-colors">-</button>
+            <input v-model="numeroComensales" type="number" min="1" max="50" class="w-10 h-8 text-center text-sm font-black text-slate-800 dark:text-gray-200 outline-none bg-transparent" />
+            <button @click="numeroComensales++" class="w-8 h-8 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:bg-indigo-900/30 transition-colors">+</button>
           </div>
         </div>
 
@@ -373,55 +370,55 @@
         <div class="flex-1 overflow-y-auto space-y-5 mb-4 pr-2 custom-scrollbar">
           <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center py-12 opacity-40">
             <span class="text-6xl mb-4">🍽️</span>
-            <p class="text-slate-900 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
+            <p class="text-slate-900 dark:text-gray-100 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
           </div>
           
           <div v-else class="space-y-5">
             <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-[1.5rem] overflow-hidden transition-all duration-300 bg-white"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-lg shadow-indigo-100/50' : 'border-slate-100'">
+                 class="border-2 rounded-[1.5rem] overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800"
+                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-lg shadow-indigo-100/50' : 'border-slate-100 dark:border-gray-700'">
               
               <!-- Header Comensal -->
               <div class="p-3.5 flex justify-between items-center cursor-pointer transition-colors" 
-                   :class="comensalActivoIndex === cIdx ? 'bg-indigo-50/30' : 'bg-slate-50/50 hover:bg-slate-50'"
+                   :class="comensalActivoIndex === cIdx ? 'bg-indigo-50 dark:bg-indigo-900/30/30' : 'bg-slate-50 dark:bg-gray-800/50/50 hover:bg-slate-50 dark:hover:bg-gray-700/50 dark:bg-gray-800/50'"
                    @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-3">
                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm border border-white transition-colors"
-                        :class="comensalActivoIndex === cIdx ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'">
+                        :class="comensalActivoIndex === cIdx ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-800 text-slate-400 dark:text-gray-500'">
                      {{ comensalActivoIndex === cIdx ? '👤' : '👥' }}
                    </div>
                    <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 dark:text-gray-200 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 dark:text-gray-400 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
                    </div>
                 </div>
-                <div v-if="comensalActivoIndex === cIdx" class="w-2.5 h-2.5 bg-indigo-500 rounded-full shadow-sm animate-pulse"></div>
+                <div v-if="comensalActivoIndex === cIdx" class="w-2.5 h-2.5 bg-indigo-50 dark:bg-indigo-900/300 rounded-full shadow-sm animate-pulse"></div>
               </div>
 
               <!-- Items Comensal -->
-              <div class="p-3 space-y-3 bg-white border-t border-slate-50">
-                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
+              <div class="p-3 space-y-3 bg-white dark:bg-gray-800 border-t border-slate-50 dark:border-gray-700">
+                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 dark:text-gray-600 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 dark:border-gray-700 rounded-xl bg-slate-50 dark:bg-gray-800/50/30">
                   Agrega platillos
                 </div>
                 
-                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm relative group transition-all">
+                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 rounded-2xl shadow-sm relative group transition-all">
                   <button @click="eliminarDelPedido(item.cartId)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-[10px] font-black border border-white shadow-sm hover:bg-red-500 hover:text-white transition-colors">✕</button>
                   <div class="flex flex-col mb-3">
-                    <p class="text-xs font-black text-slate-800 uppercase tracking-tighter leading-tight pr-4">{{ item.nombre }}</p>
-                    <p class="text-[10px] font-bold text-slate-400 mt-1">${{ Number(item.precio).toFixed(2) }} c/u</p>
+                    <p class="text-xs font-black text-slate-800 dark:text-gray-200 uppercase tracking-tighter leading-tight pr-4">{{ item.nombre }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 dark:text-gray-500 mt-1">${{ Number(item.precio).toFixed(2) }} c/u</p>
                   </div>
                   <div class="mb-3">
-                    <input v-model="item.notas" type="text" placeholder="📝 Agregar notas (ej: sin cebolla)" class="w-full px-3 py-2 text-[10px] font-bold border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-400" />
+                    <input v-model="item.notas" type="text" placeholder="📝 Agregar notas (ej: sin cebolla)" class="w-full px-3 py-2 text-[10px] font-bold border border-slate-200 dark:border-gray-700 rounded-xl bg-slate-50 dark:bg-gray-800/50 focus:bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-400 dark:text-gray-500" />
                   </div>
-                  <div class="flex items-center justify-between pt-2 border-t border-slate-50">
-                    <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
-                      <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
-                      <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
+                  <div class="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-gray-700">
+                    <div class="flex items-center bg-slate-50 dark:bg-gray-800/50 rounded-xl p-1 border border-slate-100 dark:border-gray-700 shadow-sm">
+                      <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 text-slate-600 dark:text-gray-400 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
+                      <span class="text-[11px] font-black w-6 text-center text-slate-800 dark:text-gray-200">{{ item.cantidad }}</span>
                       <button @click="incrementar(item.cartId)"
                         :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
                         class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
-                    <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                    <p class="text-sm font-black text-slate-900 dark:text-gray-100">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
                 </div>
               </div>
@@ -429,16 +426,16 @@
           </div>
         </div>
 
-        <div class="pt-5 border-t border-slate-100 space-y-4 shrink-0 bg-white">
+        <div class="pt-5 border-t border-slate-100 dark:border-gray-700 space-y-4 shrink-0 bg-white dark:bg-gray-800">
           <div class="flex justify-between items-end px-1">
-            <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Total Orden</span>
-            <span class="text-3xl font-black text-indigo-600 leading-none tracking-tighter">${{ totalPedido.toFixed(2) }}</span>
+            <span class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Total Orden</span>
+            <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 leading-none tracking-tighter">${{ totalPedido.toFixed(2) }}</span>
           </div>
           <button @click="showCheckout = true; showCarritoMobile = false" :disabled="pedido.length === 0"
-            class="w-full py-4 bg-slate-900 text-white text-sm font-black rounded-2xl hover:bg-slate-800 active:scale-95 transition-all disabled:opacity-40 uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center justify-center gap-2">
+            class="w-full py-4 bg-slate-900 dark:bg-gray-950 text-white text-sm font-black rounded-2xl hover:bg-slate-800 dark:bg-gray-900 active:scale-95 transition-all disabled:opacity-40 uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center justify-center gap-2">
             Confirmar Pedido <span class="text-lg">✨</span>
           </button>
-          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest text-center transition-colors">
+          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 dark:text-gray-500 hover:text-red-500 uppercase tracking-widest text-center transition-colors">
             Vaciar todo el carrito
           </button>
         </div>
@@ -449,8 +446,8 @@
     <!-- Botón flotante móvil -->
     <div v-if="pedido.length > 0" class="sm:hidden fixed bottom-6 left-6 right-6 z-20">
       <button @click="showCarritoMobile = true"
-        class="w-full py-5 bg-slate-900 text-white rounded-3xl shadow-2xl flex items-center justify-between px-6 font-black animate-slide-up border border-slate-800">
-        <span class="bg-indigo-500 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest">{{ totalItems }} Items</span>
+        class="w-full py-5 bg-slate-900 dark:bg-gray-950 text-white rounded-3xl shadow-2xl flex items-center justify-between px-6 font-black animate-slide-up border border-slate-800">
+        <span class="bg-indigo-50 dark:bg-indigo-900/300 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest">{{ totalItems }} Items</span>
         <span class="uppercase tracking-widest text-xs">Ver Pedido</span>
         <span class="text-sm">${{ totalPedido.toFixed(2) }}</span>
       </button>
@@ -459,65 +456,65 @@
     <!-- Modal carrito móvil -->
     <div v-if="showCarritoMobile" class="sm:hidden fixed inset-0 bg-black/50 z-30 flex items-end animate-fade-in"
       @click.self="showCarritoMobile = false">
-      <div class="bg-white w-full rounded-t-3xl p-5 max-h-[85vh] flex flex-col animate-slide-up">
+      <div class="bg-white dark:bg-gray-800 w-full rounded-t-3xl p-5 max-h-[85vh] flex flex-col animate-slide-up">
         
-        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-gray-700">
           <div>
-            <h3 class="font-black text-slate-800 text-lg">Tu Pedido</h3>
+            <h3 class="font-black text-slate-800 dark:text-gray-200 text-lg">Tu Pedido</h3>
             <span class="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">{{ totalItems }} items</span>
           </div>
-          <button @click="showCarritoMobile = false" class="text-slate-400 text-xl hover:text-slate-600">✕</button>
+          <button @click="showCarritoMobile = false" class="text-slate-400 dark:text-gray-500 text-xl hover:text-slate-600 dark:text-gray-400">✕</button>
         </div>
         
-        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-2 border border-slate-100 shadow-sm mb-4">
-          <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-          <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
+        <div class="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-xl p-2 border border-slate-100 dark:border-gray-700 shadow-sm mb-4">
+          <span class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-2">Comensales:</span>
+          <input v-model="numeroComensales" type="number" min="1" max="50" class="w-16 px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
         </div>
 
         <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
           <div v-if="pedido.length === 0" class="text-center py-10 opacity-50">
             <span class="text-5xl mb-4 block">🍽️</span>
-            <p class="text-slate-900 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
+            <p class="text-slate-900 dark:text-gray-100 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
           </div>
           
           <div v-else class="space-y-4">
             <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
                  class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100 dark:border-gray-700'">
               
-              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+              <div class="bg-slate-50 dark:bg-gray-800/50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-2">
                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
                    <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-24 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 dark:text-gray-200 outline-none w-24 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 dark:text-gray-400 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
                    </div>
                 </div>
-                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-50 dark:bg-indigo-900/300 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
               </div>
 
-              <div class="p-3 space-y-3 bg-white">
-                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-2 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
+              <div class="p-3 space-y-3 bg-white dark:bg-gray-800">
+                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-2 text-slate-300 dark:text-gray-600 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 dark:border-gray-700 rounded-xl">
                   Caja Vacía
                 </div>
                 
-                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-2 bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 rounded-xl">
                   <div class="flex items-center justify-between mb-2">
-                    <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none flex-1">{{ item.nombre }}</p>
-                    <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
+                    <p class="text-[11px] font-black text-slate-800 dark:text-gray-200 uppercase tracking-tighter truncate leading-none flex-1">{{ item.nombre }}</p>
+                    <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 dark:text-gray-600 hover:text-red-500 transition-all ml-2">✕</button>
                   </div>
                   <div class="mb-2">
-                    <input v-model="item.notas" type="text" placeholder="Notas" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                    <input v-model="item.notas" type="text" placeholder="Notas" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
                   </div>
                   <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-1 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
-                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500">−</button>
+                    <div class="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg p-1 border border-slate-100 dark:border-gray-700 shadow-sm">
+                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 dark:bg-gray-800/50 text-slate-400 dark:text-gray-500 text-xs font-black flex items-center justify-center hover:text-red-500">−</button>
                       <span class="text-[10px] font-black w-4 text-center">{{ item.cantidad }}</span>
                       <button @click="incrementar(item.cartId)"
                         :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
-                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                        class="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-black flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
-                    <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                    <p class="text-xs font-black text-slate-900 dark:text-gray-100">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                   </div>
                 </div>
               </div>
@@ -525,16 +522,16 @@
           </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-100 space-y-3 shrink-0">
+        <div class="pt-4 border-t border-slate-100 dark:border-gray-700 space-y-3 shrink-0">
           <div class="flex justify-between items-end">
-            <span class="text-sm font-black text-slate-900 uppercase tracking-widest">Total</span>
-            <span class="text-2xl font-black text-indigo-600 leading-none">${{ totalPedido.toFixed(2) }}</span>
+            <span class="text-sm font-black text-slate-900 dark:text-gray-100 uppercase tracking-widest">Total</span>
+            <span class="text-2xl font-black text-indigo-600 dark:text-indigo-400 leading-none">${{ totalPedido.toFixed(2) }}</span>
           </div>
           <button @click="showCheckout = true; showCarritoMobile = false" :disabled="pedido.length === 0"
             class="w-full py-4 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-40 uppercase tracking-widest shadow-lg shadow-indigo-100">
             Confirmar Orden ✨
           </button>
-          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest text-center">
+          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 dark:text-gray-500 hover:text-red-500 uppercase tracking-widest text-center">
             Limpiar Carrito
           </button>
         </div>
@@ -560,10 +557,11 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarquesitaWidget from '../components/Marquesitawidget.vue'
 import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 
 const router = useRouter()
 const API_URL     = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-import { STORAGE_URL } from '@/config/api'
+import { STORAGE_URL, getHeaders } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 // --- Estado ---
@@ -622,10 +620,7 @@ const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {}
 const empleadoId = userActual?.id ?? null
 
 // --- Helpers ---
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
+
 const getImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http')) return path
@@ -998,8 +993,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.animate-spin { animation: spin 1s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .animate-fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slide-left { animation: slideLeft 0.3s ease-out; }

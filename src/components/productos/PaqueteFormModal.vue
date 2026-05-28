@@ -1,14 +1,14 @@
 <template>
   <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-zoom-in">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-zoom-in mx-4">
       
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50/50">
         <div>
-          <h3 class="text-xl font-black text-gray-900">{{ isEdit ? 'Editar Paquete' : 'Nuevo Paquete' }}</h3>
-          <p class="text-xs text-gray-400">Combina productos para crear ofertas únicas</p>
+          <h3 class="text-xl font-black text-gray-900 dark:text-gray-100">{{ isEdit ? 'Editar Paquete' : 'Nuevo Paquete' }}</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500">Combina productos para crear ofertas únicas</p>
         </div>
-        <button @click="$emit('close')" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-white hover:text-gray-600 transition shadow-sm">✕</button>
+        <button @click="$emit('close')" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-white dark:bg-gray-800 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 transition shadow-sm">✕</button>
       </div>
 
       <!-- Form Content -->
@@ -18,24 +18,24 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Nombre del Paquete</label>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-1.5 ml-1">Nombre del Paquete</label>
               <input 
                 v-model="form.nombre"
                 type="text"
                 placeholder="Ej: Combo Familiar"
-                class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
+                class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
               />
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Precio Final</label>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-1.5 ml-1">Precio Final</label>
               <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold">$</span>
                 <input 
                   v-model="form.precio"
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  class="w-full pl-8 pr-4 py-3 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition font-bold"
+                  class="w-full pl-8 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition font-bold"
                 />
               </div>
             </div>
@@ -43,18 +43,18 @@
 
           <!-- Imagen -->
           <div class="space-y-2">
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Imagen del Paquete</label>
+            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-1.5 ml-1">Imagen del Paquete</label>
             <div 
               @click="$refs.fileInput.click()"
-              class="relative aspect-video rounded-2xl border-2 border-dashed border-gray-200 hover:border-indigo-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group"
+              class="relative aspect-video rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-indigo-400 bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group"
             >
               <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
               <div v-else class="text-center p-4">
                 <span class="text-3xl block mb-2">🖼️</span>
-                <p class="text-xs text-gray-400 font-medium">Click para subir imagen</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Click para subir imagen</p>
               </div>
               <div v-if="previewUrl" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <span class="text-white text-xs font-bold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">Cambiar Imagen</span>
+                <span class="text-white text-xs font-bold bg-white dark:bg-gray-800/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">Cambiar Imagen</span>
               </div>
               <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFile" />
             </div>
@@ -62,20 +62,20 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Descripción</label>
+          <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-1.5 ml-1">Descripción</label>
           <textarea 
             v-model="form.descripcion"
             rows="2"
             placeholder="Describe qué incluye el paquete..."
-            class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
+            class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
           ></textarea>
         </div>
 
         <!-- Selector de Productos -->
         <div class="space-y-4">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h4 class="text-sm font-black text-gray-800 uppercase tracking-wider">Productos Incluidos</h4>
-            <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">{{ form.productos.length }} productos seleccionados</span>
+          <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+            <h4 class="text-sm font-black text-gray-800 dark:text-gray-200 uppercase tracking-wider">Productos Incluidos</h4>
+            <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">{{ form.productos.length }} productos seleccionados</span>
           </div>
 
             <!-- Buscador para agregar -->
@@ -86,43 +86,43 @@
                 placeholder="🔍 Buscar producto para añadir..."
                 @focus="isFocused = true"
                 @blur="setTimeout(() => isFocused = false, 250)"
-                class="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
+                class="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
               />
               
               <!-- Botón de Flecha para abrir/cerrar -->
               <button 
                 type="button"
                 @click.stop="isFocused = !isFocused"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-all duration-300 transform"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:text-indigo-400 transition-all duration-300 transform"
                 :class="isFocused ? 'rotate-180' : 'rotate-0'"
               >
                 <span class="text-xs">▼</span>
               </button>
               
               <!-- Resultados búsqueda / Lista desplegable -->
-              <div v-if="isFocused && filteredProducts.length > 0" class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-64 overflow-y-auto animate-fade-in border-t-4 border-t-indigo-500">
-                <div class="p-2 border-b border-gray-50 bg-gray-50/50">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Selecciona un producto</p>
+              <div v-if="isFocused && filteredProducts.length > 0" class="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto animate-fade-in border-t-4 border-t-indigo-500">
+                <div class="p-2 border-b border-gray-50 bg-gray-50 dark:bg-gray-800/50/50">
+                  <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-2">Selecciona un producto</p>
                 </div>
                 <button 
                   v-for="p in filteredProducts" 
                   :key="p.id"
                   @click="addProduct(p)"
-                  class="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-center justify-between group transition-colors border-b border-gray-50 last:border-0"
+                  class="w-full px-4 py-3 text-left hover:bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-between group transition-colors border-b border-gray-50 last:border-0"
                 >
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-white">
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-white">
                       <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
                       <span v-else class="text-lg">🍽️</span>
                     </div>
                     <div>
-                      <p class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</p>
-                      <p class="text-[10px] text-gray-400 font-medium">{{ p.categoria?.nombre || 'Producto' }}</p>
+                      <p class="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:text-indigo-400 transition-colors">{{ p.nombre }}</p>
+                      <p class="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{{ p.categoria?.nombre || 'Producto' }}</p>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="text-xs font-black text-gray-400 group-hover:text-indigo-500 transition-colors">${{ p.precio }}</span>
-                    <span class="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">+</span>
+                    <span class="text-xs font-black text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 transition-colors">${{ p.precio }}</span>
+                    <span class="w-6 h-6 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">+</span>
                   </div>
                 </button>
               </div>
@@ -130,30 +130,30 @@
 
           <!-- Lista de productos seleccionados -->
           <div class="space-y-2">
-            <div v-if="form.productos.length === 0" class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-              <p class="text-xs text-gray-400 font-medium italic">Selecciona al menos un producto arriba</p>
+            <div v-if="form.productos.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+              <p class="text-xs text-gray-400 dark:text-gray-500 font-medium italic">Selecciona al menos un producto arriba</p>
             </div>
             <div 
               v-for="(p, index) in form.productos" 
               :key="p.id"
-              class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors"
+              class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors"
             >
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 overflow-hidden">
                   <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
                   <span v-else>🍽️</span>
                 </div>
                 <div>
-                  <p class="text-sm font-bold text-gray-800">{{ p.nombre }}</p>
-                  <p class="text-[10px] text-gray-400 font-medium">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
+                  <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ p.nombre }}</p>
+                  <p class="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
                 </div>
               </div>
 
               <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-gray-50 rounded-xl p-1 border border-gray-100">
-                  <button @click="p.cantidad > 1 ? p.cantidad-- : null" class="w-7 h-7 rounded-lg bg-white shadow-sm text-gray-500 hover:text-indigo-600 transition flex items-center justify-center font-bold">−</button>
-                  <span class="text-sm font-black w-6 text-center text-gray-700">{{ p.cantidad }}</span>
-                  <button @click="p.cantidad++" class="w-7 h-7 rounded-lg bg-white shadow-sm text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center font-bold">+</button>
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-1 border border-gray-100 dark:border-gray-700">
+                  <button @click="p.cantidad > 1 ? p.cantidad-- : null" class="w-7 h-7 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:text-indigo-400 transition flex items-center justify-center font-bold">−</button>
+                  <span class="text-sm font-black w-6 text-center text-gray-700 dark:text-gray-300">{{ p.cantidad }}</span>
+                  <button @click="p.cantidad++" class="w-7 h-7 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:bg-indigo-900/30 transition flex items-center justify-center font-bold">+</button>
                 </div>
                 <button @click="removeProduct(index)" class="text-gray-300 hover:text-red-500 transition">✕</button>
               </div>
@@ -162,35 +162,35 @@
         </div>
 
         <!-- ══ CALCULADORA DE PRECIO Y MÁRGENES ══ -->
-        <div class="bg-indigo-50/30 rounded-3xl p-6 border border-indigo-100 space-y-5">
+        <div class="bg-indigo-50 dark:bg-indigo-900/30/30 rounded-3xl p-6 border border-indigo-100 space-y-5">
           <div class="flex items-center justify-between">
             <div>
               <h4 class="text-sm font-black text-indigo-900 uppercase tracking-wider">💰 Análisis Financiero del Paquete</h4>
             </div>
-            <div class="px-3 py-1 bg-white border border-indigo-100 rounded-lg text-[10px] font-bold text-indigo-500 shadow-sm flex items-center gap-1">
+            <div class="px-3 py-1 bg-white dark:bg-gray-800 border border-indigo-100 rounded-lg text-[10px] font-bold text-indigo-500 shadow-sm flex items-center gap-1">
               <span>⏱️</span> Tiempo Prod: {{ minutosProduccionTotal }} min
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Costos -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-50">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-indigo-50">
               <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] font-black text-gray-400 uppercase">Costo Producción</span>
-                <span class="text-xl font-black text-indigo-600">${{ costoTotal.toFixed(2) }}</span>
+                <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">Costo Producción</span>
+                <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ costoTotal.toFixed(2) }}</span>
               </div>
               <div class="space-y-2">
                 <div class="flex justify-between text-[11px]">
-                  <span class="text-gray-500 font-medium">Insumos (Suma):</span>
-                  <span class="text-gray-900 font-bold">${{ costoInsumosTotal.toFixed(2) }}</span>
+                  <span class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Insumos (Suma):</span>
+                  <span class="text-gray-900 dark:text-gray-100 font-bold">${{ costoInsumosTotal.toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between text-[11px]">
-                  <span class="text-gray-500 font-medium">Mano de Obra (MO):</span>
-                  <span class="text-gray-900 font-bold">${{ costoManoObraTotal.toFixed(2) }}</span>
+                  <span class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Mano de Obra (MO):</span>
+                  <span class="text-gray-900 dark:text-gray-100 font-bold">${{ costoManoObraTotal.toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between text-[11px] pt-1 border-t border-gray-50">
-                  <span class="text-gray-500 font-medium">Gastos Indirectos (5%):</span>
-                  <span class="text-gray-900 font-bold">${{ costoIndirectosTotal.toFixed(2) }}</span>
+                  <span class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Gastos Indirectos (5%):</span>
+                  <span class="text-gray-900 dark:text-gray-100 font-bold">${{ costoIndirectosTotal.toFixed(2) }}</span>
                 </div>
               </div>
             </div>
@@ -207,12 +207,12 @@
           </div>
 
           <!-- Sugerencia -->
-          <div class="bg-white rounded-2xl p-4 border border-indigo-100 shadow-sm relative overflow-hidden group">
-            <div class="absolute right-0 top-0 bottom-0 w-24 bg-indigo-500/5 -skew-x-12 translate-x-12"></div>
+          <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-indigo-100 shadow-sm relative overflow-hidden group">
+            <div class="absolute right-0 top-0 bottom-0 w-24 bg-indigo-50 dark:bg-indigo-900/300/5 -skew-x-12 translate-x-12"></div>
             <div class="flex items-center justify-between relative z-10">
               <div>
                 <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Precio Sugerido (30% util.)</p>
-                <p class="text-2xl font-black text-indigo-600">${{ precioSugerido.toFixed(2) }}</p>
+                <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400">${{ precioSugerido.toFixed(2) }}</p>
               </div>
               <button 
                 @click="aplicarPrecioSugerido"
@@ -226,10 +226,10 @@
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+      <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50/50 flex gap-3">
         <button 
           @click="$emit('close')"
-          class="flex-1 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition"
+          class="flex-1 py-3 text-sm font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 transition"
         >
           Cancelar
         </button>

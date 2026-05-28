@@ -22,6 +22,10 @@ import CorteXModal from '../components/caja/CorteXModal.vue'
 
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 import { apiClient } from '@/utils/apiClient'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
 
 const router = useRouter()
 
@@ -74,7 +78,7 @@ const propinasTotal = ref(0)
 const orders = ref([])
 const movements = ref([])
 const historial = ref([])
-const toasts = ref([])
+const { toasts, showToast, removeToast } = useToast()
 
 const loading = reactive({
   general: true,
@@ -132,17 +136,6 @@ const tabs = computed(() => [
   { key: 'flow', label: 'Flujo Caja', count: movements.value.length },
 ])
 
-// ── Toasts ────────────────────────────────────────────────────────────────────
-const showToast = (message, type = 'info', duration = 4000) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-
-const removeToast = (id) => {
-  toasts.value = toasts.value.filter(t => t.id !== id)
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatMoney = (v) => Number(v || 0).toFixed(2)
 
@@ -163,15 +156,6 @@ const toLocalTime = (dateStr) => {
     return dateStr;
   }
 };
-
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : ''
-  }
-}
 
 const reproducirSonido = () => {
   try {
@@ -535,15 +519,7 @@ onUnmounted(() => {
     <CajaMovimientoModal v-if="showMovimientoModal" @close="showMovimientoModal = false" @saved="handleMovimientoSaved" />
     <CorteXModal v-if="showCorteXModal" @close="showCorteXModal = false" @saved="handleMovimientoSaved" />
 
-    <div class="toast-container">
-      <div v-for="toast in toasts" :key="toast.id" :class="['toast-card', toast.type]">
-        <div class="toast-icon-circle">{{ {'success':'✓','error':'✕','warning':'!','info':'i'}[toast.type] || '•' }}</div>
-        <div class="toast-content">
-          <p class="toast-message">{{ toast.message }}</p>
-        </div>
-        <button @click="removeToast(toast.id)" class="toast-close-btn">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <CajaCorteImprimible :id="'corte-imprimible'" class="is-hidden"
       :opening-amount="openingAmount" :efectivo-sales="efectivoSales"
@@ -561,10 +537,7 @@ onUnmounted(() => {
         :fecha-hoy="fechaHoy"
       />
 
-      <div v-if="loading.general" class="loading-wrapper">
-        <div class="custom-spinner"></div>
-        <p>Actualizando registros...</p>
-      </div>
+      <LoadingSpinner v-if="loading.general" text="Actualizando registros..." />
 
       <template v-else>
         <template v-if="!cajaAbierta">
@@ -577,7 +550,7 @@ onUnmounted(() => {
             <button
               :disabled="esAdminOPropietario"
               @click="showOpenModal = true"
-              :class="['btn-primary-action', esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none hover:bg-slate-300 hover:transform-none' : '']"
+              :class="['btn-primary-action', esAdminOPropietario ? 'bg-slate-300 text-slate-500 dark:bg-slate-600 dark:text-slate-400 cursor-not-allowed shadow-none hover:bg-slate-300 dark:hover:bg-slate-600 hover:transform-none' : '']"
             >
               {{ esAdminOPropietario ? '🚫 Apertura Bloqueada' : '🔓 Abrir Caja Ahora' }}
             </button>
@@ -676,68 +649,14 @@ onUnmounted(() => {
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
+:is(.dark) .caja-layout {
+  background-color: #0f172a;
+}
+
 .main-content {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
-}
-
-/* Sistema de Toasts (Estilo App) */
-.toast-container {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  pointer-events: none;
-}
-
-.toast-card {
-  pointer-events: auto;
-  background: white;
-  border-radius: 1rem;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  min-width: 300px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  border: 1px solid #f0f0f0;
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.toast-icon-circle {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  background: #6366f1;
-  color: white;
-}
-
-.toast-card.success .toast-icon-circle { background: #10b981; }
-.toast-card.warning .toast-icon-circle { background: #f59e0b; }
-.toast-card.error .toast-icon-circle { background: #ef4444; }
-
-.toast-message {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.toast-close-btn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.25rem;
-  cursor: pointer;
 }
 
 /* Vista Caja Cerrada */
@@ -754,6 +673,11 @@ onUnmounted(() => {
   margin-bottom: 2rem;
 }
 
+:is(.dark) .empty-state-card {
+  background: #1e293b;
+  border-color: #475569;
+}
+
 .empty-state-icon {
   font-size: 4rem;
   background: #f8fafc;
@@ -765,6 +689,10 @@ onUnmounted(() => {
   border-radius: 1.5rem;
 }
 
+:is(.dark) .empty-state-icon {
+  background: #334155;
+}
+
 .empty-state-text h2 {
   font-size: 1.5rem;
   font-weight: 800;
@@ -772,9 +700,17 @@ onUnmounted(() => {
   margin: 0;
 }
 
+:is(.dark) .empty-state-text h2 {
+  color: #f1f5f9;
+}
+
 .empty-state-text p {
   color: #64748b;
   margin-top: 0.5rem;
+}
+
+:is(.dark) .empty-state-text p {
+  color: #94a3b8;
 }
 
 .btn-primary-action {
@@ -816,6 +752,11 @@ onUnmounted(() => {
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
+:is(.dark) .chart-container-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
 .chart-header {
   display: flex;
   justify-content: space-between;
@@ -835,6 +776,11 @@ onUnmounted(() => {
   font-size: 0.875rem;
 }
 
+:is(.dark) .chart-total-badge {
+  background: rgba(22, 163, 74, 0.2);
+  color: #4ade80;
+}
+
 .canvas-wrapper {
   height: 250px;
   position: relative;
@@ -849,6 +795,10 @@ onUnmounted(() => {
   border-radius: 1rem;
   width: fit-content;
   margin: 2rem 0 1rem 0;
+}
+
+:is(.dark) .tabs-navigation {
+  background: #374151;
 }
 
 .tab-link {
@@ -866,10 +816,20 @@ onUnmounted(() => {
   transition: all 0.2s;
 }
 
+:is(.dark) .tab-link {
+  color: #9ca3af;
+}
+
 .tab-link.active {
   background: white;
   color: #0f172a;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+:is(.dark) .tab-link.active {
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 
 .tab-counter-pill {
@@ -878,6 +838,11 @@ onUnmounted(() => {
   font-size: 0.75rem;
   padding: 0.1rem 0.5rem;
   border-radius: 99px;
+}
+
+:is(.dark) .tab-counter-pill {
+  background: #4b5563;
+  color: #d1d5db;
 }
 
 .has-alerts {
@@ -892,33 +857,13 @@ onUnmounted(() => {
   border: 1px solid #f1f5f9;
   padding: 1.25rem;
   min-height: 400px;
+  overflow-x: auto;
 }
 
-/* Utils */
-.loading-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8rem 0;
-  color: #94a3b8;
-}
-
-.custom-spinner {
-  width: 3rem;
-  height: 3rem;
-  border: 4px solid #f1f5f9;
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: spinner-rotate 0.8s linear infinite;
-  margin-bottom: 1rem;
+:is(.dark) .data-table-container {
+  background: #1e293b;
+  border-color: #334155;
 }
 
 .is-hidden { display: none; }
-
-@keyframes spinner-rotate { to { transform: rotate(360deg); } }
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
 </style>

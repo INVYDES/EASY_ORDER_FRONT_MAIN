@@ -137,6 +137,11 @@ const guardar = async () => {
   animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+:is(.dark) .modal-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -149,6 +154,10 @@ const guardar = async () => {
   font-weight: 800;
   color: #0f172a;
   margin: 0;
+}
+
+:is(.dark) .modal-title {
+  color: #e2e8f0;
 }
 
 .close-btn {
@@ -167,6 +176,15 @@ const guardar = async () => {
 
 .close-btn:hover { background: #e2e8f0; color: #0f172a; }
 
+:is(.dark) .close-btn {
+  background: #334155;
+  color: #94a3b8;
+}
+:is(.dark) .close-btn:hover {
+  background: #475569;
+  color: #f1f5f9;
+}
+
 .alert-info {
   background: #eff6ff;
   border: 1px solid #dbeafe;
@@ -178,6 +196,12 @@ const guardar = async () => {
   line-height: 1.5;
 }
 
+:is(.dark) .alert-info {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
 .alert-error {
   background: #fef2f2;
   border: 1px solid #fee2e2;
@@ -187,6 +211,12 @@ const guardar = async () => {
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
+}
+
+:is(.dark) .alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
 .form-body { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -201,6 +231,10 @@ const guardar = async () => {
   letter-spacing: 0.05em;
 }
 
+:is(.dark) .input-label {
+  color: #94a3b8;
+}
+
 .input-wrapper { position: relative; }
 
 .currency-symbol {
@@ -213,6 +247,10 @@ const guardar = async () => {
   font-size: 1.1rem;
 }
 
+:is(.dark) .currency-symbol {
+  color: #64748b;
+}
+
 .form-input {
   width: 100%;
   padding: 1rem 1.25rem;
@@ -223,6 +261,12 @@ const guardar = async () => {
   color: #1e293b;
   transition: all 0.2s;
   box-sizing: border-box;
+}
+
+:is(.dark) .form-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
 }
 
 .form-input:focus {
@@ -250,6 +294,16 @@ const guardar = async () => {
 }
 
 .btn-cancel:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+:is(.dark) .btn-cancel {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+:is(.dark) .btn-cancel:hover {
+  background: #334155;
+  border-color: #475569;
+}
 
 .btn-submit {
   flex: 2;

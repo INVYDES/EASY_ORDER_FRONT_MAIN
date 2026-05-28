@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border p-4 flex flex-col h-full">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-4 flex flex-col h-full">
 
     <!-- Header fijo -->
     <h2 class="text-lg font-semibold mb-4" :class="headerColor">
@@ -15,7 +15,7 @@
         @update-status="$emit('update-status', $event)"
       />
 
-      <p v-if="orders.length === 0" class="text-sm text-gray-400 text-center py-4">
+      <p v-if="orders.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
         Sin órdenes {{ title.toLowerCase() }}
       </p>
     </div>

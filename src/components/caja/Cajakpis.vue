@@ -97,6 +97,11 @@ const format = (v) => Number(v || 0).toLocaleString('en-US', { minimumFractionDi
   transition: all 0.2s ease;
 }
 
+:is(.dark) .kpi-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);

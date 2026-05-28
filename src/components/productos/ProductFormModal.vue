@@ -2,21 +2,21 @@
   <div
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl p-0 max-h-[95vh] flex flex-col overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-5xl p-0 max-h-[95vh] flex flex-col overflow-hidden mx-4">
 
       <!-- Encabezado -->
-      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+      <div class="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
         <div>
-          <h2 class="text-xl font-bold text-gray-800">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">
             {{ product ? 'Editar Producto' : 'Nuevo Producto' }}
           </h2>
-          <p class="text-xs text-gray-500 mt-1">Configura la información general y la receta del producto</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">Configura la información general y la receta del producto</p>
         </div>
-        <button @click="$emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">✕</button>
+        <button @click="$emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition">✕</button>
       </div>
 
       <!-- ══ INSTRUCCIONES PARA NUEVO PRODUCTO ══ -->
-      <div v-if="!product && !productoCreado" class="mx-6 mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
+      <div v-if="!product && !productoCreado" class="mx-6 mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 rounded-2xl">
         <p class="text-xs font-black text-indigo-700 uppercase tracking-widest mb-2">Pasos para crear un producto</p>
         <div class="flex items-start gap-3">
           <div class="flex items-center gap-2">
@@ -53,16 +53,16 @@
           <!-- ══ COLUMNA IZQUIERDA: INFORMACIÓN ══ -->
           <div class="space-y-6">
             <div class="flex items-center gap-2 mb-2">
-              <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">1</span>
-              <h3 class="font-bold text-gray-800">Información General</h3>
+              <span class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold">1</span>
+              <h3 class="font-bold text-gray-800 dark:text-gray-200">Información General</h3>
             </div>
 
             <!-- IMAGEN -->
             <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Imagen del producto</label>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Imagen del producto</label>
               <div
                 class="relative border-2 border-dashed rounded-2xl overflow-hidden cursor-pointer transition-all"
-                :class="isDragging ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300'"
+                :class="isDragging ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300'"
                 @dragover.prevent="isDragging = true"
                 @dragleave.prevent="isDragging = false"
                 @drop.prevent="handleDrop"
@@ -83,15 +83,15 @@
                   <button type="button" @click.stop="removeImage"
                     class="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center text-xs hover:bg-red-600 transition">✕</button>
                 </div>
-                <div v-else class="flex flex-col items-center justify-center py-10 text-gray-400">
-                  <div class="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3 text-gray-300">
+                <div v-else class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
+                  <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center mb-3 text-gray-300">
                     Sin Imagen
                   </div>
-                  <p class="text-sm font-bold text-gray-600">Arrastra una imagen o haz clic</p>
+                  <p class="text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500">Arrastra una imagen o haz clic</p>
                   <p class="text-xs mt-1 font-bold" :class="errorMessage?.includes('250KB') ? 'text-red-500' : ''">JPG, PNG, WebP · máx. 250KB</p>
                 </div>
               </div>
-              <label v-if="product?.tiene_imagen && !newImageFile" class="flex items-center gap-2 mt-3 text-sm text-gray-600 cursor-pointer p-2 bg-red-50 rounded-lg w-fit">
+              <label v-if="product?.tiene_imagen && !newImageFile" class="flex items-center gap-2 mt-3 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 cursor-pointer p-2 bg-red-50 rounded-lg w-fit">
                 <input v-model="form.eliminar_imagen" type="checkbox" class="accent-red-500" />
                 <span class="text-red-500 font-medium">Eliminar imagen actual</span>
               </label>
@@ -99,18 +99,18 @@
 
             <!-- Nombre -->
             <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Producto *</label>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Nombre del Producto *</label>
               <input v-model="form.nombre" type="text" placeholder="Ej. Hamburguesa Gourmet"
-                class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-medium"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm font-medium"
                 :class="errors.nombre ? 'ring-2 ring-red-400' : ''" />
               <p v-if="errors.nombre" class="text-xs text-red-500 mt-1">{{ errors.nombre }}</p>
             </div>
 
             <!-- Categoría -->
             <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Categoría *</label>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Categoría *</label>
               <select v-model="form.categoria_id"
-                class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-medium"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm font-medium"
                 :class="errors.categoria_id ? 'ring-2 ring-red-400' : ''">
                 <option :value="null">Seleccionar categoría</option>
                 <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
@@ -120,30 +120,30 @@
 
             <!-- Descripción -->
             <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                Descripción <span class="text-gray-400 font-normal">(opcional)</span>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                Descripción <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
               </label>
               <textarea v-model="form.descripcion" placeholder="¿Qué incluye este platillo?" rows="3"
-                class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm resize-none"></textarea>
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm resize-none"></textarea>
             </div>
 
             <!-- Precio y Stock -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Precio de Venta *</label>
+                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Precio de Venta *</label>
                 <div class="relative">
-                  <span class="absolute left-4 top-3 text-gray-400 font-bold">$</span>
+                  <span class="absolute left-4 top-3 text-gray-400 dark:text-gray-500 font-bold">$</span>
                   <input v-model.number="form.precio" type="number" step="0.01" min="0" placeholder="0.00"
-                    class="w-full pl-8 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-black"
+                    class="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm font-black"
                     :class="errors.precio ? 'ring-2 ring-red-400' : ''" />
                 </div>
                 <p v-if="errors.precio" class="text-xs text-red-500 mt-1">{{ errors.precio }}</p>
               </div>
               <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Stock Actual</label>
+                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Stock Actual</label>
                 <div class="relative">
                   <input v-model.number="form.stock" type="number" readonly placeholder="0"
-                    class="w-full px-4 py-3 border-none bg-gray-100 text-gray-500 rounded-xl focus:outline-none text-sm cursor-not-allowed font-black" />
+                    class="w-full px-4 py-3 border-none bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 rounded-xl focus:outline-none text-sm cursor-not-allowed font-black" />
                   <span v-if="receta.length" class="absolute right-3 top-3 text-indigo-500 text-[10px]" title="Calculado por receta">Sincronizado</span>
                 </div>
                 <p v-if="receta.length" class="text-[10px] text-indigo-500 mt-1 font-medium">Calculado por receta</p>
@@ -152,14 +152,14 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Stock Mínimo</label>
+                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Stock Mínimo</label>
                 <input v-model.number="form.stock_minimo" type="number" min="0" placeholder="5"
-                  class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-medium" />
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm font-medium" />
               </div>
               <div v-if="product" class="flex flex-col justify-end">
-                <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition">
+                <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition">
                   <input v-model="form.activo" type="checkbox" class="w-5 h-5 accent-indigo-600 rounded" />
-                  <span class="text-sm font-bold text-gray-700">Producto Activo</span>
+                  <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Producto Activo</span>
                 </label>
               </div>
             </div>
@@ -175,22 +175,22 @@
           <div class="space-y-6">
             <div class="flex items-center gap-2 mb-2">
               <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">2</span>
-              <h3 class="font-bold text-gray-800">Receta e Insumos</h3>
+              <h3 class="font-bold text-gray-800 dark:text-gray-200">Receta e Insumos</h3>
               <span v-if="!product && !productoCreado" class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 ml-auto">⚠️ Crea el producto primero</span>
             </div>
 
             <!-- Loading Receta -->
-            <div v-if="loadingReceta" class="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-3xl border border-gray-100">
+            <div v-if="loadingReceta" class="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-gray-100 dark:border-gray-700">
               <div class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-              <p class="text-sm text-gray-500 font-medium">Analizando ingredientes...</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Analizando ingredientes...</p>
             </div>
 
             <template v-else-if="!product && !productoCreado">
               <!-- Sección deshabilitada hasta crear producto -->
-              <div class="py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+              <div class="py-16 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50/50">
                 <p class="text-3xl mb-3">🔒</p>
-                <p class="text-sm font-bold text-gray-500">Primero crea el producto</p>
-                <p class="text-xs text-gray-400 mt-1">Después podrás asignar ingredientes a la receta</p>
+                <p class="text-sm font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500">Primero crea el producto</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Después podrás asignar ingredientes a la receta</p>
               </div>
             </template>
 

@@ -1,17 +1,17 @@
 <template>
   <div class="overflow-x-auto">
 
-    <div v-if="loading" class="text-center py-10 text-gray-400 text-sm">
+    <div v-if="loading" class="text-center py-10 text-gray-400 dark:text-gray-500 text-sm">
       Cargando movimientos...
     </div>
 
-    <div v-else-if="movements.length === 0" class="text-center py-10 text-gray-400 italic text-sm">
+    <div v-else-if="movements.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 italic text-sm">
       No hay movimientos registrados
     </div>
 
     <table v-else class="w-full text-sm">
       <thead>
-        <tr class="text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
+        <tr class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-700">
           <th class="text-left py-3 px-3">Tipo</th>
           <th class="text-left px-3">Monto</th>
           <th class="text-left px-3">Descripción</th>
@@ -20,11 +20,11 @@
           <th class="text-left px-3">Hora</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50">
+      <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
         <tr
           v-for="m in movements"
           :key="m.id"
-          class="hover:bg-gray-50 transition"
+          class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
         >
           <!-- Tipo -->
           <td class="py-3 px-3">
@@ -46,7 +46,7 @@
           </td>
 
           <!-- Descripción -->
-          <td class="px-3 text-gray-700">{{ m.descripcion || m.concepto || '—' }}</td>
+          <td class="px-3 text-gray-700 dark:text-gray-300">{{ m.descripcion || m.concepto || '—' }}</td>
 
           <!-- Referencia / Folio del Voucher -->
           <td class="px-3">
@@ -60,14 +60,14 @@
             >
               Sin referencia
             </span>
-            <span v-else class="text-gray-400 text-xs">—</span>
+            <span v-else class="text-gray-400 dark:text-gray-500 text-xs">—</span>
           </td>
 
           <!-- Usuario -->
-          <td class="px-3 text-gray-500 text-xs">{{ m.usuario || '—' }}</td>
+          <td class="px-3 text-gray-500 dark:text-gray-400 text-xs">{{ m.usuario || '—' }}</td>
 
           <!-- Hora -->
-          <td class="px-3 text-gray-400 text-xs">
+          <td class="px-3 text-gray-400 dark:text-gray-500 text-xs">
             {{ formatTime(m.created_at || m.created_at_formateado) }}
           </td>
         </tr>

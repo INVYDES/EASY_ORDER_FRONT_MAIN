@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-3">
-    <h3 class="font-semibold text-gray-800">Acciones</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
+      <h3 class="font-semibold text-gray-800 dark:text-gray-200">Acciones</h3>
 
     <button :disabled="esAdminOPropietario" @click="$emit('movimiento')"
       :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition',
-               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700']">
+                esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700']">
       <span class="text-lg">💵</span> Movimiento de efectivo
     </button>
     <button :disabled="esAdminOPropietario" @click="$emit('corte-x')"
@@ -22,24 +22,24 @@
       <span class="text-lg">🔒</span> Cerrar caja
     </button>
 
-    <div class="mt-auto pt-4 border-t border-gray-100 space-y-2 text-sm">
-      <div class="flex justify-between text-gray-600">
-        <span>Por cobrar (listas)</span>
-        <span class="font-semibold" :class="ordenesListas > 0 ? 'text-emerald-600' : 'text-gray-400'">{{ ordenesListas }}</span>
+      <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2 text-sm">
+        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+          <span>Por cobrar (listas)</span>
+          <span class="font-semibold" :class="ordenesListas > 0 ? 'text-emerald-600' : 'text-gray-400 dark:text-gray-500'">{{ ordenesListas }}</span>
+        </div>
+        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+          <span>En proceso</span>
+          <span class="font-semibold text-amber-600">{{ ordenesEnProceso }}</span>
+        </div>
+        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+          <span>Cerradas hoy</span>
+          <span class="font-semibold text-gray-600 dark:text-gray-400">{{ closedOrdersCount }}</span>
+        </div>
+        <div class="flex justify-between text-gray-700 dark:text-gray-300 font-semibold border-t border-gray-100 dark:border-gray-700 pt-2">
+          <span>Total órdenes</span>
+          <span>{{ totalOrdenes }}</span>
+        </div>
       </div>
-      <div class="flex justify-between text-gray-600">
-        <span>En proceso</span>
-        <span class="font-semibold text-amber-600">{{ ordenesEnProceso }}</span>
-      </div>
-      <div class="flex justify-between text-gray-600">
-        <span>Cerradas hoy</span>
-        <span class="font-semibold text-gray-600">{{ closedOrdersCount }}</span>
-      </div>
-      <div class="flex justify-between text-gray-700 font-semibold border-t border-gray-100 pt-2">
-        <span>Total órdenes</span>
-        <span>{{ totalOrdenes }}</span>
-      </div>
-    </div>
   </div>
 </template>
 

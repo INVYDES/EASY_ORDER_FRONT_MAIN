@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-slate-100 p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h3 class="font-bold text-slate-800 text-lg">🏆 Top Ventas</h3>
@@ -9,7 +9,7 @@
       <div class="flex bg-slate-100 p-1 rounded-xl">
         <button v-for="p in periodos" :key="p.value" @click="setPeriodo(p.value)"
           :class="['px-3 py-1.5 text-xs rounded-lg font-bold transition-all',
-            periodo === p.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+            periodo === p.value ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
           {{ p.label }}
         </button>
       </div>

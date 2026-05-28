@@ -1,44 +1,44 @@
 <template>
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
     <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
-      <h3 class="font-semibold text-gray-800">Historial de cajas</h3>
+      <h3 class="font-semibold text-gray-800 dark:text-gray-200">Historial de cajas</h3>
       <div class="flex items-center gap-2">
         <input v-model="filtro" type="text" placeholder="Buscar por fecha..."
-          class="px-3 py-1.5 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none w-44" />
-        <span class="text-xs text-gray-400">{{ filtrados.length }} registros</span>
+          class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none w-44 dark:bg-gray-800 dark:text-gray-200" />
+        <span class="text-xs text-gray-400 dark:text-gray-500">{{ filtrados.length }} registros</span>
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-8 text-gray-400 text-sm">Cargando historial...</div>
-    <div v-else-if="filtrados.length === 0" class="text-center py-10 text-gray-400 italic text-sm">
+    <div v-if="loading" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">Cargando historial...</div>
+    <div v-else-if="filtrados.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 italic text-sm">
       No hay cajas anteriores registradas
     </div>
     <div v-else class="space-y-3">
       <div v-for="caja in filtrados" :key="caja.id"
-        class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer"
+        class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
         @click="$emit('ver-detalle', caja.id)">
-        <div class="w-12 h-12 rounded-xl bg-indigo-100 flex flex-col items-center justify-center shrink-0">
-          <span class="text-xs font-bold text-indigo-700 leading-tight">{{ formatDia(caja.fecha) }}</span>
-          <span class="text-[10px] text-indigo-500">{{ formatMes(caja.fecha) }}</span>
+        <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex flex-col items-center justify-center shrink-0">
+          <span class="text-xs font-bold text-indigo-700 dark:text-indigo-400 leading-tight">{{ formatDia(caja.fecha) }}</span>
+          <span class="text-[10px] text-indigo-500 dark:text-indigo-400">{{ formatMes(caja.fecha) }}</span>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <p class="text-sm font-semibold text-gray-800">{{ caja.fecha }}</p>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ caja.fecha }}</p>
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
               :class="caja.diferencia >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'">
               {{ caja.diferencia >= 0 ? 'Sin faltante' : 'Con faltante' }}
             </span>
           </div>
-          <p class="text-xs text-gray-400 mt-0.5">
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             {{ toLocalTime(caja.apertura) }} → {{ toLocalTime(caja.cierre) }} · {{ caja.abierto_por || '—' }}
           </p>
         </div>
         <div class="text-right shrink-0 space-y-1">
-          <p class="text-sm font-bold text-gray-800">${{ Number(caja.ventas_totales||0).toFixed(2) }}</p>
+          <p class="text-sm font-bold text-gray-800 dark:text-gray-200">${{ Number(caja.ventas_totales||0).toFixed(2) }}</p>
           <p class="text-xs" :class="caja.diferencia >= 0 ? 'text-emerald-600' : 'text-red-500'">
             {{ caja.diferencia >= 0 ? '+' : '' }}${{ Number(caja.diferencia||0).toFixed(2) }}
           </p>
-          <span class="text-[10px] text-indigo-500 font-medium">Ver detalle →</span>
+          <span class="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">Ver detalle →</span>
         </div>
       </div>
     </div>

@@ -2,18 +2,18 @@
   <div class="min-h-screen flex">
 
     <!-- IZQUIERDA -->
-    <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 px-6">
+    <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 dark:bg-gray-900 px-6">
       <div class="w-full max-w-md">
 
-        <h1 class="text-3xl font-semibold text-gray-800 mb-2">
+        <h1 class="text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Nueva contraseña
         </h1>
-        <p class="text-gray-500 mb-8 text-sm">
+        <p class="text-gray-500 dark:text-gray-400 mb-8 text-sm">
           Ingresa y confirma tu nueva contraseña.
         </p>
 
         <!-- Token inválido / faltante -->
-        <div v-if="!token" class="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl mb-6">
+        <div v-if="!token" class="p-4 text-sm text-red-700 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl mb-6">
           <p class="font-semibold">Enlace inválido o expirado</p>
           <p class="mt-1">Solicita un nuevo enlace desde la pantalla de inicio de sesión.</p>
           <router-link to="/" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
@@ -22,7 +22,7 @@
         </div>
 
         <!-- ÉXITO -->
-        <div v-else-if="successMessage" class="p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl mb-6">
+        <div v-else-if="successMessage" class="p-4 text-sm text-green-700 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl mb-6">
           <p class="font-semibold mb-1">✅ Contraseña restablecida</p>
           <p>{{ successMessage }}</p>
           <router-link to="/" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
@@ -31,7 +31,7 @@
         </div>
 
         <!-- ERROR -->
-        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
+        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 rounded-lg">
           {{ errorMessage }}
         </div>
 
@@ -43,7 +43,7 @@
         >
 
           <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700">
+            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               Correo electrónico
             </label>
             <input
@@ -51,12 +51,12 @@
               type="email"
               required
               placeholder="El correo de tu cuenta"
-              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-4 py-3 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700">
+            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               Nueva contraseña
             </label>
             <div class="relative">
@@ -67,12 +67,12 @@
                 minlength="8"
                 placeholder="Mínimo 8 caracteres"
                 autocomplete="new-password"
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-20"
+                class="w-full px-4 py-3 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-20"
               />
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-3 text-sm text-gray-500 hover:text-gray-700 transition"
+                class="absolute right-3 top-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
               >
                 {{ showPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
@@ -80,7 +80,7 @@
           </div>
 
           <div>
-            <label class="block mb-1 text-sm font-medium text-gray-700">
+            <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               Confirmar contraseña
             </label>
             <input
@@ -89,7 +89,7 @@
               required
               placeholder="Repite la nueva contraseña"
               autocomplete="new-password"
-              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-4 py-3 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               :class="passwordMismatch ? 'border-red-400 focus:ring-red-400' : ''"
             />
             <p v-if="passwordMismatch" class="mt-1 text-xs text-red-500">

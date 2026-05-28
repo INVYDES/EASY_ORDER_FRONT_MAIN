@@ -26,7 +26,7 @@
               <span class="status-dot"></span>
             </div>
             <div>
-              <h3 class="font-bold text-white text-sm">Asistente TiendaFer</h3>
+              <h3 class="font-bold text-white text-sm">Asistente E-Order</h3>
               <p class="text-[10px] text-indigo-200 uppercase tracking-widest font-black">En línea • IA Gemini</p>
             </div>
           </div>
@@ -252,7 +252,7 @@ const submitSuggestion = async () => {
 const clearChat = () => {
   messages.value = [{ 
     role: 'bot', 
-    content: '¡Hola! Soy el asistente virtual de TiendaFer. ¿En qué puedo ayudarte hoy?' 
+    content: '¡Bienvenido a E-Order! Soy tu asistente virtual. ¿En qué puedo ayudarte?' 
   }]
   sessionStorage.removeItem('chat_history')
 }
@@ -552,5 +552,65 @@ watch(isOpen, (val) => {
 @keyframes scaleIn {
   from { transform: translateY(100px); }
   to { transform: translateY(0); }
+}
+
+/* Dark mode overrides */
+:global(:is(.dark)) .chat-window {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(:is(.dark)) .chat-messages {
+  background: #0f172a;
+}
+
+:global(:is(.dark)) .chat-messages::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+:global(:is(.dark)) .bubble-bot {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+:global(:is(.dark)) .chat-input-area {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(:is(.dark)) .input-container {
+  background: #334155;
+}
+
+:global(:is(.dark)) .custom-input {
+  color: #e2e8f0;
+}
+
+:global(:is(.dark)) .custom-input::placeholder {
+  color: #64748b;
+}
+
+:global(:is(.dark)) .suggestion-card {
+  background: #1e293b;
+}
+
+:global(:is(.dark)) .form-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+:global(:is(.dark)) .form-input:focus {
+  background: #1e293b;
+  border-color: #6366f1;
+}
+
+:global(:is(.dark)) .bot-avatar {
+  background: #1e293b;
+}
+
+:global(:is(.dark)) .status-dot {
+  border-color: #1e293b;
 }
 </style>

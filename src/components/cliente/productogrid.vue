@@ -1,6 +1,6 @@
 <template>
   <div v-if="productos.length === 0" class="text-center py-6">
-    <p class="text-gray-400 italic text-sm">No hay productos en esta categoría</p>
+    <p class="text-gray-400 dark:text-gray-500 italic text-sm">No hay productos en esta categoría</p>
   </div>
 
   <div

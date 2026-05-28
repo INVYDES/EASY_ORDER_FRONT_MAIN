@@ -1,29 +1,29 @@
 <template>
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
     @click.self="$emit('close')">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
 
       <!-- Encabezado -->
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold text-gray-800">Cobrar Ticket</h2>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Cobrar Ticket</h2>
+        <button @click="$emit('close')" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xl leading-none">✕</button>
       </div>
 
       <!-- Resumen del ticket -->
-      <div class="bg-gray-50 rounded-xl px-4 py-3 mb-5">
+      <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl px-4 py-3 mb-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs text-gray-500 font-medium">Mesa</p>
-            <p class="text-sm font-semibold text-gray-800">{{ ticket.mesa || 'N/A' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Mesa</p>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ ticket.mesa || 'N/A' }}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-gray-500 font-medium">Subtotal</p>
-            <p class="text-2xl font-bold text-indigo-600">${{ formatMoney(total) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Subtotal</p>
+            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">${{ formatMoney(total) }}</p>
           </div>
         </div>
         <!-- Desglose si hay propina -->
-        <div v-if="propina > 0" class="mt-3 pt-3 border-t border-gray-200 space-y-1 text-sm">
-          <div class="flex justify-between text-gray-500">
+        <div v-if="propina > 0" class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-1 text-sm">
+          <div class="flex justify-between text-gray-500 dark:text-gray-400">
             <span>Subtotal</span>
             <span>${{ formatMoney(total) }}</span>
           </div>
@@ -31,7 +31,7 @@
             <span>Propina</span>
             <span>+${{ formatMoney(propina) }}</span>
           </div>
-          <div class="flex justify-between font-bold text-gray-800 border-t border-gray-200 pt-1">
+          <div class="flex justify-between font-bold text-gray-800 dark:text-gray-200 border-t border-gray-200 dark:border-gray-700 pt-1">
             <span>Total a cobrar</span>
             <span>${{ formatMoney(totalConPropina) }}</span>
           </div>
@@ -42,14 +42,14 @@
 
         <!-- Método de pago -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Método de pago</label>
           <div class="grid grid-cols-3 gap-2">
             <button v-for="m in metodos" :key="m.value"
               @click="paymentMethod = m.value; amountReceived = 0"
               :class="['py-2.5 rounded-xl text-sm font-semibold border-2 transition flex flex-col items-center gap-1',
                 paymentMethod === m.value
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300']">
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600']">
               <span class="text-base">{{ m.icon }}</span>
               {{ m.label }}
             </button>
@@ -58,12 +58,12 @@
 
         <!-- Monto recibido (solo efectivo) -->
         <div v-if="paymentMethod === 'efectivo'">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Monto recibido</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monto recibido</label>
           <div class="relative">
-            <span class="absolute left-3 top-3 text-gray-400 text-sm font-medium">$</span>
+            <span class="absolute left-3 top-3 text-gray-400 dark:text-gray-500 text-sm font-medium">$</span>
             <input v-model.number="amountReceived" type="number" step="0.01"
               :min="totalConPropina" placeholder="0.00"
-              class="w-full pl-7 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full pl-7 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200"
               :class="amountReceived > 0 && amountReceived < totalConPropina ? 'border-red-400' : ''" />
           </div>
           <p v-if="amountReceived > 0 && amountReceived < totalConPropina" class="text-xs text-red-500 mt-1">
@@ -73,42 +73,42 @@
 
         <!-- Folio/referencia (solo tarjeta y transferencia) -->
         <div v-if="paymentMethod !== 'efectivo'">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {{ paymentMethod === 'tarjeta' ? 'Referencia del Voucher' : 'Referencia / Folio' }}
             <span class="text-red-500">*</span>
-            <span class="text-gray-400 font-normal text-xs ml-1">(obligatorio)</span>
+            <span class="text-gray-400 dark:text-gray-500 font-normal text-xs ml-1">(obligatorio)</span>
           </label>
           <input v-model="folio" type="text"
             :placeholder="paymentMethod === 'tarjeta' ? 'Número de voucher o referencia' : 'Ej. REF123456'"
-            :class="['w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none',
-              fieldError && paymentMethod === 'tarjeta' ? 'border-red-400' : 'border-gray-200']"
+            :class="['w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200',
+              fieldError && paymentMethod === 'tarjeta' ? 'border-red-400' : 'border-gray-200 dark:border-gray-700']"
           />
           <p v-if="fieldError && paymentMethod === 'tarjeta'" class="text-xs text-red-500 mt-1">
             {{ fieldError }}
           </p>
-          <p v-else-if="paymentMethod === 'tarjeta'" class="text-xs text-gray-500 mt-1">
+          <p v-else-if="paymentMethod === 'tarjeta'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Ingresa el número de referencia del voucher de la terminal bancaria
           </p>
         </div>
 
         <!-- Propina -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Propina <span class="text-gray-400 font-normal">(opcional)</span>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Propina <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
           </label>
           <div class="relative">
-            <span class="absolute left-3 top-3 text-gray-400 text-sm font-medium">$</span>
+            <span class="absolute left-3 top-3 text-gray-400 dark:text-gray-500 text-sm font-medium">$</span>
             <input v-model.number="propina" type="number" step="0.01" min="0" placeholder="0.00"
-              class="w-full pl-7 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full pl-7 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200" />
           </div>
           <!-- Atajos rápidos de propina -->
           <div class="flex gap-2 mt-2">
             <button v-for="pct in [10, 15, 20]" :key="pct"
               @click="propina = Math.round(total * pct / 100 * 100) / 100"
-              class="flex-1 py-1 text-xs font-medium bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition">
+              class="flex-1 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition">
               {{ pct }}%
             </button>
-            <button @click="propina = 0" class="flex-1 py-1 text-xs font-medium bg-gray-100 hover:bg-red-50 hover:text-red-500 rounded-lg transition">
+            <button @click="propina = 0" class="flex-1 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition">
               Sin propina
             </button>
           </div>
@@ -124,18 +124,18 @@
       </div>
 
       <!-- Error -->
-      <div v-if="errorMsg" class="mt-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">
+      <div v-if="errorMsg" class="mt-4 p-3 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl">
         {{ errorMsg }}
       </div>
 
       <!-- Botones -->
       <div class="flex gap-3 mt-6">
         <button @click="$emit('close')"
-          class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+          class="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">
           Cancelar
         </button>
         <button @click="processPayment" :disabled="!canPay || processing"
-          class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
+          class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600">
           <span v-if="processing">Procesando...</span>
           <span v-else>Confirmar pago{{ propina > 0 ? ` ($${formatMoney(totalConPropina)})` : '' }}</span>
         </button>

@@ -1,28 +1,28 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-3xl overflow-hidden">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-3xl overflow-hidden">
       <!-- Encabezado -->
-      <div class="bg-white px-8 py-10 border-b border-gray-100">
-        <h1 class="text-3xl md:text-4xl font-black text-gray-900 border-b-4 border-black pb-4 uppercase tracking-tighter">
+      <div class="bg-white dark:bg-gray-800 px-8 py-10 border-b border-gray-100 dark:border-gray-700">
+        <h1 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-gray-100 border-b-4 border-black dark:border-gray-300 pb-4 uppercase tracking-tighter">
           TÉRMINOS Y CONDICIONES GENERALES DE USO — eOrder
         </h1>
-        <p class="mt-4 text-gray-500 font-medium">Última actualización: 16 de mayo de 2026</p>
+        <p class="mt-4 text-gray-500 dark:text-gray-400 font-medium">Última actualización: 16 de mayo de 2026</p>
       </div>
 
-      <div class="px-8 py-10 text-gray-700 leading-relaxed space-y-8 text-sm md:text-base">
+      <div class="px-8 py-10 text-gray-700 dark:text-gray-300 leading-relaxed space-y-8 text-sm md:text-base">
         <p>
           El presente documento regula el acceso, uso, contratación y operación de la plataforma SaaS denominada <strong>eOrder (Easy Order)</strong>, propiedad y operada por <strong>Merag Comercial / Materiales, Tecnología y Automatización / Food Software Services Mexico / eOrder Mexico</strong>, en adelante “eOrder”, con domicilio fiscal en Trapiche 96, El Cortijo, Veracruz, Veracruz, México, RFC MCO2404269V5.
         </p>
 
         <p>Al acceder, registrarse, contratar o utilizar cualquier servicio relacionado con eOrder, el usuario acepta plenamente los presentes términos y condiciones, el aviso de privacidad, políticas complementarias y cualquier documento legal relacionado.</p>
 
-        <div class="bg-yellow-50 border-l-8 border-yellow-400 p-5 rounded-r-xl font-bold text-yellow-900">
+        <div class="bg-yellow-50 dark:bg-yellow-900/30 border-l-8 border-yellow-400 dark:border-yellow-600 p-5 rounded-r-xl font-bold text-yellow-900 dark:text-yellow-200">
           Si el usuario no está de acuerdo con cualquiera de las disposiciones aquí establecidas, deberá abstenerse de utilizar la plataforma.
         </div>
 
         <!-- 1. DEFINICIONES -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">1. DEFINICIONES</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">1. DEFINICIONES</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li><strong>Plataforma:</strong> sistema SaaS eOrder.</li>
             <li><strong>Usuario:</strong> cualquier persona física o moral con acceso autorizado.</li>
@@ -35,7 +35,7 @@
 
         <!-- 2. SERVICIOS OFRECIDOS -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">2. SERVICIOS OFRECIDOS</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">2. SERVICIOS OFRECIDOS</h2>
           <p>eOrder proporciona una plataforma tecnológica enfocada al sector restaurantero y de alimentos, incluyendo de manera enunciativa más no limitativa:</p>
           <ul class="list-disc pl-6 mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
             <li>Sistema POS.</li>
@@ -57,7 +57,7 @@
 
         <!-- 3. REGISTRO Y CUENTAS -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">3. REGISTRO Y CUENTAS</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">3. REGISTRO Y CUENTAS</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li>La edad mínima para contratar el servicio es de 18 años.</li>
             <li>El usuario es responsable de mantener la confidencialidad de sus credenciales.</li>
@@ -70,7 +70,7 @@
 
         <!-- 4. PLANES, PAGOS Y FACTURACIÓN -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">4. PLANES, PAGOS Y FACTURACIÓN</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">4. PLANES, PAGOS Y FACTURACIÓN</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li>Los servicios podrán contratarse bajo modalidad mensual o anual.</li>
             <li>eOrder ofrece un periodo de prueba gratuito de 30 días.</li>
@@ -86,7 +86,7 @@
 
         <!-- 5. POLÍTICA DE CANCELACIÓN -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">5. POLÍTICA DE CANCELACIÓN</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">5. POLÍTICA DE CANCELACIÓN</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li>El cliente podrá cancelar el servicio desde la plataforma mediante el botón correspondiente.</li>
             <li>Una vez cancelada la cuenta, los datos podrán eliminarse inmediatamente.</li>
@@ -97,7 +97,7 @@
 
         <!-- 6. USO ACEPTABLE -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">6. USO ACEPTABLE</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">6. USO ACEPTABLE</h2>
           <p>Queda estrictamente prohibido:</p>
           <ul class="list-disc pl-6 space-y-2">
             <li>Intentar vulnerar la seguridad de la plataforma.</li>
@@ -115,7 +115,7 @@
 
         <!-- 7. LIMITACIÓN DE RESPONSABILIDAD -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">7. LIMITACIÓN DE RESPONSABILIDAD</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">7. LIMITACIÓN DE RESPONSABILIDAD</h2>
           <p>eOrder no será responsable por daños directos, indirectos, incidentales, especiales o consecuenciales derivados de:</p>
           <ul class="list-disc pl-6 space-y-2 grid grid-cols-1 md:grid-cols-2">
             <li>Caídas de internet.</li>
@@ -140,7 +140,7 @@
 
         <!-- 8. PROPIEDAD INTELECTUAL -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">8. PROPIEDAD INTELECTUAL</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">8. PROPIEDAD INTELECTUAL</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li>Todo el software, diseño, código, estructura, algoritmos, funcionalidades, interfaces y tecnología de eOrder son propiedad exclusiva de eOrder y sus entidades relacionadas.</li>
             <li>El cliente conserva propiedad sobre sus datos operativos.</li>
@@ -151,7 +151,7 @@
 
         <!-- 9. PRIVACIDAD Y DATOS PERSONALES -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">9. PRIVACIDAD Y DATOS PERSONALES</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">9. PRIVACIDAD Y DATOS PERSONALES</h2>
           <p>eOrder podrá recopilar y procesar:</p>
           <ul class="list-disc pl-6 space-y-2 mb-4">
             <li>Datos de clientes finales.</li>
@@ -172,7 +172,7 @@
 
         <!-- 10. POLÍTICA DE COOKIES -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">10. POLÍTICA DE COOKIES</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">10. POLÍTICA DE COOKIES</h2>
           <p>La plataforma podrá utilizar cookies, identificadores de sesión, almacenamiento local y tecnologías similares para:</p>
           <ul class="list-disc pl-6 space-y-2 mt-2">
             <li>Autenticación, Seguridad, Analítica, Mejora de experiencia, Preferencias del usuario, Rendimiento de la plataforma.</li>
@@ -182,7 +182,7 @@
 
         <!-- 11. INTELIGENCIA ARTIFICIAL Y AUTOMATIZACIONES -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">11. INTELIGENCIA ARTIFICIAL Y AUTOMATIZACIONES</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">11. INTELIGENCIA ARTIFICIAL Y AUTOMATIZACIONES</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li>La IA podrá sugerir promociones dentro de la aplicación.</li>
             <li>Los bots podrán solicitar información para canalizar incidencias.</li>
@@ -195,7 +195,7 @@
 
         <!-- 12. SOPORTE TÉCNICO -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">12. SOPORTE TÉCNICO</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">12. SOPORTE TÉCNICO</h2>
           <ul class="list-disc pl-6 space-y-2">
             <li>Horario: 08:00 a 20:00 horas.</li>
             <li>Canal principal: WhatsApp.</li>
@@ -208,7 +208,7 @@
 
         <!-- 13. SLA Y DISPONIBILIDAD -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">13. SLA Y DISPONIBILIDAD</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">13. SLA Y DISPONIBILIDAD</h2>
           <p>eOrder realizará esfuerzos comercialmente razonables para mantener la disponibilidad del servicio. No obstante:</p>
           <ul class="list-disc pl-6 space-y-2 mt-2">
             <li>No se garantiza disponibilidad ininterrumpida.</li>
@@ -220,49 +220,49 @@
 
         <!-- 14. INTEGRACIONES Y APIs -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">14. INTEGRACIONES Y APIs</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">14. INTEGRACIONES Y APIs</h2>
           <p>Las integraciones con servicios externos podrán cambiar, limitarse o descontinuarse sin previo aviso. eOrder no controla políticas, estabilidad ni disponibilidad de plataformas externas. El usuario asume riesgos derivados del uso de integraciones de terceros.</p>
         </section>
 
         <!-- 15. MARKETPLACE Y PLUGINS -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">15. MARKETPLACE Y PLUGINS</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">15. MARKETPLACE Y PLUGINS</h2>
           <p>Los complementos, plugins o herramientas externas podrán ser operados por terceros independientes. eOrder no garantiza compatibilidad permanente ni funcionamiento continuo de desarrollos externos.</p>
         </section>
 
         <!-- 16. POLÍTICA ANTI FRAUDE -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">16. POLÍTICA ANTI FRAUDE</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">16. POLÍTICA ANTI FRAUDE</h2>
           <p>eOrder podrá monitorear actividad sospechosa, intentos de fraude, accesos anómalos, automatización maliciosa y cualquier actividad que comprometa la integridad de la plataforma. Las cuentas sospechosas podrán limitarse o bloquearse preventivamente.</p>
         </section>
 
         <!-- 17. CONSENTIMIENTO WHATSAPP -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">17. CONSENTIMIENTO WHATSAPP</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">17. CONSENTIMIENTO WHATSAPP</h2>
           <p>El usuario autoriza expresamente el envío de comunicaciones operativas, técnicas, administrativas y de soporte mediante WhatsApp. Los bots automatizados podrán participar en procesos iniciales de soporte y clasificación de incidencias.</p>
         </section>
 
         <!-- 18. FUERZA MAYOR -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">18. FUERZA MAYOR</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">18. FUERZA MAYOR</h2>
           <p>eOrder no será responsable por incumplimientos derivados de eventos fuera de su control razonable, incluyendo: Desastres naturales, fallas masivas de internet, apagones, conflictos laborales, ciberataques globales, actos gubernamentales, problemas de proveedores externos.</p>
         </section>
 
         <!-- 19. LEGISLACIÓN Y JURISDICCIÓN -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">19. LEGISLACIÓN Y JURISDICCIÓN</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">19. LEGISLACIÓN Y JURISDICCIÓN</h2>
           <p>Los presentes términos se regirán conforme a las leyes federales de los Estados Unidos Mexicanos y legislación aplicable del Estado de Veracruz. Cualquier controversia será sometida a los tribunales competentes de Veracruz / Boca del Río, Veracruz, México. Las partes renuncian expresamente a cualquier otro fuero que pudiera corresponderles.</p>
         </section>
 
         <!-- 20. MODIFICACIONES -->
         <section>
-          <h2 class="text-2xl font-bold text-black border-l-4 border-black pl-4 mb-4 uppercase">20. MODIFICACIONES</h2>
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 border-l-4 border-black dark:border-gray-300 pl-4 mb-4 uppercase">20. MODIFICACIONES</h2>
           <p>eOrder podrá modificar estos términos en cualquier momento. Las modificaciones entrarán en vigor una vez publicadas dentro de la plataforma o sitio oficial. El uso continuo del servicio implica aceptación de las modificaciones.</p>
         </section>
 
         <!-- 21. CONTACTO -->
-        <section class="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-          <h2 class="text-2xl font-bold text-black mb-6 uppercase">21. CONTACTO</h2>
+        <section class="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-black dark:text-gray-100 mb-6 uppercase">21. CONTACTO</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
             <p><strong>Razón social:</strong> Merag Comercial / Materiales, Tecnología y Automatización / Food Software Services Mexico / eOrder Mexico</p>
             <p><strong>Nombre comercial:</strong> eOrder / Easy Order</p>
@@ -276,7 +276,7 @@
         </section>
       </div>
 
-      <div class="bg-gray-100 px-8 py-6 text-center text-gray-500 text-xs font-bold uppercase tracking-widest">
+      <div class="bg-gray-100 dark:bg-gray-700 px-8 py-6 text-center text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
         © 2026 eOrder — Todos los derechos reservados.
       </div>
     </div>

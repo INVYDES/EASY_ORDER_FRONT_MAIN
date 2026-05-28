@@ -20,7 +20,7 @@
             class="inline-flex items-center shrink-0"
           >
             <!-- IMAGEN DEL PRODUCTO / COMBO O EMOJI -->
-            <div v-if="(a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
+            <div v-if="(a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white dark:bg-gray-800/10 backdrop-blur-sm">
               <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" class="w-full h-full object-cover" @error="onImageError" />
             </div>
             <span v-else class="text-4xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
@@ -28,7 +28,7 @@
             <div class="flex flex-col justify-center ml-4">
               <div class="flex items-center gap-2">
                 <span class="font-black text-xl tracking-tight uppercase">{{ a.titulo }}</span>
-                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white text-black px-2 py-0.5 rounded-lg text-xs font-black shadow-sm border border-black/5">
+                <span v-if="a.tipo === 'promo' && a.precio_promo" class="bg-white dark:bg-gray-800 text-black px-2 py-0.5 rounded-lg text-xs font-black shadow-sm border border-black/5">
                   ${{ Number(a.precio_promo).toFixed(2) }}
                 </span>
                 <!-- BADGE DYNAMIC COLOR FOR TYPE -->

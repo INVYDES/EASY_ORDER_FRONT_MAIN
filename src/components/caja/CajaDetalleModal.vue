@@ -2,20 +2,20 @@
   <div
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto mx-4">
 
       <!-- Encabezado -->
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h3 class="text-lg font-bold text-gray-800">Detalle de Caja</h3>
-          <p class="text-xs text-gray-400 mt-0.5">{{ data?.caja?.fecha_apertura?.split(' ')[0] }}</p>
+          <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Detalle de Caja</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ data?.caja?.fecha_apertura?.split(' ')[0] }}</p>
         </div>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-xl leading-none transition">✕</button>
+        <button @click="$emit('close')" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xl leading-none transition">✕</button>
       </div>
 
       <!-- Cargando -->
-      <div v-if="loading" class="text-center py-10 text-gray-400 text-sm">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
+      <div v-if="loading" class="text-center py-10 text-gray-400 dark:text-gray-500 text-sm">
+        <div class="w-8 h-8 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin mx-auto mb-3"></div>
         Cargando detalle...
       </div>
 
@@ -30,30 +30,30 @@
         <div class="grid grid-cols-2 gap-3 mb-5">
           <div class="bg-emerald-50 rounded-xl p-4">
             <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide mb-1">Apertura</p>
-            <p class="text-sm font-bold text-gray-800">{{ data.caja.fecha_apertura?.split(' ')[0] }} {{ toLocalTime(data.caja.fecha_apertura) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ data.caja.abierto_por }}</p>
+            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ data.caja.fecha_apertura?.split(' ')[0] }} {{ toLocalTime(data.caja.fecha_apertura) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ data.caja.abierto_por }}</p>
           </div>
           <div class="bg-red-50 rounded-xl p-4">
             <p class="text-xs text-red-500 font-semibold uppercase tracking-wide mb-1">Cierre</p>
-            <p class="text-sm font-bold text-gray-800">{{ data.caja.fecha_cierre ? data.caja.fecha_cierre.split(' ')[0] : '' }} {{ toLocalTime(data.caja.fecha_cierre) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ data.caja.cerrado_por || '—' }}</p>
+            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ data.caja.fecha_cierre ? data.caja.fecha_cierre.split(' ')[0] : '' }} {{ toLocalTime(data.caja.fecha_cierre) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ data.caja.cerrado_por || '—' }}</p>
           </div>
         </div>
 
         <!-- Montos -->
-        <div class="bg-gray-50 rounded-xl p-4 mb-4">
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Montos</p>
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Montos</p>
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-600">Fondo de apertura</span>
+              <span class="text-gray-600 dark:text-gray-400">Fondo de apertura</span>
               <span class="font-semibold">${{ formatMoney(data.montos.monto_inicial) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">Efectivo final contado</span>
+              <span class="text-gray-600 dark:text-gray-400">Efectivo final contado</span>
               <span class="font-semibold">${{ formatMoney(data.montos.monto_final) }}</span>
             </div>
-            <div class="flex justify-between border-t border-gray-200 pt-2">
-              <span class="font-semibold text-gray-700">Diferencia</span>
+            <div class="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2">
+              <span class="font-semibold text-gray-700 dark:text-gray-300">Diferencia</span>
               <span class="font-bold" :class="data.montos.diferencia >= 0 ? 'text-emerald-600' : 'text-red-500'">
                 {{ data.montos.diferencia >= 0 ? '+' : '' }}${{ formatMoney(data.montos.diferencia) }}
                 <span class="text-xs font-normal ml-1">
@@ -65,88 +65,88 @@
         </div>
 
         <!-- Ventas -->
-        <div class="bg-gray-50 rounded-xl p-4 mb-4">
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Ventas</p>
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Ventas</p>
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-600">💵 Efectivo</span>
+              <span class="text-gray-600 dark:text-gray-400">💵 Efectivo</span>
               <span class="font-semibold">${{ formatMoney(data.ventas.efectivo) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">💳 Tarjeta</span>
+              <span class="text-gray-600 dark:text-gray-400">💳 Tarjeta</span>
               <span class="font-semibold">${{ formatMoney(data.ventas.tarjeta) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">📲 Transferencia</span>
+              <span class="text-gray-600 dark:text-gray-400">📲 Transferencia</span>
               <span class="font-semibold">${{ formatMoney(data.ventas.transferencia) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">🧾 Órdenes</span>
+              <span class="text-gray-600 dark:text-gray-400">🧾 Órdenes</span>
               <span class="font-semibold">{{ data.ventas.total_ordenes }}</span>
             </div>
           </div>
-          <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 text-sm">
-            <span class="font-bold text-gray-700">Total ventas</span>
-            <span class="font-bold text-gray-900">
+            <div class="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2 mt-2 text-sm">
+            <span class="font-bold text-gray-700 dark:text-gray-300">Total ventas</span>
+            <span class="font-bold text-gray-900 dark:text-gray-100">
               ${{ formatMoney(data.ventas.total) }}
             </span>
           </div>
         </div>
 
         <!-- Propinas -->
-        <div v-if="data.propinas" class="bg-gray-50 rounded-xl p-4 mb-4">
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Propinas</p>
+        <div v-if="data.propinas" class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Propinas</p>
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-600">💵 Efectivo</span>
-              <span class="font-semibold text-gray-800">${{ formatMoney(data.propinas.efectivo) }}</span>
+              <span class="text-gray-600 dark:text-gray-400">💵 Efectivo</span>
+              <span class="font-semibold text-gray-800 dark:text-gray-200">${{ formatMoney(data.propinas.efectivo) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">💳 Tarjeta</span>
-              <span class="font-semibold text-gray-800">${{ formatMoney(data.propinas.tarjeta) }}</span>
+              <span class="text-gray-600 dark:text-gray-400">💳 Tarjeta</span>
+              <span class="font-semibold text-gray-800 dark:text-gray-200">${{ formatMoney(data.propinas.tarjeta) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">📲 Transferencia</span>
-              <span class="font-semibold text-gray-800">${{ formatMoney(data.propinas.transferencia) }}</span>
+              <span class="text-gray-600 dark:text-gray-400">📲 Transferencia</span>
+              <span class="font-semibold text-gray-800 dark:text-gray-200">${{ formatMoney(data.propinas.transferencia) }}</span>
             </div>
           </div>
-          <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 text-sm">
-            <span class="font-bold text-gray-700">Total propinas</span>
-            <span class="font-bold text-gray-900">
+          <div class="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2 mt-2 text-sm">
+            <span class="font-bold text-gray-700 dark:text-gray-300">Total propinas</span>
+            <span class="font-bold text-gray-900 dark:text-gray-100">
               ${{ formatMoney(data.propinas.total) }}
             </span>
           </div>
         </div>
 
         <!-- Movimientos -->
-        <div class="bg-gray-50 rounded-xl p-4 mb-4">
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Movimientos de efectivo</p>
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Movimientos de efectivo</p>
           <div class="space-y-2 text-sm mb-4">
             <div class="flex justify-between">
-              <span class="text-gray-600">↑ Ingresos manuales</span>
+              <span class="text-gray-600 dark:text-gray-400">↑ Ingresos manuales</span>
               <span class="font-semibold text-emerald-600">${{ formatMoney(data.movimientos.ingresos) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">↓ Egresos manuales</span>
+              <span class="text-gray-600 dark:text-gray-400">↓ Egresos manuales</span>
               <span class="font-semibold text-red-500">${{ formatMoney(data.movimientos.egresos) }}</span>
             </div>
           </div>
 
           <!-- Listado Detallado de Movimientos -->
-          <div v-if="data.movimientos.lista?.length > 0" class="border-t border-gray-200 pt-3">
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Registro de Actividad</p>
+          <div v-if="data.movimientos.lista?.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-3">
+            <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">Registro de Actividad</p>
             <div class="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scroll">
               <div v-for="m in data.movimientos.lista" :key="m.id" 
-                class="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-100 shadow-sm"
+                class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm"
                 :class="{ 'border-sky-200 bg-sky-50/30': m.descripcion === 'CORTE X' }"
               >
                 <div class="flex items-center gap-2">
                   <span class="text-xs">{{ (m.tipo === 'ingreso' || m.descripcion === 'Apertura de caja') ? '🟢' : '🔴' }}</span>
                   <div>
-                    <p class="text-[11px] font-bold text-gray-700" :class="{ 'text-sky-700': m.descripcion === 'CORTE X' }">
+                    <p class="text-[11px] font-bold text-gray-700 dark:text-gray-300" :class="{ 'text-sky-700': m.descripcion === 'CORTE X' }">
                       {{ m.descripcion }}
                     </p>
-                    <p class="text-[9px] text-gray-400">{{ toLocalTime(m.created_at || m.fecha) }}</p>
+                    <p class="text-[9px] text-gray-400 dark:text-gray-500">{{ toLocalTime(m.created_at || m.fecha) }}</p>
                   </div>
                 </div>
                 <span class="text-xs font-black" :class="(m.tipo === 'ingreso' || m.descripcion === 'Apertura de caja') ? 'text-emerald-600' : 'text-red-500'">
@@ -166,7 +166,7 @@
         <!-- Botón imprimir -->
         <button
           @click="imprimir"
-          class="w-full py-2.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition"
+          class="w-full py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition"
         >
           🖨️ Imprimir corte
         </button>

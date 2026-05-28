@@ -1,8 +1,8 @@
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
 
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-semibold text-gray-800">
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
         {{ modoEdicion ? 'Editar Restaurante' : 'Registrar Nuevo Restaurante' }}
       </h2>
 
@@ -27,7 +27,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- nombre -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Sucursal</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de la Sucursal</label>
           <input v-model="form.nombre" type="text" maxlength="120" required
             class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             placeholder="Ej. Restaurante Centro" />
@@ -35,7 +35,7 @@
 
         <!-- teléfono -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
           <input v-model="form.telefono" type="tel" maxlength="20" required
             class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             placeholder="Ej. 5551234567" />
@@ -44,7 +44,7 @@
 
       <!-- dirección -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
         <input v-model="form.direccion" type="text" maxlength="200" required
           class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           placeholder="Ej. Av. Principal #123" />
@@ -53,14 +53,14 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- ciudad -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ciudad</label>
           <input v-model="form.ciudad" type="text" maxlength="100" required
             class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
         </div>
 
         <!-- estado -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
           <input v-model="form.estado" type="text" maxlength="100" required
             class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
         </div>
@@ -69,7 +69,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- horario -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Horario</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Horario</label>
           <input v-model="form.horario" type="text" maxlength="100"
             class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             placeholder="09:00 - 21:00" />
@@ -77,8 +77,8 @@
 
         <!-- activo -->
         <div class="flex items-center pt-6">
-          <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-            <input v-model="form.activo" type="checkbox" class="w-4 h-4 text-indigo-600 rounded" />
+          <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+            <input v-model="form.activo" type="checkbox" class="w-4 h-4 text-indigo-600 dark:text-indigo-400 rounded" />
             Restaurante activo
           </label>
         </div>
@@ -92,7 +92,7 @@
       <!-- botones -->
       <div class="flex justify-end gap-3 pt-4">
         <button type="button" @click="cancelar"
-          class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+          class="px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 transition">
           Cancelar
         </button>
         <button type="submit" :disabled="loading || (!modoEdicion && restaurantsCount >= maxRestaurants)"

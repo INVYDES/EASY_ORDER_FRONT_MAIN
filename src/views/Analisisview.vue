@@ -3,52 +3,35 @@
 
     <SucursalBadge />
 
-    <div class="bg-gradient-to-r from-indigo-600 to-violet-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-100 mb-8 relative overflow-hidden">
+    <div class="bg-gradient-to-r from-indigo-600 to-violet-700 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl shadow-indigo-100 mb-6 relative overflow-hidden">
       <div class="relative z-10">
-        <h2 class="text-3xl font-black tracking-tight">Centro de Inteligencia</h2>
-        <p class="text-indigo-100 mt-2 max-w-xl text-lg leading-relaxed font-medium">
+        <h2 class="text-xl sm:text-2xl font-black tracking-tight">Centro de Inteligencia</h2>
+        <p class="text-indigo-100 mt-1 sm:mt-2 max-w-xl text-sm sm:text-base leading-relaxed font-medium">
           Bienvenido al panel de control. Aquí puedes ver cómo va tu negocio hoy, analizar tus productos más vendidos y revisar el desempeño de tu equipo.
         </p>
-        <div class="flex gap-4 mt-6">
-          <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-            <span class="text-xs font-bold uppercase tracking-wider">Datos en vivo</span>
+        <div class="flex flex-wrap gap-2 sm:gap-4 mt-3 sm:mt-4">
+          <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-white/10">
+            <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Datos en vivo</span>
           </div>
-          <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-            <i class="fa-solid fa-shield-check text-indigo-200"></i>
-            <span class="text-xs font-bold uppercase tracking-wider">Reporte Seguro</span>
+          <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-white/10">
+            <i class="fa-solid fa-shield-check text-indigo-200 text-xs sm:text-sm"></i>
+            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Reporte Seguro</span>
           </div>
         </div>
       </div>
       <!-- Decoración fondo -->
-      <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-      <div class="absolute right-10 top-10 text-white/10 text-9xl">
+      <div class="absolute -right-16 sm:-right-20 -bottom-16 sm:-bottom-20 w-48 sm:w-72 h-48 sm:h-72 bg-white/5 rounded-full blur-3xl"></div>
+      <div class="absolute right-6 sm:right-10 top-6 sm:top-10 text-white/10 text-5xl sm:text-7xl">
         <i class="fa-solid fa-chart-line"></i>
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex flex-wrap items-center gap-2 bg-gray-100 rounded-2xl p-1.5 w-fit">
-      <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
-        :class="['px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2',
-          activeTab === t.key ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-gray-500 hover:bg-gray-200']">
-        <i :class="[
-          t.key === 'resumen' ? 'fa-solid fa-house' : '',
-          t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
-          t.key === 'kpis' ? 'fa-solid fa-chart-bar' : '',
-          t.key === 'productos' ? 'fa-solid fa-box' : '',
-          t.key === 'meseros' ? 'fa-solid fa-users' : ''
-        ]"></i>
-        {{ t.label }}
-      </button>
-    </div>
+    <AppTabs :tabs="tabs" :active="activeTab" @update:active="activeTab = $event" />
 
     <!-- ══ TAB RESUMEN ══ -->
     <template v-if="activeTab === 'resumen'">
-      <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400">Cargando métricas...</p>
-      </div>
+      <LoadingSpinner v-if="loading" text="Cargando métricas..." />
 
       <template v-else>
         <!-- KPIs -->
@@ -82,10 +65,7 @@
 
     <!-- ══ TAB ANÁLISIS FINANCIERO ══ -->
     <template v-if="activeTab === 'financiero'">
-      <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400">Cargando datos financieros...</p>
-      </div>
+      <LoadingSpinner v-if="loading" text="Cargando datos financieros..." />
       <div v-else class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />
 
@@ -96,26 +76,29 @@
 
     <!-- ══ TAB KPIs VENTAS ══ -->
     <template v-if="activeTab === 'kpis'">
-      <KpiVentas :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" :refresh-key="refreshCounter" :server-date="serverDate" />
+      <LoadingSpinner v-if="loading" text="Cargando KPIs de ventas..." />
+      <KpiVentas v-else :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" :refresh-key="refreshCounter" :server-date="serverDate" />
     </template>
 
     <!-- ══ TAB KPIs PRODUCTOS ══ -->
     <template v-if="activeTab === 'productos'">
-      <KpiProductos :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
+      <LoadingSpinner v-if="loading" text="Cargando KPIs de productos..." />
+      <KpiProductos v-else :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
-
 
     <!-- ══ TAB KPIs EMPLEADOS ══ -->
     <template v-if="activeTab === 'meseros'">
+      <LoadingSpinner v-if="loading" text="Cargando KPIs de empleados..." />
+      <template v-else>
       <div class="space-y-6">
         <!-- Distribución de Equipo (Fuerza Operativa) -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Distribución de Fuerza Operativa</h3>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+           <h3 class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Distribución de Fuerza Operativa</h3>
            <EmpleadosRolChart :empleados="empleados" />
         </div>
 
         <!-- Sub-tabs para Empleados -->
-        <div class="flex border-b border-gray-200">
+        <div class="flex border-b border-gray-200 dark:border-gray-700">
           <button v-for="st in subTabs" :key="st.key"
             @click="activeSubTab = st.key"
             :class="['px-6 py-3 text-sm font-bold transition-all border-b-2',
@@ -139,6 +122,7 @@
            <KpiCajaModule :api-url="API_URL" :get-headers="getHeaders" :server-date="serverDate" />
         </div>
       </div>
+      </template>
     </template>
 
   </div>
@@ -156,14 +140,15 @@ import PedidosEstadoChart   from '../components/administraccion/PedidosEstadoCha
 import EmpleadosRolChart    from '../components/administraccion/EmpleadosRolChart.vue'
 import KpiVentas            from '../components/administraccion/KpiVentas.vue'
 import KpiProductos         from '../components/administraccion/KpiProductos.vue'
-import MetricasMeseros      from '../components/administraccion/MetricasMeseros.vue'
-import KpiMeserosModule    from '../components/administraccion/KpiMeserosModule.vue'
-import KpiCocinaModule     from '../components/administraccion/KpiCocinaModule.vue'
-import KpiCajaModule       from '../components/administraccion/KpiCajaModule.vue'
+import AppTabs              from '@/components/ui/AppTabs.vue'
+import LoadingSpinner       from '@/components/ui/LoadingSpinner.vue'
+import KpiMeserosModule     from '../components/administraccion/KpiMeserosModule.vue'
+import KpiCocinaModule      from '../components/administraccion/KpiCocinaModule.vue'
+import KpiCajaModule        from '../components/administraccion/KpiCajaModule.vue'
 import FinancialMetricsGrid from '../components/administraccion/FinancialMetricsGrid.vue'
 import CanalVentasChart     from '../components/administraccion/CanalVentasChart.vue'
-import { API_URL }          from '@/config/api'
-import { apiClient }        from '@/utils/apiClient'
+import { API_URL, getHeaders } from '@/config/api'
+import { apiClient }         from '@/utils/apiClient'
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 const activeTab          = ref('resumen')
@@ -240,17 +225,6 @@ const subTabs = [
   { key: 'cocina_sub',  label: '👨‍🍳 Cocina' },
   { key: 'caja_sub',    label: '💵 Caja' },
 ]
-
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  const restauranteId = localStorage.getItem('restaurante_id')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : '',
-    ...(restauranteId && { 'X-Restaurante-Id': restauranteId })
-  }
-}
 
 // ── Carga de datos ─────────────────────────────────────────────────────────────
 const loadData = async () => {
@@ -472,8 +446,3 @@ onBeforeUnmount(() => {
   if (metricsInterval) clearInterval(metricsInterval)
 })
 </script>
-
-<style scoped>
-@keyframes spin { to { transform: rotate(360deg); } }
-.animate-spin { animation: spin 1s linear infinite; }
-</style>

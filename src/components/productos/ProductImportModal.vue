@@ -3,12 +3,12 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
     @click.self="$emit('close')"
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-6">
 
       <!-- Encabezado -->
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold text-gray-800">Importar Productos</h2>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Importar Productos</h2>
+        <button @click="$emit('close')" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xl leading-none">✕</button>
       </div>
 
       <!-- Instrucciones -->
@@ -27,10 +27,10 @@
         class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all"
         :class="
           isDragging
-            ? 'border-indigo-400 bg-indigo-50'
+            ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
             : fileSelected
               ? 'border-emerald-400 bg-emerald-50'
-              : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+              : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-800/50'
         "
         @dragover.prevent="isDragging = true"
         @dragleave.prevent="isDragging = false"
@@ -45,19 +45,19 @@
           @change="handleFileSelect"
         />
         <div class="text-3xl mb-2">{{ fileSelected ? '📄' : '📁' }}</div>
-        <p class="text-sm font-medium text-gray-700">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
           {{ fileName || 'Arrastra un archivo o haz clic para seleccionar' }}
         </p>
-        <p class="text-xs text-gray-400 mt-1">CSV o Excel · máximo 100 productos</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">CSV o Excel · máximo 100 productos</p>
       </div>
 
       <!-- Opciones -->
       <div v-if="fileSelected" class="mt-4 space-y-2">
-        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
           <input v-model="overwriteExisting" type="checkbox" class="accent-indigo-600" />
           Sobrescribir productos existentes (por nombre)
         </label>
-        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
           <input v-model="createCategories" type="checkbox" class="accent-indigo-600" />
           Crear categorías automáticamente si no existen
         </label>
@@ -65,25 +65,25 @@
 
       <!-- Vista previa -->
       <div v-if="previewData.length > 0" class="mt-5">
-        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">
           Vista previa (primeros {{ previewData.length }} productos)
         </p>
-        <div class="overflow-x-auto rounded-xl border border-gray-100">
+        <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700">
           <table class="w-full text-xs">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-50 dark:bg-gray-800/50">
               <tr>
-                <th class="text-left px-3 py-2 font-semibold text-gray-500">Nombre</th>
-                <th class="text-left px-3 py-2 font-semibold text-gray-500">Precio</th>
-                <th class="text-left px-3 py-2 font-semibold text-gray-500">Stock</th>
-                <th class="text-left px-3 py-2 font-semibold text-gray-500">Categoría ID</th>
+                <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">Nombre</th>
+                <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">Precio</th>
+                <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">Stock</th>
+                <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">Categoría ID</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-              <tr v-for="(item, i) in previewData" :key="i" class="hover:bg-gray-50">
-                <td class="px-3 py-2 text-gray-800">{{ item.nombre || '—' }}</td>
+              <tr v-for="(item, i) in previewData" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-800/50">
+                <td class="px-3 py-2 text-gray-800 dark:text-gray-200">{{ item.nombre || '—' }}</td>
                 <td class="px-3 py-2">${{ Number(item.precio || 0).toFixed(2) }}</td>
                 <td class="px-3 py-2">{{ item.stock || 0 }}</td>
-                <td class="px-3 py-2 text-gray-400">{{ item.categoria_id || '—' }}</td>
+                <td class="px-3 py-2 text-gray-400 dark:text-gray-500">{{ item.categoria_id || '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -97,11 +97,11 @@
 
       <!-- Progreso -->
       <div v-if="importing" class="mt-4">
-        <div class="flex justify-between text-sm text-gray-600 mb-1">
+        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1">
           <span>Importando productos...</span>
           <span>{{ importProgress }}%</span>
         </div>
-        <div class="w-full bg-gray-100 rounded-full h-2">
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
           <div
             class="bg-indigo-600 h-2 rounded-full transition-all duration-300"
             :style="{ width: importProgress + '%' }"
@@ -125,7 +125,7 @@
       <div class="flex gap-3 mt-6">
         <button
           @click="$emit('close')"
-          class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
+          class="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:bg-gray-600 transition"
         >
           Cancelar
         </button>

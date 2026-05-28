@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
+  <div class="flex h-screen bg-gray-100 dark:bg-gray-950">
 
     <!-- Sidebar (responsivo) -->
     <AppSidebar 

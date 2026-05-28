@@ -58,12 +58,12 @@
     </div>
 
     <!-- Botones de acción -->
-    <div class="px-3 pb-3 flex flex-col gap-2">
+    <div class="px-3 pb-3 flex flex-wrap gap-2">
       <!-- Botón de Receta (siempre interactivo para admin/owner, o secundario para todos) -->
       <button
         v-if="esAdminOPropietario || secondaryActionLabel"
         @click="$emit('secondary-action')"
-        class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-black/20 flex items-center justify-center gap-1.5"
+        class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-black/20 flex items-center justify-center gap-1.5"
       >
         <span>👁️</span> {{ secondaryActionLabel || 'Receta' }}
       </button>
@@ -74,7 +74,7 @@
         :disabled="procesando || esAdminOPropietario"
         :class="[
           esAdminOPropietario ? 'bg-gray-700 text-gray-500 cursor-not-allowed shadow-none' : accionClass,
-          'w-full py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20'
+          'flex-1 py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20'
         ]"
       >
         <span v-if="procesando" class="inline-block animate-spin mr-2">⏳</span>

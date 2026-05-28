@@ -128,7 +128,7 @@ const totalPedido = computed(() =>
       <div class="col-span-8">
 
         <div v-if="loading" class="text-center py-10">
-          <p class="text-gray-500">Cargando productos...</p>
+          <p class="text-gray-500 dark:text-gray-400">Cargando productos...</p>
         </div>
 
         <template v-else>

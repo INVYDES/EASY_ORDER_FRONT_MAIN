@@ -7,20 +7,20 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-white tracking-tight">🍳 Cocina</h1>
-        <p class="text-gray-500 text-xs mt-0.5">{{ fechaHoy }}</p>
+        <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{{ fechaHoy }}</p>
       </div>
       <div class="flex items-center gap-2">
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-xl">
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-950 border border-gray-800 dark:border-gray-700 rounded-xl">
           <div :class="['w-2 h-2 rounded-full', wsConectado ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : (loading ? 'bg-amber-400 animate-pulse' : 'bg-red-400')]"></div>
-          <span class="text-xs font-medium text-gray-300">
+          <span class="text-xs font-medium text-gray-300 dark:text-gray-200">
             {{ wsConectado ? 'En vivo' : (loading ? 'Conectando...' : 'Polling') }}
           </span>
-          <span v-if="ultimaActualizacion" class="text-[10px] text-gray-600 border-l border-gray-800 pl-2 ml-1">
+          <span v-if="ultimaActualizacion" class="text-[10px] text-gray-600 dark:text-gray-500 border-l border-gray-800 dark:border-gray-700 pl-2 ml-1">
             {{ ultimaActualizacion }}
           </span>
         </div>
         <button @click="loadOrders" :disabled="loading"
-          class="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-400 text-xs rounded-xl transition disabled:opacity-50">
+          class="px-3 py-1.5 bg-gray-900 dark:bg-gray-950 hover:bg-gray-800 dark:hover:bg-gray-900 border border-gray-800 dark:border-gray-700 text-gray-400 dark:text-gray-300 text-xs rounded-xl transition disabled:opacity-50">
           🔄
         </button>
       </div>
@@ -42,24 +42,13 @@
       </div>
     </div>
 
-    <!-- ══ TOAST ══ -->
-    <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-      <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 min-w-64 pointer-events-auto animate-slide-in',
-          toast.type==='success' ? 'bg-emerald-900 border border-emerald-700 text-emerald-200' :
-          toast.type==='error'   ? 'bg-red-900 border border-red-700 text-red-200' :
-          'bg-gray-900 border border-gray-700 text-gray-200']">
-        <span>{{ toast.type==='success'?'✅':toast.type==='error'?'❌':'ℹ️' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="opacity-50 hover:opacity-100">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- ══ KANBAN ══ -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <!-- Pendientes -->
-      <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
+      <div class="bg-gray-900 dark:bg-gray-950 rounded-2xl overflow-hidden border border-gray-800/80 dark:border-gray-700/80">
         <div class="px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span>🟡</span>
@@ -71,7 +60,7 @@
         </div>
         <div class="p-3 space-y-3 min-h-72 max-h-[calc(100vh-320px)] overflow-y-auto">
           <p v-if="pendingOrders.length === 0 && !loading"
-            class="text-center py-12 text-gray-700 text-sm italic">
+            class="text-center py-12 text-gray-700 dark:text-gray-500 text-sm italic">
             Sin órdenes pendientes 🎉
           </p>
           <OrdenCardCocina
@@ -89,7 +78,7 @@
       </div>
 
       <!-- En preparación -->
-      <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
+      <div class="bg-gray-900 dark:bg-gray-950 rounded-2xl overflow-hidden border border-gray-800/80 dark:border-gray-700/80">
         <div class="px-4 py-3 bg-orange-500/10 border-b border-orange-500/20 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span>🔥</span>
@@ -101,7 +90,7 @@
         </div>
         <div class="p-3 space-y-3 min-h-72 max-h-[calc(100vh-320px)] overflow-y-auto">
           <p v-if="preparingOrders.length === 0 && !loading"
-            class="text-center py-12 text-gray-700 text-sm italic">
+            class="text-center py-12 text-gray-700 dark:text-gray-500 text-sm italic">
             Sin órdenes en preparación
           </p>
           <OrdenCardCocina
@@ -125,45 +114,45 @@
     <div v-if="modalIngredientes.visible"
       class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModal">
-      <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div class="bg-gray-900 dark:bg-gray-950 border border-gray-700 dark:border-gray-600 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
 
         <!-- Header -->
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800 dark:border-gray-700">
           <div>
             <h3 class="text-white font-bold text-base">🧑‍🍳 Confirmar ingredientes</h3>
-            <p class="text-gray-400 text-xs mt-0.5">
+            <p class="text-gray-400 dark:text-gray-300 text-xs mt-0.5">
               Orden #{{ modalIngredientes.orden?.id }} ·
               {{ modalIngredientes.productosTotal }} producto{{ modalIngredientes.productosTotal !== 1 ? 's' : '' }}
             </p>
           </div>
-          <button @click="cerrarModal" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+          <button @click="cerrarModal" class="text-gray-500 dark:text-gray-400 hover:text-white text-xl leading-none">✕</button>
         </div>
 
         <!-- Cuerpo: lista de productos con sus ingredientes -->
         <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
 
           <!-- Loading ingredientes -->
-          <div v-if="modalIngredientes.loading" class="flex items-center justify-center py-10 gap-2 text-gray-500">
-            <div class="w-5 h-5 border-2 border-gray-600 border-t-orange-400 rounded-full animate-spin"></div>
+          <div v-if="modalIngredientes.loading" class="flex items-center justify-center py-10 gap-2 text-gray-500 dark:text-gray-400">
+            <LoadingSpinner />
             <span class="text-sm">Cargando ingredientes...</span>
           </div>
 
           <!-- Sin datos aún -->
-          <div v-else-if="!modalIngredientes.items.length" class="text-center py-10 text-gray-600 text-sm">
+          <div v-else-if="!modalIngredientes.items.length" class="text-center py-10 text-gray-600 dark:text-gray-500 text-sm">
             Los productos de esta orden no tienen ingredientes asignados.
             <p class="mt-2 text-xs">Puedes continuar igualmente.</p>
           </div>
 
           <!-- Productos con ingredientes -->
           <div v-else v-for="item in modalIngredientes.items" :key="item.producto_id"
-            class="bg-gray-800/60 rounded-xl overflow-hidden border border-gray-700/50">
+            class="bg-gray-800/60 dark:bg-gray-900/60 rounded-xl overflow-hidden border border-gray-700/50 dark:border-gray-600/50">
 
             <!-- Producto header -->
-            <div class="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700/50">
+            <div class="flex items-center gap-3 px-4 py-3 bg-gray-800 dark:bg-gray-900 border-b border-gray-700/50 dark:border-gray-600/50">
               <span class="text-base">🍽️</span>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-white truncate">{{ item.producto_nombre }}</p>
-                <p class="text-xs text-gray-400">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-300">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
               </div>
               <!-- Badge si algún ingrediente tiene problema -->
               <span v-if="item.ingredientes.some(i => i.sin_stock || i.insuficiente)"
@@ -174,7 +163,7 @@
             </div>
 
             <!-- Lista de ingredientes -->
-            <div class="divide-y divide-gray-700/30">
+            <div class="divide-y divide-gray-700/30 dark:divide-gray-600/30">
               <div v-for="ing in item.ingredientes" :key="ing.id"
                 class="flex items-center gap-3 px-4 py-2.5">
 
@@ -182,17 +171,17 @@
                 <button 
                   @click="modalIngredientes.nuevoEstado ? (ing.incluir = !ing.incluir) : null"
                   :class="['w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition',
-                    ing.incluir ? 'bg-orange-500 border-orange-500' : 'border-gray-600 bg-transparent',
+                    ing.incluir ? 'bg-orange-500 border-orange-500' : 'border-gray-600 dark:border-gray-500 bg-transparent',
                     !modalIngredientes.nuevoEstado ? 'cursor-default' : '']">
                   <span v-if="ing.incluir" class="text-white text-xs font-black">✓</span>
                 </button>
 
                 <!-- Nombre + cantidad receta -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm text-gray-200" :class="!ing.incluir ? 'line-through opacity-40' : ''">
+                  <p class="text-sm text-gray-200 dark:text-gray-100" :class="!ing.incluir ? 'line-through opacity-40' : ''">
                     {{ ing.nombre }}
                   </p>
-                  <p class="text-xs text-gray-500">
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
                     necesario: {{ ing.cantidad_receta_total }} {{ ing.unidad }}
                   </p>
                 </div>
@@ -202,7 +191,7 @@
                   <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
                     :class="ing.sin_stock    ? 'bg-red-900/60 text-red-400' :
                             ing.insuficiente ? 'bg-amber-900/60 text-amber-400' :
-                                               'bg-gray-700 text-gray-400'">
+                                               'bg-gray-700 dark:bg-gray-800 text-gray-400 dark:text-gray-300'">
                     {{ ing.sin_stock ? 'Sin stock' :
                        ing.insuficiente ? `Solo ${ing.stock_actual} ${ing.unidad}` :
                        `${ing.stock_actual} ${ing.unidad}` }}
@@ -214,9 +203,9 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-5 py-4 border-t border-gray-800 flex items-center gap-3">
+        <div class="px-5 py-4 border-t border-gray-800 dark:border-gray-700 flex items-center gap-3">
           <button @click="cerrarModal"
-            class="flex-1 py-2.5 text-sm text-gray-400 bg-gray-800 rounded-xl hover:bg-gray-700 transition">
+            class="flex-1 py-2.5 text-sm text-gray-400 dark:text-gray-300 bg-gray-800 dark:bg-gray-900 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-800 transition">
             {{ modalIngredientes.nuevoEstado ? 'Cancelar' : 'Cerrar' }}
           </button>
           <button v-if="modalIngredientes.nuevoEstado" 
@@ -239,6 +228,10 @@ import SucursalBadge from '../components/SucursalBadge.vue'
 import OrdenCardCocina from '../components/cocina/OrdenCardCocina.vue'
 import { apiClient } from '@/utils/apiClient'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
 
 const POLL_INTERVAL = 15000 // Aumentamos intervalo ya que tenemos WS
 const router        = useRouter()
@@ -260,7 +253,7 @@ const esAdminOPropietario = computed(() => {
 const orders     = ref([])
 const loading    = ref(false)
 const procesando = ref(null)
-const toasts     = ref([])
+const { toasts, showToast, removeToast } = useToast()
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
 let   pollTimer  = null
@@ -277,10 +270,7 @@ const modalIngredientes = ref({
 })
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
+
 
 const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
@@ -332,12 +322,7 @@ const readyOrders = computed(() => {
   })
 })
 
-const showToast = (message, type = 'info', duration = 3500) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
+
 
 // ── Cargar órdenes (polling) ───────────────────────────────────────────────────
 const loadOrders = async (silent = false) => {
@@ -515,11 +500,3 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-@keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
-.animate-slide-in { animation: slideIn 0.25s ease-out; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.animate-spin { animation: spin 1s linear infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
-.animate-pulse { animation: pulse 2s ease-in-out infinite; }
-</style>

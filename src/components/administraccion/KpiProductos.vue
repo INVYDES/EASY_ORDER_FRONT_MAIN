@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-6">
+    <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
+      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p class="text-gray-400 dark:text-gray-500">Cargando KPIs de productos...</p>
+    </div>
+    <div v-show="!loading">
 
     <!-- ══ FILTROS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
           <h3 class="text-lg font-bold text-slate-800">Análisis de Popularidad de Productos</h3>
@@ -31,7 +36,7 @@
           <div class="flex flex-col gap-1">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Vendido por:</span>
             <select v-model="kpiMeseroId" @change="loadKpis"
-              class="px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              class="px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-800 cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
               <option value="">Todo el personal</option>
               <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
                 {{ emp.nombre || emp.name || emp.username }}
@@ -66,7 +71,7 @@
     </div>
 
     <!-- TODOS LOS PRODUCTOS — Gráfica de barras filtrable -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
           <h3 class="font-bold text-slate-800 text-lg">🏆 Todos los Productos del Menú</h3>
@@ -91,7 +96,7 @@
                 <span class="text-xs font-black text-slate-400">{{ Number(p.total_vendido) }} uds</span>
               </div>
               <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                <div class="h-full rounded-full bg-indigo-500 transition-all duration-1000"
+                <div class="h-full rounded-full bg-indigo-50 dark:bg-indigo-900/300 transition-all duration-1000"
                   :style="{ width: pct(p.total_vendido, topProductos[0]?.total_vendido) + '%' }"></div>
               </div>
             </div>
@@ -242,6 +247,7 @@
 
 
   </div>
+  </div>
 </template>
 
 <script setup>
@@ -252,10 +258,9 @@ import { STORAGE_URL } from '@/config/api'
 const props = defineProps({
   apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },
   getHeaders: { type: Function, required: true },
-  empleados: { type: Array, default: () => [] }
 })
 
-const loading = ref(false)
+const loading = ref(true)
 const kpiPeriodo = ref('hoy')
 const kpiFechaInicio = ref('')
 const kpiFechaFin = ref('')

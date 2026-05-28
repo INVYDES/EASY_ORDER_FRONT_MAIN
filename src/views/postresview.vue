@@ -42,18 +42,7 @@
       </div>
     </div>
 
-    <!-- ══ TOAST ══ -->
-    <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-      <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 min-w-64 pointer-events-auto animate-slide-in',
-          toast.type==='success' ? 'bg-emerald-900 border border-emerald-700 text-emerald-200' :
-          toast.type==='error'   ? 'bg-red-900 border border-red-700 text-red-200' :
-          'bg-gray-900 border border-gray-700 text-gray-200']">
-        <span>{{ toast.type==='success'?'✅':toast.type==='error'?'❌':'ℹ️' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="opacity-50 hover:opacity-100">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- ══ KANBAN ══ -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,7 +133,7 @@
 
           <!-- Loading ingredientes -->
           <div v-if="modalIngredientes.loading" class="flex items-center justify-center py-10 gap-2 text-gray-500">
-            <div class="w-5 h-5 border-2 border-gray-600 border-t-pink-400 rounded-full animate-spin"></div>
+            <LoadingSpinner />
             <span class="text-sm">Cargando ingredientes...</span>
           </div>
 
@@ -239,6 +228,10 @@ import SucursalBadge from '../components/SucursalBadge.vue'
 import OrdenCardPostres from '../components/postres/OrdenCardPostres.vue'
 import { apiClient } from '@/utils/apiClient'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
 
 const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
@@ -260,7 +253,7 @@ const esAdminOPropietario = computed(() => {
 const orders     = ref([])
 const loading    = ref(false)
 const procesando = ref(null)
-const toasts     = ref([])
+const { toasts, showToast, removeToast } = useToast()
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
 let   pollTimer  = null
@@ -277,10 +270,7 @@ const modalIngredientes = ref({
 })
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
+
 
 const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
@@ -319,12 +309,7 @@ const readyOrders = computed(() => {
   })
 })
 
-const showToast = (message, type = 'info', duration = 3500) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
+
 
 // ── Cargar órdenes (polling) ───────────────────────────────────────────────────
 const loadOrders = async (silent = false) => {
@@ -501,11 +486,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-@keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
-.animate-slide-in { animation: slideIn 0.25s ease-out; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.animate-spin { animation: spin 1s linear infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
-.animate-pulse { animation: pulse 2s ease-in-out infinite; }
-</style>
+

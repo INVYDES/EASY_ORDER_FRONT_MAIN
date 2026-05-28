@@ -6,68 +6,68 @@
     @click="emit('close')"
   ></div>
 
-  <aside 
+  <aside
     :class="[
-      'bg-white shadow-xl min-h-screen flex flex-col fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0',
+      'bg-white dark:bg-gray-900 shadow-xl min-h-screen flex flex-col fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0',
       isOpen ? 'translate-x-0' : '-translate-x-full'
     ]"
     :style="{ width: isCollapsed && !isMobile ? '80px' : '280px' }"
   >
 
     <!-- Logo / Título -->
-    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-100">
+    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-800">
       <div class="flex items-center gap-2 overflow-hidden cursor-pointer" @click="$router.push('/panel/panelinicial')">
-        <img 
-          src="@/assets/imaguenes/Logo.jpg" 
-          class="w-10 h-10 object-contain rounded-lg" 
+        <img
+          src="@/assets/imaguenes/Logo.jpg"
+          class="w-10 h-10 object-contain rounded-lg"
           alt="Logo"
         />
-        <h1 
-          v-show="!isCollapsed || isMobile" 
-          class="text-xl font-extrabold text-[#0056b3] italic tracking-tight whitespace-nowrap"
+        <h1
+          v-show="!isCollapsed || isMobile"
+          class="text-xl font-extrabold text-[#0056b3] dark:text-indigo-400 italic tracking-tight whitespace-nowrap"
           style="font-family: 'Inter', sans-serif;"
         >
           Easy Order
         </h1>
       </div>
-      <button v-if="!isMobile" class="hidden lg:flex text-gray-400 hover:text-gray-600 transition" @click="toggleCollapse">
+      <button v-if="!isMobile" class="hidden lg:flex text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition" @click="toggleCollapse">
         <i :class="isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'" class="text-sm"></i>
       </button>
     </div>
 
     <!-- Perfil de usuario (Habilitado para Config) -->
-    <div class="p-4 border-b border-gray-50 relative">
-      <div 
+    <div class="p-4 border-b border-gray-50 dark:border-gray-800 relative">
+      <div
         @click="showUserMenu = !showUserMenu"
-        class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1 rounded-xl transition-all"
+        class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1 rounded-xl transition-all"
         :class="{ 'justify-center': isCollapsed && !isMobile }"
       >
         <div class="relative">
-          <div 
-            class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden border-2 border-gray-100 shadow-sm"
-            :class="!activeRestImage ? 'bg-[#7c3aed]' : 'bg-white'"
+          <div
+            class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden border-2 border-gray-100 dark:border-gray-700 shadow-sm"
+            :class="!activeRestImage ? 'bg-[#7c3aed]' : 'bg-white dark:bg-gray-800'"
           >
             <img v-if="activeRestImage" :src="activeRestImage" class="w-full h-full object-cover" />
             <span v-else>{{ userInitials }}</span>
           </div>
-          <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#10b981] border-2 border-white rounded-full"></div>
+          <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#10b981] border-2 border-white dark:border-gray-900 rounded-full"></div>
         </div>
         <div v-show="!isCollapsed || isMobile" class="flex-1 min-w-0">
-          <p class="text-sm font-bold text-gray-700 truncate">{{ userName }}</p>
-          <p class="text-xs text-gray-500 truncate flex items-center gap-1">
+          <p class="text-sm font-bold text-gray-700 dark:text-gray-200 truncate">{{ userName }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
             <span class="text-amber-500">👑</span> {{ userRoleLabel }}
           </p>
         </div>
-        <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 text-[10px]" :class="{'rotate-180': showUserMenu}"></i>
+        <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 text-[10px]" :class="{'rotate-180': showUserMenu}"></i>
       </div>
 
       <!-- Menú Flotante Perfil -->
       <transition enter-active-class="transition duration-100 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100">
-        <div v-if="showUserMenu" class="absolute left-4 right-4 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-1">
-          <button @click="navigate('/panel/perfil')" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2">
-            <i class="fa-solid fa-user-gear text-gray-400"></i> Mi Perfil / Config
+        <div v-if="showUserMenu" class="absolute left-4 right-4 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 py-1">
+          <button @click="navigate('/panel/perfil')" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center gap-2">
+            <i class="fa-solid fa-user-gear text-gray-400 dark:text-gray-500"></i> Mi Perfil / Config
           </button>
-          <button @click="logout" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-50">
+          <button @click="logout" class="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2 border-t border-gray-50 dark:border-gray-700">
             <i class="fa-solid fa-power-off text-red-400"></i> Cerrar Sesión
           </button>
         </div>
@@ -80,26 +80,26 @@
       <!-- SELECTOR DE SUCURSAL -->
       <div v-if="restaurantes && restaurantes.length > 1 && !isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-1">
-          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sucursal</p>
+          <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Sucursal</p>
         </div>
-        <button @click="showRestMenu = !showRestMenu" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-100 transition" :class="{ 'justify-center': isCollapsed && !isMobile }">
+        <button @click="showRestMenu = !showRestMenu" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700 transition" :class="{ 'justify-center': isCollapsed && !isMobile }">
           <i class="fa-solid fa-store text-emerald-500 text-sm w-6"></i>
-          <span v-show="!isCollapsed || isMobile" class="text-sm font-medium text-gray-600 truncate flex-1 text-left">{{ activeRestName }}</span>
-          <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+          <span v-show="!isCollapsed || isMobile" class="text-sm font-medium text-gray-600 dark:text-gray-300 truncate flex-1 text-left">{{ activeRestName }}</span>
+          <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 text-[10px]"></i>
         </button>
-        <div v-if="showRestMenu && (!isCollapsed || isMobile)" class="mt-1 space-y-1 bg-gray-50 rounded-lg p-1">
-          <button v-for="r in restaurantes" :key="r.id" @click="selectRest(r.id)" class="w-full text-left px-3 py-1.5 text-xs rounded transition" :class="r.id === restauranteActivo ? 'bg-white text-blue-600 font-bold' : 'text-gray-500 hover:bg-gray-200'">{{ r.nombre }}</button>
+        <div v-if="showRestMenu && (!isCollapsed || isMobile)" class="mt-1 space-y-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-1">
+          <button v-for="r in restaurantes" :key="r.id" @click="selectRest(r.id)" class="w-full text-left px-3 py-1.5 text-xs rounded transition" :class="r.id === restauranteActivo ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">{{ r.nombre }}</button>
         </div>
       </div>
 
       <!-- SECCIÓN: PLATAFORMA (SUPER ADMIN ONLY) -->
       <div v-if="isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
-          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Plataforma</p>
+          <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Plataforma</p>
         </div>
         <div class="space-y-1">
-          <RouterLink to="/panel/plataforma" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/plataforma', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
-            <i class="fa-solid fa-screwdriver-wrench text-lg w-6 text-center text-indigo-600"></i>
+          <RouterLink to="/panel/plataforma" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition" :class="{ 'bg-[#eef2ff] dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm': $route.path === '/panel/plataforma', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+            <i class="fa-solid fa-screwdriver-wrench text-lg w-6 text-center text-indigo-600 dark:text-indigo-400"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Plataforma</span>
           </RouterLink>
         </div>
@@ -108,14 +108,14 @@
       <!-- SECCIÓN: OPERACIONES -->
       <div v-if="!isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
-          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
+          <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Operaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition" :class="{ 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-users text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Mesero</span>
           </RouterLink>
-          <RouterLink v-if="hasPermission('VER_CAJA')" to="/panel/caja" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/caja', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_CAJA')" to="/panel/caja" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition" :class="{ 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium': $route.path === '/panel/caja', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cash-register text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Caja</span>
           </RouterLink>
@@ -125,22 +125,22 @@
       <!-- SECCIÓN: ESTACIONES -->
       <div v-if="!isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
-          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
+          <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Estaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition relative" :class="{ 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-utensils text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Alimentos</span>
             <span v-if="pendingCounts.cocina > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.cocina }}</span>
           </RouterLink>
-          
-          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+
+          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition relative" :class="{ 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Bebidas</span>
             <span v-if="pendingCounts.barra > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.barra }}</span>
           </RouterLink>
-          
-          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+
+          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition relative" :class="{ 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cake-candles text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
             <span v-if="pendingCounts.postres > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.postres }}</span>
@@ -151,18 +151,18 @@
       <!-- SECCIÓN: ADMINISTRACIÓN -->
       <div v-if="isAdminOrOwner && !isSuperAdmin">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
-          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Administración</p>
+          <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Administración</p>
         </div>
         <div class="space-y-1">
-          <RouterLink to="/panel/Gestion" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/Gestion', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/Gestion" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition" :class="{ 'bg-[#eef2ff] dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm': $route.path === '/panel/Gestion', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-gear text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Gestión</span>
           </RouterLink>
-          <RouterLink to="/panel/analisis" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/analisis', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/analisis" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition" :class="{ 'bg-[#eef2ff] dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm': $route.path === '/panel/analisis', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-magnifying-glass-chart text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Métricas</span>
           </RouterLink>
-          <RouterLink to="/panel/productos" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/productos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/productos" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition" :class="{ 'bg-[#eef2ff] dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm': $route.path === '/panel/productos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-box text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
           </RouterLink>
@@ -373,5 +373,7 @@ onUnmounted(() => {
 nav::-webkit-scrollbar { width: 4px; }
 nav::-webkit-scrollbar-track { background: transparent; }
 nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+:is(.dark) nav::-webkit-scrollbar-thumb { background: #374151; }
 .router-link-active { background-color: #eef2ff; color: #4f46e5; font-weight: 600; }
+:is(.dark) .router-link-active { background-color: rgba(67, 56, 202, 0.3); color: #818cf8; }
 </style>

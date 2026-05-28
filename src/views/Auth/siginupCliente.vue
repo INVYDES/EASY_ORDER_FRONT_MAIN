@@ -2,23 +2,23 @@
   <div class="min-h-screen flex">
 
     <!-- ── FORMULARIO ── -->
-    <div class="flex items-center justify-center w-full lg:w-1/2 bg-white px-6 py-10">
+    <div class="flex items-center justify-center w-full lg:w-1/2 bg-white dark:bg-gray-800 px-6 py-10">
       <div class="w-full max-w-md">
 
         <!-- Header -->
         <div class="mb-8">
-          <div class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+          <div class="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
             <span>🍽️</span> Easy Order
           </div>
-          <h1 class="text-3xl font-black text-gray-900 leading-tight">Crea tu cuenta</h1>
-          <p class="text-gray-500 mt-1.5 text-sm">Explora menús, haz pedidos y sigue tus órdenes en tiempo real.</p>
+          <h1 class="text-3xl font-black text-gray-900 dark:text-gray-100 leading-tight">Crea tu cuenta</h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1.5 text-sm">Explora menús, haz pedidos y sigue tus órdenes en tiempo real.</p>
         </div>
 
         <!-- Alerts -->
-        <div v-if="errorMessage" class="mb-4 p-3.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+        <div v-if="errorMessage" class="mb-4 p-3.5 text-sm text-red-700 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-2">
           <span>❌</span> {{ errorMessage }}
         </div>
-        <div v-if="successMessage" class="mb-4 p-3.5 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
+        <div v-if="successMessage" class="mb-4 p-3.5 text-sm text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2">
           <span>✅</span> {{ successMessage }}
         </div>
 
@@ -26,41 +26,41 @@
 
           <!-- Nombre -->
           <div>
-            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Nombre completo</label>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">Nombre completo</label>
             <input v-model="form.nombre" type="text" placeholder="¿Cómo te llamas?" required
-              :class="['w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
-                errors.nombre ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
+              :class="['w-full px-4 py-3 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
+                errors.nombre ? 'border-red-400 bg-red-50 dark:bg-red-900/30' : 'border-gray-200 dark:border-gray-600']" />
             <p v-if="errors.nombre" class="text-xs text-red-500 mt-1">{{ errors.nombre[0] }}</p>
           </div>
 
           <!-- Email -->
           <div>
-            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Correo electrónico</label>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">Correo electrónico</label>
             <input v-model="form.email" type="email" placeholder="tu@correo.com" required
-              :class="['w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
-                errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
+              :class="['w-full px-4 py-3 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
+                errors.email ? 'border-red-400 bg-red-50 dark:bg-red-900/30' : 'border-gray-200 dark:border-gray-600']" />
             <p v-if="errors.email" class="text-xs text-red-500 mt-1">{{ errors.email[0] }}</p>
           </div>
 
           <!-- Teléfono -->
           <div>
-            <label class="block mb-1.5 text-sm font-semibold text-gray-700">
-              Teléfono <span class="text-gray-400 font-normal">(opcional)</span>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Teléfono <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
             </label>
             <input v-model="form.telefono" type="tel" placeholder="Ej. 5512345678"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm" />
+              class="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm" />
           </div>
 
           <!-- Contraseña -->
           <div>
-            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Contraseña</label>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">Contraseña</label>
             <div class="relative">
               <input v-model="form.password" :type="showPassword ? 'text' : 'password'"
                 placeholder="Mínimo 6 caracteres" required
-                :class="['w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
-                  errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
+                :class="['w-full px-4 py-3 pr-12 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
+                  errors.password ? 'border-red-400 bg-red-50 dark:bg-red-900/30' : 'border-gray-200 dark:border-gray-600']" />
               <button type="button" @click="showPassword = !showPassword"
-                class="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 transition text-sm">
+                class="absolute right-4 top-3.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition text-sm">
                 {{ showPassword ? '🙈' : '👁️' }}
               </button>
             </div>
@@ -69,11 +69,11 @@
 
           <!-- Confirmar contraseña -->
           <div>
-            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Confirmar contraseña</label>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">Confirmar contraseña</label>
             <input v-model="form.password_confirmation" :type="showPassword ? 'text' : 'password'"
               placeholder="Repite tu contraseña" required
-              :class="['w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
-                passwordMismatch ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
+              :class="['w-full px-4 py-3 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
+                passwordMismatch ? 'border-red-400 bg-red-50 dark:bg-red-900/30' : 'border-gray-200 dark:border-gray-600']" />
             <p v-if="passwordMismatch" class="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
           </div>
 
@@ -82,26 +82,26 @@
             <div class="flex gap-1">
               <div v-for="i in 4" :key="i"
                 class="flex-1 h-1.5 rounded-full transition-all duration-300"
-                :class="i <= passwordStrength.level ? passwordStrength.color : 'bg-gray-100'"></div>
+                :class="i <= passwordStrength.level ? passwordStrength.color : 'bg-gray-100 dark:bg-gray-700'"></div>
             </div>
             <p class="text-xs" :class="passwordStrength.textColor">{{ passwordStrength.label }}</p>
           </div>
 
           <!-- Botón -->
           <button type="submit" :disabled="loading || passwordMismatch"
-            class="w-full py-3.5 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 font-bold text-sm shadow-lg shadow-indigo-200/50 flex items-center justify-center gap-2 mt-2">
+            class="w-full py-3.5 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 font-bold text-sm shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/50 flex items-center justify-center gap-2 mt-2">
             <div v-if="loading" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
             <span>{{ loading ? 'Creando cuenta...' : '🚀 Comenzar a pedir' }}</span>
           </button>
 
         </form>
 
-        <p class="mt-6 text-center text-sm text-gray-500">
+        <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           ¿Ya tienes cuenta?
           <RouterLink to="/" class="text-indigo-600 font-bold hover:underline">Inicia sesión</RouterLink>
         </p>
 
-        <p class="mt-3 text-center text-xs text-gray-400">
+        <p class="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
           ¿Eres dueño de un restaurante?
           <RouterLink to="/registro/dueno" class="text-indigo-500 hover:underline">Regístrate aquí</RouterLink>
         </p>

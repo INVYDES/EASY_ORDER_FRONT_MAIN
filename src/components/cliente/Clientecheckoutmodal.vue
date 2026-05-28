@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
     @click.self="!procesando && $emit('close')">
-    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
+    <div class="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
 
       <!-- ══ PANTALLA DE PROCESANDO PAGO ONLINE ══ -->
       <div v-if="procesandoPagoOnline" class="flex flex-col items-center justify-center px-8 py-16 text-center gap-5">
@@ -13,34 +13,34 @@
           <div class="absolute -bottom-2 -right-2 w-7 h-7 border-4 border-white rounded-full border-t-indigo-500 animate-spin"></div>
         </div>
         <div>
-          <p class="text-lg font-bold text-gray-900">Conectando con {{ metodoPago==='paypal' ? 'PayPal' : 'Mercado Pago' }}</p>
-          <p class="text-sm text-gray-400 mt-1">Preparando tu sesión de pago segura...</p>
+          <p class="text-lg font-bold text-gray-900 dark:text-gray-100">Conectando con {{ metodoPago==='paypal' ? 'PayPal' : 'Mercado Pago' }}</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Preparando tu sesión de pago segura...</p>
         </div>
-        <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-          <div class="h-full bg-indigo-500 rounded-full animate-progress"></div>
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+          <div class="h-full bg-indigo-50 dark:bg-indigo-900/300 rounded-full animate-progress"></div>
         </div>
-        <p class="text-xs text-gray-400">Serás redirigido en un momento</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">Serás redirigido en un momento</p>
       </div>
 
       <!-- ══ FORMULARIO NORMAL ══ -->
       <template v-else>
 
         <!-- Header -->
-        <div class="sticky top-0 bg-white z-10 px-6 pt-5 pb-4 border-b border-gray-100">
+        <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-bold text-gray-900">Finalizar pedido</h2>
-              <p class="text-xs text-gray-400 mt-0.5">{{ restauranteNombre }}</p>
+              <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Finalizar pedido</h2>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ restauranteNombre }}</p>
             </div>
-            <button @click="$emit('close')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">✕</button>
+            <button @click="$emit('close')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">✕</button>
           </div>
           <!-- Resumen rápido -->
-          <div class="mt-3 flex items-center justify-between bg-indigo-50 rounded-xl px-4 py-2.5">
-            <div class="flex items-center gap-2 text-sm text-indigo-700">
+          <div class="mt-3 flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 rounded-xl px-4 py-2.5">
+            <div class="flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
               <span>🛒</span>
               <span class="font-medium">{{ totalItems }} producto{{ totalItems !== 1 ? 's' : '' }}</span>
             </div>
-            <span class="text-base font-black text-indigo-700">${{ totalPedido.toFixed(2) }}</span>
+            <span class="text-base font-black text-indigo-700 dark:text-indigo-300">${{ totalPedido.toFixed(2) }}</span>
           </div>
         </div>
 
@@ -48,14 +48,14 @@
 
           <!-- ── 1. TIPO DE ENTREGA ── -->
           <div>
-            <p class="text-sm font-bold text-gray-700 mb-3">¿Cómo quieres recibir tu pedido?</p>
+            <p class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">¿Cómo quieres recibir tu pedido?</p>
             <div class="grid grid-cols-2 gap-3">
               <button v-for="op in opcionesEntrega" :key="op.value" @click="entrega = op.value"
                 :class="['flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition',
-                  entrega === op.value ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300 bg-white']">
+                  entrega === op.value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 bg-white dark:bg-gray-800']">
                 <span class="text-3xl">{{ op.icon }}</span>
-                <span class="text-sm font-semibold" :class="entrega===op.value?'text-indigo-700':'text-gray-700'">{{ op.label }}</span>
-                <span class="text-[10px] text-center leading-tight" :class="entrega===op.value?'text-indigo-500':'text-gray-400'">
+                <span class="text-sm font-semibold" :class="entrega===op.value?'text-indigo-700 dark:text-indigo-300':'text-gray-700 dark:text-gray-300'">{{ op.label }}</span>
+                <span class="text-[10px] text-center leading-tight" :class="entrega===op.value?'text-indigo-500':'text-gray-400 dark:text-gray-500'">
                   {{ op.desc }}
                 </span>
               </button>
@@ -64,25 +64,25 @@
 
           <!-- Dirección (solo domicilio) -->
           <div v-if="entrega === 'domicilio'" class="space-y-3 animate-fade-in">
-            <p class="text-sm font-bold text-gray-700">Dirección de entrega</p>
+            <p class="text-sm font-bold text-gray-700 dark:text-gray-300">Dirección de entrega</p>
             <input v-model="direccion" type="text" placeholder="Calle y número *"
               :class="['w-full px-4 py-3 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none',
-                !direccion && intentoEnvio ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
+                !direccion && intentoEnvio ? 'border-red-400 bg-red-50' : 'border-gray-200 dark:border-gray-700']" />
             <div class="grid grid-cols-2 gap-2">
               <input v-model="colonia"     type="text" placeholder="Colonia"
-                class="px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                class="px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               <input v-model="referencias" type="text" placeholder="Referencias"
-                class="px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                class="px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
           </div>
 
           <!-- ── 2. MÉTODO DE PAGO ── -->
           <div>
-            <p class="text-sm font-bold text-gray-700 mb-3">¿Cómo vas a pagar?</p>
+            <p class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">¿Cómo vas a pagar?</p>
             <div class="space-y-2">
               <button v-for="m in metodosPago" :key="m.value" @click="metodoPago = m.value"
                 :class="['w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition text-left',
-                  metodoPago === m.value ? `border-${m.color}-500 bg-${m.color}-50` : 'border-gray-200 hover:border-gray-300',
+                  metodoPago === m.value ? `border-${m.color}-500 bg-${m.color}-50` : 'border-gray-200 dark:border-gray-700 hover:border-gray-300',
                   !metodoPago && intentoEnvio ? 'border-red-300' : '']"
                 :style="metodoPago === m.value ? { borderColor: m.hex, backgroundColor: m.hexBg } : {}">
                 <!-- Icono -->
@@ -92,8 +92,8 @@
                 </div>
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-gray-800">{{ m.label }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{{ m.sub }}</p>
+                  <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ m.label }}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ m.sub }}</p>
                 </div>
                 <!-- Badge online -->
                 <span v-if="m.online" class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
@@ -103,7 +103,7 @@
                 <!-- Radio -->
                 <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
                   :style="metodoPago===m.value ? { borderColor: m.hex, backgroundColor: m.hex } : { borderColor:'#d1d5db' }">
-                  <div v-if="metodoPago===m.value" class="w-2 h-2 rounded-full bg-white"></div>
+                  <div v-if="metodoPago===m.value" class="w-2 h-2 rounded-full bg-white dark:bg-gray-800"></div>
                 </div>
               </button>
             </div>
@@ -113,7 +113,7 @@
           <transition name="fade">
             <div v-if="infoPago.titulo" class="rounded-xl p-4 text-sm border" :style="{ backgroundColor: metodoActivo?.hexBg||'#f9fafb', borderColor: metodoActivo?.hex+'44'||'#e5e7eb' }">
               <p class="font-semibold mb-1" :style="{ color: metodoActivo?.hex||'#374151' }">{{ infoPago.titulo }}</p>
-              <p class="text-xs leading-relaxed text-gray-600">{{ infoPago.descripcion }}</p>
+              <p class="text-xs leading-relaxed text-gray-600 dark:text-gray-400">{{ infoPago.descripcion }}</p>
               <!-- Aviso de redirección para pagos online -->
               <div v-if="metodoActivo?.online" class="mt-2 flex items-center gap-1.5 text-xs font-medium" :style="{ color: metodoActivo?.hex }">
                 <span>🔒</span>
@@ -124,9 +124,9 @@
 
           <!-- ── 3. NOTA ── -->
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Nota para el restaurante <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nota para el restaurante <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span></label>
             <textarea v-model="nota" rows="2" placeholder="Alergias, preferencias, sin cebolla..."
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+              class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
           </div>
 
           <!-- Error -->
@@ -144,7 +144,7 @@
             <span v-if="!procesando && metodoActivo?.online">→</span>
           </button>
 
-          <p v-if="metodoActivo?.online" class="text-center text-xs text-gray-400">
+          <p v-if="metodoActivo?.online" class="text-center text-xs text-gray-400 dark:text-gray-500">
             🔒 Pago 100% seguro procesado por {{ metodoActivo.label }}
           </p>
 

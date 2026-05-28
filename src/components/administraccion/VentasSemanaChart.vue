@@ -1,44 +1,44 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-5 flex flex-col justify-between">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 flex flex-col justify-between">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h3 class="font-semibold text-gray-800">Tendencia de ventas</h3>
-        <p class="text-xs text-gray-400 mt-0.5">Solo órdenes cerradas</p>
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200">Tendencia de ventas</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Solo órdenes cerradas</p>
       </div>
     </div>
     <div class="relative h-52">
       <div v-if="loading"
-        class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
-        <div class="flex items-center gap-2 text-gray-400 text-sm">
+        class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800/80 rounded-xl z-10">
+        <div class="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm">
           <div class="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
           Cargando...
         </div>
       </div>
       <div v-if="!loading && sinDatos"
-        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
         <span class="text-3xl mb-1">📈</span>
         <span class="text-sm">Sin ventas en el período</span>
       </div>
       <canvas ref="chartRef"></canvas>
     </div>
     <!-- Resumen período -->
-    <div v-if="!sinDatos" class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100">
+    <div v-if="!sinDatos" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
       <div class="text-center">
-        <p class="text-xs text-gray-400">Total período</p>
-        <p class="text-sm font-bold text-gray-800">${{ fm(totales.total_ventas) }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">Total período</p>
+        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">${{ fm(totales.total_ventas) }}</p>
       </div>
-      <div class="text-center border-x border-gray-100">
-        <p class="text-xs text-gray-400">Órdenes</p>
-        <p class="text-sm font-bold text-gray-800">{{ totales.total_ordenes }}</p>
+      <div class="text-center border-x border-gray-100 dark:border-gray-700">
+        <p class="text-xs text-gray-400 dark:text-gray-500">Órdenes</p>
+        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ totales.total_ordenes }}</p>
       </div>
       <div class="text-center">
-        <p class="text-xs text-gray-400">Ticket prom.</p>
-        <p class="text-sm font-bold text-gray-800">${{ fm(totales.promedio_por_orden) }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">Ticket prom.</p>
+        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">${{ fm(totales.promedio_por_orden) }}</p>
       </div>
     </div>
     
     <!-- Botones de búsqueda rápida (abajo) -->
-    <div class="flex justify-center gap-2 mt-4 pt-4 border-t border-gray-100">
+    <div class="flex justify-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
       <button v-for="p in periodos" :key="p.value" @click="cambiarPeriodo(p.value)"
         :class="['px-5 py-2 text-xs rounded-xl font-bold transition shadow-sm border',
           periodoActivo===p.value ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-100' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200']">

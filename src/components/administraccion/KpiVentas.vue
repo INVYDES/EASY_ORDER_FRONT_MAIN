@@ -1,6 +1,10 @@
 <template>
   <div class="space-y-6">
-
+    <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
+      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p class="text-gray-400 dark:text-gray-500">Cargando KPIs de ventas...</p>
+    </div>
+    <div v-show="!loading">
 
     <!-- ══ TIEMPOS DE PREPARACIÓN ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -27,31 +31,31 @@
     <!-- ══ KPI CARDS ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div v-for="card in kpiCards" :key="card.label"
-        class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative">
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 relative">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-xs font-bold text-gray-400 uppercase">{{ card.label }}</p>
-            <p class="text-2xl font-black text-gray-900 mt-1">{{ card.value }}</p>
+            <p class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">{{ card.label }}</p>
+            <p class="text-2xl font-black text-gray-900 dark:text-gray-100 mt-1">{{ card.value }}</p>
           </div>
-          <div class="p-2 bg-indigo-50 rounded-lg text-xl">{{ card.icon }}</div>
+          <div class="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-xl">{{ card.icon }}</div>
         </div>
 
         <div v-if="mostrarComparacion && card.rawAnterior" class="mt-3 flex items-center gap-1 text-xs">
           <span :class="dc(card.raw, card.rawAnterior)" class="px-1.5 py-0.5 rounded-md flex items-center">
             {{ di(card.raw, card.rawAnterior) }} {{ dp(card.raw, card.rawAnterior) }}%
           </span>
-          <span class="text-gray-400">vs anterior</span>
+          <span class="text-gray-400 dark:text-gray-500">vs anterior</span>
         </div>
       </div>
     </div>
 
     <!-- ══ INVERSIÓN / UTILIDAD + PROPINAS ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 relative overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-red-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">📦</span>
         <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
         <p class="text-2xl font-black text-red-600 mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
-        <p class="text-xs text-gray-400 mt-1">costo de insumos + MO</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">costo de insumos + MO</p>
       </div>
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
@@ -59,45 +63,45 @@
         <p class="text-2xl font-black text-emerald-700 mt-1">${{ fm(finanzasDia.utilidadTotal) }}</p>
         <p class="text-xs text-emerald-500 mt-1">Utilidad bruta del dia no se consideran salidad de efectivo del dia</p>
       </div>
-      <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
         <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas</p>
         <p class="text-2xl font-black text-violet-700 mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
-        <p class="text-xs text-gray-400 mt-1">Efectivo + Terminal + Transferencia</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Efectivo + Terminal + Transferencia</p>
       </div>
     </div>
 
     <!-- ══ FILTROS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-800">Reporte de Ventas Detallado</h3>
-          <p class="text-sm text-gray-500 mt-1">
+          <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Reporte de Ventas Detallado</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
             Visualiza el flujo de ingresos de tu restaurante. Puedes comparar periodos y filtrar por meseros específicos.
           </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-4">
           <!-- Rango de Fechas -->
-          <div class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+          <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-1.5 rounded-2xl border border-gray-100 dark:border-gray-700">
             <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Inicio</span>
+              <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Inicio</span>
               <input v-model="kpiFechaInicio" type="date" @change="kpiPeriodo = 'custom'"
-                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
+                class="bg-transparent text-sm font-semibold text-gray-700 dark:text-gray-300 focus:outline-none" />
             </div>
-            <div class="w-px h-8 bg-gray-200"></div>
+            <div class="w-px h-8 bg-gray-200 dark:bg-gray-600"></div>
             <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Fin</span>
+              <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Fin</span>
               <input v-model="kpiFechaFin" type="date" @change="kpiPeriodo = 'custom'"
-                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
+                class="bg-transparent text-sm font-semibold text-gray-700 dark:text-gray-300 focus:outline-none" />
             </div>
           </div>
 
           <!-- Selector de Empleado -->
           <div class="flex flex-col gap-1">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Ventas de:</span>
+            <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Ventas de:</span>
             <select v-model="kpiMeseroId" @change="loadKpis"
-              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-800 cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
               <option value="">Todo el equipo</option>
               <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
                 {{ emp.nombre || emp.name || emp.username }}
@@ -114,14 +118,14 @@
         </div>
       </div>
 
-      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-gray-50 pt-4">
+      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-gray-50 dark:border-gray-700/50 pt-4">
         <!-- Atajos de Periodo -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-gray-400 uppercase">Período rápido:</span>
-          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Período rápido:</span>
+          <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 dark:bg-gray-700 rounded-xl p-1">
             <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
               :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']">
+                kpiPeriodo === p.key ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300']">
               {{ p.label }}
             </button>
           </div>
@@ -129,34 +133,34 @@
 
         <!-- Agrupación -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-gray-400 uppercase">Ver por:</span>
-          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Ver por:</span>
+          <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 dark:bg-gray-700 rounded-xl p-1">
             <button v-for="g in grupos" :key="g.value" @click="kpiGrupo = g.value; loadKpis()"
               :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiGrupo === g.value ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700']">
+                kpiGrupo === g.value ? 'bg-white dark:bg-gray-800 shadow-sm text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300']">
               {{ g.label }}
             </button>
           </div>
         </div>
 
         <!-- Comparación -->
-        <label class="flex items-center gap-3 text-sm font-medium text-gray-600 cursor-pointer ml-auto bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-          <input type="checkbox" v-model="mostrarComparacion" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" @change="loadKpis" />
+        <label class="flex items-center gap-3 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500 cursor-pointer ml-auto bg-gray-50 dark:bg-gray-800/50 px-4 py-2 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 dark:bg-gray-700 transition-colors">
+          <input type="checkbox" v-model="mostrarComparacion" class="w-4 h-4 rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 cursor-pointer" @change="loadKpis" />
           Comparar vs período anterior
         </label>
       </div>
     </div>
 
     <!-- ══ GRÁFICA EVOLUCIÓN DE VENTAS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h3 class="font-bold text-gray-800 text-lg">Evolución de Ventas</h3>
-          <p class="text-sm text-gray-400">Desglose por {{ kpiGrupoLabel }}</p>
+          <h3 class="font-bold text-gray-800 dark:text-gray-200 text-lg">Evolución de Ventas</h3>
+          <p class="text-sm text-gray-400 dark:text-gray-500">Desglose por {{ kpiGrupoLabel }}</p>
         </div>
         <div class="text-right">
-          <p class="text-xs text-gray-400 uppercase font-bold">Total del Período</p>
-          <p class="text-xl font-black text-indigo-600">${{ fm(kpiData.totales?.total_ventas) }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 uppercase font-bold">Total del Período</p>
+          <p class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ fm(kpiData.totales?.total_ventas) }}</p>
         </div>
       </div>
       <div class="relative h-80">
@@ -171,25 +175,25 @@
       <CanalVentasChart :api-url="apiUrl" :get-headers="getHeaders" :refresh-key="refreshKey" :server-date="serverDate" />
 
       <!-- Productos mayor margen FUERA del Top 5 -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h3 class="font-bold text-gray-800 mb-1 flex items-center gap-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
           <span>💎</span> Mayor Margen (fuera del Top 5 ventas)
         </h3>
-        <p class="text-xs text-gray-400 mb-4">Productos con alta utilidad y bajo volumen — oportunidad de impulso</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">Productos con alta utilidad y bajo volumen — oportunidad de impulso</p>
         <div class="space-y-3 max-h-52 overflow-y-auto pr-1">
-          <div v-if="productosMargenFueraTop.length === 0" class="text-center py-8 text-gray-400 text-sm italic">
+          <div v-if="productosMargenFueraTop.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm italic">
             Sin datos disponibles
           </div>
           <div v-for="(p, i) in productosMargenFueraTop" :key="p.id || i"
             class="flex items-center justify-between p-3 rounded-xl border"
-            :class="i === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'">
+            :class="i === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700'">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-gray-400 w-4">{{ i+1 }}</span>
-              <span class="text-sm font-semibold text-gray-700">{{ p.nombre }}</span>
+              <span class="text-xs font-black text-gray-400 dark:text-gray-500 w-4">{{ i+1 }}</span>
+              <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ p.nombre }}</span>
             </div>
             <div class="text-right">
               <p class="text-sm font-black text-emerald-600">${{ fm(p.margen) }}</p>
-              <p class="text-[10px] text-gray-400">{{ p.ventas }} uds</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ p.ventas }} uds</p>
             </div>
           </div>
         </div>
@@ -197,16 +201,17 @@
     </div>
 
     <!-- ══ RENDIMIENTO VS ANTERIOR ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h3 class="font-bold text-gray-800 mb-4">📈 Rendimiento vs Período Anterior</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-4">📈 Rendimiento vs Período Anterior</h3>
       <div v-if="!mostrarComparacion" class="h-60 flex flex-col items-center justify-center text-center">
-        <p class="text-gray-400 text-sm mb-4">Activa la comparación para analizar el crecimiento</p>
-        <button @click="mostrarComparacion=true; loadKpis()" class="text-indigo-600 font-bold text-sm hover:underline">Activar ahora</button>
+        <p class="text-gray-400 dark:text-gray-500 text-sm mb-4">Activa la comparación para analizar el crecimiento</p>
+        <button @click="mostrarComparacion=true; loadKpis()" class="text-indigo-600 dark:text-indigo-400 font-bold text-sm hover:underline">Activar ahora</button>
       </div>
       <div v-else class="h-60">
         <canvas ref="chartComparacion"></canvas>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -225,16 +230,8 @@ const props = defineProps({
 })
 
 // --- ESTADO ---
-const loading = ref(false)
-const kpiPeriodo = ref('semana')
-const kpiFechaInicio = ref('')
-const kpiFechaFin = ref('')
-const kpiGrupo = ref('dia')
-const mostrarComparacion = ref(false)
-const kpiData = ref({ ventas: [], totales: null })
-const kpiAnterior = ref({ ventas: [], totales: null })
-const topProductos = ref([])
-const kpiMeseroId = ref('')
+const loading = ref(true)
+
 
 // Datos nuevos
 const tiempos = ref({ cocina: null, barra: null, postres: null })

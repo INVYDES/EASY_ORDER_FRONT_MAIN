@@ -3,14 +3,14 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
     @click.self="$emit('close')"
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
 
       <!-- Encabezado -->
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold text-gray-800">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
           {{ categoria ? 'Editar Categoría' : 'Nueva Categoría' }}
         </h2>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-xl leading-none transition">✕</button>
+        <button @click="$emit('close')" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xl leading-none transition">✕</button>
       </div>
 
       <!-- Error -->
@@ -22,27 +22,27 @@
 
         <!-- Nombre -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
           <input
             v-model="form.nombre"
             type="text"
             placeholder="Ej. Bebidas, Postres..."
             class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-            :class="errors.nombre ? 'border-red-400' : 'border-gray-200'"
+            :class="errors.nombre ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'"
           />
           <p v-if="errors.nombre" class="text-xs text-red-500 mt-1">{{ errors.nombre }}</p>
         </div>
 
         <!-- Descripción -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Descripción <span class="text-gray-400 font-normal">(opcional)</span>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Descripción <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
           </label>
           <textarea
             v-model="form.descripcion"
             placeholder="Descripción de la categoría"
             rows="2"
-            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm resize-none"
+            class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm resize-none"
           ></textarea>
         </div>
 
@@ -51,12 +51,12 @@
 
           <!-- Color -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
             <div class="flex items-center gap-2">
               <input
                 v-model="form.color"
                 type="color"
-                class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5"
+                class="w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer p-0.5"
               />
               <div class="flex flex-wrap gap-1.5">
                 <button
@@ -74,7 +74,7 @@
 
           <!-- Ícono -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Ícono</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ícono</label>
             <div class="flex flex-wrap gap-1.5 mb-2">
               <button
                 v-for="icono in iconosDisponibles"
@@ -84,7 +84,7 @@
                 class="w-8 h-8 rounded-lg text-lg flex items-center justify-center transition border"
                 :class="form.icono === icono
                   ? 'bg-indigo-100 border-indigo-400'
-                  : 'bg-gray-50 border-transparent hover:bg-gray-100'"
+                  : 'bg-gray-50 dark:bg-gray-800/50 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700'"
               >
                 {{ icono }}
               </button>
@@ -93,14 +93,14 @@
               v-model="form.icono"
               type="text"
               placeholder="Ej. 🍔"
-              class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
         </div>
 
         <!-- Preview -->
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
           <div
             class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
             :style="{ backgroundColor: form.color + '22', border: `2px solid ${form.color}` }"
@@ -108,8 +108,8 @@
             {{ form.icono || '📦' }}
           </div>
           <div>
-            <p class="text-sm font-semibold text-gray-800">{{ form.nombre || 'Nombre de categoría' }}</p>
-            <p class="text-xs text-gray-400">{{ form.descripcion || 'Sin descripción' }}</p>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ form.nombre || 'Nombre de categoría' }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">{{ form.descripcion || 'Sin descripción' }}</p>
           </div>
           <span
             class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
@@ -121,22 +121,22 @@
 
         <!-- Orden -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Orden <span class="text-gray-400 font-normal">(menor número = primero)</span>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Orden <span class="text-gray-400 dark:text-gray-500 font-normal">(menor número = primero)</span>
           </label>
           <input
             v-model.number="form.orden"
             type="number"
             min="0"
             placeholder="0"
-            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+            class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
           />
         </div>
 
         <!-- Activo (solo edición) -->
         <div v-if="categoria" class="flex items-center gap-2">
           <input v-model="form.activo" type="checkbox" class="w-4 h-4 accent-indigo-600 rounded" />
-          <label class="text-sm text-gray-700">Categoría activa</label>
+          <label class="text-sm text-gray-700 dark:text-gray-300">Categoría activa</label>
         </div>
 
       </div>
@@ -145,7 +145,7 @@
       <div class="flex gap-3 mt-6">
         <button
           @click="$emit('close')"
-          class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
+          class="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:bg-gray-600 transition"
         >
           Cancelar
         </button>

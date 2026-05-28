@@ -1,29 +1,29 @@
 <template>
   <div
-    class="bg-white rounded-xl shadow-sm border flex flex-col gap-3 hover:shadow-md transition-shadow overflow-hidden"
+    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border flex flex-col gap-3 hover:shadow-md transition-shadow overflow-hidden"
     :class="ticket.estado === 'CERRADA'
-      ? 'border-gray-100 opacity-75'
+      ? 'border-gray-100 dark:border-gray-700 opacity-75'
       : estadoConfig.border"
   >
     <!-- HEADER -->
     <div class="px-4 pt-4 flex items-center justify-between">
       <div>
-        <p class="font-semibold text-gray-800 text-sm">
+        <p class="font-semibold text-gray-800 dark:text-gray-200 text-sm">
           {{ ticket.folio || `Orden #${ticket.id}` }}
           <span
             v-if="ticket.mesa"
-            class="text-gray-400 font-normal ml-1"
+            class="text-gray-400 dark:text-gray-500 font-normal ml-1"
           >
             · Mesa {{ ticket.mesa }}
           </span>
         </p>
-        <p class="text-xs text-gray-400 mt-0.5">
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           {{ formatTime(ticket.created_at) }}
         </p>
       </div>
 
       <div class="text-right">
-        <p class="font-bold text-gray-900 text-base">
+        <p class="font-bold text-gray-900 dark:text-gray-100 text-base">
           ${{ formatMoney(ticket.total) }}
         </p>
         <span
@@ -38,17 +38,17 @@
     <!-- USUARIO -->
     <div
       v-if="ticket.user?.name"
-      class="px-4 flex items-center gap-1.5 text-xs text-gray-500"
+      class="px-4 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
     >
       <span>👤</span>
       <span>{{ ticket.user.name }}</span>
     </div>
 
     <!-- ITEMS -->
-    <div class="px-4 space-y-1 text-sm text-gray-600 border-t border-gray-50 pt-2">
+    <div class="px-4 space-y-1 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-800 pt-2">
       <div
         v-if="normalizedItems.length === 0"
-        class="text-gray-400 italic text-xs"
+        class="text-gray-400 dark:text-gray-500 italic text-xs"
       >
         Sin productos
       </div>
@@ -61,7 +61,7 @@
         <span class="truncate flex-1">
           {{ item.cantidad }} × {{ item.nombre }}
         </span>
-        <span class="text-gray-500 shrink-0 ml-2">
+        <span class="text-gray-500 dark:text-gray-400 shrink-0 ml-2">
           ${{ formatMoney(item.subtotal) }}
         </span>
       </div>
@@ -79,7 +79,7 @@
     <!-- MÉTODO DE PAGO Y REFERENCIA -->
     <div
       v-if="ticket.estado === 'CERRADA' && ticket.metodo_pago"
-      class="px-4 flex justify-between text-xs text-gray-400"
+      class="px-4 flex justify-between text-xs text-gray-400 dark:text-gray-500"
     >
       <span>Método</span>
       <span class="capitalize font-medium">
@@ -92,8 +92,8 @@
       v-if="ticket.estado === 'CERRADA' && (ticket.folio || ticket.referencia) && ticket.metodo_pago !== 'efectivo'"
       class="px-4 flex justify-between text-xs"
     >
-      <span class="text-gray-400">{{ ticket.metodo_pago === 'tarjeta' ? 'Voucher' : 'Referencia' }}</span>
-      <span class="font-mono font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+      <span class="text-gray-400 dark:text-gray-500">{{ ticket.metodo_pago === 'tarjeta' ? 'Voucher' : 'Referencia' }}</span>
+      <span class="font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
         {{ ticket.folio || ticket.referencia }}
       </span>
     </div>
@@ -115,7 +115,7 @@
 
       <div
         v-else
-        class="w-full py-2 bg-emerald-50 text-emerald-600 rounded-xl text-center text-xs font-semibold"
+        class="w-full py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-center text-xs font-semibold"
       >
         ✓ Pagado
       </div>

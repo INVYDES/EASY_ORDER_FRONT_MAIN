@@ -1,15 +1,15 @@
 <template>
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl p-6 w-96 shadow-xl">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-96 shadow-xl">
 
       <h2 class="text-lg font-semibold mb-1 text-center">Abrir Caja</h2>
-      <p class="text-sm text-gray-500 mb-5 text-center">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-5 text-center">
         Ingresa el monto inicial para comenzar el turno
       </p>
 
       <!-- Error general -->
       <div v-if="errorMessage" class="mb-4 p-3 text-sm rounded-lg"
-        :class="cajaYaAbierta ? 'bg-amber-50 border border-amber-200 text-amber-700' : 'bg-red-50 border border-red-200 text-red-700'"
+        :class="cajaYaAbierta ? 'bg-amber-50 border border-amber-200 text-amber-700' : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'"
       >
         <p class="font-semibold mb-0.5">
           {{ cajaYaAbierta ? '⚠️ Caja ya abierta' : '❌ Error' }}
@@ -35,7 +35,7 @@
           step="0.01"
           min="0"
           placeholder="Monto inicial"
-          class="w-full px-3 py-2.5 border rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          class="w-full px-3 py-2.5 border rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
           :class="{ 'border-red-400': fieldError }"
           autofocus
         />
@@ -45,13 +45,13 @@
           v-model="observations"
           placeholder="Observaciones (opcional)"
           rows="2"
-          class="w-full px-3 py-2 border rounded-lg mb-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          class="w-full px-3 py-2 border rounded-lg mb-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
         ></textarea>
 
         <div class="flex gap-2">
           <button
             @click="$emit('close')"
-            class="flex-1 py-2.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium text-gray-700"
+            class="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Cancelar
           </button>

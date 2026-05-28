@@ -1,20 +1,20 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-5">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h3 class="font-semibold text-gray-800">Ventas por hora</h3>
-        <p class="text-xs text-gray-400 mt-0.5">Ingresos del día de hoy</p>
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200">Ventas por hora</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Ingresos del día de hoy</p>
       </div>
-      <span class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1 rounded-full">
+      <span class="text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-semibold px-3 py-1 rounded-full">
         Hoy: ${{ fm(totalHoy) }}
       </span>
     </div>
     <div class="relative h-52">
-      <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
+      <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800/80 rounded-xl z-10">
         <div class="w-5 h-5 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
       </div>
       <div v-if="!loading && totalHoy === 0"
-        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
         <span class="text-3xl mb-1">📊</span>
         <span class="text-sm">Sin ventas registradas hoy</span>
       </div>
