@@ -1,21 +1,21 @@
 <template>
-  <div class="bg-white p-6 rounded-lg">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
 
     <div class="mb-4">
-      <h2 class="text-xl font-semibold text-gray-800">
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
         {{ modoEdicion ? 'Editar Trabajador' : 'Registrar Nuevo Trabajador' }}
       </h2>
-      <p v-if="!modoEdicion" class="text-xs text-gray-400 mt-1">El usuario y correo se generarán automáticamente.</p>
+      <p v-if="!modoEdicion" class="text-xs text-gray-400 dark:text-gray-500 mt-1">El usuario y correo se generarán automáticamente.</p>
     </div>
 
     <!-- ✅ Cadena de acceso -->
-    <div v-if="cadenaAcceso" class="mb-5 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+    <div v-if="cadenaAcceso" class="mb-5 p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 rounded-xl">
       <p class="text-sm font-medium text-indigo-800 mb-1">✅ Empleado registrado correctamente</p>
-      <p class="text-xs text-indigo-600 mb-2">
+      <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-2">
         Comparte esta cadena al empleado — la usará para iniciar sesión:
       </p>
       <div class="flex items-center gap-2">
-        <span class="flex-1 font-mono text-lg font-bold tracking-widest text-indigo-900 bg-white border border-indigo-300 rounded px-3 py-2 text-center">
+        <span class="flex-1 font-mono text-lg font-bold tracking-widest text-indigo-900 bg-white dark:bg-gray-800 border border-indigo-300 rounded px-3 py-2 text-center">
           {{ cadenaAcceso }}
         </span>
         <button type="button" @click="copiarCadena"
@@ -30,32 +30,32 @@
       <!-- Nombre y Apellidos -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nombre *</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nombre *</label>
           <input v-model="form.nombre" type="text" required maxlength="100"
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Apellidos *</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Apellidos *</label>
           <input v-model="form.apellidos" type="text" required maxlength="120"
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
         </div>
       </div>
 
       <!-- Password -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
           {{ modoEdicion ? 'Nueva contraseña (vacío para no cambiar)' : 'Establecer Contraseña *' }}
         </label>
         <input v-model="form.password" type="password" :required="!modoEdicion" minlength="6"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+          class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
       </div>
 
       <!-- Rol y Sucursal -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Rol *</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Rol *</label>
           <select v-model="form.rol_id" required
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800 text-sm shadow-sm">
             <option value="">Seleccionar rol</option>
             <option value="2">Administrador</option>
             <option value="3">Mesero</option>
@@ -65,9 +65,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sucursal *</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Sucursal *</label>
            <select v-model="form.restaurante_id" required
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800 text-sm shadow-sm">
             <option :value="null">Elegir sucursal</option>
             <option v-for="r in restaurantes" :key="r.id" :value="r.id">{{ r.nombre }}</option>
           </select>
@@ -75,10 +75,10 @@
       </div>
 
       <!-- Estado Activo -->
-      <div v-if="modoEdicion" class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+      <div v-if="modoEdicion" class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
         <input v-model="form.es_activo" type="checkbox" id="emp-activo" class="w-4 h-4 accent-indigo-600 rounded" />
-        <label for="emp-activo" class="text-sm font-semibold text-gray-700 cursor-pointer">Empleado Activo</label>
-        <p class="text-[10px] text-gray-400 ml-auto">(Influye en cálculos de nómina)</p>
+        <label for="emp-activo" class="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">Empleado Activo</label>
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">(Influye en cálculos de nómina)</p>
       </div>
 
       <!-- Error -->
@@ -90,7 +90,7 @@
       <!-- Botones -->
       <div class="flex justify-end gap-3 pt-6">
         <button type="button" @click="cancelar"
-          class="flex-1 py-3 bg-gray-50 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition text-sm">
+          class="flex-1 py-3 bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition text-sm">
           {{ modoEdicion ? 'Cerrar' : 'Cancelar' }}
         </button>
         <button type="submit" :disabled="loading || passwordsMismatch"

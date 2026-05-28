@@ -17,7 +17,20 @@ export async function request<T = any>(
     endpoint: string,
     options: RequestInit & { params?: Record<string, any> } = {}
 ): Promise<ApiResponse<T>> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+    let url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+
+    if (options.params) {
+        const queryParams = new URLSearchParams();
+        Object.entries(options.params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                queryParams.append(key, String(value));
+            }
+        });
+        const queryString = queryParams.toString();
+        if (queryString) {
+            url += (url.includes('?') ? '&' : '?') + queryString;
+        }
+    }
 
     const defaultHeaders = getHeaders();
     const headers = {
@@ -50,7 +63,6 @@ export async function request<T = any>(
         const response = await fetch(finalUrl, {
             ...options,
             headers
-
         });
 
         const contentType = response.headers.get('content-type');
@@ -59,7 +71,13 @@ export async function request<T = any>(
         let data;
 
         if (isJson) {
-            const text = await response.text();
+            let text = await response.text();
+            // Corrección global de zona horaria: El backend de Laravel envía la hora local pero 
+            // le añade una 'Z' al final (indicando UTC). Esto causaba que el frontend restara 6 horas.
+            // Al remover la 'Z' antes de parsear, el frontend respeta la hora tal cual viene.
+            if (text) {
+                text = text.replace(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?)Z/g, '$1');
+            }
             data = text ? JSON.parse(text) : {};
         } else {
             data = {};

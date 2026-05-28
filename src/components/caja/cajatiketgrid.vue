@@ -2,19 +2,19 @@
   <div>
     <!-- ══ MODAL: COBRAR ORDEN ══ -->
     <div v-if="ordenCobrar" class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4" @click.self="ordenCobrar = null">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
-        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+      <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
           <div>
-            <h3 class="font-black text-slate-800 text-lg">Cobrar orden</h3>
-            <p class="text-xs text-slate-400 font-bold">{{ ordenCobrar.folio }} · Mesa {{ ordenCobrar.mesa || '—' }}</p>
+            <h3 class="font-black text-slate-800 dark:text-gray-200 text-lg">Cobrar orden</h3>
+            <p class="text-xs text-slate-400 dark:text-gray-500 font-bold">{{ ordenCobrar.folio }} · Mesa {{ ordenCobrar.mesa || '—' }}</p>
           </div>
-          <button @click="ordenCobrar = null" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-200">✕</button>
+          <button @click="ordenCobrar = null" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-400 dark:text-gray-500 hover:bg-slate-200 dark:hover:bg-gray-600">✕</button>
         </div>
 
         <div class="px-6 py-4 max-h-52 overflow-y-auto space-y-2">
           <div v-for="d in ordenCobrar.detalles" :key="d.id" 
             :class="['flex justify-between items-center text-sm font-bold p-2 rounded-xl group/item transition-all', 
-                    d.cancelado ? 'bg-red-50 text-red-400 opacity-80' : 'bg-slate-50 text-slate-700']">
+                    d.cancelado ? 'bg-red-50 text-red-400 opacity-80' : 'bg-slate-50 dark:bg-gray-800/50 text-slate-700 dark:text-gray-300']">
             <div class="flex-1">
               <span :class="{'line-through': d.cancelado}">
                 {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
@@ -26,8 +26,8 @@
               <span :class="{'line-through': d.cancelado}">
                 ${{ Number(d.subtotal || 0).toFixed(2) }}
               </span>
-              <button v-if="!d.cancelado" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
-                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-red-100">
+              <button v-if="!d.cancelado && !esMesero" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
+                class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all">
                 <span class="text-xs">🗑️</span>
               </button>
             </div>
@@ -35,27 +35,27 @@
         </div>
 
         <!-- Propina -->
-        <div class="px-6 py-3 bg-slate-50 border-y border-slate-100">
+        <div class="px-6 py-3 bg-slate-50 dark:bg-gray-800/50 border-y border-slate-100 dark:border-gray-700">
           <div class="flex items-center justify-between gap-4">
-            <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Propina</label>
+            <label class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Propina</label>
             <div class="flex items-center gap-2">
               <button v-for="pct in [0, 10, 15, 20]" :key="pct"
                 @click="propinaPct = pct; propinaManual = ''"
                 :class="['px-3 py-1.5 rounded-xl text-xs font-black transition',
-                  propinaPct === pct && !propinaManual ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 border border-slate-200']">
+                  propinaPct === pct && !propinaManual ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-800 text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-gray-700']">
                 {{ pct === 0 ? 'Sin propina' : pct + '%' }}
               </button>
               <div class="relative">
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 text-xs">$</span>
                 <input v-model="propinaManual" @focus="propinaPct = null" type="number" min="0" placeholder="0"
-                  class="w-20 pl-5 pr-2 py-1.5 text-xs font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  class="w-20 pl-5 pr-2 py-1.5 text-xs font-bold border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-900 dark:text-gray-200" />
               </div>
             </div>
           </div>
-          <div class="flex justify-between text-xs font-black text-slate-500 mt-3">
+          <div class="flex justify-between text-xs font-black text-slate-500 dark:text-gray-400 mt-3">
             <span>Subtotal</span><span>${{ Number(ordenCobrar.total || 0).toFixed(2) }}</span>
           </div>
-          <div class="flex justify-between text-base font-black text-slate-800 mt-1">
+          <div class="flex justify-between text-base font-black text-slate-800 dark:text-gray-200 mt-1">
             <span>Total con propina</span>
             <span class="text-indigo-600">${{ totalConPropina.toFixed(2) }}</span>
           </div>
@@ -63,23 +63,23 @@
 
         <!-- Método de pago -->
         <div class="px-6 py-4">
-          <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Método de pago</p>
+          <p class="text-xs font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-3">Método de pago</p>
           <div class="grid grid-cols-3 gap-2 mb-5">
             <button v-for="m in metodos" :key="m.key"
               @click="metodoPago = m.key; montoRecibido = 0"
               :class="['flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 font-black text-xs transition',
-                metodoPago === m.key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-500 hover:border-slate-300']">
+                metodoPago === m.key ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' : 'border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-500 dark:text-gray-400 hover:border-slate-300 dark:hover:border-gray-600']">
               <span class="text-xl">{{ m.icon }}</span>{{ m.label }}
             </button>
           </div>
 
           <!-- Campos extras de pago -->
           <div v-if="metodoPago === 'efectivo'" class="mb-5">
-            <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Monto recibido</label>
+            <label class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Monto recibido</label>
             <div class="relative mt-1">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 font-bold">$</span>
               <input v-model.number="montoRecibido" type="number" min="0" placeholder="0.00"
-                class="w-full pl-7 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+                class="w-full pl-7 pr-4 py-2.5 bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none dark:text-gray-200" />
             </div>
             <div v-if="cambio > 0" class="flex justify-between items-center mt-2 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl">
               <span class="text-xs font-bold uppercase tracking-widest">Cambio a entregar</span>
@@ -92,22 +92,23 @@
           </div>
           
           <div v-if="metodoPago !== 'efectivo'" class="mb-5">
-            <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Referencia / Folio <span class="text-red-500">*</span></label>
+            <label class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Referencia / Folio <span class="text-red-500">*</span></label>
             <input v-model="folio" type="text" placeholder="Ej. REF123456"
-              class="w-full mt-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+              class="w-full mt-1 px-4 py-2.5 bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none dark:text-gray-200" />
           </div>
 
-          <div v-if="errorCobro" class="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-700">
+          <div v-if="errorCobro" class="mb-3 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold text-red-700 dark:text-red-400">
             {{ errorCobro }}
           </div>
 
           <!-- Botones de acción -->
           <div class="flex gap-3">
-            <button @click="abrirDividirCuenta"
-              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2">
+            <button :disabled="esAdminOPropietario || Object.keys(itemsByComensal).length <= 1" @click="abrirDividirCuenta"
+              class="flex-1 py-3 text-xs font-black text-slate-600 dark:text-gray-400 bg-slate-100 dark:bg-gray-700 rounded-2xl hover:bg-slate-200 dark:hover:bg-gray-600 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              :title="Object.keys(itemsByComensal).length <= 1 ? 'No se puede dividir una cuenta con un solo comensal' : ''">
               ✂️ Dividir cuenta
             </button>
-            <button @click="cobrarOrden" :disabled="cobrando || !canPay"
+            <button @click="cobrarOrden" :disabled="cobrando || !canPay || esAdminOPropietario"
               class="flex-1 py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
               <div v-if="cobrando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               {{ cobrando ? 'Procesando...' : '💳 Cobrar' }}
@@ -119,13 +120,13 @@
 
     <!-- ══ MODAL: DIVIDIR CUENTA ══ -->
     <div v-if="modalDividir" class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4" @click.self="modalDividir = false">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up max-h-[90vh] flex flex-col">
-        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+      <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up max-h-[90vh] flex flex-col">
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between shrink-0">
           <div>
-            <h3 class="font-black text-slate-800 text-lg">✂️ Dividir cuenta</h3>
-            <p class="text-xs text-slate-400 font-bold">{{ ordenCobrar?.folio }}</p>
+            <h3 class="font-black text-slate-800 dark:text-gray-200 text-lg">✂️ Dividir cuenta</h3>
+            <p class="text-xs text-slate-400 dark:text-gray-500 font-bold">{{ ordenCobrar?.folio }}</p>
           </div>
-          <button @click="modalDividir = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+          <button @click="modalDividir = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-400 dark:text-gray-500">✕</button>
         </div>
 
         <!-- Modo único: Por Comensales -->
@@ -143,15 +144,18 @@
         <!-- Modo Por Comensales -->
         <div class="px-6 py-4 flex-1 overflow-y-auto">
           <div class="mb-4">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Asignar comensales a tickets</p>
+            <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-2">Asignar comensales a tickets</p>
             <div class="space-y-3">
-              <div v-for="c in comensalesAuto" :key="c.nombre" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:border-indigo-200 transition">
+              <div v-for="c in comensalesAuto" :key="c.nombre" class="flex items-center justify-between p-3 bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 rounded-2xl hover:border-indigo-200 transition">
                 <div class="flex-1">
-                  <p class="text-sm font-black text-slate-800">{{ c.nombre }}</p>
-                  <p class="text-[10px] font-bold text-slate-400">{{ c.detalles.length }} platillos - ${{ c.subtotal.toFixed(2) }}</p>
+                  <p class="text-sm font-black text-slate-800 dark:text-gray-200">{{ c.nombre }}</p>
+                  <p class="text-[10px] font-bold text-slate-400 dark:text-gray-500">
+                    {{ c.detalles.map(d => `${Number(d.cantidad)}x ${d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'}`).join(', ') }}
+                    - ${{ c.subtotal.toFixed(2) }}
+                  </p>
                 </div>
                 <div>
-                  <select v-model="c.ticketId" class="pl-3 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-black bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none text-indigo-700 shadow-sm">
+                  <select v-model="c.ticketId" class="pl-3 pr-8 py-2 border border-slate-200 dark:border-gray-700 rounded-xl text-xs font-black bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 outline-none text-indigo-700 dark:text-indigo-400 shadow-sm">
                     <option v-for="n in comensalesAuto.length" :key="n" :value="n">Agrupar en Ticket {{ n }}</option>
                   </select>
                 </div>
@@ -160,14 +164,14 @@
           </div>
           
           <!-- Vista previa Tickets con Pago Individual -->
-          <div class="mt-4 pt-4 border-t border-slate-100">
-             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Detalle de Pago por Ticket</p>
+          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-gray-700">
+             <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-2">Detalle de Pago por Ticket</p>
              <div class="space-y-3">
-               <div v-for="t in ticketsAgrupados" :key="t.id" class="p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                <div v-for="t in ticketsAgrupados" :key="t.id" class="p-3 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-2xl">
                  <div class="flex justify-between items-center mb-3">
                    <div>
-                     <p class="text-xs font-black text-indigo-800">Ticket {{ t.id }}</p>
-                     <p class="text-[9px] font-bold text-indigo-500 mt-0.5 leading-tight">{{ t.nombres.join(', ') }}</p>
+                    <p class="text-xs font-black text-indigo-800 dark:text-indigo-400">Ticket {{ t.id }}</p>
+                    <p class="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 mt-0.5 leading-tight">{{ t.nombres.join(', ') }}</p>
                    </div>
                    <div class="text-right">
                      <p class="text-[9px] text-indigo-400 font-bold mb-0.5 uppercase">Total + Propina</p>
@@ -180,7 +184,7 @@
                     <button v-for="m in metodos" :key="m.key" 
                       @click="setPagoTicket(t.id, m.key)"
                       :class="['py-1.5 rounded-xl border text-[10px] font-black transition flex items-center justify-center gap-1',
-                        getPagoTicket(t.id).metodo === m.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-400 border-slate-200']">
+                        getPagoTicket(t.id).metodo === m.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white dark:bg-gray-800 text-slate-400 dark:text-gray-500 border-slate-200 dark:border-gray-700']">
                       <span>{{ m.icon }}</span> {{ m.label }}
                     </button>
                  </div>
@@ -188,31 +192,31 @@
                  <!-- Campos adicionales según método -->
                  <div class="mt-2 space-y-2">
                     <div>
-                      <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">Propina</p>
+                      <p class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase ml-1 mb-1">Propina</p>
                       <div class="flex items-center gap-2">
                         <button v-for="pct in [0, 10, 15, 20]" :key="pct"
                           @click="setPropinaTicket(t.id, pct, t.total)"
                           :class="['px-2 py-1 rounded-lg text-[10px] font-black transition',
-                            getPagoTicket(t.id).propinaPct === pct && !getPagoTicket(t.id).propinaManual ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200']">
+                            getPagoTicket(t.id).propinaPct === pct && !getPagoTicket(t.id).propinaManual ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-gray-600']">
                           {{ pct === 0 ? 'Sin' : pct + '%' }}
                         </button>
                         <div class="relative flex-1">
-                          <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                          <input type="number" v-model.number="getPagoTicket(t.id).propina" 
+                          <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 text-[10px] font-bold">$</span>
+                          <input type="number" v-model.number="getPagoTicket(t.id).propina" min="0"
                             @focus="getPagoTicket(t.id).propinaPct = null; getPagoTicket(t.id).propinaManual = true"
-                            class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                            class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
                         </div>
                       </div>
                     </div>
                     <div>
-                      <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
+                      <p class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
                       <div class="relative">
-                        <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" 
-                          class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                        <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 text-[10px] font-bold">$</span>
+                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" min="0"
+                          class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
                         <input v-else v-model="getPagoTicket(t.id).referencia" 
                           placeholder="Folio..."
-                          class="w-full px-3 py-1.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                          class="w-full px-3 py-1.5 text-xs font-bold bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
                       </div>
                     </div>
                  </div>
@@ -234,15 +238,15 @@
         </div>
 
 
-        <div class="px-6 py-4 border-t border-slate-100 shrink-0">
-          <div class="flex items-center justify-between mb-3 text-sm font-black text-slate-800">
+        <div class="px-6 py-4 border-t border-slate-100 dark:border-gray-700 shrink-0">
+          <div class="flex items-center justify-between mb-3 text-sm font-black text-slate-800 dark:text-gray-200">
             <span>Total a cobrar</span>
             <span class="text-indigo-700 text-base">${{ totalDivididoGeneral.toFixed(2) }}</span>
           </div>
-          <div v-if="errorDividir" class="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-700">
+          <div v-if="errorDividir" class="mb-3 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold text-red-700 dark:text-red-400">
             {{ errorDividir }}
           </div>
-          <button @click="cobrarDividido" :disabled="cobrando || !canPayDividido"
+          <button @click="cobrarDividido" :disabled="cobrando || !canPayDividido || esAdminOPropietario"
             class="w-full py-3.5 text-sm font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
             <div v-if="cobrando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             {{ cobrando ? 'Procesando e Imprimiendo...' : `💳 Cobrar y Emitir ${ticketsAgrupados.length || numComensales} Tickets` }}
@@ -252,55 +256,76 @@
     </div>
 
     <!-- ══ GRID DE TICKETS ══ -->
-    <div v-if="orders.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+    <div v-if="filteredOrders.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
       <span class="text-5xl mb-4 opacity-20">{{ type === 'open' ? '🎫' : '🗂️' }}</span>
-      <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">
+      <p class="text-slate-400 dark:text-gray-500 font-bold uppercase tracking-widest text-xs">
         {{ type === 'open' ? 'Sin órdenes por cobrar' : 'Sin órdenes cerradas' }}
       </p>
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-      <div v-for="order in orders" :key="order.id"
-        class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
+      <div v-for="order in filteredOrders" :key="order.id"
+        class="bg-white dark:bg-gray-800 rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
 
         <!-- Header ticket -->
         <div class="px-5 py-4 flex items-center justify-between"
-          :class="type === 'open' ? 'bg-emerald-50' : 'bg-slate-50'">
+          :class="type === 'open' ? 'bg-emerald-50' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'bg-red-50/50' : 'bg-slate-50 dark:bg-gray-800/50')">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm"
-              :class="type === 'open' ? 'bg-emerald-100' : 'bg-slate-100'">
-              {{ type === 'open' ? '💳' : '✓' }}
+              :class="type === 'open' ? 'bg-emerald-100' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'bg-red-100' : 'bg-slate-100 dark:bg-gray-700')">
+              {{ type === 'open' ? '💳' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫' : '✓') }}
             </div>
             <div>
-              <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">{{ type === 'open' ? 'Por cobrar' : 'Cerrada' }}</p>
-              <p class="text-base font-black text-slate-800 leading-none">{{ order.folio || '#' + order.id }}</p>
+              <p class="text-xs font-black text-slate-400 dark:text-gray-500 uppercase tracking-tighter">
+                {{ type === 'open' ? 'Por cobrar' : ((order.estado || '').toUpperCase() === 'CANCELADA' ? 'Cancelada' : 'Cerrada') }}
+              </p>
+              <p class="text-base font-black text-slate-800 dark:text-gray-200 leading-none">{{ order.folio || '#' + order.id }}</p>
               <p v-if="type === 'open'" class="text-[10px] font-bold text-indigo-600 mt-1">Estado: {{ order.estado }}</p>
             </div>
           </div>
-          <div v-if="order.mesa" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black">
+          <div v-if="order.mesa" class="px-3 py-1 bg-slate-900 dark:bg-gray-950 text-white rounded-lg text-[10px] font-black">
             MESA {{ order.mesa }}
           </div>
         </div>
 
         <!-- Detalles -->
         <div class="px-5 py-4 space-y-3">
-          <div class="space-y-1 bg-slate-50 rounded-2xl p-3">
-            <div v-for="d in (order.detalles || []).slice(0, 4)" :key="d.id"
-              class="flex justify-between text-xs font-bold"
-              :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
-              <span class="truncate flex-1">
-                {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
-                <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
-              </span>
-              <span class="text-slate-400 ml-2">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+          <div class="space-y-3">
+            <div v-for="(detalles, nomComensal) in agruparDetallesPorComensal(order.detalles)" :key="nomComensal"
+              class="bg-slate-50/50 dark:bg-gray-800/30 p-3 rounded-2xl border border-slate-100 dark:border-gray-700 space-y-2">
+              
+              <!-- Encabezado del Comensal -->
+              <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-gray-700">
+                <span class="text-[10px]">👤</span>
+                <span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{{ nomComensal }}</span>
+              </div>
+
+              <!-- Lista de Productos -->
+              <div class="space-y-1.5">
+                <div v-for="d in detalles" :key="d.id"
+                  class="flex justify-between items-center text-xs font-bold gap-2"
+                  :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600 dark:text-gray-400'">
+                  <span class="truncate flex-1">
+                    {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
+                    <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
+                    <p v-else-if="d.notas" class="text-[9px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-400 dark:text-gray-500">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                    <!-- Botón eliminar producto en caja -->
+                    <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
+                      class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
+                      title="Eliminar Producto">
+                      <span class="text-[10px]">🗑️</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p v-if="(order.detalles || []).length > 4" class="text-[10px] text-slate-400 font-black pt-1">
-              +{{ order.detalles.length - 4 }} producto(s) más
-            </p>
           </div>
 
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-bold">
+            <span class="text-xs text-slate-400 dark:text-gray-500 font-bold">
               {{ order.created_at_formateado || (order.created_at ? new Date(order.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—') }}
             </span>
             <div class="flex items-center gap-1">
@@ -317,16 +342,19 @@
         <!-- Footer ticket -->
         <div class="px-5 pb-5">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs text-slate-500 font-black">Total</span>
-            <span class="text-xl font-black text-slate-800">${{ Number(order.total || 0).toFixed(2) }}</span>
+            <span class="text-xs text-slate-500 dark:text-gray-400 font-black">Total</span>
+            <span class="text-xl font-black text-slate-800 dark:text-gray-200">${{ Number(order.total || 0).toFixed(2) }}</span>
           </div>
           <button v-if="type === 'open'"
+            :disabled="esAdminOPropietario"
             @click="abrirCobrar(order)"
-            class="w-full py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 active:scale-95">
-            💳 Cobrar orden
+            :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
+                     esAdminOPropietario ? 'bg-slate-300 dark:bg-gray-600 text-slate-500 dark:text-gray-400 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
+            {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
           </button>
-          <div v-else class="w-full py-2.5 text-center text-[10px] font-black text-slate-400 bg-slate-50 rounded-2xl uppercase tracking-widest">
-            ✓ Pagada · {{ order.metodo_pago || 'efectivo' }}
+          <div v-else class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"
+            :class="(order.estado || '').toUpperCase() === 'CANCELADA' ? 'text-red-500 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800' : 'text-slate-400 dark:text-gray-500 bg-slate-50 dark:bg-gray-800/50'">
+            {{ (order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫 Cancelada completamente' : `✓ Pagada · ${order.metodo_pago || 'efectivo'}` }}
           </div>
         </div>
       </div>
@@ -405,33 +433,51 @@
           <p style="margin-top: 2mm; font-size: 8px; color: #666;">*** EASY ORDER SYSTEM ***</p>
         </div>
       </div>
+    </div>
     <!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
     <div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4" @click.self="cancelacionModal.visible = false">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100">
-        <div class="px-6 py-5 bg-red-50 border-b border-red-100 flex items-center gap-3">
+      <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100 dark:border-gray-700">
+        <div class="px-6 py-5 bg-red-50 dark:bg-red-900/30 border-b border-red-100 dark:border-red-800 flex items-center gap-3">
           <span class="text-2xl">⚠️</span>
           <div>
-            <h3 class="font-black text-red-800 text-sm uppercase tracking-tight">Motivo de cancelación</h3>
-            <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Este producto no se cobrará</p>
+            <h3 class="font-black text-red-800 dark:text-red-400 text-sm uppercase tracking-tight">Motivo de cancelación</h3>
+            <p class="text-[10px] font-bold text-red-400 dark:text-red-300 uppercase tracking-widest">Este producto no se cobrará</p>
           </div>
         </div>
         <div class="p-6">
-          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Selecciona o escribe el motivo</label>
+          <!-- Selector de Cantidad a Cancelar (solo si max > 1) -->
+          <div v-if="cancelacionModal.cantidadMaxima > 1" class="mb-4 bg-slate-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-slate-100 dark:border-gray-700 flex flex-col gap-2">
+            <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest ml-1 text-center">Cantidad a Cancelar</label>
+            <div class="flex items-center justify-center gap-4">
+              <button @click="cancelacionModal.cantidadCancelar > 1 ? cancelacionModal.cantidadCancelar-- : null"
+                class="w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700 font-black transition active:scale-95 text-sm">
+                −
+              </button>
+              <span class="text-lg font-black text-slate-800 dark:text-gray-200 w-12 text-center">{{ cancelacionModal.cantidadCancelar }}</span>
+              <button @click="cancelacionModal.cantidadCancelar < cancelacionModal.cantidadMaxima ? cancelacionModal.cantidadCancelar++ : null"
+                class="w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-black transition active:scale-95 text-sm">
+                +
+              </button>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest text-center mt-1">De un total de {{ cancelacionModal.cantidadMaxima }} unidades</p>
+          </div>
+
+          <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-3 ml-1">Selecciona o escribe el motivo</label>
           <div class="grid grid-cols-1 gap-2 mb-4">
             <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
               @click="cancelacionModal.motivo = m"
               :class="['px-4 py-2.5 rounded-2xl text-xs font-bold transition text-left border', 
-                cancelacionModal.motivo === m ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100']">
+                cancelacionModal.motivo === m ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-slate-50 dark:bg-gray-800/50 text-slate-600 dark:text-gray-400 border-slate-100 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-700']">
               {{ m }}
             </button>
           </div>
           <textarea v-model="cancelacionModal.motivo" rows="2" 
-            class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition font-bold"
+            class="w-full px-4 py-3.5 border border-slate-100 dark:border-gray-700 rounded-2xl text-sm bg-slate-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-red-500/10 outline-none transition font-bold dark:text-gray-200"
             placeholder="Escribe otro motivo detallado..."></textarea>
         </div>
-        <div class="px-6 py-4 bg-slate-50 flex gap-3">
+        <div class="px-6 py-4 bg-slate-50 dark:bg-gray-800/50 flex gap-3">
           <button @click="cancelacionModal.visible = false" 
-            class="flex-1 py-3 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
+            class="flex-1 py-3 text-xs font-black text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-400 transition uppercase tracking-widest">
             Ignorar
           </button>
           <button @click="confirmarCancelacion" :disabled="!cancelacionModal.motivo || cobrando"
@@ -440,14 +486,13 @@
           </button>
         </div>
       </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-import { API_URL } from '@/config/api'
+import { API_URL, getHeaders } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
@@ -455,6 +500,38 @@ const props = defineProps({
   type:   { type: String, default: 'open' }, // 'open' | 'closed'
 })
 const emit = defineEmits(['order-paid', 'refresh'])
+
+const filteredOrders = computed(() => {
+  return props.orders.map(o => {
+    if (props.type !== 'open') return o
+    
+    // Only keep details that are ENTREGADO or cancelado
+    const deliveredDetalles = (o.detalles || []).filter(d => 
+      d.cancelado || d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'
+    )
+    
+    // Recalculate subtotal and total based on delivered items
+    const subtotal = deliveredDetalles.reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
+    const total = subtotal + parseFloat(o.propina || 0)
+    
+    return {
+      ...o,
+      detalles: deliveredDetalles,
+      total: total
+    }
+  })
+})
+
+const agruparDetallesPorComensal = (detalles) => {
+  const grupos = {}
+  if (!detalles) return grupos
+  detalles.forEach(d => {
+    const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
+    if (!grupos[nom]) grupos[nom] = []
+    grupos[nom].push(d)
+  })
+  return grupos
+}
 
 // ── Estado Cobrar ──────────────────────────────────────────────────────────
 const ordenCobrar    = ref(null)
@@ -466,7 +543,7 @@ const montoRecibido  = ref(0)
 const folio          = ref('')
 const errorCobro     = ref('')
 
-const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '' })
+const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '', cantidadMaxima: 1, cantidadCancelar: 1 })
 
 const metodos = [
   { key: 'efectivo',      label: 'Efectivo',      icon: '💵' },
@@ -500,6 +577,25 @@ const cambio = computed(() => {
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const user = JSON.parse(userRaw)
 const userName = computed(() => user.name || 'Personal')
+
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
+
+const esMesero = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
+    return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
+})
 
 const nombreSucursal = ref('RESTAURANTE E-ORDER')
 const datosSucursal  = ref({ direccion: '', telefono: '', propietario_id: '' })
@@ -701,11 +797,6 @@ const imprimirTicketMultiple = (cuentas, folioOriginal, ordenesIds = []) => {
   }, 500)
 }
 
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
-
 const cobrarOrden = async () => {
   if (!ordenCobrar.value) return
   if (!canPay.value) {
@@ -759,21 +850,32 @@ const cobrarOrden = async () => {
 }
 
 const eliminarProductoDeOrden = (detalleId, ordenId) => {
+  let maxCant = 1;
+  const order = props.orders.find(o => o.id === ordenId) || ordenCobrar.value;
+  if (order && order.detalles) {
+    const d = order.detalles.find(item => item.id === detalleId);
+    if (d) {
+      maxCant = Number(d.cantidad || 1);
+    }
+  }
+
   cancelacionModal.value = {
     visible: true,
     detalleId,
     ordenId,
-    motivo: ''
+    motivo: '',
+    cantidadMaxima: maxCant,
+    cantidadCancelar: maxCant
   }
 }
 
 const confirmarCancelacion = async () => {
-  const { detalleId, ordenId, motivo } = cancelacionModal.value
+  const { detalleId, ordenId, motivo, cantidadCancelar } = cancelacionModal.value
   if (!motivo) return
   
   cobrando.value = true
   try {
-    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}`)
+    const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}&cantidad_cancelar=${cantidadCancelar || 1}`)
     if (data.success || data.data) {
       // Actualizar ordenCobrar.detalles localmente
       if (ordenCobrar.value && ordenCobrar.value.id === ordenId) {
@@ -997,7 +1099,7 @@ const cobrarDividido = async () => {
       return {
         monto: t.total,
         metodo: p.metodo,
-        propina: p.propina || 0,
+        propina: Math.max(0, parseFloat(p.propina) || 0),
         referencia: p.referencia || '',
         comensal: t.nombres.join(', '),
         detalles: t.detalles.map(d => d.id)

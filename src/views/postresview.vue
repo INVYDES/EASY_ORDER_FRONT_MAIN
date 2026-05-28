@@ -42,18 +42,7 @@
       </div>
     </div>
 
-    <!-- ══ TOAST ══ -->
-    <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-      <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 min-w-64 pointer-events-auto animate-slide-in',
-          toast.type==='success' ? 'bg-emerald-900 border border-emerald-700 text-emerald-200' :
-          toast.type==='error'   ? 'bg-red-900 border border-red-700 text-red-200' :
-          'bg-gray-900 border border-gray-700 text-gray-200']">
-        <span>{{ toast.type==='success'?'✅':toast.type==='error'?'❌':'ℹ️' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="opacity-50 hover:opacity-100">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- ══ KANBAN ══ -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -80,7 +69,10 @@
             accion-label="🍰 Iniciar preparación"
             accion-class="bg-pink-600 hover:bg-pink-500 text-white"
             :procesando="procesando === order.id"
-            @accion="abrirModalIngredientes(order, 'EN_PREPARACION')"
+            :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="PENDIENTE"
+            @accion="abrirModalIngredientes(order, 'EN_PREPARACION', 'PENDIENTE')"
+            @secondary-action="abrirModalIngredientes(order, null, 'PENDIENTE')"
           />
         </div>
       </div>
@@ -106,8 +98,12 @@
             :order="order"
             accion-label="✅ Marcar como listo"
             accion-class="bg-rose-500 hover:bg-rose-400 text-white"
+            secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
+            :es-admin-o-propietario="esAdminOPropietario"
+            estado-filtro="EN_PREPARACION"
             @accion="cambiarEstado(order.id, 'LISTO')"
+            @secondary-action="abrirModalIngredientes(order, null, 'EN_PREPARACION')"
           />
         </div>
       </div>
@@ -137,7 +133,7 @@
 
           <!-- Loading ingredientes -->
           <div v-if="modalIngredientes.loading" class="flex items-center justify-center py-10 gap-2 text-gray-500">
-            <div class="w-5 h-5 border-2 border-gray-600 border-t-pink-400 rounded-full animate-spin"></div>
+            <LoadingSpinner />
             <span class="text-sm">Cargando ingredientes...</span>
           </div>
 
@@ -172,9 +168,11 @@
                 class="flex items-center gap-3 px-4 py-2.5">
 
                 <!-- Toggle checkbox -->
-                <button @click="ing.incluir = !ing.incluir"
+                <button 
+                  @click="modalIngredientes.nuevoEstado ? (ing.incluir = !ing.incluir) : null"
                   :class="['w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition',
-                    ing.incluir ? 'bg-pink-500 border-pink-500' : 'border-gray-600 bg-transparent']">
+                    ing.incluir ? 'bg-pink-500 border-pink-500' : 'border-gray-600 bg-transparent',
+                    !modalIngredientes.nuevoEstado ? 'cursor-default' : '']">
                   <span v-if="ing.incluir" class="text-white text-xs font-black">✓</span>
                 </button>
 
@@ -208,9 +206,10 @@
         <div class="px-5 py-4 border-t border-gray-800 flex items-center gap-3">
           <button @click="cerrarModal"
             class="flex-1 py-2.5 text-sm text-gray-400 bg-gray-800 rounded-xl hover:bg-gray-700 transition">
-            Cancelar
+            {{ modalIngredientes.nuevoEstado ? 'Cancelar' : 'Cerrar' }}
           </button>
-          <button @click="confirmarYCambiarEstado"
+          <button v-if="modalIngredientes.nuevoEstado"
+            @click="confirmarYCambiarEstado"
             :disabled="modalIngredientes.guardando"
             class="flex-1 py-2.5 text-sm font-bold text-white bg-pink-600 hover:bg-pink-500 rounded-xl transition disabled:opacity-50">
             {{ modalIngredientes.guardando ? 'Iniciando...' : '🍰 Iniciar preparación' }}
@@ -229,15 +228,32 @@ import SucursalBadge from '../components/SucursalBadge.vue'
 import OrdenCardPostres from '../components/postres/OrdenCardPostres.vue'
 import { apiClient } from '@/utils/apiClient'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
 
-const POLL_INTERVAL = 5000
+const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
+
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const orders     = ref([])
 const loading    = ref(false)
 const procesando = ref(null)
-const toasts     = ref([])
+const { toasts, showToast, removeToast } = useToast()
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
 let   pollTimer  = null
@@ -254,10 +270,7 @@ const modalIngredientes = ref({
 })
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
+
 
 const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' })
@@ -284,7 +297,7 @@ const preparingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isPostreOrder(o)) return false
     const detalles = getDetallesPostres(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION') && !detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'EN_PREPARACION')
   })
 })
 
@@ -296,12 +309,7 @@ const readyOrders = computed(() => {
   })
 })
 
-const showToast = (message, type = 'info', duration = 3500) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
+
 
 // ── Cargar órdenes (polling) ───────────────────────────────────────────────────
 const loadOrders = async (silent = false) => {
@@ -330,20 +338,9 @@ const onOrdenWS = async (evento) => {
   const { accion, orden } = evento
   console.log('📡 WS Postres:', accion, orden.id)
   
-  if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
-    if (!isPostreOrder(orden)) {
-      orders.value = orders.value.filter(o => o.id !== orden.id)
-      return
-    }
-
-    const idx = orders.value.findIndex(o => o.id === orden.id)
-    if (idx !== -1) {
-      orders.value[idx] = { ...orders.value[idx], ...orden }
-    } else {
-      orders.value.push(orden)
-      orders.value.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      showToast(`Nueva orden #${orden.id} para postres`, 'info')
-    }
+  if (['creada', 'actualizada', 'estado_cambiado', 'productos_agregados', 'productos_agregados_a_estacion'].includes(accion)) {
+    if (accion === 'creada') showToast(`Nueva orden #${orden.id} para postres`, 'info')
+    await loadOrders(true)
   } else if (accion === 'cerrada' || accion === 'eliminada') {
     orders.value = orders.value.filter(o => o.id !== orden.id)
   }
@@ -354,9 +351,12 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 })
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
-const abrirModalIngredientes = async (orden, nuevoEstado) => {
-  // Solo los detalles que son postres
-  const detallesPostres = (orden.detalles ?? []).filter(esPostre)
+const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
+  // Solo los detalles que son postres y coinciden con el filtro
+  let detallesPostres = (orden.detalles ?? []).filter(esPostre)
+  if (estadoFiltro) {
+    detallesPostres = detallesPostres.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+  }
 
   modalIngredientes.value = {
     visible:        true,
@@ -409,7 +409,19 @@ const cerrarModal = () => {
 const confirmarYCambiarEstado = async () => {
   modalIngredientes.value.guardando = true
   try {
-    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado)
+    const excluidos = []
+    modalIngredientes.value.items.forEach(item => {
+      item.ingredientes.forEach(ing => {
+        if (!ing.incluir) {
+          excluidos.push({
+            producto_id: item.producto_id,
+            ingrediente_id: ing.id
+          })
+        }
+      })
+    })
+
+    await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado, excluidos)
     modalIngredientes.value.visible = false
   } finally {
     modalIngredientes.value.guardando = false
@@ -417,12 +429,13 @@ const confirmarYCambiarEstado = async () => {
 }
 
 // ── Cambiar estado ─────────────────────────────────────────────────────────────
-const cambiarEstado = async (id, nuevoEstado) => {
+const cambiarEstado = async (id, nuevoEstado, ingredientesExcluidos = []) => {
   procesando.value = id
   try {
     const data = await apiClient.post(`/ordenes/${id}/actualizar-estado-estacion`, {
       estacion: 'postres',
-      estado: nuevoEstado 
+      estado: nuevoEstado,
+      ingredientes_excluidos: ingredientesExcluidos
     })
     
     if (data.success || data.data) {
@@ -461,7 +474,9 @@ onMounted(async () => {
     if (data.success || data.data) {
       const user = data.data || data
       const ra = user?.restaurante_activo
-      restauranteActivo.value = typeof ra === 'object' && ra !== null ? ra.id : (ra ?? null)
+      if (ra) {
+        restauranteActivo.value = (typeof ra === 'object' && ra !== null) ? ra.id : ra
+      }
     }
   } catch {}
 })
@@ -471,11 +486,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-@keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
-.animate-slide-in { animation: slideIn 0.25s ease-out; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.animate-spin { animation: spin 1s linear infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
-.animate-pulse { animation: pulse 2s ease-in-out infinite; }
-</style>
+

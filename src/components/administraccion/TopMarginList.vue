@@ -1,14 +1,14 @@
 <template>
-  <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h3 class="text-lg font-bold text-gray-800">⚠️ Menor a Mayor Rentabilidad</h3>
-        <p class="text-xs text-gray-400 mt-0.5">Los productos con margen crítico aparecen primero</p>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">⚠️ Menor a Mayor Rentabilidad</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Los productos con margen crítico aparecen primero</p>
       </div>
-      <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-xl w-fit">
+      <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl w-fit">
         <button v-for="filter in filters" :key="filter.value" @click="activeFilter = filter.value; $emit('filter-change', filter.value)"
           :class="['px-3 py-1.5 text-xs font-medium rounded-lg transition',
-            activeFilter === filter.value ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:bg-gray-200']">
+            activeFilter === filter.value ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:bg-gray-600']">
           {{ filter.label }}
         </button>
       </div>
@@ -25,7 +25,7 @@
           class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-200">
           <div class="flex items-center gap-3">
             <span class="text-base">⚠️</span>
-            <span class="text-sm font-semibold text-gray-700">{{ prod.nombre }}</span>
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ prod.nombre }}</span>
           </div>
           <div class="text-right leading-tight">
             <span class="text-sm font-bold block" :class="(prod.margen || 0) < 0 ? 'text-red-600' : 'text-red-500'">
@@ -36,28 +36,28 @@
             </span>
           </div>
         </div>
-        <div v-if="bottom5.length === 0" class="text-center py-4 text-gray-400 text-sm italic">Sin datos</div>
+        <div v-if="bottom5.length === 0" class="text-center py-4 text-gray-400 dark:text-gray-500 text-sm italic">Sin datos</div>
       </div>
     </div>
 
     <!-- Resto de productos -->
     <div>
-      <div class="flex items-center gap-2 mb-3 text-gray-500">
+      <div class="flex items-center gap-2 mb-3 text-gray-500 dark:text-gray-400 dark:text-gray-500">
         <span class="text-lg">📋</span>
         <span class="text-sm font-bold uppercase tracking-wider">Otros Productos</span>
       </div>
       <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
         <div v-for="(prod, i) in others" :key="prod.id"
-          class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-          <span class="text-sm text-gray-600">{{ prod.nombre }}</span>
+          class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+          <span class="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">{{ prod.nombre }}</span>
           <div class="text-right leading-tight">
-            <span class="text-sm font-medium block text-gray-500">${{ prod.margen || 0 }}</span>
-            <span class="text-[10px] font-bold text-gray-400">
+            <span class="text-sm font-medium block text-gray-500 dark:text-gray-400 dark:text-gray-500">${{ prod.margen || 0 }}</span>
+            <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">
               {{ prod.precio ? ((prod.margen / prod.precio) * 100).toFixed(1) : 0 }}%
             </span>
           </div>
         </div>
-        <div v-if="others.length === 0" class="text-center py-4 text-gray-400 text-sm italic">Sin otros productos</div>
+        <div v-if="others.length === 0" class="text-center py-4 text-gray-400 dark:text-gray-500 text-sm italic">Sin otros productos</div>
       </div>
     </div>
   </div>

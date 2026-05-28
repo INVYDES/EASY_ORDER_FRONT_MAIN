@@ -113,7 +113,7 @@ onUnmounted(() => {
 <template>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
 
     <!-- SIDEBAR NUEVO (Con datos conectados) -->
     <AppSidebar 
@@ -129,12 +129,12 @@ onUnmounted(() => {
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       
       <!-- Navbar superior móvil -->
-      <header class="lg:hidden h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0 z-20">
+      <header class="lg:hidden h-16 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-4 shrink-0 z-20">
         <div class="flex items-center gap-3">
-          <button @click="toggleSidebar" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
+          <button @click="toggleSidebar" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
             <i class="fa-solid fa-bars-staggered"></i>
           </button>
-          <span class="font-bold text-blue-700">Easy Order</span>
+          <span class="font-bold text-blue-700 dark:text-blue-400">Easy Order</span>
         </div>
       </header>
 

@@ -6,8 +6,16 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 import ChatBotWidget from './components/chat/ChatBotWidget.vue'
+
+const themeStore = useThemeStore()
+
+onMounted(() => {
+  themeStore.init()
+})
 </script>
 
 <style>

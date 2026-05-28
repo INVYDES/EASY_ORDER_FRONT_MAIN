@@ -33,11 +33,42 @@
       </div>
     </div>
 
-    <!-- Acción -->
-    <div class="px-3 pb-3">
-      <button @click="$emit('accion')" :disabled="procesando"
-        :class="['w-full py-2.5 text-xs font-bold rounded-lg transition disabled:opacity-50', accionClass]">
-        {{ procesando ? 'Actualizando...' : accionLabel }}
+    <!-- Footer de Info -->
+    <div class="px-3 pb-2 flex items-center justify-between text-[10px] text-gray-600 font-medium">
+      <span v-if="order.user?.name || order.usuario?.name">
+        👤 {{ order.user?.name || order.usuario?.name }}
+      </span>
+      <span v-else class="opacity-0">—</span>
+      <div class="flex items-center gap-2">
+        <span v-if="tiempoEstimadoTotal > 0" class="text-indigo-400 font-bold">⏱️ Est: {{ tiempoEstimadoTotal }} min</span>
+        <span>
+          {{ postresFiltrados.length }} postre{{ postresFiltrados.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="px-3 pb-3 flex flex-wrap gap-2">
+      <!-- Botón de Receta (siempre interactivo para admin/owner, o secundario para todos) -->
+      <button
+        v-if="esAdminOPropietario || secondaryActionLabel"
+        @click="$emit('secondary-action')"
+        class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-black/20 flex items-center justify-center gap-1.5"
+      >
+        <span>👁️</span> {{ secondaryActionLabel || 'Receta' }}
+      </button>
+
+      <!-- Botón Principal de Estado (bloqueado para admin/owner) -->
+      <button
+        @click="$emit('accion')"
+        :disabled="procesando || esAdminOPropietario"
+        :class="[
+          esAdminOPropietario ? 'bg-gray-700 text-gray-500 cursor-not-allowed shadow-none' : accionClass,
+          'flex-1 py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20'
+        ]"
+      >
+        <span v-if="procesando" class="inline-block animate-spin mr-2">⏳</span>
+        {{ esAdminOPropietario ? '🚫 Bloqueado' : (procesando ? 'Actualizando...' : accionLabel) }}
       </button>
     </div>
   </div>
@@ -51,8 +82,11 @@ const props = defineProps({
   accionLabel: { type: String,  default: '' },
   accionClass: { type: String,  default: '' },
   procesando:  { type: Boolean, default: false },
+  esAdminOPropietario: { type: Boolean, default: false },
+  secondaryActionLabel: { type: String, default: '' },
+  estadoFiltro: { type: String, default: '' }
 })
-defineEmits(['accion'])
+defineEmits(['accion', 'secondary-action'])
 
 // ✅ Lógica de filtrado estricta: busca la categoría en el producto
 const esProductoPostre = (detalle) => {
@@ -66,11 +100,27 @@ const getNombreProducto = (detalle) => {
   return detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
 }
 
-const postresFiltrados = computed(() =>
-  (props.order.detalles || []).filter(esProductoPostre)
-)
+const postresFiltrados = computed(() => {
+  let list = (props.order.detalles || []).filter(d => esProductoPostre(d) && !d.cancelado)
+  if (props.estadoFiltro) {
+    list = list.filter(d => (d.estado_preparacion || d.estado) === props.estadoFiltro)
+  }
+  return list
+})
+
+const tiempoEstimadoTotal = computed(() => {
+  return postresFiltrados.value.reduce((sum, d) => sum + ((parseFloat(d.minutos_produccion) || 0) * d.cantidad), 0)
+})
 
 const minutosTranscurridos = computed(() => {
+  if (postresFiltrados.value.length > 0) {
+    const timestamps = postresFiltrados.value
+      .map(d => d.created_at ? new Date(d.created_at).getTime() : null)
+      .filter(t => t !== null)
+    if (timestamps.length > 0) {
+      return Math.floor((Date.now() - Math.min(...timestamps)) / 60000)
+    }
+  }
   if (!props.order.created_at) return 0
   return Math.floor((Date.now() - new Date(props.order.created_at)) / 60000)
 })

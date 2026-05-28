@@ -1,8 +1,8 @@
 <template>
-  <div class="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-100/50 border border-slate-100 relative overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-100/50 border border-slate-100 relative overflow-hidden">
     
     <!-- Decoración de fondo -->
-    <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full opacity-50 blur-3xl"></div>
+    <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 dark:bg-indigo-900/30 rounded-full opacity-50 blur-3xl"></div>
     
     <div class="relative z-10 flex flex-col md:flex-row items-center gap-10">
       
@@ -17,7 +17,7 @@
           <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Estado del Equipo</p>
           <div class="grid grid-cols-2 gap-4">
             <div class="text-center">
-              <span class="block text-3xl font-black text-indigo-600 leading-none">{{ empleados.length }}</span>
+              <span class="block text-3xl font-black text-indigo-600 dark:text-indigo-400 leading-none">{{ empleadosFiltrados.length }}</span>
               <span class="text-[9px] font-bold text-slate-400 uppercase">Total</span>
             </div>
             <div class="text-center border-l border-slate-200">
@@ -28,14 +28,14 @@
         </div>
 
         <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto md:mx-0">
-          Análisis balanceado de los 5 pilares operativos para asegurar la eficiencia del servicio.
+          Análisis balanceado de los 4 pilares operativos para asegurar la eficiencia del servicio.
         </p>
       </div>
 
       <!-- Lado Derecho: El Pentágono -->
       <div class="relative w-full max-w-[400px] aspect-square flex items-center justify-center">
         <!-- Overlay de carga o error -->
-        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-20">
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800/80 z-20">
           <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
         
@@ -45,9 +45,9 @@
     </div>
 
     <!-- Leyenda Inferior (Bucket) -->
-    <div class="mt-10 pt-8 border-t border-slate-50 grid grid-cols-2 sm:grid-cols-5 gap-4">
+    <div class="mt-10 pt-8 border-t border-slate-50 grid grid-cols-2 sm:grid-cols-4 gap-4">
       <div v-for="cat in PENTAGONO_LABELS" :key="cat" class="flex flex-col items-center group">
-        <div class="w-2 h-2 rounded-full bg-indigo-500 mb-2 group-hover:scale-150 transition-transform shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+        <div class="w-2 h-2 rounded-full bg-indigo-50 dark:bg-indigo-900/300 mb-2 group-hover:scale-150 transition-transform shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
         <span class="text-[10px] font-black text-slate-800 uppercase tracking-tighter">{{ cat }}</span>
         <span class="text-lg font-black text-slate-300 mt-1">{{ rolesCount[cat] || 0 }}</span>
       </div>
@@ -68,33 +68,10 @@ const canvasEl = ref(null)
 const loading = ref(false)
 let chartInstance = null
 
-// Los 5 ejes solicitados en el pentágono
-const PENTAGONO_LABELS = ['COCINA', 'BARRA', 'POSTRES', 'CAJA', 'MESEROS']
+// Los 4 ejes solicitados en el indicador
+const PENTAGONO_LABELS = ['COCINA', 'CAJA', 'MESEROS', 'ADMINISTRADOR']
 
 const isActivo = (e) => e.activo === true || e.activo === 1
-
-const activosCount = computed(() =>
-  props.empleados.filter(e => isActivo(e)).length
-)
-
-// Mapeo inteligente de roles a los 5 ejes del pentágono
-const rolesCount = computed(() => {
-  const counts = { 'COCINA': 0, 'BARRA': 0, 'POSTRES': 0, 'CAJA': 0, 'MESEROS': 0 }
-  
-  props.empleados.forEach(e => {
-    const rol = getRolNombre(e).toUpperCase()
-    
-    if (rol.includes('COCINA')) counts['COCINA']++
-    else if (rol.includes('BARRA')) counts['BARRA']++
-    else if (rol.includes('POSTRE')) counts['POSTRES']++
-    else if (rol.includes('CAJA')) counts['CAJA']++
-    else if (rol.includes('MESERO')) counts['MESEROS']++
-    // Los administradores se cuentan en CAJA por ser parte operativa admin
-    else if (rol.includes('ADMIN')) counts['CAJA']++
-  })
-  
-  return counts
-})
 
 const getRolNombre = (emp) => {
   const ROLES_MAP = { 1:'Admin', 2:'Admin', 3:'Mesero', 4:'Cocina', 5:'Caja', 6:'Barra' }
@@ -105,6 +82,35 @@ const getRolNombre = (emp) => {
   }
   return ROLES_MAP[emp.rol_id] || emp.rol || 'Otro'
 }
+
+const empleadosFiltrados = computed(() => {
+  return props.empleados.filter(e => {
+    const rol = getRolNombre(e).toUpperCase()
+    const esPropietario = rol.includes('PROPIETARIO') || rol.includes('DUEÑO') || rol.includes('OWNER')
+    const esMenuKiosk = rol.includes('MENU') || rol.includes('KIOSK') || rol.includes('KIOSKO')
+    return !(esPropietario || esMenuKiosk)
+  })
+})
+
+const activosCount = computed(() =>
+  empleadosFiltrados.value.filter(e => isActivo(e)).length
+)
+
+// Mapeo inteligente de roles a los 4 ejes del indicador
+const rolesCount = computed(() => {
+  const counts = { 'COCINA': 0, 'CAJA': 0, 'MESEROS': 0, 'ADMINISTRADOR': 0 }
+  
+  empleadosFiltrados.value.forEach(e => {
+    const rol = getRolNombre(e).toUpperCase()
+    
+    if (rol.includes('COCINA')) counts['COCINA']++
+    else if (rol.includes('CAJA')) counts['CAJA']++
+    else if (rol.includes('MESERO')) counts['MESEROS']++
+    else if (rol.includes('ADMIN')) counts['ADMINISTRADOR']++
+  })
+  
+  return counts
+})
 
 const initChart = async () => {
   if (!canvasEl.value) return
@@ -178,7 +184,7 @@ onMounted(async () => {
   loading.value = false
 })
 
-watch(() => props.empleados, () => {
+watch(() => empleadosFiltrados.value, () => {
   initChart()
 }, { deep: true })
 </script>

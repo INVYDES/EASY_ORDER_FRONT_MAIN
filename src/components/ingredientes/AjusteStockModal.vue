@@ -2,12 +2,12 @@
   <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
     @click.self="$emit('close')">
     
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col border border-gray-100 animate-slide-up">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700 animate-slide-up">
       
       <!-- Header con gradiente -->
       <div class="relative px-8 py-6 bg-gradient-to-r from-gray-900 to-gray-800">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white dark:bg-gray-800/5 rounded-full -mr-16 -mt-16"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white dark:bg-gray-800/5 rounded-full -ml-12 -mb-12"></div>
         
         <div class="relative flex justify-between items-center">
           <div>
@@ -15,7 +15,7 @@
               <span class="text-3xl">📦</span>
               <h3 class="text-2xl font-black text-white tracking-tight">Ajustar Stock</h3>
             </div>
-            <p class="text-gray-400 text-sm">Movimientos de almacén y control de inventario</p>
+            <p class="text-gray-400 dark:text-gray-500 text-sm">Movimientos de almacén y control de inventario</p>
           </div>
           <button 
             @click="$emit('close')" 
@@ -42,7 +42,7 @@
               <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center">
                 <span class="text-sm">🔍</span>
               </div>
-              <h4 class="font-bold text-indigo-600 text-sm uppercase tracking-wider">Estado Actual</h4>
+              <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm uppercase tracking-wider">Estado Actual</h4>
             </div>
 
             <!-- Tarjeta de información del ingrediente -->
@@ -50,7 +50,7 @@
               <div class="flex items-start justify-between mb-3">
                 <div>
                   <p class="text-[10px] font-black text-indigo-400 uppercase tracking-wider mb-1">Insumo Seleccionado</p>
-                  <p class="text-xl font-black text-gray-800">{{ ingrediente?.nombre || 'Cargando...' }}</p>
+                  <p class="text-xl font-black text-gray-800 dark:text-gray-200">{{ ingrediente?.nombre || 'Cargando...' }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-lg">
                   🧄
@@ -59,7 +59,7 @@
               
               <div class="mt-4 pt-4 border-t border-indigo-100">
                 <div class="flex justify-between items-center mb-2">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Stock Actual</p>
+                  <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stock Actual</p>
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                     :class="stockStatusBadge">
                     {{ stockStatusText }}
@@ -69,13 +69,13 @@
                   <p class="text-3xl font-black" :class="stockStatusColor">
                     {{ Number(ingrediente?.stock_actual || 0).toFixed(2) }}
                   </p>
-                  <span class="text-sm text-gray-500">{{ ingrediente?.unidad || 'unidad' }}</span>
+                  <span class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">{{ ingrediente?.unidad || 'unidad' }}</span>
                 </div>
-                <div v-if="ingrediente?.stock_minimo" class="mt-3 flex justify-between text-xs text-gray-500">
+                <div v-if="ingrediente?.stock_minimo" class="mt-3 flex justify-between text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   <span>📊 Stock mínimo:</span>
                   <span class="font-semibold">{{ Number(ingrediente.stock_minimo).toFixed(2) }} {{ ingrediente.unidad }}</span>
                 </div>
-                <div v-if="ingrediente?.proveedor" class="mt-2 flex justify-between text-xs text-gray-400">
+                <div v-if="ingrediente?.proveedor" class="mt-2 flex justify-between text-xs text-gray-400 dark:text-gray-500">
                   <span>🏭 Proveedor:</span>
                   <span>{{ ingrediente.proveedor }}</span>
                 </div>
@@ -84,10 +84,10 @@
 
             <!-- Selector de tipo de movimiento -->
             <div>
-              <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2 ml-1">
+              <label class="block text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-1">
                 Tipo de Movimiento
               </label>
-              <div class="grid grid-cols-3 gap-2 p-1.5 bg-gray-100 rounded-2xl shadow-inner">
+              <div class="grid grid-cols-3 gap-2 p-1.5 bg-gray-100 dark:bg-gray-700 rounded-2xl shadow-inner">
                 <button 
                   v-for="t in tiposMovimiento" 
                   :key="t.value"
@@ -95,7 +95,7 @@
                   type="button"
                   :class="[
                     'py-2.5 text-[11px] font-black uppercase rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5',
-                    localForm.tipo === t.value ? t.activeClass : 'text-gray-400 hover:text-gray-600 bg-transparent'
+                    localForm.tipo === t.value ? t.activeClass : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 bg-transparent'
                   ]"
                 >
                   <span>{{ t.icon }}</span>
@@ -119,7 +119,7 @@
               
               <!-- Campo cantidad -->
               <div class="mb-5">
-                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                <label class="block text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
                   Cantidad a {{ localForm.tipo === 'entrada' ? 'agregar' : localForm.tipo === 'salida' ? 'retirar' : 'asignar' }}
                 </label>
                 <div class="relative group">
@@ -136,7 +136,7 @@
                     :class="cantidadInputClass"
                     placeholder="0.00"
                   >
-                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-400 uppercase tracking-widest">
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                     {{ ingrediente?.unidad || 'unidad' }}
                   </span>
                 </div>
@@ -154,19 +154,19 @@
 
               <!-- Campo motivo -->
               <div class="mb-5">
-                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                <label class="block text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
                   Motivo / Referencia
                 </label>
                 <textarea 
                   v-model="localForm.motivo" 
                   rows="3"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none shadow-sm text-sm font-medium resize-none transition-all"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none shadow-sm text-sm font-medium resize-none transition-all"
                   placeholder="Ej. Compra a proveedor, Merma por caducidad, Devolución de cliente, Inventario inicial..."
                 ></textarea>
               </div>
 
               <!-- Proyección de stock -->
-              <div class="pt-3 border-t border-gray-200">
+              <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div class="rounded-xl p-4 transition-all duration-300" :class="proyeccionStyles.bg">
                   <div class="flex items-center justify-between mb-2">
                     <p class="text-[10px] font-black uppercase tracking-widest" :class="proyeccionStyles.text + ' opacity-70'">
@@ -184,7 +184,7 @@
                       {{ ingrediente?.unidad || 'unidad' }}
                     </span>
                   </div>
-                  <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                  <div class="mt-2 h-1.5 w-full bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-500" 
                       :class="proyeccionBarClass"
                       :style="{ width: proyeccionPorcentaje + '%' }">
@@ -201,10 +201,10 @@
       </div>
 
       <!-- Footer con botones -->
-      <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-4">
+      <div class="px-8 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-4">
         <button 
           @click="$emit('close')" 
-          class="px-6 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all duration-200"
+          class="px-6 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded-xl transition-all duration-200"
         >
           Cancelar
         </button>

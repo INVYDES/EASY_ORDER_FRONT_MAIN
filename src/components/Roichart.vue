@@ -1,17 +1,17 @@
 <template>
   <div class="space-y-6 pb-10">
     <!-- Controles de período -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-4">
-        <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+        <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
           <button v-for="p in periodos" :key="p.value" @click="setPeriodo(p.value)"
             :class="['px-5 py-2 text-xs font-bold rounded-lg transition-all',
-              periodo === p.value ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:bg-gray-200']">
+              periodo === p.value ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:bg-gray-600']">
             {{ p.label }}
           </button>
         </div>
         
-        <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+        <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700">
           <input v-model="fechaInicio" type="date" class="bg-transparent text-xs font-medium focus:outline-none" />
           <span class="text-gray-300">→</span>
           <input v-model="fechaFin" type="date" class="bg-transparent text-xs font-medium focus:outline-none" />
@@ -26,9 +26,9 @@
     </div>
 
     <!-- Spinner -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100">
+    <div v-if="loading" class="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700">
       <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-      <p class="text-gray-400 text-sm">Procesando datos financieros...</p>
+      <p class="text-gray-400 dark:text-gray-500 text-sm">Procesando datos financieros...</p>
     </div>
 
     <template v-else>
@@ -56,22 +56,22 @@
           </div>
         </div>
 
-        <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm flex flex-col md:flex-row items-center gap-8">
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm flex flex-col md:flex-row items-center gap-8">
           <div class="relative w-56 h-56 shrink-0">
             <canvas ref="chartGastosRef"></canvas>
             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span class="text-[10px] font-black text-gray-400 uppercase">Gastos</span>
-              <span class="text-lg font-black text-gray-800">${{ fm(gastoResumen.total_gastos) }}</span>
+              <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">Gastos</span>
+              <span class="text-lg font-black text-gray-800 dark:text-gray-200">${{ fm(gastoResumen.total_gastos) }}</span>
             </div>
           </div>
           
           <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
             <div v-for="(monto, cat) in gastoResumen.por_categoria" :key="cat" 
-              class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
+              class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
               <span class="w-3 h-3 rounded-full" :style="{ background: colorCategoria(cat) }"></span>
               <div class="flex-1">
-                <p class="text-[10px] font-bold text-gray-400 uppercase">{{ cat }}</p>
-                <p class="text-sm font-black text-gray-700">${{ fm(monto) }}</p>
+                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">{{ cat }}</p>
+                <p class="text-sm font-black text-gray-700 dark:text-gray-300">${{ fm(monto) }}</p>
               </div>
               <span class="text-[10px] font-black text-indigo-500">
                 {{ Math.round((Number(monto) / (gastoResumen.total_gastos || 1)) * 100) }}%
@@ -82,11 +82,11 @@
       </div>
 
       <!-- Gráfica de Productos -->
-      <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
         <div class="flex items-center justify-between mb-8">
           <div>
-            <h3 class="font-black text-gray-800 text-lg">Rendimiento de Productos</h3>
-            <p class="text-xs text-gray-400">Unidades vendidas por producto en el período seleccionado</p>
+            <h3 class="font-black text-gray-800 dark:text-gray-200 text-lg">Rendimiento de Productos</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500">Unidades vendidas por producto en el período seleccionado</p>
           </div>
           <div class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase">
             {{ productosList.length }} Productos analizados

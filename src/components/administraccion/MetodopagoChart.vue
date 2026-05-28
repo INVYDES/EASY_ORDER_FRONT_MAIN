@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-5">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-semibold text-gray-800">💳 Métodos de pago</h3>
-      <span class="text-xs text-gray-400">Órdenes cerradas hoy</span>
+      <h3 class="font-semibold text-gray-800 dark:text-gray-200">💳 Métodos de pago</h3>
+      <span class="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400">Órdenes cerradas hoy</span>
     </div>
 
-    <div v-if="sinDatos" class="flex flex-col items-center justify-center py-8 text-gray-400">
+    <div v-if="sinDatos" class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500 dark:text-gray-400">
       <span class="text-3xl mb-2">💳</span>
       <span class="text-sm">Sin ventas registradas</span>
     </div>
@@ -16,8 +16,8 @@
         <canvas ref="chartRef"></canvas>
         <!-- Total en centro -->
         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <p class="text-lg font-black text-gray-800">${{ fm(total) }}</p>
-          <p class="text-[10px] text-gray-400">total</p>
+          <p class="text-lg font-black text-gray-800 dark:text-gray-200">${{ fm(total) }}</p>
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 dark:text-gray-400">total</p>
         </div>
       </div>
       <!-- Leyenda detallada -->
@@ -26,14 +26,14 @@
           <div class="flex justify-between text-xs">
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ background: item.color }"></span>
-              <span class="font-medium text-gray-700">{{ item.label }}</span>
+              <span class="font-medium text-gray-700 dark:text-gray-300">{{ item.label }}</span>
             </div>
             <div class="flex gap-2 text-right">
-              <span class="font-bold text-gray-800">${{ fm(item.monto) }}</span>
-              <span class="text-gray-400 w-10 text-right">{{ item.pct }}%</span>
+              <span class="font-bold text-gray-800 dark:text-gray-200">${{ fm(item.monto) }}</span>
+              <span class="text-gray-400 dark:text-gray-500 dark:text-gray-400 w-10 text-right">{{ item.pct }}%</span>
             </div>
           </div>
-          <div class="w-full bg-gray-100 rounded-full h-1.5">
+          <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
             <div class="h-1.5 rounded-full transition-all" :style="{ width: item.pct + '%', background: item.color }"></div>
           </div>
         </div>

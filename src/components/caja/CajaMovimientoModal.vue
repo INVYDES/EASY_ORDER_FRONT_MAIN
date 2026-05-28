@@ -91,6 +91,11 @@
   animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+:is(.dark) .modal-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
 /* Encabezado */
 .modal-header {
   display: flex;
@@ -106,6 +111,10 @@
   margin: 0;
 }
 
+:is(.dark) .modal-title {
+  color: #e2e8f0;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -117,6 +126,9 @@
 }
 
 .close-btn:hover { color: #475569; }
+
+:is(.dark) .close-btn { color: #64748b; }
+:is(.dark) .close-btn:hover { color: #cbd5e1; }
 
 /* Selector Tipo */
 .type-selector {
@@ -140,6 +152,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+:is(.dark) .type-btn {
+  border-color: #334155;
+  color: #64748b;
 }
 
 /* Estados Activos Selector */
@@ -172,6 +189,10 @@
   letter-spacing: 0.025em;
 }
 
+:is(.dark) .input-label {
+  color: #94a3b8;
+}
+
 .input-wrapper { position: relative; }
 
 .currency-symbol {
@@ -190,7 +211,13 @@
   border-radius: 0.75rem;
   font-size: 0.95rem;
   transition: all 0.2s;
-  box-sizing: border-box; /* Crucial para que el padding no rompa el ancho */
+  box-sizing: border-box;
+}
+
+:is(.dark) .form-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
 }
 
 .form-input:focus {
@@ -219,6 +246,12 @@
   cursor: pointer;
 }
 
+:is(.dark) .btn-cancel {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
 .btn-submit {
   flex: 2;
   padding: 0.85rem;
@@ -244,6 +277,11 @@
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 1rem;
+}
+
+:is(.dark) .alert-error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
 }
 
 @keyframes modalPop {

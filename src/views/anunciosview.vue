@@ -1,22 +1,12 @@
 <template>
   <div class="p-4 sm:p-6 space-y-6 bg-gray-50/50 min-h-screen">
     
-    <div class="fixed top-4 right-4 z-[60] space-y-2 pointer-events-none">
-      <TransitionGroup name="list">
-        <div v-for="toast in toasts" :key="toast.id"
-          :class="['px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[300px] pointer-events-auto border backdrop-blur-md',
-            toast.type==='success'?'bg-emerald-50/90 border-emerald-200 text-emerald-900':'bg-red-50/90 border-red-200 text-red-900']">
-          <span class="text-xl">{{ toast.type==='success'?'✅':'❌' }}</span>
-          <span class="text-sm font-semibold flex-1">{{ toast.message }}</span>
-          <button @click="removeToast(toast.id)" class="opacity-50 hover:opacity-100 text-lg">×</button>
-        </div>
-      </TransitionGroup>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-black text-gray-900 tracking-tight">📢 Marquesina de Anuncios</h1>
-        <p class="text-gray-500 font-medium">Impulsa tus ventas con promociones en tiempo real</p>
+        <h1 class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">📢 Marquesina de Anuncios</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Impulsa tus ventas con promociones en tiempo real</p>
       </div>
       <button @click="abrirModal()"
         class="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95">
@@ -24,21 +14,32 @@
       </button>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group">
-      <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between bg-white">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden group">
+      <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wider">Vista previa (Menú Digital)</h3>
+          <h3 class="font-bold text-gray-800 dark:text-gray-200 text-sm uppercase tracking-wider">Vista previa (Menú Digital)</h3>
         </div>
         <div class="flex items-center gap-4">
-          <div class="hidden">
-             <button @click="previewTipo = 'cliente'">CLIENTE</button>
-             <button @click="previewTipo = 'interno'">MENÚ DIGITAL</button>
+          <div class="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
+             <button @click="previewTipo = 'cliente'" 
+                :class="['px-3 py-1 text-[9px] font-black rounded-lg transition-all', 
+                  previewTipo === 'cliente' ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400']">
+                CLIENTES
+             </button>
+             <button @click="previewTipo = 'interno'"
+                :class="['px-3 py-1 text-[9px] font-black rounded-lg transition-all', 
+                  previewTipo === 'interno' ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400']">
+               MENÚ DIGITAL
+             </button>
           </div>
-          <div v-for="v in ['dark', 'light', 'color', 'amber']" :key="v" 
-            @click="previewVariant = v"
-            :class="['w-4 h-4 rounded-full cursor-pointer border', previewVariant === v ? 'ring-2 ring-offset-2 ring-indigo-500' : '']"
-            :style="{ backgroundColor: v === 'dark' ? '#030712' : v === 'amber' ? '#f59e0b' : v === 'color' ? '#6366f1' : '#f8fafc' }">
+          <div class="flex gap-1.5 border-l border-gray-100 dark:border-gray-700 pl-4">
+            <div v-for="v in ['dark', 'light', 'color', 'amber']" :key="v" 
+              @click="previewVariant = v"
+              :class="['w-4 h-4 rounded-full cursor-pointer border transition-all hover:scale-110', 
+                previewVariant === v ? 'ring-2 ring-offset-2 ring-indigo-500' : 'border-gray-200']"
+              :style="{ backgroundColor: v === 'dark' ? '#030712' : v === 'amber' ? '#f59e0b' : v === 'color' ? '#6366f1' : '#f8fafc' }">
+            </div>
           </div>
         </div>
       </div>
@@ -54,31 +55,28 @@
     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
       <button v-for="f in filtros" :key="f.key" @click="filtroActivo=f.key"
         :class="['px-5 py-2.5 text-sm font-bold rounded-2xl transition-all whitespace-nowrap border-2',
-          filtroActivo===f.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100' : 'bg-white text-gray-500 border-transparent hover:border-gray-200']">
+          filtroActivo===f.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-transparent hover:border-gray-200 dark:hover:border-gray-600']">
         {{ f.label }}
-        <span :class="['ml-2 px-2 py-0.5 rounded-lg text-[10px]', filtroActivo===f.key ? 'bg-white/20' : 'bg-gray-100']">
+        <span :class="['ml-2 px-2 py-0.5 rounded-lg text-[10px]', filtroActivo===f.key ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-700']">
           {{ contarFiltro(f.key) }}
         </span>
       </button>
     </div>
 
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 text-gray-400">
-      <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p class="font-medium">Sincronizando anuncios...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Sincronizando anuncios..." />
 
-    <div v-else-if="anunciosFiltrados.length === 0" class="bg-white rounded-3xl p-20 text-center border-2 border-dashed border-gray-100">
+    <div v-else-if="anunciosFiltrados.length === 0" class="bg-white dark:bg-gray-800 rounded-3xl p-20 text-center border-2 border-dashed border-gray-100 dark:border-gray-700">
       <span class="text-6xl block mb-4">📭</span>
-      <h3 class="text-xl font-bold text-gray-800">No hay anuncios aquí</h3>
-      <p class="text-gray-400 max-w-xs mx-auto mt-2">Crea un nuevo anuncio para empezar a mostrar contenido en tu marquesita.</p>
+      <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">No hay anuncios aquí</h3>
+      <p class="text-gray-400 dark:text-gray-500 max-w-xs mx-auto mt-2">Crea un nuevo anuncio para empezar a mostrar contenido en tu marquesita.</p>
     </div>
     
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       <div v-for="a in anunciosFiltrados" :key="a.id"
-        class="group bg-white rounded-3xl shadow-sm border-2 transition-all hover:shadow-xl hover:shadow-gray-200/50"
-        :class="a.vigente ? 'border-transparent' : 'border-gray-100 opacity-75 grayscale-[0.5]'">
+        class="group bg-white dark:bg-gray-800 rounded-3xl shadow-sm border-2 transition-all hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50"
+        :class="a.vigente ? 'border-transparent' : 'border-gray-100 dark:border-gray-700 opacity-75 grayscale-[0.5]'">
         
-        <div class="p-4 flex items-center justify-between border-b border-gray-50"
+        <div class="p-4 flex items-center justify-between border-b border-gray-50 dark:border-gray-700"
           :class="`bg-${a.color || 'indigo'}-50/50` ">
           <div class="flex items-center gap-3">
             <span class="text-3xl drop-shadow-sm">{{ a.emoji || '📢' }}</span>
@@ -88,49 +86,49 @@
                 {{ a.tipo }}
               </span>
               <div class="flex gap-1">
-                 <span v-if="a.mostrar_cliente" class="text-[9px] font-bold bg-white px-1.5 py-0.5 rounded border border-gray-100 text-gray-500">CLIENTES</span>
-                 <span v-if="a.mostrar_interno" class="text-[9px] font-bold bg-white px-1.5 py-0.5 rounded border border-gray-100 text-gray-500 uppercase">MENÚ DIGITAL</span>
+                 <span v-if="a.mostrar_cliente" class="text-[9px] font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400">CLIENTES</span>
+                 <span v-if="a.mostrar_interno" class="text-[9px] font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 uppercase">MENÚ DIGITAL</span>
               </div>
             </div>
           </div>
           <button @click="toggleActivo(a)" 
             :class="['w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm', 
-              a.activo ? 'bg-white text-emerald-500 hover:scale-110' : 'bg-gray-200 text-gray-500']">
+              a.activo ? 'bg-white dark:bg-gray-800 text-emerald-500 hover:scale-110' : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400']">
             {{ a.activo ? '●' : '○' }}
           </button>
         </div>
         
         <div class="p-5">
-          <h4 class="font-black text-gray-900 text-lg leading-tight mb-1">{{ a.titulo }}</h4>
-          <p v-if="a.contenido" class="text-sm text-gray-500 line-clamp-2 font-medium">{{ a.contenido }}</p>
+          <h4 class="font-black text-gray-900 dark:text-gray-100 text-lg leading-tight mb-1">{{ a.titulo }}</h4>
+          <p v-if="a.contenido" class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 font-medium">{{ a.contenido }}</p>
           
-          <div v-if="a.producto || a.paquete" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 group-hover:bg-indigo-50/50 transition-colors">
-            <div class="w-12 h-12 rounded-xl overflow-hidden bg-white shrink-0 border border-gray-100 shadow-sm">
+          <div v-if="a.producto || a.paquete" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 group-hover:bg-indigo-50/50 dark:group-hover:bg-indigo-900/20 transition-colors">
+            <div class="w-12 h-12 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shrink-0 border border-gray-100 dark:border-gray-700 shadow-sm">
                <img v-if="(a.producto || a.paquete).imagen_url" :src="resolveImageUrl((a.producto || a.paquete).imagen_url)" class="w-full h-full object-cover" />
                <span v-else class="flex h-full items-center justify-center text-xl">🍽️</span>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5 mb-0.5">
-                <span class="text-[8px] font-black px-1 py-0.5 rounded bg-gray-200 text-gray-600">{{ a.paquete ? 'COMBO' : 'PLATO' }}</span>
-                <p class="text-xs font-black text-gray-800 truncate uppercase tracking-tighter">{{ (a.producto || a.paquete).nombre }}</p>
+                <span class="text-[8px] font-black px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400">{{ a.paquete ? 'COMBO' : 'PLATO' }}</span>
+                <p class="text-xs font-black text-gray-800 dark:text-gray-200 truncate uppercase tracking-tighter">{{ (a.producto || a.paquete).nombre }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded" v-if="a.precio_promo">${{ Number(a.precio_promo).toFixed(2) }}</span>
-                <span class="text-[10px] text-gray-400 line-through">antes {{ (a.producto || a.paquete).precio_formateado || '$' + (a.producto || a.paquete).precio }}</span>
+                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded" v-if="a.precio_promo">${{ Number(a.precio_promo).toFixed(2) }}</span>
+                <span class="text-[10px] text-gray-400 dark:text-gray-500 line-through">antes {{ (a.producto || a.paquete).precio_formateado || '$' + (a.producto || a.paquete).precio }}</span>
               </div>
             </div>
           </div>
           
-          <div class="mt-5 pt-4 border-t border-gray-50 flex items-center justify-between">
-            <div class="text-[10px] font-bold text-gray-400 flex flex-col uppercase tracking-tighter">
+          <div class="mt-5 pt-4 border-t border-gray-50 dark:border-gray-700 flex items-center justify-between">
+            <div class="text-[10px] font-bold text-gray-400 dark:text-gray-500 flex flex-col uppercase tracking-tighter">
                <span>Inicio: {{ a.fecha_inicio || 'Inmediato' }}</span>
                <span>Fin: {{ a.fecha_fin || 'Indefinido' }}</span>
             </div>
             <div class="flex gap-2">
-              <button @click="abrirModal(a)" class="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+              <button @click="abrirModal(a)" class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                 ✏️
               </button>
-              <button @click="eliminar(a.id)" class="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-red-600 hover:text-white transition-all shadow-sm">
+              <button @click="eliminar(a.id)" class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-red-600 hover:text-white transition-all shadow-sm">
                 🗑️
               </button>
             </div>
@@ -143,13 +141,13 @@
       <div v-if="showModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-gray-950/40 backdrop-blur-sm" @click="showModal=false"></div>
         
-        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden relative flex flex-col max-h-[90vh]">
-          <div class="p-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div class="bg-white dark:bg-gray-800 rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden relative flex flex-col max-h-[90vh]">
+          <div class="p-6 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 sticky top-0 z-10">
             <div>
-              <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ editando ? 'Editar Anuncio' : 'Crear Anuncio' }}</h3>
-              <p class="text-sm text-gray-500 font-medium">Configura cómo se verá tu mensaje</p>
+              <h3 class="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{{ editando ? 'Editar Anuncio' : 'Crear Anuncio' }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Configura cómo se verá tu mensaje</p>
             </div>
-            <button @click="showModal=false" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
+            <button @click="showModal=false" class="w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-colors">✕</button>
           </div>
           
           <div class="p-6 overflow-y-auto space-y-6">
@@ -158,38 +156,38 @@
             </div>
             
             <section>
-              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">¿Qué tipo de anuncio es?</label>
+              <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3 ml-1">¿Qué tipo de anuncio es?</label>
               <div class="grid grid-cols-4 gap-3">
-                <button v-for="t in tipos" :key="t.value" @click="form.tipo=t.value; form.emoji=t.emoji"
+                  <button v-for="t in tipos" :key="t.value" @click="form.tipo=t.value; form.emoji=t.emoji"
                   :class="['p-4 rounded-[20px] border-2 transition-all flex flex-col items-center gap-2',
-                    form.tipo===t.value ? 'border-indigo-600 bg-indigo-50 shadow-lg shadow-indigo-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200']">
+                    form.tipo===t.value ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-lg shadow-indigo-100 scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600']">
                   <span class="text-2xl">{{ t.emoji }}</span>
-                  <span :class="['text-[10px] font-black tracking-widest', form.tipo===t.value ? 'text-indigo-700' : 'text-gray-400']">{{ t.label }}</span>
+                  <span :class="['text-[10px] font-black tracking-widest', form.tipo===t.value ? 'text-indigo-700 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500']">{{ t.label }}</span>
                 </button>
               </div>
             </section>
             
             <section class="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div class="sm:col-span-3">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Título del Mensaje</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Título del Mensaje</label>
                 <input v-model="form.titulo" type="text" placeholder="Ej: ¡Happy Hour Activado!"
-                  class="w-full px-5 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-gray-800" />
+                  class="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-700 border-2 border-transparent rounded-2xl focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-500 transition-all outline-none font-bold text-gray-800 dark:text-gray-200" />
               </div>
               <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 text-center">Emoji</label>
-                <input v-model="form.emoji" type="text" class="w-full py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none" />
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1 text-center">Emoji</label>
+                <input v-model="form.emoji" type="text" class="w-full py-3.5 bg-gray-50 dark:bg-gray-700 border-2 border-transparent rounded-2xl text-center text-2xl focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-500 transition-all outline-none" />
               </div>
             </section>
             
             <section>
-              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Contenido (Opcional)</label>
+              <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Contenido (Opcional)</label>
               <textarea v-model="form.contenido" rows="2" placeholder="Describe brevemente la oferta..."
-                class="w-full px-5 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-sm font-medium text-gray-600 resize-none"></textarea>
+                class="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-700 border-2 border-transparent rounded-2xl focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-500 transition-all outline-none text-sm font-medium text-gray-600 dark:text-gray-400 resize-none"></textarea>
             </section>
             
             <section class="flex flex-wrap items-center justify-between gap-6">
               <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Color de Énfasis</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 ml-1">Color de Énfasis</label>
                 <div class="flex gap-2.5">
                   <button v-for="c in colores" :key="c.value" @click="form.color=c.value"
                     :class="['w-8 h-8 rounded-full border-4 transition-all shadow-sm', 
@@ -198,54 +196,54 @@
                 </div>
               </div>
               <div class="w-32">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Orden / Prioridad</label>
-                <input v-model="form.orden" type="number" class="w-full px-4 py-2 bg-gray-50 rounded-xl font-bold text-center border-2 border-transparent focus:border-indigo-500 outline-none" />
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Orden / Prioridad</label>
+                <input v-model="form.orden" type="number" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-xl font-bold text-center border-2 border-transparent focus:border-indigo-500 outline-none" />
               </div>
             </section>
 
             <section class="p-5 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 rounded-[28px] border-2 border-indigo-100/50">
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">🍕</span>
-                <label class="text-[11px] font-black text-indigo-700 uppercase tracking-widest">Vincular a un platillo / combo</label>
+                <label class="text-[11px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest">Vincular a un platillo / combo</label>
               </div>
               
               <div class="relative product-selector">
                 <button type="button" @click="dropdownOpen = !dropdownOpen"
-                  class="w-full px-4 py-4 text-left border-2 border-white rounded-[20px] bg-white flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+                  class="w-full px-4 py-4 text-left border-2 border-white dark:border-gray-700 rounded-[20px] bg-white dark:bg-gray-800 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                   <div class="flex items-center gap-3 overflow-hidden">
                     <template v-if="selectedItem">
-                      <img v-if="selectedItem.imagen_url" :src="resolveImageUrl(selectedItem.imagen_url)" class="w-8 h-8 rounded-lg object-cover ring-1 ring-gray-100" />
+                      <img v-if="selectedItem.imagen_url" :src="resolveImageUrl(selectedItem.imagen_url)" class="w-8 h-8 rounded-lg object-cover ring-1 ring-gray-100 dark:ring-gray-700" />
                       <span v-else class="text-xl">🍽️</span>
                       <div class="min-w-0">
-                        <p class="font-black text-gray-800 text-sm truncate uppercase tracking-tighter">
+                        <p class="font-black text-gray-800 dark:text-gray-200 text-sm truncate uppercase tracking-tighter">
                           <span class="text-[8px] px-1 bg-gray-100 rounded mr-1">{{ selectedItem.es_paquete ? 'COMBO' : 'PLATO' }}</span>
                           {{ selectedItem.nombre }}
                         </p>
-                        <p class="text-[10px] text-indigo-500 font-bold">{{ selectedItem.precio_formateado || '$' + selectedItem.precio }}</p>
+                        <p class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold">{{ selectedItem.precio_formateado || '$' + selectedItem.precio }}</p>
                       </div>
                     </template>
-                    <span v-else class="text-gray-400 font-medium text-sm px-2">¿Quieres asociar un producto o combo?</span>
+                    <span v-else class="text-gray-400 dark:text-gray-500 font-medium text-sm px-2">¿Quieres asociar un producto o combo?</span>
                   </div>
                   <span class="text-indigo-300 mr-2">{{ dropdownOpen ? '▲' : '▼' }}</span>
                 </button>
                 
-                <div v-if="dropdownOpen" class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-[24px] shadow-2xl max-h-60 overflow-hidden flex flex-col animate-slide-up">
-                  <div class="p-3 border-b bg-gray-50/50">
+                <div v-if="dropdownOpen" class="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[24px] shadow-2xl max-h-60 overflow-hidden flex flex-col animate-slide-up">
+                  <div class="p-3 border-b dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                     <input v-model="searchTerm" type="text" placeholder="Escribe para buscar..." 
-                      class="w-full px-4 py-2.5 text-sm border-2 border-transparent bg-white rounded-xl outline-none focus:border-indigo-300 font-medium" @click.stop />
+                      class="w-full px-4 py-2.5 text-sm border-2 border-transparent bg-white dark:bg-gray-800 rounded-xl outline-none focus:border-indigo-300 font-medium" @click.stop />
                   </div>
                   <div class="overflow-y-auto flex-1 custom-scrollbar">
                     <div v-for="p in itemsFiltrados" :key="p.uid" @click="seleccionarItem(p)"
-                      class="p-4 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors">
-                      <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-10 h-10 rounded-xl object-cover border border-gray-100 bg-gray-100" />
+                      class="p-4 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 flex items-center gap-3 transition-colors">
+                      <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-10 h-10 rounded-xl object-cover border border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-700" />
                       <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1.5 mb-0.5">
                           <span :class="['text-[8px] font-black px-1 py-0.5 rounded', p.es_paquete ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700']">
                             {{ p.es_paquete ? 'COMBO' : 'PLATO' }}
                           </span>
-                          <p class="text-sm font-black text-gray-800 truncate uppercase">{{ p.nombre }}</p>
+                          <p class="text-sm font-black text-gray-800 dark:text-gray-200 truncate uppercase">{{ p.nombre }}</p>
                         </div>
-                        <p class="text-[10px] text-indigo-500 font-bold tracking-widest">{{ p.precio_formateado || '$' + p.precio }}</p>
+                        <p class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold tracking-widest">{{ p.precio_formateado || '$' + p.precio }}</p>
                       </div>
                     </div>
                   </div>
@@ -254,9 +252,9 @@
               </div>
               
               <div v-if="form.producto_id || form.paquete_id" class="mt-5 animate-slide-up">
-                <label class="block text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-3 ml-1">Nuevo Precio Promocional</label>
-                <div class="flex items-center gap-4 bg-white p-4 rounded-[20px] shadow-inner border-2 border-emerald-50">
-                  <span class="text-gray-300 line-through font-bold text-lg leading-none">{{ selectedItem?.precio_formateado || '$' + selectedItem?.precio }}</span>
+                <label class="block text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">Nuevo Precio Promocional</label>
+                <div class="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-[20px] shadow-inner border-2 border-emerald-50 dark:border-emerald-900/30">
+                  <span class="text-gray-300 dark:text-gray-600 line-through font-bold text-lg leading-none">{{ selectedItem?.precio_formateado || '$' + selectedItem?.precio }}</span>
                   <div class="flex-1 relative">
                     <span class="absolute left-0 top-1/2 -translate-y-1/2 text-emerald-500 font-black text-xl">$</span>
                     <input v-model="form.precio_promo" type="number" step="0.01" 
@@ -269,28 +267,28 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
               <div class="space-y-4">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mostrar anuncio en:</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Mostrar anuncio en:</label>
                 <div class="flex flex-col gap-3">
-                  <label class="flex items-center gap-3 cursor-pointer group p-3 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-indigo-100 transition-all">
+                  <label class="flex items-center gap-3 cursor-pointer group p-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border-2 border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 transition-all">
                     <input v-model="form.mostrar_cliente" type="checkbox" class="w-5 h-5 rounded-lg accent-indigo-600" />
-                    <span class="font-bold text-gray-700 text-sm group-hover:text-indigo-600">📱 APP CLIENTES</span>
+                    <span class="font-bold text-gray-700 dark:text-gray-300 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400">📱 APP CLIENTES</span>
                   </label>
-                  <label class="flex items-center gap-3 cursor-pointer group p-3 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-indigo-100 transition-all">
+                  <label class="flex items-center gap-3 cursor-pointer group p-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border-2 border-transparent hover:border-indigo-100 dark:hover:border-indigo-800 transition-all">
                     <input v-model="form.mostrar_interno" type="checkbox" class="w-5 h-5 rounded-lg accent-indigo-600" />
-                    <span class="font-bold text-gray-700 text-sm group-hover:text-indigo-600 uppercase">👨‍🍳 MENÚ DIGITAL</span>
+                    <span class="font-bold text-gray-700 dark:text-gray-300 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 uppercase">👨‍🍳 MENÚ DIGITAL</span>
                   </label>
                 </div>
               </div>
               <div class="space-y-3">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Periodo de Vigencia</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Periodo de Vigencia</label>
                 <div class="space-y-2">
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs">🕒</span>
-                    <input v-model="form.fecha_inicio" type="date" class="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl text-xs font-bold text-gray-600 outline-none focus:bg-white border border-transparent focus:border-indigo-200" />
+                    <input v-model="form.fecha_inicio" type="date" class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 outline-none focus:bg-white dark:focus:bg-gray-800 border border-transparent focus:border-indigo-200" />
                   </div>
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs">🏁</span>
-                    <input v-model="form.fecha_fin" type="date" class="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl text-xs font-bold text-gray-600 outline-none focus:bg-white border border-transparent focus:border-indigo-200" />
+                    <input v-model="form.fecha_fin" type="date" class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 outline-none focus:bg-white dark:focus:bg-gray-800 border border-transparent focus:border-indigo-200" />
                   </div>
                   <p class="text-[9px] text-gray-400 italic px-1">Si dejas vacío, el anuncio será permanente.</p>
                 </div>
@@ -298,9 +296,9 @@
             </div>
           </div>
           
-          <div class="p-6 border-t border-gray-50 flex gap-4 bg-gray-50/30 sticky bottom-0">
+          <div class="p-6 border-t border-gray-50 dark:border-gray-700 flex gap-4 bg-gray-50/30 dark:bg-gray-800/30 sticky bottom-0">
             <button @click="showModal=false"
-              class="flex-1 py-4 text-xs font-black text-gray-500 bg-white rounded-2xl hover:bg-gray-100 transition-all uppercase tracking-[0.2em] border-2 border-gray-100">Cancelar</button>
+              class="flex-1 py-4 text-xs font-black text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all uppercase tracking-[0.2em] border-2 border-gray-100 dark:border-gray-700">Cancelar</button>
             <button @click="guardar" :disabled="guardando"
               class="flex-1 py-4 text-xs font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-[0.2em] disabled:opacity-50 active:scale-95">
               {{ guardando ? 'Guardando...' : 'Publicar Anuncio' }}
@@ -315,8 +313,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import MarquesitaWidget from '../components/MarquesitaWidget.vue'
-import { API_URL, STORAGE_URL } from '@/config/api'
+import { API_URL, STORAGE_URL, getHeaders } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
 
 // --- Helper: Resolver URLs de imágenes ---
 const resolveImageUrl = (path) => {
@@ -332,15 +333,19 @@ const productos = ref([])
 const paquetes = ref([])
 const loading = ref(false)
 const guardando = ref(false)
-const toasts = ref([])
+const { toasts, showToast, removeToast } = useToast()
 const showModal = ref(false)
 const editando = ref(null)
 const formError = ref('')
 const filtroActivo = ref('todos')
 const dropdownOpen = ref(false)
 const searchTerm = ref('')
-const previewVariant = ref('dark')
+const previewVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 const previewTipo = ref('interno')
+
+watch(previewVariant, (newVal) => {
+  localStorage.setItem('marquesina_variant', newVal)
+})
 
 // Variable reactiva para el ID del restaurante - esto asegura que el Widget se entere del cambio
 const restauranteId = ref(localStorage.getItem('restaurante_id_activo'))
@@ -365,16 +370,6 @@ const checkRestaurante = setInterval(() => {
 }, 1000)
 
 const lastRestId = ref(restauranteId.value)
-
-// --- AUTH HEADERS ---
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 
-    'Content-Type': 'application/json', 
-    'Accept': 'application/json', 
-    'Authorization': token ? `Bearer ${token}` : '' 
-  }
-}
 
 // --- CONFIGURACIÓN UI ---
 const tipos = [
@@ -447,16 +442,6 @@ const contarFiltro = (key) => {
 }
 
 // --- MÉTODOS ---
-const showToast = (message, type = 'success') => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  setTimeout(() => removeToast(id), 4000)
-}
-
-const removeToast = (id) => {
-  toasts.value = toasts.value.filter(t => t.id !== id)
-}
-
 const seleccionarItem = (item) => {
   if (item.es_paquete) {
     form.value.paquete_id = item.id
@@ -496,10 +481,20 @@ const cargar = async () => {
 
     const data = await apiClient.get('/admin/anuncios')
     if (data.success) {
-      anuncios.value = data.data.map(a => ({
-        ...a,
-        vigente: a.activo && (!a.fecha_fin || new Date(a.fecha_fin) >= new Date())
-      }))
+      const hoy = new Date()
+      anuncios.value = data.data.map(a => {
+        let esVigente = a.activo
+        if (a.fecha_inicio) {
+          const inicio = new Date(a.fecha_inicio)
+          if (hoy < inicio) esVigente = false
+        }
+        if (a.fecha_fin) {
+          const fin = new Date(a.fecha_fin)
+          fin.setHours(23, 59, 59, 999) // Hacer fin de día inclusivo
+          if (hoy > fin) esVigente = false
+        }
+        return { ...a, vigente: esVigente }
+      })
     }
   } catch (err) {
     showToast('Error al conectar con el servidor', 'error')
@@ -514,6 +509,12 @@ const abrirModal = (a = null) => {
   
   if (a) {
     form.value = { ...defaultForm(), ...a }
+    // Asignar IDs de producto o paquete vinculados
+    if (a.producto_id) form.value.producto_id = a.producto_id
+    else if (a.producto && a.producto.id) form.value.producto_id = a.producto.id
+
+    if (a.paquete_id) form.value.paquete_id = a.paquete_id
+    else if (a.paquete && a.paquete.id) form.value.paquete_id = a.paquete.id
     // Formatear fechas para input type="date"
     if(a.fecha_inicio) form.value.fecha_inicio = a.fecha_inicio.split(' ')[0]
     if(a.fecha_fin) form.value.fecha_fin = a.fecha_fin.split(' ')[0]
@@ -589,10 +590,6 @@ onUnmounted(() => {
 
 <style scoped>
 /* Animaciones */
-.list-enter-active, .list-leave-active { transition: all 0.4s ease; }
-.list-enter-from { opacity: 0; transform: translateX(30px); }
-.list-leave-to { opacity: 0; transform: scale(0.9); }
-
 .modal-enter-active, .modal-leave-active { transition: opacity 0.3s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 

@@ -1,39 +1,39 @@
 <template>
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
 
       <!-- Encabezado -->
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold text-gray-800">Cierre de Caja</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Cierre de Caja</h2>
         <button
           @click="$emit('close')"
-          class="text-gray-400 hover:text-gray-600 text-xl leading-none transition"
+          class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xl leading-none transition"
         >✕</button>
       </div>
 
       <!-- Resumen -->
-      <div class="bg-gray-50 rounded-xl p-4 mb-5 space-y-2">
+      <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-5 space-y-2">
         <div class="flex justify-between text-sm">
-          <span class="text-gray-500">Fondo de apertura</span>
-          <span class="font-medium text-gray-800">${{ formatMoney(opening) }}</span>
+          <span class="text-gray-500 dark:text-gray-400">Fondo de apertura</span>
+          <span class="font-medium text-gray-800 dark:text-gray-200">${{ formatMoney(opening) }}</span>
         </div>
         <div class="flex justify-between text-sm">
-          <span class="text-gray-500">Ventas del día</span>
-          <span class="font-medium text-gray-800">${{ formatMoney(sales) }}</span>
+          <span class="text-gray-500 dark:text-gray-400">Ventas del día</span>
+          <span class="font-medium text-gray-800 dark:text-gray-200">${{ formatMoney(sales) }}</span>
         </div>
-        <div class="flex justify-between text-sm border-t border-gray-200 pt-2 mt-1">
-          <span class="font-medium text-gray-700">Efectivo esperado</span>
+        <div class="flex justify-between text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-1">
+          <span class="font-medium text-gray-700 dark:text-gray-300">Efectivo esperado</span>
           <span class="font-bold text-emerald-600">${{ formatMoney(expectedCash) }}</span>
         </div>
       </div>
 
       <!-- Efectivo real -->
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Efectivo real en caja
         </label>
         <div class="relative">
-          <span class="absolute left-3 top-3 text-gray-400 text-sm font-medium">$</span>
+          <span class="absolute left-3 top-3 text-gray-400 dark:text-gray-500 text-sm font-medium">$</span>
           <input
             v-model.number="realCash"
             type="number"
@@ -41,8 +41,8 @@
             min="0"
             placeholder="0.00"
             autofocus
-            class="w-full pl-7 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-            :class="fieldError ? 'border-red-400' : 'border-gray-200'"
+            class="w-full pl-7 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm dark:bg-gray-900 dark:text-gray-200"
+            :class="fieldError ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'"
           />
         </div>
         <p v-if="fieldError" class="text-xs text-red-500 mt-1">{{ fieldError }}</p>
@@ -53,7 +53,7 @@
         v-if="realCash !== null && realCash !== ''"
         class="flex items-center justify-between px-4 py-2.5 rounded-xl mb-4 text-sm font-medium"
         :class="difference === 0
-          ? 'bg-gray-100 text-gray-600'
+          ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
           : difference > 0
             ? 'bg-emerald-50 text-emerald-700'
             : 'bg-red-50 text-red-600'"
@@ -69,19 +69,19 @@
 
       <!-- Observaciones -->
       <div class="mb-5">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Observaciones <span class="text-gray-400 font-normal">(opcional)</span>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Observaciones <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
         </label>
         <textarea
           v-model="observations"
           placeholder="Notas del turno, incidencias..."
           rows="2"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+          class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none dark:bg-gray-900 dark:text-gray-200"
         ></textarea>
       </div>
 
       <!-- Error general -->
-      <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">
+      <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl">
         {{ errorMessage }}
       </div>
 
@@ -90,7 +90,7 @@
         <button
           @click="$emit('close')"
           :disabled="loading"
-          class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition disabled:opacity-50"
+          class="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition disabled:opacity-50"
         >
           Cancelar
         </button>

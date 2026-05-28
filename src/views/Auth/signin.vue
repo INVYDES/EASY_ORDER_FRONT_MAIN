@@ -1,18 +1,18 @@
 <template>
   <div class="min-h-screen flex">
     
-    <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 px-6 py-12">
+    <div class="flex items-center justify-center w-full lg:w-1/2 bg-gray-50 dark:bg-gray-800 px-6 py-12">
       <div class="w-full max-w-md">
 
-        <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center">
           Easy Order
         </h1>
-        <p class="text-gray-500 mb-8 text-center text-sm">
+        <p class="text-gray-500 dark:text-gray-400 mb-8 text-center text-sm">
           Ingresa tus credenciales para acceder al sistema
         </p>
 
         <!-- Error -->
-        <div v-if="errorMessage" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
+        <div v-if="errorMessage" class="mb-6 p-4 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 rounded-xl flex items-center gap-3 animate-shake">
           <span class="font-medium">{{ errorMessage }}</span>
         </div>
 
@@ -20,17 +20,17 @@
 
           <!-- Identificador Único -->
           <div>
-            <label class="block mb-2 text-sm font-semibold text-gray-700 uppercase tracking-wider">Usuario, Correo o Código</label>
+            <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Usuario, Correo o Código</label>
             <div class="relative">
               <input
                 v-model="loginIdentifier"
                 type="text"
                 required
                 placeholder="ej: nombre@mail.com o 3-1-2"
-                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition-all placeholder-gray-300 shadow-sm text-sm"
+                class="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 focus:border-indigo-600 dark:focus:border-indigo-400 focus:outline-none transition-all placeholder-gray-300 dark:placeholder-gray-500 shadow-sm text-sm dark:bg-gray-700 dark:text-gray-100"
               />
             </div>
-            <p class="text-[10px] text-gray-400 mt-2 px-1">
+            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-2 px-1">
               Empleados: usen el código proporcionado por su sucursal.
             </p>
           </div>
@@ -38,10 +38,10 @@
           <!-- Contraseña -->
           <div>
             <div class="flex justify-between mb-2">
-              <label class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Contraseña</label>
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contraseña</label>
               <router-link
                 to="/recuperar-contrasena"
-                class="text-xs text-indigo-600 font-bold hover:text-indigo-800 transition"
+                class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:text-indigo-800 dark:hover:text-indigo-300 transition"
               >
                 ¿Olvidaste tu contraseña?
               </router-link>
@@ -52,12 +52,12 @@
                 :type="showPassword ? 'text' : 'password'"
                 required
                 placeholder="••••••••"
-                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition-all shadow-sm text-sm"
+                class="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 focus:border-indigo-600 dark:focus:border-indigo-400 focus:outline-none transition-all shadow-sm text-sm dark:bg-gray-700 dark:text-gray-100"
               />
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-3 px-2 py-1 text-[10px] font-bold text-gray-400 hover:text-indigo-600 transition uppercase tracking-widest"
+                class="absolute right-3 top-3 px-2 py-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition uppercase tracking-widest"
               >
                 {{ showPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
@@ -67,8 +67,8 @@
           <!-- Mantener sesión -->
           <div class="flex items-center justify-between py-1">
             <label class="flex items-center gap-2 cursor-pointer select-none group">
-              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm" />
-              <span class="text-xs text-gray-500 group-hover:text-gray-700 transition">Recordarme en este equipo</span>
+              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 dark:border-gray-500 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 cursor-pointer shadow-sm dark:bg-gray-700" />
+              <span class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition">Recordarme en este equipo</span>
             </label>
           </div>
 
@@ -82,13 +82,13 @@
           </button>
         </form>
 
-        <div class="mt-12 pt-8 border-t border-gray-100 flex flex-col items-center gap-4">
-          <p class="text-sm text-gray-500">
+        <div class="mt-12 pt-8 border-t border-gray-100 dark:border-gray-700 flex flex-col items-center gap-4">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
             ¿Eres dueño y no tienes cuenta?
-            <router-link to="/registro/dueno" class="text-indigo-600 font-bold hover:underline ml-1">Regístrate aquí</router-link>
+            <router-link to="/registro/dueno" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline ml-1">Regístrate aquí</router-link>
           </p>
           <div class="flex gap-4">
-            <router-link to="/registro/cliente" class="text-xs text-gray-400 hover:text-indigo-600 transition font-medium italic">Acceso Clientes</router-link>
+            <router-link to="/registro/cliente" class="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition font-medium italic">Acceso Clientes</router-link>
           </div>
         </div>
 

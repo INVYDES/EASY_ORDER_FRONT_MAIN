@@ -1,12 +1,12 @@
 <template>
-  <div class="border rounded-lg p-3 bg-gray-50">
+  <div class="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50">
 
     <!-- Header -->
     <div class="flex justify-between mb-2">
       <span class="text-sm font-semibold">
         Mesa {{ order.table }}
       </span>
-      <span class="text-xs text-gray-400">
+      <span class="text-xs text-gray-400 dark:text-gray-500">
         {{ formatTime(order.timestamp) }}
       </span>
     </div>
@@ -21,13 +21,13 @@
         {{ item.quantity }} × {{ item.name }}
 
         <span v-if="item.note"
-              class="text-xs text-gray-500 block">
+              class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 block">
           {{ item.note }}
         </span>
       </div>
 
       <p v-if="foodItems.length === 0"
-         class="text-xs text-gray-400">
+         class="text-xs text-gray-400 dark:text-gray-500">
         Sin productos de cocina
       </p>
     </div>

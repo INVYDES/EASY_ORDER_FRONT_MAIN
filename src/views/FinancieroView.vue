@@ -1,23 +1,13 @@
 <template>
   <div class="space-y-6">
 
-    <!-- TOASTS -->
-    <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-      <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-72 pointer-events-auto animate-slide-in',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800'
-                                   : 'bg-red-50 border-l-4 border-red-500 text-red-800']">
-        <span>{{ toast.type === 'success' ? '✅' : '❌' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- Encabezado -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">💰 Configuración Financiera</h2>
-        <p class="text-sm text-gray-500 mt-1">Define los datos base para el cálculo de métricas financieras</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">💰 Configuración Financiera</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Define los datos base para el cálculo de métricas financieras</p>
       </div>
       <button @click="guardar"
         :disabled="cargando"
@@ -33,50 +23,50 @@
       <div class="xl:col-span-2 space-y-6">
 
         <!-- Configuración Inicial -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <div class="flex items-center gap-3 mb-5">
-            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-lg">🏗️</div>
+            <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-lg">🏗️</div>
             <div>
-              <h3 class="text-lg font-bold text-gray-800">Configuración Inicial</h3>
-              <p class="text-xs text-gray-400">Datos de inversión y metas del negocio</p>
+              <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Configuración Inicial</h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500">Datos de inversión y metas del negocio</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Inversión Inicial</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Inversión Inicial</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.inversion_inicial" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="0.00" />
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Monto total invertido para abrir el restaurante</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Monto total invertido para abrir el restaurante</p>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Utilidad Objetivo (Mensual)</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Utilidad Objetivo (Mensual)</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.utilidad_objetivo" type="number" min="0" step="0.01"
                   class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="0.00" />
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Ganancia neta que esperas obtener cada mes</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Ganancia neta que esperas obtener cada mes</p>
             </div>
           </div>
         </div>
 
         <!-- Gastos Fijos Mensuales -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <div class="flex items-center gap-3 mb-5">
-            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-lg">📉</div>
+            <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-lg">📉</div>
             <div>
-              <h3 class="text-lg font-bold text-gray-800">Gastos Fijos Mensuales</h3>
-              <p class="text-xs text-gray-400">Costos recurrentes para operar el negocio</p>
+              <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Gastos Fijos Mensuales</h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500">Costos recurrentes para operar el negocio</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Renta</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Renta</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_renta" type="number" min="0" step="0.01"
@@ -85,7 +75,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Servicios (agua, luz, internet)</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Servicios (Asesoría Fiscal/Legal)</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_servicios" type="number" min="0" step="0.01"
@@ -94,7 +84,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Software / Apps</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Costo de las licencias</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_software" type="number" min="0" step="0.01"
@@ -103,7 +93,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Marketing / Publicidad</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Servicios no identificados u otros servicios</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
                 <input v-model.number="form.gasto_marketing" type="number" min="0" step="0.01"
@@ -118,31 +108,35 @@
 
       <!-- Vista previa de métricas -->
       <div class="xl:col-span-1">
-        <div class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl border border-indigo-100 shadow-sm p-5 sticky top-6">
+        <div class="bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-white dark:to-gray-800 rounded-2xl border border-indigo-100 dark:border-indigo-800 shadow-sm p-5 sticky top-6">
           <div class="flex items-center gap-2 mb-4">
             <i class="fa-solid fa-chart-line text-indigo-600"></i>
-            <h4 class="text-sm font-bold text-indigo-800 uppercase tracking-wider">Vista Previa</h4>
+            <h4 class="text-sm font-bold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider">Vista Previa</h4>
           </div>
-          <p class="text-[10px] text-indigo-400 mb-4">Así se reflejarán estos datos en Análisis Financiero</p>
+          <p class="text-[10px] text-indigo-400 dark:text-indigo-300 mb-4">Así se reflejarán estos datos en Análisis Financiero</p>
 
           <div class="space-y-3">
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Inversión Inicial</p>
-              <p class="text-lg font-bold text-gray-800">${{ fm(form.inversion_inicial) }}</p>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-50 dark:border-indigo-900/30">
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">Inversión Inicial</p>
+              <p class="text-lg font-bold text-gray-800 dark:text-gray-200">${{ fm(form.inversion_inicial) }}</p>
             </div>
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Costo Operativo Mensual</p>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-50 dark:border-indigo-900/30">
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">Inversión Inicial</p>
+              <p class="text-lg font-bold text-gray-800 dark:text-gray-200">${{ fm(form.inversion_inicial) }}</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-50 dark:border-indigo-900/30">
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">Costo Operativo Mensual</p>
               <p class="text-lg font-bold text-red-600">${{ fm(totalGastosMensuales) }}</p>
-              <p class="text-[9px] text-gray-400 mt-0.5">Variables + Operativos</p>
+              <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">Variables + Operativos</p>
             </div>
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Utilidad Objetivo</p>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-50 dark:border-indigo-900/30">
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">Utilidad Objetivo</p>
               <p class="text-lg font-bold text-emerald-600">${{ fm(form.utilidad_objetivo) }}</p>
             </div>
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Punto de Equilibrio</p>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 border border-indigo-50 dark:border-indigo-900/30">
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">Punto de Equilibrio</p>
               <p class="text-lg font-bold text-indigo-600">${{ fm(puntoEquilibrio) }}</p>
-              <p class="text-[9px] text-gray-400 mt-0.5">Ventas necesarias para cubrir gastos</p>
+              <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">Ventas necesarias para cubrir gastos</p>
             </div>
           </div>
 
@@ -162,10 +156,12 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { apiClient } from '@/utils/apiClient'
+import { useToast } from '@/composables/useToast'
 
+const { toasts, showToast, removeToast } = useToast()
 const cargando = ref(false)
-const toasts = ref([])
 
 const form = reactive({
   inversion_inicial: 0,
@@ -186,16 +182,6 @@ const puntoEquilibrio = computed(() => {
 })
 
 const fm = (v) => Number(v || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-const showToast = (message, type = 'info') => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  setTimeout(() => removeToast(id), 4000)
-}
-const removeToast = (id) => {
-  const i = toasts.value.findIndex(t => t.id === id)
-  if (i !== -1) toasts.value.splice(i, 1)
-}
 
 const cargarConfig = async () => {
   try {
@@ -242,7 +228,3 @@ const guardar = async () => {
 onMounted(cargarConfig)
 </script>
 
-<style scoped>
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-.animate-slide-in { animation: slideIn 0.3s ease-out; }
-</style>

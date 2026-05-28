@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-800/50">
 
     <!-- ══ MARQUESITA ══ -->
     <MarquesitaWidget
       :api-url="API_URL"
       :get-headers="getHeaders"
       tipo="cliente"
-      :variant="vista === 'menu' ? 'color' : 'light'"
+      :variant="marquesinaVariant"
       :restaurante-id="restauranteSeleccionado?.id || authStore?.restauranteId || null"
     />
 
@@ -14,30 +14,27 @@
     <div v-if="vista === 'restaurantes'">
 
       <!-- Header -->
-      <div class="bg-white border-b border-gray-100 px-5 py-4 sticky top-0 z-20">
-        <h1 class="text-xl font-bold text-gray-900">¿Dónde quieres comer?</h1>
-        <p class="text-gray-400 text-sm mt-0.5">Selecciona un restaurante para ver su menú</p>
+      <div class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-5 py-4 sticky top-0 z-20">
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">¿Dónde quieres comer?</h1>
+        <p class="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Selecciona un restaurante para ver su menú</p>
         <div class="relative mt-3">
-          <svg class="absolute left-3.5 top-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="absolute left-3.5 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input v-model="busquedaRestaurante" type="text" placeholder="Buscar restaurante..."
-            class="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border-0" />
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border-0" />
         </div>
       </div>
 
-      <div v-if="loading.restaurantes" class="flex flex-col items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400 text-sm">Cargando restaurantes...</p>
-      </div>
+      <LoadingSpinner v-if="loading.restaurantes" text="Cargando restaurantes..." />
       <div v-else-if="restaurantesFiltrados.length === 0" class="text-center py-20">
         <span class="text-5xl block mb-3">🍽️</span>
-        <p class="text-gray-500 font-medium">No encontramos restaurantes</p>
+        <p class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">No encontramos restaurantes</p>
       </div>
       <div v-else class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <button v-for="rest in restaurantesFiltrados" :key="rest.id"
           @click="seleccionarRestaurante(rest)"
-          class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-left hover:shadow-md hover:-translate-y-0.5 transition-all group">
+          class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden text-left hover:shadow-md hover:-translate-y-0.5 transition-all group">
           <div class="w-full h-36 bg-gradient-to-br from-indigo-500 to-purple-600 relative overflow-hidden flex items-center justify-center">
             <img v-if="rest.imagen" :src="getImageUrl(rest.imagen)" class="w-full h-full object-cover" @error="onImageError" />
             <span v-else class="text-6xl opacity-30">🍽️</span>
@@ -47,13 +44,13 @@
             </div>
           </div>
           <div class="p-4">
-            <h3 class="font-bold text-gray-900 text-base">{{ rest.nombre }}</h3>
-            <p v-if="rest.calle || rest.ciudad" class="text-xs text-gray-400 mt-1">
+            <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base">{{ rest.nombre }}</h3>
+            <p v-if="rest.calle || rest.ciudad" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
               📍 {{ [rest.calle, rest.ciudad, rest.estado].filter(Boolean).join(', ') }}
             </p>
-            <p v-if="rest.telefono" class="text-xs text-gray-400 mt-0.5">📞 {{ rest.telefono }}</p>
+            <p v-if="rest.telefono" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">📞 {{ rest.telefono }}</p>
             <div class="flex items-center justify-between mt-3">
-              <span class="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full">Ver menú →</span>
+              <span class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-full">Ver menú →</span>
             </div>
           </div>
         </button>
@@ -64,10 +61,10 @@
     <div v-else-if="vista === 'menu'" class="flex flex-col h-screen">
 
       <!-- Header menú -->
-      <div class="bg-white border-b border-gray-100 sticky top-0 z-20">
+      <div class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-20">
         <div class="w-full h-28 bg-gradient-to-br from-indigo-500 to-purple-600 relative flex items-end px-5 pb-4">
           <button @click="volverARestaurantes"
-            class="absolute top-4 left-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition text-white font-bold">
+            class="absolute top-4 left-4 w-8 h-8 bg-white dark:bg-gray-800/20 hover:bg-white dark:bg-gray-800/30 rounded-full flex items-center justify-center transition text-white font-bold">
             ←
           </button>
           <div>
@@ -86,8 +83,8 @@
                 <span class="text-white text-lg">🔥</span>
               </div>
               <div>
-                <h3 class="font-bold text-gray-800">Ofertas Especiales</h3>
-                <p class="text-xs text-gray-500">¡Precios exclusivos por tiempo limitado!</p>
+                <h3 class="font-bold text-gray-800 dark:text-gray-200">Ofertas Especiales</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">¡Precios exclusivos por tiempo limitado!</p>
               </div>
               <span class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
                 {{ ofertasProductos.length }} disponibles
@@ -99,7 +96,7 @@
                 v-for="oferta in ofertasProductos" 
                 :key="oferta.id"
                 @click="agregarOfertaAlPedido(oferta)"
-                class="bg-white rounded-xl shadow-md border border-amber-200 overflow-hidden flex-shrink-0 w-64 hover:shadow-lg transition-all group"
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-amber-200 overflow-hidden flex-shrink-0 w-64 hover:shadow-lg transition-all group"
               >
                 <div class="relative h-28 bg-gradient-to-br from-amber-400 to-orange-500">
                   <img 
@@ -122,19 +119,19 @@
                 <div class="p-3">
                   <div class="flex items-center justify-between mb-2">
                     <div>
-                      <span class="text-gray-400 text-xs line-through">${{ oferta.precio_original.toFixed(2) }}</span>
+                      <span class="text-gray-400 dark:text-gray-500 text-xs line-through">${{ oferta.precio_original.toFixed(2) }}</span>
                       <span class="text-amber-600 font-bold text-lg ml-2">${{ oferta.precio_oferta.toFixed(2) }}</span>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition">
                       <span class="text-lg font-bold">+</span>
                     </div>
                   </div>
-                  <p class="text-xs text-gray-500 line-clamp-2">{{ oferta.descripcion }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 line-clamp-2">{{ oferta.descripcion }}</p>
                   <div v-if="oferta.stock_limitado" class="mt-2">
-                    <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                       <div class="h-full bg-amber-500 rounded-full" :style="{ width: `${(oferta.stock_actual / oferta.stock_total) * 100}%` }"></div>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-1">Quedan {{ oferta.stock_actual }} unidades</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">Quedan {{ oferta.stock_actual }} unidades</p>
                   </div>
                 </div>
               </button>
@@ -143,15 +140,15 @@
         </div>
 
         <!-- Filtros de categoría -->
-        <div class="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide bg-white">
+        <div class="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide bg-white dark:bg-gray-800">
           <button @click="categoriaActiva = null"
             :class="['px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition shrink-0',
-              categoriaActiva === null ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">
+              categoriaActiva === null ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600']">
             Todos
           </button>
           <button v-for="cat in categorias" :key="cat.id" @click="categoriaActiva = cat.id"
             :class="['px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition shrink-0 border',
-              categoriaActiva === cat.id ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200']"
+              categoriaActiva === cat.id ? 'text-white border-transparent' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700']"
             :style="categoriaActiva === cat.id ? { backgroundColor: cat.color || '#6366f1' } : {}">
             {{ cat.icono ? cat.icono + ' ' : '' }}{{ cat.nombre }}
           </button>
@@ -163,14 +160,11 @@
 
         <!-- Lista de productos -->
         <div class="flex-1 overflow-y-auto p-4 space-y-6">
-          <div v-if="loading.productos" class="flex flex-col items-center justify-center py-20 gap-3">
-            <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p class="text-gray-400 text-sm">Cargando menú...</p>
-          </div>
+          <LoadingSpinner v-if="loading.productos" text="Cargando menú..." />
           <div v-else-if="categoriasFiltradas.length === 0" class="text-center py-20">
             <span class="text-5xl block mb-3">😔</span>
-            <p class="text-gray-500">Sin productos disponibles</p>
-            <p class="text-xs text-gray-400 mt-2">{{ debugMsg }}</p>
+            <p class="text-gray-500 dark:text-gray-400 dark:text-gray-500">Sin productos disponibles</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">{{ debugMsg }}</p>
           </div>
           <div v-else v-for="cat in categoriasFiltradas" :key="cat.id">
             <div class="flex items-center gap-2 mb-3">
@@ -178,15 +172,15 @@
                 :style="{ backgroundColor: (cat.color||'#6366f1')+'22', border:`2px solid ${cat.color||'#6366f1'}` }">
                 {{ cat.icono || '📦' }}
               </div>
-              <h3 class="font-bold text-gray-800">{{ cat.nombre }}</h3>
-              <div class="flex-1 h-px bg-gray-100"></div>
+              <h3 class="font-bold text-gray-800 dark:text-gray-200">{{ cat.nombre }}</h3>
+              <div class="flex-1 h-px bg-gray-100 dark:bg-gray-700"></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button v-for="p in cat.productos" :key="p.id"
                 @click="agregarAlPedido(p)"
                 :disabled="p.agotado"
-                class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex gap-3 p-3 text-left hover:shadow-md transition-all group disabled:opacity-50 disabled:cursor-not-allowed">
-                <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+                class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden flex gap-3 p-3 text-left hover:shadow-md transition-all group disabled:opacity-50 disabled:cursor-not-allowed">
+                <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 flex items-center justify-center">
                   <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     @error="onImageError" />
@@ -194,8 +188,8 @@
                 </div>
                 <div class="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
-                    <p class="font-semibold text-gray-800 text-sm leading-tight">{{ p.nombre }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{{ p.descripcion || 'Sin descripción' }}</p>
+                    <p class="font-semibold text-gray-800 dark:text-gray-200 text-sm leading-tight">{{ p.nombre }}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{{ p.descripcion || 'Sin descripción' }}</p>
                     <p v-if="p.bajo_stock && !p.agotado" class="text-[10px] text-amber-500 mt-1">
                       ⚠️ Últimas unidades
                     </p>
@@ -205,9 +199,9 @@
                     </span>
                   </div>
                   <div class="flex items-center justify-between mt-2">
-                    <span class="font-bold text-indigo-600">${{ Number(p.precio||0).toFixed(2) }}</span>
+                    <span class="font-bold text-indigo-600 dark:text-indigo-400">${{ Number(p.precio||0).toFixed(2) }}</span>
                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition"
-                      :class="!p.agotado ? 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 text-gray-400'">
+                      :class="!p.agotado ? 'bg-indigo-100 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'">
                       {{ !p.agotado ? '+' : '✕' }}
                     </div>
                   </div>
@@ -218,46 +212,46 @@
         </div>
 
         <!-- Carrito lateral (desktop) -->
-        <div class="hidden lg:flex w-96 shrink-0 bg-white border-l border-gray-100 flex-col shadow-sm">
-          <div class="px-5 py-4 border-b border-gray-100">
-            <h3 class="font-bold text-gray-800">Tu pedido</h3>
-            <p class="text-xs text-gray-400 mt-0.5">{{ restauranteSeleccionado?.nombre }}</p>
+        <div class="hidden lg:flex w-96 shrink-0 bg-white dark:bg-gray-800 border-l border-gray-100 dark:border-gray-700 flex-col shadow-sm">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="font-bold text-gray-800 dark:text-gray-200">Tu pedido</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ restauranteSeleccionado?.nombre }}</p>
           </div>
           <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2">
             <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center h-full py-10 text-center">
               <span class="text-4xl mb-3">🛒</span>
-              <p class="text-gray-400 text-sm">Agrega productos<br>para comenzar</p>
+              <p class="text-gray-400 dark:text-gray-500 text-sm">Agrega productos<br>para comenzar</p>
             </div>
             <div v-else v-for="item in pedido" :key="item.id"
-              class="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl">
-              <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+              class="flex items-center gap-2.5 p-2.5 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 flex items-center justify-center">
                 <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre" class="w-full h-full object-cover" @error="onImageError" />
                 <span v-else class="text-lg">🍽️</span>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-gray-800 truncate">{{ item.nombre }}</p>
+                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{{ item.nombre }}</p>
                 <div class="flex items-center gap-1.5 mt-1.5">
                   <button @click="decrementar(item.id)"
-                    class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 text-xs hover:bg-gray-300 transition flex items-center justify-center font-bold">−</button>
+                    class="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xs hover:bg-gray-300 transition flex items-center justify-center font-bold">−</button>
                   <span class="text-xs font-bold w-4 text-center">{{ item.cantidad }}</span>
                   <button @click="incrementar(item.id)"
-                    class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-xs hover:bg-indigo-200 transition flex items-center justify-center font-bold">+</button>
+                    class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-xs hover:bg-indigo-200 transition flex items-center justify-center font-bold">+</button>
                 </div>
               </div>
               <div class="text-right shrink-0">
-                <p class="text-xs font-bold text-gray-800">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                <p class="text-xs font-bold text-gray-800 dark:text-gray-200">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
                 <button @click="eliminarDelPedido(item.id)" class="text-gray-300 hover:text-red-400 transition text-xs mt-0.5 block ml-auto">✕</button>
               </div>
             </div>
           </div>
-          <div class="px-4 py-4 border-t border-gray-100 space-y-3">
+          <div class="px-4 py-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
             <template v-if="pedido.length > 0">
               <div class="flex justify-between font-bold text-base">
                 <span>Total</span>
-                <span class="text-indigo-600">${{ totalPedido.toFixed(2) }}</span>
+                <span class="text-indigo-600 dark:text-indigo-400">${{ totalPedido.toFixed(2) }}</span>
               </div>
               <textarea v-model="notaGeneral" rows="2" placeholder="📝 Nota general del pedido..."
-                class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none"></textarea>
+                class="w-full text-xs px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none"></textarea>
             </template>
             <button @click="showCheckout = true" :disabled="pedido.length === 0"
               class="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
@@ -269,7 +263,7 @@
             <div v-if="errorOrden" class="p-2.5 bg-red-50 border border-red-200 text-red-600 text-xs font-medium rounded-xl text-center animate-fade-in">
               ❌ {{ errorOrden }}
             </div>
-            <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-1.5 text-xs text-gray-400 hover:text-red-400 transition">
+            <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-red-400 transition">
               Vaciar pedido
             </button>
           </div>
@@ -281,7 +275,7 @@
       <div v-if="pedido.length > 0" class="lg:hidden fixed bottom-5 left-4 right-4 z-20">
         <button @click="showCarritoMobile = true"
           class="w-full py-4 bg-indigo-600 text-white rounded-2xl shadow-xl flex items-center justify-between px-5 font-semibold animate-slide-up">
-          <span class="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ totalItems }}</span>
+          <span class="bg-white dark:bg-gray-800/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ totalItems }}</span>
           <span>Ver pedido</span>
           <span class="font-bold">${{ totalPedido.toFixed(2) }}</span>
         </button>
@@ -290,31 +284,31 @@
       <!-- Modal carrito móvil -->
       <div v-if="showCarritoMobile" class="lg:hidden fixed inset-0 bg-black/50 z-30 flex items-end animate-fade-in"
         @click.self="showCarritoMobile = false">
-        <div class="bg-white w-full rounded-t-3xl p-5 max-h-[85vh] overflow-y-auto animate-slide-up">
-          <div class="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2">
-            <h3 class="font-bold text-gray-800">Tu pedido</h3>
-            <button @click="showCarritoMobile = false" class="text-gray-400 text-xl hover:text-gray-600">✕</button>
+        <div class="bg-white dark:bg-gray-800 w-full rounded-t-3xl p-5 max-h-[85vh] overflow-y-auto animate-slide-up">
+          <div class="flex items-center justify-between mb-4 sticky top-0 bg-white dark:bg-gray-800 pb-2">
+            <h3 class="font-bold text-gray-800 dark:text-gray-200">Tu pedido</h3>
+            <button @click="showCarritoMobile = false" class="text-gray-400 dark:text-gray-500 text-xl hover:text-gray-600 dark:text-gray-400 dark:text-gray-500">✕</button>
           </div>
           <div class="space-y-2 mb-4 max-h-[45vh] overflow-y-auto">
-            <div v-for="item in pedido" :key="item.id" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <div v-for="item in pedido" :key="item.id" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
               <div class="flex-1">
-                <p class="text-sm font-semibold text-gray-800">{{ item.nombre }}</p>
-                <p class="text-xs text-gray-400">${{ item.precio.toFixed(2) }} c/u</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ item.nombre }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">${{ item.precio.toFixed(2) }} c/u</p>
               </div>
               <div class="flex items-center gap-2">
-                <button @click="decrementar(item.id)" class="w-6 h-6 rounded-full bg-gray-200 text-sm flex items-center justify-center font-bold">−</button>
+                <button @click="decrementar(item.id)" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 text-sm flex items-center justify-center font-bold">−</button>
                 <span class="text-sm font-bold w-5 text-center">{{ item.cantidad }}</span>
-                <button @click="incrementar(item.id)" class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-sm flex items-center justify-center font-bold">+</button>
+                <button @click="incrementar(item.id)" class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-sm flex items-center justify-center font-bold">+</button>
               </div>
-              <span class="text-sm font-bold text-gray-800 w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
+              <span class="text-sm font-bold text-gray-800 dark:text-gray-200 w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
             </div>
           </div>
-          <div class="flex justify-between font-bold text-lg mb-4 pt-3 border-t border-gray-100">
+          <div class="flex justify-between font-bold text-lg mb-4 pt-3 border-t border-gray-100 dark:border-gray-700">
             <span>Total</span>
-            <span class="text-indigo-600">${{ totalPedido.toFixed(2) }}</span>
+            <span class="text-indigo-600 dark:text-indigo-400">${{ totalPedido.toFixed(2) }}</span>
           </div>
           <textarea v-model="notaGeneral" rows="2" placeholder="📝 Nota general del pedido..."
-            class="w-full text-sm px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none mb-3"></textarea>
+            class="w-full text-sm px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none mb-3"></textarea>
           <button @click="showCheckout = true; showCarritoMobile = false"
             class="w-full py-3.5 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition">
             Ir a pagar 💳
@@ -344,13 +338,15 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import MarquesitaWidget       from '../components/MarquesitaWidget.vue'
 import ClienteCheckoutModal from '../components/cliente/Clientecheckoutmodal.vue'
 
 const API_URL     = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { getHeaders } from '@/config/api'
 
 // ── ESTADO ─────────────────────────────────────────────────
 const vista                   = ref('restaurantes')
@@ -372,6 +368,9 @@ const showCheckout            = ref(false)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const loadingOfertas          = ref(false)
+const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'light')
+let pollTimer = null
+const POLL_INTERVAL = 5000 // 5 segundos
 
 // Datos del usuario
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
@@ -382,10 +381,6 @@ const esCliente  = rolActual === 'CLIENTE'
 const clienteId  = esCliente ? (userActual?.cliente_id ?? null) : null
 
 // ── HELPERS ────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
 const getImageUrl = (path) => {
   if (!path) return null
   if (path.startsWith('http')) return path
@@ -456,9 +451,11 @@ const cargarRestaurantes = async () => {
   finally { loading.value.restaurantes = false }
 }
 
-const cargarProductos = async (restauranteId) => {
-  loading.value.productos = true
-  productos.value = []
+const cargarProductos = async (restauranteId, silent = true) => {
+  if (!silent) {
+    loading.value.productos = true
+    productos.value = []
+  }
   debugMsg.value  = ''
   try {
     const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
@@ -485,7 +482,9 @@ const cargarProductos = async (restauranteId) => {
     console.error('Error cargarProductos:', e)
     mostrarError('Error de conexión al cargar el menú')
   } finally {
-    loading.value.productos = false
+    if (!silent) {
+      loading.value.productos = false
+    }
   }
 }
 
@@ -651,7 +650,7 @@ const handleCheckout = async (checkoutData) => {
   try {
     const body = {
       restaurante_id: restauranteSeleccionado.value.id,
-      productos:      pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad })),
+      productos:      pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null })),
       metodo_pago:    checkoutData.metodo_pago,
       tipo_entrega:   checkoutData.tipo_entrega,
       notas:          checkoutData.notas || null,
@@ -666,6 +665,8 @@ const handleCheckout = async (checkoutData) => {
       notaGeneral.value       = ''
       showCarritoMobile.value = false
       mostrarExito()
+      // Recargar productos de inmediato de forma silenciosa para actualizar stock
+      cargarProductos(restauranteSeleccionado.value.id, true)
     } else {
       const msg = data.errors
         ? Object.values(data.errors).flat().join('. ')
@@ -683,14 +684,39 @@ onMounted(async () => {
   if (restaurantes.value.length > 0) {
     await cargarRestauranteDesdeLocalStorage()
   }
+
+  // Polling silencioso para actualizar stocks periódicamente en el Kiosco
+  const poll = async () => {
+    marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'light'
+    if (restauranteSeleccionado.value?.id) {
+      await cargarProductos(restauranteSeleccionado.value.id, true)
+    }
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
+
+  // Escuchar cambios de color de la marquesina en caliente
+  const handleStorageEvent = (e) => {
+    if (e.key === 'marquesina_variant') {
+      marquesinaVariant.value = e.newValue || 'light'
+    }
+  }
+  window.addEventListener('storage', handleStorageEvent)
+  
+  onMounted._handleStorage = handleStorageEvent
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearTimeout(pollTimer)
+  if (onMounted._handleStorage) {
+    window.removeEventListener('storage', onMounted._handleStorage)
+  }
 })
 </script>
 
 <style scoped>
-@keyframes spin     { to { transform: rotate(360deg); } }
 @keyframes fade-in  { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 @keyframes slide-up { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
-.animate-spin     { animation: spin     1s linear   infinite; }
 .animate-fade-in  { animation: fade-in  0.3s ease-out; }
 .animate-slide-up { animation: slide-up 0.3s ease-out; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }

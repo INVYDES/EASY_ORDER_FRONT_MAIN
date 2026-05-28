@@ -1,7 +1,7 @@
 <template>
   <div class="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-2xl shadow-lg text-white">
     <div class="flex items-center gap-3 mb-5">
-      <div class="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center text-2xl">📦</div>
+      <div class="w-11 h-11 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center text-2xl">📦</div>
       <div>
         <h3 class="text-lg font-bold">Sugerencia de Paquete Estratégico</h3>
         <p class="text-indigo-100 text-xs">Cocina (mayor utilidad, fuera Top 10) · Bebida #1 ventas · Postre menor volumen con ROI+</p>
@@ -10,10 +10,10 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Cocina -->
-      <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+      <div class="bg-white dark:bg-gray-800/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
         <div class="flex items-center gap-2 mb-3">
           <span class="text-2xl">🍳</span>
-          <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase">Cocina</span>
+          <span class="text-xs bg-white dark:bg-gray-800/20 px-2 py-0.5 rounded-full font-bold uppercase">Cocina</span>
           <span class="ml-auto text-[10px] text-indigo-200">Alta Utilidad</span>
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.kitchen || 'Calculando...' }}</p>
@@ -25,10 +25,10 @@
       </div>
 
       <!-- Bebida -->
-      <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+      <div class="bg-white dark:bg-gray-800/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
         <div class="flex items-center gap-2 mb-3">
           <span class="text-2xl">🥤</span>
-          <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase">Bebida</span>
+          <span class="text-xs bg-white dark:bg-gray-800/20 px-2 py-0.5 rounded-full font-bold uppercase">Bebida</span>
           <span class="ml-auto text-[10px] text-indigo-200">Top Ventas</span>
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.drink || 'Calculando...' }}</p>
@@ -40,10 +40,10 @@
       </div>
 
       <!-- Postre -->
-      <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+      <div class="bg-white dark:bg-gray-800/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
         <div class="flex items-center gap-2 mb-3">
           <span class="text-2xl">🍮</span>
-          <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase">Postre</span>
+          <span class="text-xs bg-white dark:bg-gray-800/20 px-2 py-0.5 rounded-full font-bold uppercase">Postre</span>
           <span class="ml-auto text-[10px] text-indigo-200">Bajo Vol. (ROI+)</span>
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.dessert || 'Calculando...' }}</p>
@@ -60,7 +60,7 @@
         Lógica: Margen Max(Cocina ∉ Top10) + Ventas Max(Bebida) + Vol Min(Postre con ROI+)
       </p>
       <button @click="executeBundle"
-        class="px-5 py-2 bg-white text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-50 transition uppercase tracking-wide shrink-0">
+        class="px-5 py-2 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-xl hover:bg-indigo-50 dark:bg-indigo-900/30 transition uppercase tracking-wide shrink-0">
         Ejecutar Paquete
       </button>
     </div>

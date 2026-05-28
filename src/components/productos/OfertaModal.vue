@@ -3,41 +3,41 @@
     <div v-if="modelValue" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-gray-950/40 backdrop-blur-sm" @click="$emit('update:modelValue', false)"></div>
       
-      <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden relative flex flex-col max-h-[90vh] animate-modal-in">
+      <div class="bg-white dark:bg-gray-800 rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden relative flex flex-col max-h-[90vh] animate-modal-in">
         
-        <div class="p-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div class="p-6 border-b border-gray-50 flex items-center justify-between bg-white dark:bg-gray-800 sticky top-0 z-10">
           <div>
-            <h3 class="text-2xl font-black text-gray-900 tracking-tight">
+            <h3 class="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
               {{ oferta ? 'Editar Promoción' : 'Nueva Promoción' }}
             </h3>
-            <p class="text-sm text-gray-500 font-medium">Configura tu anuncio u oferta especial</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Configura tu anuncio u oferta especial</p>
           </div>
-          <button @click="$emit('update:modelValue', false)" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
+          <button @click="$emit('update:modelValue', false)" class="w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
         </div>
         
         <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar">
           
           <section>
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">¿Qué deseas publicar?</label>
+            <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3 ml-1">¿Qué deseas publicar?</label>
             <div class="grid grid-cols-4 gap-3">
               <button v-for="t in tipos" :key="t.value" @click="form.tipo=t.value; form.emoji=t.emoji"
                 :class="['p-4 rounded-[20px] border-2 transition-all flex flex-col items-center gap-2',
-                  form.tipo===t.value ? 'border-indigo-600 bg-indigo-50 shadow-lg shadow-indigo-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200']">
+                  form.tipo===t.value ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-lg shadow-indigo-100 scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:border-gray-700']">
                 <span class="text-2xl">{{ t.emoji }}</span>
-                <span :class="['text-[10px] font-black tracking-widest text-center', form.tipo===t.value ? 'text-indigo-700' : 'text-gray-400']">{{ t.label }}</span>
+                <span :class="['text-[10px] font-black tracking-widest text-center', form.tipo===t.value ? 'text-indigo-700' : 'text-gray-400 dark:text-gray-500']">{{ t.label }}</span>
               </button>
             </div>
           </section>
           
           <section class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div class="sm:col-span-3">
-              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Título</label>
+              <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Título</label>
               <input v-model="form.titulo" type="text" placeholder="Ej: 2x1 en Burgers"
-                class="w-full px-5 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-gray-800" />
+                class="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-800/50 border-2 border-transparent rounded-2xl focus:bg-white dark:bg-gray-800 focus:border-indigo-500 transition-all outline-none font-bold text-gray-800 dark:text-gray-200" />
             </div>
             <div>
-              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 text-center">Icono</label>
-              <input v-model="form.emoji" type="text" class="w-full py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none" />
+              <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1 text-center">Icono</label>
+              <input v-model="form.emoji" type="text" class="w-full py-3.5 bg-gray-50 dark:bg-gray-800/50 border-2 border-transparent rounded-2xl text-center text-2xl focus:bg-white dark:bg-gray-800 focus:border-indigo-500 transition-all outline-none" />
             </div>
           </section>
           
@@ -49,12 +49,12 @@
             
             <div class="relative">
               <button type="button" @click="dropdownOpen = !dropdownOpen"
-                class="w-full px-4 py-4 text-left border-2 border-white rounded-[20px] bg-white flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+                class="w-full px-4 py-4 text-left border-2 border-white rounded-[20px] bg-white dark:bg-gray-800 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                 <div class="flex items-center gap-3 overflow-hidden">
                   <template v-if="selectedProduct">
                     <img v-if="selectedProduct.imagen_url" :src="resolveImageUrl(selectedProduct.imagen_url)" class="w-8 h-8 rounded-lg object-cover" />
                     <div class="min-w-0">
-                      <p class="font-black text-gray-800 text-sm truncate uppercase">{{ selectedProduct.nombre }}</p>
+                      <p class="font-black text-gray-800 dark:text-gray-200 text-sm truncate uppercase">{{ selectedProduct.nombre }}</p>
                       <p class="text-[10px] text-indigo-500 font-bold">{{ selectedProduct.precio_formateado }}</p>
                     </div>
                   </template>

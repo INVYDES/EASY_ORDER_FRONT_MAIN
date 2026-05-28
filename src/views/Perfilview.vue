@@ -1,55 +1,36 @@
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div class="max-w-2xl mx-auto space-y-6 px-4 sm:px-6">
 
-    <!-- TOASTS -->
-    <div class="fixed top-4 right-4 z-50 space-y-2">
-      <div
-        v-for="(toast, index) in toasts"
-        :key="toast.id"
-        :class="[
-          'px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' : '',
-          toast.type === 'error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800'             : '',
-          toast.type === 'info'    ? 'bg-blue-50 border-l-4 border-blue-500 text-blue-800'           : '',
-          toast.type === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800'        : '',
-        ]"
-      >
-        <span class="text-lg">
-          {{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}
-        </span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- Encabezado -->
     <div>
-      <h2 class="text-2xl font-bold text-gray-900">Mi Perfil</h2>
-      <p class="text-gray-500 text-sm mt-1">Consulta y actualiza tu información personal</p>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Mi Perfil</h2>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Consulta y actualiza tu información personal</p>
     </div>
 
     <!-- Tarjeta de perfil -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
       <div class="h-24 bg-gradient-to-r from-[#1e1b6e] to-[#2d2a9e]"></div>
       <div class="px-6 pb-6">
         <div class="-mt-8 mb-4 flex items-end justify-between">
-          <div class="w-16 h-16 rounded-2xl bg-blue-500 ring-4 ring-white flex items-center justify-center text-xl font-bold text-white shadow-lg">
+          <div class="w-16 h-16 rounded-2xl bg-blue-500 ring-4 ring-white dark:ring-gray-800 flex items-center justify-center text-xl font-bold text-white shadow-lg">
             {{ userInitials }}
           </div>
           <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full" :class="roleBadgeClass">
             {{ userRoleLabel }}
           </span>
         </div>
-        <h3 class="text-xl font-bold text-gray-900">{{ user?.name || '—' }}</h3>
-        <p class="text-gray-500 text-sm">{{ user?.email || '—' }}</p>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ user?.name || '—' }}</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">{{ user?.email || '—' }}</p>
       </div>
     </div>
 
     <!-- TARJETA DE LICENCIA (solo PROPIETARIO / ADMIN) -->
-    <div v-if="['PROPIETARIO', 'ADMIN'].includes(typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles?.[0]?.nombre)" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-if="['PROPIETARIO', 'ADMIN'].includes(typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles?.[0]?.nombre)" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
       <div class="px-6 py-5">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
             <span class="text-xl">📋</span> Licencia actual
           </h3>
           <span
@@ -61,28 +42,28 @@
         </div>
 
         <!-- Cargando -->
-        <div v-if="loading.licencia" class="text-center py-4 text-gray-400 text-sm">
+        <div v-if="loading.licencia" class="text-center py-4 text-gray-400 dark:text-gray-500 text-sm">
           Cargando información de licencia...
         </div>
 
         <!-- Con licencia -->
         <div v-else-if="licenciaActiva" class="space-y-4">
           <div class="grid grid-cols-2 gap-3">
-            <div class="bg-gray-50 rounded-xl p-4">
-              <p class="text-xs text-gray-500 font-medium">Tipo</p>
-              <p class="text-base font-bold text-gray-900 mt-1">{{ licenciaActiva.tipo }}</p>
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Tipo</p>
+              <p class="text-base font-bold text-gray-900 dark:text-gray-100 mt-1">{{ licenciaActiva.tipo }}</p>
             </div>
-            <div class="bg-gray-50 rounded-xl p-4">
-              <p class="text-xs text-gray-500 font-medium">Plan</p>
-              <p class="text-base font-bold text-gray-900 mt-1">{{ licenciaActiva.nombre }}</p>
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Plan</p>
+              <p class="text-base font-bold text-gray-900 dark:text-gray-100 mt-1">{{ licenciaActiva.nombre }}</p>
             </div>
-            <div class="bg-gray-50 rounded-xl p-4">
-              <p class="text-xs text-gray-500 font-medium">Restaurantes</p>
-              <p class="text-base font-bold text-gray-900 mt-1">{{ licenciaActiva.max_restaurantes }}</p>
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Restaurantes</p>
+              <p class="text-base font-bold text-gray-900 dark:text-gray-100 mt-1">{{ licenciaActiva.max_restaurantes }}</p>
             </div>
-            <div class="bg-gray-50 rounded-xl p-4">
-              <p class="text-xs text-gray-500 font-medium">Usuarios</p>
-              <p class="text-base font-bold text-gray-900 mt-1">{{ licenciaActiva.max_usuarios }}</p>
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Usuarios</p>
+              <p class="text-base font-bold text-gray-900 dark:text-gray-100 mt-1">{{ licenciaActiva.max_usuarios }}</p>
             </div>
           </div>
 
@@ -107,7 +88,7 @@
           <!-- Botón gestionar -->
           <button
             @click="router.push('/panel/licencias')"
-            class="w-full py-2.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition"
+            class="w-full py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition"
           >
             Gestionar licencia →
           </button>
@@ -116,7 +97,7 @@
         <!-- Sin licencia -->
         <div v-else class="text-center py-8">
           <span class="text-4xl mb-3 block">📭</span>
-          <p class="text-gray-500 text-sm">No tienes una licencia activa</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">No tienes una licencia activa</p>
           <button
             @click="router.push('/panel/licencias')"
             class="mt-3 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
@@ -128,22 +109,22 @@
     </div>
 
     <!-- Formulario de edición -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h4 class="text-base font-semibold text-gray-800 mb-5">Información personal</h4>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-5">Información personal</h4>
 
       <form @submit.prevent="handleGuardar" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre completo</label>
           <input v-model="form.name" type="text" required
-            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
+            class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo electrónico</label>
           <input v-model="form.email" type="email" required
             class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario</label>
           <input v-model="form.username" type="text"
             class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
         </div>
@@ -157,37 +138,37 @@
     </div>
 
     <!-- Cambiar contraseña -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h4 class="text-base font-semibold text-gray-800 mb-1">Cambiar contraseña</h4>
-      <p class="text-gray-500 text-sm mb-5">Usa una contraseña segura de al menos 8 caracteres</p>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-1">Cambiar contraseña</h4>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mb-5">Usa una contraseña segura de al menos 8 caracteres</p>
 
       <form @submit.prevent="handleCambiarPassword" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña actual</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña actual</label>
           <div class="relative">
             <input v-model="passForm.current" :type="showPass.current ? 'text' : 'password'" required
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm pr-20" />
+              class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm pr-20" />
             <button type="button" @click="showPass.current = !showPass.current"
-              class="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600">
+              class="absolute right-3 top-2.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
               {{ showPass.current ? 'Ocultar' : 'Mostrar' }}
             </button>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nueva contraseña</label>
           <div class="relative">
             <input v-model="passForm.new" :type="showPass.new ? 'text' : 'password'" required minlength="8"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm pr-20" />
+              class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm pr-20" />
             <button type="button" @click="showPass.new = !showPass.new"
-              class="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600">
+              class="absolute right-3 top-2.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
               {{ showPass.new ? 'Ocultar' : 'Mostrar' }}
             </button>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar nueva contraseña</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirmar nueva contraseña</label>
           <input v-model="passForm.confirm" type="password" required
-            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
+            class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" />
         </div>
         <div class="pt-2">
           <button type="submit" :disabled="loading.password"
@@ -205,12 +186,15 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
 const router  = useRouter()
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 const user           = ref(null)
 const licenciaActiva = ref(null)
-const toasts         = ref([])
+const { toasts, showToast, removeToast } = useToast()
 
 const loading = reactive({ guardar: false, password: false, licencia: false, perfil: false })
 const form     = reactive({ name: '', email: '', username: '' })
@@ -253,24 +237,7 @@ const porcentajeLicencia = computed(() => {
   return Math.min(100, Math.max(0, Math.round((licenciaActiva.value.dias_restantes / total) * 100)))
 })
 
-// ── Toasts ────────────────────────────────────────────────────────────────────
-const showToast = (message, type = 'info', duration = 5000) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-
-const removeToast = (id) => {
-  const i = toasts.value.findIndex(t => t.id === id)
-  if (i !== -1) toasts.value.splice(i, 1)
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
-}
-
 const formatDate = (d) => {
   if (!d) return ''
   return new Date(d).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -391,11 +358,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
-}
 </style>

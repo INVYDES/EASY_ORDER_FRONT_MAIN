@@ -3,13 +3,13 @@
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
     @click.self="$emit('close')"
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
 
       <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg font-semibold text-gray-800">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
           {{ ingrediente ? 'Editar ingrediente' : 'Nuevo ingrediente' }}
         </h3>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        <button @click="$emit('close')" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xl leading-none">✕</button>
       </div>
 
       <div v-if="formError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">
@@ -18,21 +18,21 @@
 
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
           <input
             v-model="form.nombre"
             type="text"
             placeholder="Ej. Jitomate"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Unidad *</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unidad *</label>
             <select
               v-model="form.unidad"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+              class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800"
             >
               <option value="gramos">gramos</option>
               <option value="kilogramos">kilogramos</option>
@@ -45,13 +45,13 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Costo por unidad *</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Costo por unidad *</label>
             <div class="relative">
-              <span class="absolute left-3 top-3 text-gray-400 text-xs">$</span>
+              <span class="absolute left-3 top-3 text-gray-400 dark:text-gray-500 text-xs">$</span>
               <input
                 v-model="form.costo_unitario"
                 type="number" min="0" step="0.0001" placeholder="0.00"
-                class="w-full pl-7 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full pl-7 pr-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -59,30 +59,30 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock actual</label>
             <input
               v-model="form.stock_actual"
               type="number" min="0" step="0.001"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock mínimo</label>
             <input
               v-model="form.stock_minimo"
               type="number" min="0" step="0.001"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Proveedor</label>
           <input
             v-model="form.proveedor"
             type="text"
             placeholder="Nombre del proveedor (opcional)"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
         </div>
       </div>
@@ -90,7 +90,7 @@
       <div class="flex gap-3 mt-6">
         <button
           @click="$emit('close')"
-          class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
+          class="flex-1 py-2.5 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:bg-gray-600 transition"
         >
           Cancelar
         </button>

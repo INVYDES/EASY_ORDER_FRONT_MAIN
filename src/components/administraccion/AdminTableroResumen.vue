@@ -2,10 +2,10 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
     <!-- Empleados -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between">
       <div>
-        <p class="text-sm font-medium text-gray-500">Empleados Registrados</p>
-        <h3 class="text-2xl font-bold text-gray-800">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 dark:text-gray-500">Empleados Registrados</p>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200">
           {{ empleados.length }}
         </h3>
       </div>
@@ -21,15 +21,15 @@
 
 
     <!-- Restaurantes -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between">
       <div>
-        <p class="text-sm font-medium text-gray-500">Restaurantes Activos</p>
-        <h3 class="text-2xl font-bold text-gray-800">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 dark:text-gray-500">Restaurantes Activos</p>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200">
           {{ activeRestaurants }} / {{ maxRestaurants }}
         </h3>
       </div>
 
-      <div class="p-3 bg-indigo-50 text-indigo-600 rounded-full">
+      <div class="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
           viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -40,22 +40,22 @@
 
 
     <!-- Administrador -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between col-span-1 md:col-span-2">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between col-span-1 md:col-span-2">
 
       <div>
 
-        <p class="text-sm font-medium text-gray-500">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 dark:text-gray-500">
           Administrador
         </p>
 
-        <h3 class="text-lg font-bold text-gray-800">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">
           {{ userFullName }}
         </h3>
 
         <div class="flex items-center mt-1 space-x-4">
 
           <!-- email -->
-          <div class="flex items-center text-sm text-gray-600">
+          <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
 
             <svg xmlns="http://www.w3.org/2000/svg"
               class="h-4 w-4 mr-1"

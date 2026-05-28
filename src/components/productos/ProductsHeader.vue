@@ -1,18 +1,18 @@
 <template>
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-xl font-semibold text-gray-800">Gestión de Productos</h1>
+    <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Gestión de Productos</h1>
     <div class="flex items-center gap-2 flex-wrap">
 
       <!-- Buscador -->
       <div class="relative">
-        <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
           :value="modelValue"
           @input="$emit('update:modelValue', $event.target.value)"
           placeholder="Buscar producto..."
-          class="w-64 pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          class="w-64 pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 

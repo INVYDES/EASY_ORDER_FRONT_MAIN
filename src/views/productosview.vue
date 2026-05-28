@@ -1,24 +1,7 @@
 <template>
   <div class="space-y-5 p-4 sm:p-6">
 
-    <!-- TOASTS -->
-    <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-      <div
-        v-for="toast in toasts"
-        :key="toast.id"
-        :class="[
-          'px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in pointer-events-auto',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' : '',
-          toast.type === 'error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800' : '',
-          toast.type === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800' : '',
-          toast.type === 'info'    ? 'bg-blue-50 border-l-4 border-blue-500 text-blue-800' : '',
-        ]"
-      >
-        <span class="text-lg">{{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- Sucursal badge + Header -->
     <SucursalBadge />
@@ -40,20 +23,20 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
+    <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-xl p-1 w-fit flex-wrap">
       <button
         v-for="tab in tabs"
         :key="tab.key"
         @click="activeTab = tab.key"
         :class="[
           'px-5 py-2 text-sm font-medium rounded-lg transition',
-          activeTab === tab.key ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200'
+          activeTab === tab.key ? 'bg-white dark:bg-gray-800 shadow-sm text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
         ]"
       >
         {{ tab.label }}
         <span
           class="ml-1.5 text-xs font-bold rounded-full px-1.5 py-0.5"
-          :class="activeTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'"
+          :class="activeTab === tab.key ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'"
         >
           {{ getTabCount(tab.key) }}
         </span>
@@ -61,11 +44,31 @@
     </div>
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
-    <div v-if="activeTab === 'paquetes'" class="space-y-6">
-      <div class="flex justify-end">
+    <div v-if="activeTab === 'paquetes'" class="space-y-4">
+      <div class="flex items-center gap-4">
+        <!-- Buscador de paquetes -->
+        <div class="relative flex-1 max-w-md">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            v-model="searchTermPaquetes"
+            @input="debouncedSearchPaquetes"
+            type="text"
+            placeholder="Buscar paquete por nombre..."
+            class="w-full pl-10 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm"
+          />
+          <button
+            v-if="searchTermPaquetes"
+            @click="searchTermPaquetes = ''; loadPaquetes(1)"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-600 dark:hover:text-gray-400 transition text-xs"
+          >✕</button>
+        </div>
         <button
           @click="openCreatePaquete"
-          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
+          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition ml-auto"
         >
           <span class="text-base leading-none">＋</span> Nuevo Paquete
         </button>
@@ -82,8 +85,30 @@
       />
     </div>
 
-    <!-- ── PRODUCTOS ──────────────────────────────────────── -->
+    <!-- ══ PRODUCTOS ═════════════════════════════════════════ -->
     <div v-if="activeTab === 'productos'">
+      <!-- Buscador de productos -->
+      <div class="mb-4">
+        <div class="relative max-w-md">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            v-model="searchTerm"
+            @input="debouncedSearch"
+            type="text"
+            placeholder="Buscar producto por nombre..."
+            class="w-full pl-10 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm"
+          />
+          <button
+            v-if="searchTerm"
+            @click="searchTerm = ''; loadProducts(1)"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-600 dark:hover:text-gray-400 transition text-xs"
+          >✕</button>
+        </div>
+      </div>
       <ProductsTable
         :products="products"
         :pagination="pagination"
@@ -103,8 +128,8 @@
       <!-- ... (todo tu código de ingredientes existente se mantiene igual) ... -->
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">🧄 Ingredientes</h1>
-          <p class="text-gray-500 text-sm mt-0.5">Inventario y costos de ingredientes</p>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">🧄 Ingredientes</h1>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Inventario y costos de ingredientes</p>
         </div>
         <button
           @click="abrirModalIngrediente()"
@@ -116,20 +141,20 @@
 
       <!-- KPIs -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-indigo-500">
-          <p class="text-xs text-gray-500 uppercase font-semibold">Total ingredientes</p>
-          <p class="text-2xl font-black text-gray-900 mt-1">{{ statsIngredientes.total }}</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-indigo-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total ingredientes</p>
+          <p class="text-2xl font-black text-gray-900 dark:text-gray-100 mt-1">{{ statsIngredientes.total }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-amber-500">
-          <p class="text-xs text-gray-500 uppercase font-semibold">Bajo stock ⚠️</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-amber-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Bajo stock ⚠️</p>
           <p class="text-2xl font-black text-amber-600 mt-1">{{ statsIngredientes.bajo_stock }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500">
-          <p class="text-xs text-gray-500 uppercase font-semibold">Sin stock 🚨</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-red-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Sin stock 🚨</p>
           <p class="text-2xl font-black text-red-600 mt-1">{{ statsIngredientes.sin_stock }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-emerald-500">
-          <p class="text-xs text-gray-500 uppercase font-semibold">Valor inventario</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-emerald-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Valor inventario</p>
           <p class="text-2xl font-black text-emerald-600 mt-1">${{ formatearMoneda(statsIngredientes.costo_total) }}</p>
         </div>
       </div>
@@ -140,25 +165,22 @@
           v-model="buscarIngrediente"
           type="text"
           placeholder="🔍 Buscar ingrediente..."
-          class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-64"
+          class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-64"
         />
         <button
           @click="filtroBajoStock = !filtroBajoStock"
           :class="['px-4 py-2 rounded-xl text-sm font-semibold transition border',
-            filtroBajoStock ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300']"
+            filtroBajoStock ? 'bg-amber-100 dark:bg-amber-900/30 border-amber-400 text-amber-700' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600']"
         >
           ⚠️ Solo bajo stock
         </button>
-        <span class="text-xs text-gray-400 ml-auto">{{ ingredientesFiltrados.length }} ingredientes</span>
+        <span class="text-xs text-gray-400 dark:text-gray-500 ml-auto">{{ ingredientesFiltrados.length }} ingredientes</span>
       </div>
 
       <!-- Tabla de ingredientes -->
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div v-if="loading.ingredientes" class="text-center py-16 text-gray-400">
-          <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
-          Cargando ingredientes...
-        </div>
-        <div v-else-if="ingredientesFiltrados.length === 0" class="text-center py-16 text-gray-400">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+        <LoadingSpinner v-if="loading.ingredientes" text="Cargando ingredientes..." />
+        <div v-else-if="ingredientesFiltrados.length === 0" class="text-center py-16 text-gray-400 dark:text-gray-500">
           <span class="text-4xl block mb-3">🧄</span>
           <p>No hay ingredientes{{ buscarIngrediente ? ' con ese nombre' : ' registrados' }}</p>
           <button @click="abrirModalIngrediente()" class="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition">
@@ -166,48 +188,48 @@
           </button>
         </div>
         <div v-else class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-100">
-            <thead class="bg-gray-50">
+          <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800/50">
               <tr>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Ingrediente</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Unidad</th>
-                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Costo/unidad</th>
-                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Stock actual</th>
-                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Stock mín.</th>
-                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Ingrediente</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Unidad</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Costo/unidad</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Stock actual</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Stock mín.</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Estado</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
               <tr
                 v-for="ing in ingredientesFiltrados"
                 :key="ing.id"
-                class="hover:bg-gray-50 transition"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                 :class="ing.sin_stock ? 'bg-red-50/40' : ing.bajo_stock ? 'bg-amber-50/40' : ''"
               >
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-3">
                     <div
                       class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
-                      :class="ing.sin_stock ? 'bg-red-100' : ing.bajo_stock ? 'bg-amber-100' : 'bg-indigo-50'"
+                      :class="ing.sin_stock ? 'bg-red-100' : ing.bajo_stock ? 'bg-amber-100' : 'bg-indigo-50 dark:bg-indigo-900/30'"
                     >
                       {{ ing.sin_stock ? '🚨' : ing.bajo_stock ? '⚠️' : '🧄' }}
                     </div>
                     <div>
-                      <p class="text-sm font-semibold text-gray-900">{{ ing.nombre }}</p>
-                      <p v-if="ing.proveedor" class="text-xs text-gray-400">{{ ing.proveedor }}</p>
+                      <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ing.nombre }}</p>
+                    <p v-if="ing.proveedor" class="text-xs text-gray-400 dark:text-gray-500">{{ ing.proveedor }}</p>
                     </div>
                   </div>
                 </td>
-                <td class="px-5 py-4 text-sm text-gray-600">{{ ing.unidad }}</td>
-                <td class="px-5 py-4 text-sm font-medium text-right text-gray-800">{{ ing.costo_formateado }}</td>
+                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ ing.unidad }}</td>
+                <td class="px-5 py-4 text-sm font-medium text-right text-gray-800 dark:text-gray-200">{{ ing.costo_formateado }}</td>
                 <td class="px-5 py-4 text-right">
-                  <span class="text-sm font-bold" :class="ing.sin_stock ? 'text-red-600' : ing.bajo_stock ? 'text-amber-600' : 'text-gray-800'">
+                  <span class="text-sm font-bold" :class="ing.sin_stock ? 'text-red-600' : ing.bajo_stock ? 'text-amber-600' : 'text-gray-800 dark:text-gray-200'">
                     {{ ing.stock_actual }}
                   </span>
-                  <span class="text-xs text-gray-400 ml-1">{{ ing.unidad }}</span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">{{ ing.unidad }}</span>
                 </td>
-                <td class="px-5 py-4 text-sm text-gray-500 text-right">{{ ing.stock_minimo }} {{ ing.unidad }}</td>
+                <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 text-right">{{ ing.stock_minimo }} {{ ing.unidad }}</td>
                 <td class="px-5 py-4 text-center">
                   <span
                     class="px-2.5 py-1 text-xs font-semibold rounded-full"
@@ -218,9 +240,9 @@
                 </td>
                 <td class="px-5 py-4 text-right">
                   <div class="flex justify-end gap-1">
-                    <button @click="abrirAjusteStock(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition font-medium">📦 Stock</button>
-                    <button @click="abrirModalIngrediente(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition font-medium">✏️</button>
-                    <button @click="handleDeleteIngrediente(ing.id)" class="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">🗑️</button>
+                    <button @click="abrirAjusteStock(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition font-medium">📦 Stock</button>
+                    <button @click="abrirModalIngrediente(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition font-medium">✏️</button>
+                    <button @click="handleDeleteIngrediente(ing.id)" class="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition font-medium">🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -303,6 +325,9 @@ import PaquetesTable from '../components/productos/PaquetesTable.vue'
 import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
 import AnunciosView from './anunciosview.vue'
 import BundleStrategyCard from '../components/administraccion/BundleStrategyCard.vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
 
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -321,7 +346,8 @@ const selectedCategoria = ref(null)
 const selectedPaquete = ref(null)
 const suggestedProductsForNewPaquete = ref([])
 const searchTerm = ref('')
-const toasts = ref([])
+const searchTermPaquetes = ref('')
+const { toasts, showToast, removeToast } = useToast()
 
 // ✅ PAGINACIÓN - AGREGADA
 const pagination = ref({
@@ -396,18 +422,6 @@ const ingredientesFiltrados = computed(() => {
 
 const allProductsForSelection = ref([])
 
-// ── TOASTS ─────────────────────────────────────────────────
-const showToast = (message, type = 'info', duration = 4000) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-
-const removeToast = (id) => {
-  const i = toasts.value.findIndex(t => t.id === id)
-  if (i !== -1) toasts.value.splice(i, 1)
-}
-
 // ── HELPERS ────────────────────────────────────────────────
 const checkAuth = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
@@ -437,7 +451,7 @@ const loadProducts = async (page = 1) => {
   if (!checkAuth()) return
   loading.products = true
   try {
-    const data = await apiClient.get(`/productos?page=${page}&per_page=15&_t=${Date.now()}`)
+    const data = await apiClient.get(`/productos?page=${page}&per_page=15&buscar=${encodeURIComponent(searchTerm.value)}&_t=${Date.now()}`)
     if (data.success || data.data) {
       products.value = data.data || []
       if (data.pagination) {
@@ -461,6 +475,15 @@ const loadProducts = async (page = 1) => {
   } finally { 
     loading.products = false 
   }
+}
+
+// Debounce para búsqueda
+let searchTimeout = null
+const debouncedSearch = () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadProducts(1)
+  }, 400)
 }
 
 const loadAllProductsForSelection = async () => {
@@ -630,7 +653,7 @@ const loadPaquetes = async (page = 1) => {
   if (!checkAuth()) return
   loading.paquetes = true
   try {
-    const data = await apiClient.get(`/paquetes?page=${page}&per_page=10&_t=${Date.now()}`)
+    const data = await apiClient.get(`/paquetes?page=${page}&per_page=10&buscar=${encodeURIComponent(searchTermPaquetes.value)}&_t=${Date.now()}`)
     if (data.success || data.data) {
       paquetes.value = data.data || []
       if (data.pagination) {
@@ -657,6 +680,15 @@ const loadPaquetes = async (page = 1) => {
 const changePagePaquetes = (page) => {
   if (page < 1 || page > paginationPaquetes.value.last_page) return
   loadPaquetes(page)
+}
+
+// Debounce para búsqueda de paquetes
+let searchPaquetesTimeout = null
+const debouncedSearchPaquetes = () => {
+  clearTimeout(searchPaquetesTimeout)
+  searchPaquetesTimeout = setTimeout(() => {
+    loadPaquetes(1)
+  }, 400)
 }
 
 const openCreatePaquete = () => {
@@ -752,20 +784,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@keyframes slideIn { 
-  from { transform: translateX(100%); opacity: 0; } 
-  to { transform: translateX(0); opacity: 1; } 
-}
-
-.animate-slide-in { 
-  animation: slideIn 0.3s ease-out; 
-}
-
-@keyframes spin { 
-  to { transform: rotate(360deg); } 
-}
-
-.animate-spin { 
-  animation: spin 1s linear infinite; 
-}
 </style>

@@ -1,8 +1,8 @@
 <template>
-  <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+  <div class="overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
     <div class="overflow-x-auto">
       <table class="w-full text-sm text-left">
-        <thead class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wide">
           <tr>
             <th class="px-5 py-3">Producto</th>
             <th class="px-4 py-3">Categoría</th>
@@ -18,7 +18,7 @@
         <tbody class="divide-y divide-gray-50">
           <tr v-if="loading">
             <td colspan="8" class="px-5 py-10">
-              <div class="flex flex-col items-center justify-center gap-3 text-gray-400">
+              <div class="flex flex-col items-center justify-center gap-3 text-gray-400 dark:text-gray-500">
                 <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                 <p>Cargando catálogo...</p>
               </div>
@@ -26,7 +26,7 @@
           </tr>
 
           <tr v-else-if="filteredProducts.length === 0">
-            <td colspan="8" class="text-center py-12 text-gray-400 italic">
+            <td colspan="8" class="text-center py-12 text-gray-400 dark:text-gray-500 italic">
               <div class="flex flex-col items-center gap-2">
                 <span class="text-3xl">🔍</span>
                 <p>{{ searchTerm ? `No encontramos coincidencias para "${searchTerm}"` : 'Aún no hay productos en esta lista' }}</p>
@@ -38,11 +38,11 @@
             v-else
             v-for="p in filteredProducts"
             :key="p.id"
-            class="hover:bg-gray-50/50 transition-colors group"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-800/50/50 transition-colors group"
           >
             <td class="px-5 py-3">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center border border-gray-50">
+                <div class="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 flex items-center justify-center border border-gray-50">
                   <img
                     v-if="hasImage(p)"
                     :src="resolveImage(p)"
@@ -53,8 +53,8 @@
                   <span v-else class="text-lg">{{ p.icono || '🍽️' }}</span>
                 </div>
                 <div>
-                  <p class="font-semibold text-gray-800 leading-none">{{ p.nombre }}</p>
-                  <p class="text-[11px] text-gray-400 mt-1 line-clamp-1 max-w-[180px]">
+                  <p class="font-semibold text-gray-800 dark:text-gray-200 leading-none">{{ p.nombre }}</p>
+                  <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 line-clamp-1 max-w-[180px]">
                     {{ p.descripcion || 'Sin descripción disponible' }}
                   </p>
                 </div>
@@ -75,24 +75,24 @@
                 <div class="flex items-center gap-1.5">
                   <span
                     class="px-2 py-0.5 rounded-md text-xs font-medium"
-                    :class="p.estado_stock?.clase || 'bg-gray-100 text-gray-600'"
+                    :class="p.estado_stock?.clase || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500'"
                   >
                     {{ p.stock }} uds
                   </span>
                   <span v-if="p.bajo_stock" class="text-xs animate-bounce" title="¡Stock Crítico!">⚠️</span>
                 </div>
-                <p class="text-[10px] text-gray-400">Min: {{ p.stock_minimo || 0 }}</p>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500">Min: {{ p.stock_minimo || 0 }}</p>
               </div>
             </td>
 
             <td class="px-4 py-3">
-              <span class="font-bold text-gray-900">${{ Number(p.precio || 0).toFixed(2) }}</span>
+              <span class="font-bold text-gray-900 dark:text-gray-100">${{ Number(p.precio || 0).toFixed(2) }}</span>
             </td>
 
-            <td class="px-4 py-3 text-gray-600">
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 dark:text-gray-500">
               <div class="flex flex-col">
                 <span>${{ calcularCostoTotal(p).toFixed(2) }}</span>
-                <span class="text-[10px] text-gray-400">Insumos: {{ p.ingredientes?.length || 0 }}</span>
+                <span class="text-[10px] text-gray-400 dark:text-gray-500">Insumos: {{ p.ingredientes?.length || 0 }}</span>
               </div>
             </td>
 
@@ -101,7 +101,7 @@
                 <span class="text-xs font-bold" :class="getMargenColor(calcularMargen(p))">
                   {{ calcularMargen(p).toFixed(1) }}%
                 </span>
-                <span class="text-[10px] text-gray-400 italic">
+                <span class="text-[10px] text-gray-400 dark:text-gray-500 italic">
                   + ${{ calcularGanancia(p).toFixed(2) }}
                 </span>
               </div>
@@ -111,10 +111,10 @@
               <button
                 @click="$emit('toggle-active', p.id)"
                 class="relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                :class="p.activo ? 'bg-emerald-500' : 'bg-gray-200'"
+                :class="p.activo ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-600'"
               >
                 <span
-                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white dark:bg-gray-800 shadow ring-0 transition duration-200 ease-in-out"
                   :class="p.activo ? 'translate-x-5' : 'translate-x-0'"
                 ></span>
               </button>
@@ -124,7 +124,7 @@
               <div class="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   @click="$emit('edit', p)"
-                  class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                  class="p-1.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:bg-indigo-900/30 rounded-lg transition"
                   title="Editar producto"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -148,32 +148,32 @@
     </div>
 
     <!-- ✅ PAGINACIÓN - Mejorada con verificación de datos -->
-    <div v-if="pagination && pagination.total > 0" class="px-5 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
-      <p class="text-xs text-gray-500">
-        Mostrando <span class="font-medium text-gray-700">{{ pagination.from || ((pagination.current_page - 1) * pagination.per_page + 1) }}</span> a 
-        <span class="font-medium text-gray-700">{{ pagination.to || Math.min(pagination.current_page * pagination.per_page, pagination.total) }}</span> de 
-        <span class="font-medium text-gray-700">{{ pagination.total }}</span> resultados
+    <div v-if="pagination && pagination.total > 0" class="px-5 py-4 bg-gray-50 dark:bg-gray-800/50/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between flex-wrap gap-3">
+      <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+        Mostrando <span class="font-medium text-gray-700 dark:text-gray-300">{{ pagination.from || ((pagination.current_page - 1) * pagination.per_page + 1) }}</span> a 
+        <span class="font-medium text-gray-700 dark:text-gray-300">{{ pagination.to || Math.min(pagination.current_page * pagination.per_page, pagination.total) }}</span> de 
+        <span class="font-medium text-gray-700 dark:text-gray-300">{{ pagination.total }}</span> resultados
       </p>
       
       <div class="flex items-center gap-2">
         <button 
           @click="$emit('change-page', pagination.current_page - 1)"
           :disabled="pagination.current_page === 1"
-          class="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm"
+          class="p-2 border rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-800/50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        <span class="text-xs font-semibold px-3 py-1 bg-white border rounded-lg shadow-sm">
+        <span class="text-xs font-semibold px-3 py-1 bg-white dark:bg-gray-800 border rounded-lg shadow-sm">
           Pág. {{ pagination.current_page }} / {{ pagination.last_page }}
         </span>
 
         <button 
           @click="$emit('change-page', pagination.current_page + 1)"
           :disabled="pagination.current_page >= pagination.last_page"
-          class="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm"
+          class="p-2 border rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-800/50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

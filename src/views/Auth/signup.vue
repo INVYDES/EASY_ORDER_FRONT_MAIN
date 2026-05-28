@@ -1,18 +1,18 @@
 <template>
   <div class="min-h-screen flex">
 
-    <div class="flex items-center justify-center w-full lg:w-1/2 bg-white px-6 py-10">
+    <div class="flex items-center justify-center w-full lg:w-1/2 bg-white dark:bg-gray-800 px-6 py-10">
       <div class="w-full max-w-2xl">
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-indigo-600">Easy Order</h1>
-          <p class="text-2xl font-semibold text-gray-700 mt-1">Crea tu cuenta de Propietario</p>
-          <p class="text-sm text-gray-500 mt-1">Regístrate y configura tu primer restaurante en un solo paso</p>
+          <p class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mt-1">Crea tu cuenta de Propietario</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Regístrate y configura tu primer restaurante en un solo paso</p>
         </div>
 
-        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
+        <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 rounded-lg">
           {{ errorMessage }}
         </div>
-        <div v-if="successMessage" class="mb-4 p-3 text-sm text-green-700 bg-green-100 rounded-lg">
+        <div v-if="successMessage" class="mb-4 p-3 text-sm text-green-700 bg-green-100 dark:bg-green-900/30 rounded-lg">
           {{ successMessage }}
         </div>
 
@@ -20,107 +20,107 @@
 
           <!-- SECCIÓN 1: Información Personal -->
           <section>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b dark:border-gray-600 pb-2 mb-4 flex items-center gap-2">
               <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
               Información Personal
             </h3>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Nombre</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
                 <input v-model="formData.nombre" type="text" placeholder="Ej. Juan" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Apellido</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label>
                 <input v-model="formData.apellido" type="text" placeholder="Ej. Pérez" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Correo electrónico</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Correo electrónico</label>
                 <input v-model="formData.email" type="email" placeholder="info@gmail.com" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Contraseña</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
                 <input v-model="formData.password" type="password" placeholder="Mínimo 8 caracteres" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
             </div>
           </section>
 
           <!-- SECCIÓN 2: Tu Primer Restaurante -->
           <section>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b dark:border-gray-600 pb-2 mb-4 flex items-center gap-2">
               <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
               Tu Primer Restaurante
             </h3>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div class="sm:col-span-2">
-                <label class="block mb-1 text-sm font-medium text-gray-700">Nombre de la Sucursal</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre de la Sucursal</label>
                 <input v-model="formData.restauranteNombre" type="text" placeholder="Ej. La Trattoria Centro" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Teléfono del Negocio</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono del Negocio</label>
                 <input v-model="formData.telefono" type="tel" placeholder="2291234567" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Horario de Atención</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Horario de Atención</label>
                 <input v-model="formData.horario" type="text" placeholder="09:00 - 21:00"
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
 
               <div class="sm:col-span-2">
-                <label class="block mb-1 text-sm font-medium text-gray-700">Calle y Número</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Calle y Número</label>
                 <input v-model="formData.calle" type="text" placeholder="Ej. Av. Independencia 123" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
 
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Colonia</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Colonia</label>
                 <input v-model="formData.colonia" type="text" placeholder="Ej. Centro" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
 
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Código Postal</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Código Postal</label>
                 <input v-model="formData.codigoPostal" type="text" placeholder="Ej. 91000" maxlength="5" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
 
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Ciudad</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Ciudad</label>
                 <input v-model="formData.ciudad" type="text" placeholder="Xalapa" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Estado</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Estado</label>
                 <input v-model="formData.estado" type="text" placeholder="Veracruz" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
             </div>
           </section>
 
           <!-- SECCIÓN 3: Suscripción y Datos Fiscales -->
           <section>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b dark:border-gray-600 pb-2 mb-4 flex items-center gap-2">
               <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
               Suscripción y Datos Fiscales
             </h3>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">RFC</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">RFC</label>
                 <input v-model="formData.rfc" type="text" placeholder="XAXX010101000" maxlength="13" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase" />
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase" />
               </div>
               <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Régimen Fiscal</label>
+                <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Régimen Fiscal</label>
                 <select v-model="formData.regimenFiscal" required
-                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-gray-700">
+                  class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                   <option value="" disabled>Selecciona régimen</option>
                   <option value="601">General de Ley Personas Morales</option>
                   <option value="603">Personas Morales con Fines no Lucrativos</option>
@@ -138,20 +138,20 @@
 
             <!-- Select de Licencia -->
             <div class="mt-4">
-              <label class="block mb-1 text-sm font-medium text-gray-700">Tipo de Licencia</label>
+              <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Licencia</label>
               <select v-model="formData.tipoLicencia" required
-                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                class="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700">
                 <option value="" disabled>Selecciona un plan</option>
                 <option 
                   v-for="licencia in licencias" 
                   :key="licencia.id" 
                   :value="getLicenciaValue(licencia)"
-                  :class="{ 'bg-green-50': licencia.es_prueba }"
+                  :class="{ 'bg-green-50 dark:bg-green-900/30': licencia.es_prueba }"
                 >
                   {{ getLicenciaTexto(licencia) }}
                 </option>
               </select>
-              <p v-if="cargandoLicencias" class="text-xs text-gray-500 mt-1">Cargando planes disponibles...</p>
+              <p v-if="cargandoLicencias" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cargando planes disponibles...</p>
               <p v-if="licencias.length === 0 && !cargandoLicencias" class="text-xs text-red-500 mt-1">
                 No se pudieron cargar los planes. Verifica tu conexión.
               </p>
@@ -160,21 +160,21 @@
 
           <!-- Términos y Condiciones -->
           <div class="flex items-center gap-2 text-sm pt-4">
-            <input v-model="aceptaTerminos" type="checkbox" required class="accent-indigo-600 w-4 h-4" />
-            <span class="text-gray-600">
-              Acepto los <a href="#" class="text-indigo-600 hover:underline">términos y condiciones</a>
-            </span>
+            <input v-model="aceptaTerminos" id="terminos_checkbox" type="checkbox" required class="accent-indigo-600 w-4 h-4 cursor-pointer" />
+            <label for="terminos_checkbox" class="text-gray-600 dark:text-gray-400 cursor-pointer">
+              Acepto los <RouterLink to="/terminos-y-condiciones" target="_blank" class="text-indigo-600 hover:underline font-bold">términos y condiciones</RouterLink>
+            </label>
           </div>
 
           <!-- Botón de Envío -->
-          <button type="submit" :disabled="cargando"
-            class="w-full py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 font-bold text-lg shadow-lg">
+          <button type="submit" :disabled="cargando || !aceptaTerminos"
+            class="w-full py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:bg-gray-400 dark:disabled:bg-gray-600 font-bold text-lg shadow-lg">
             {{ cargando ? 'Procesando registro...' : 'Comenzar ahora' }}
           </button>
 
         </form>
 
-        <p class="mt-6 pb-10 text-sm text-gray-600 text-center">
+        <p class="mt-6 pb-10 text-sm text-gray-600 dark:text-gray-400 text-center">
           ¿Ya tienes cuenta?
           <RouterLink to="/" class="text-indigo-600 font-bold hover:underline">Iniciar sesión</RouterLink>
         </p>

@@ -1,11 +1,11 @@
 <template>
   <div
-    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+    class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
     :class="!hasStock ? 'opacity-60' : ''"
   >
 
     <!-- Imagen -->
-    <div class="w-full h-36 bg-gray-100 overflow-hidden shrink-0">
+    <div class="w-full h-36 bg-gray-100 dark:bg-gray-700 overflow-hidden shrink-0">
       <img
         v-if="imagenUrl"
         :src="imagenUrl"
@@ -33,16 +33,16 @@
       </span>
 
       <!-- Nombre -->
-      <h3 class="font-semibold text-gray-800 text-sm leading-tight">{{ product.nombre }}</h3>
+      <h3 class="font-semibold text-gray-800 dark:text-gray-200 text-sm leading-tight">{{ product.nombre }}</h3>
 
       <!-- Descripción -->
-      <p class="text-xs text-gray-400 mt-0.5 line-clamp-2 flex-1">
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2 flex-1">
         {{ product.descripcion || 'Sin descripción' }}
       </p>
 
       <!-- Precio + Botón -->
       <div class="flex items-center justify-between mt-3">
-        <span class="font-bold text-indigo-600">
+        <span class="font-bold text-indigo-600 dark:text-indigo-400">
           {{ product.precio_formateado ?? '$' + Number(product.precio || 0).toFixed(2) }}
         </span>
 

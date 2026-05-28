@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white rounded-2xl shadow-sm p-5">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-semibold text-gray-800">Propinas del día</h3>
+      <h3 class="font-semibold text-gray-800 dark:text-gray-200">Propinas del día</h3>
       <span class="text-xs bg-amber-100 text-amber-700 font-semibold px-2.5 py-1 rounded-full">
         ${{ Number(total || 0).toFixed(2) }}
       </span>

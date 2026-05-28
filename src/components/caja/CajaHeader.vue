@@ -1,8 +1,8 @@
 <template>
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Punto de Caja</h1>
-      <p class="text-gray-400 text-sm mt-0.5">{{ fechaHoy }}</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Punto de Caja</h1>
+      <p class="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{{ fechaHoy }}</p>
     </div>
     <div class="flex items-center gap-2">
       <div v-if="cajaAbierta" class="flex items-center gap-1.5 text-xs"
@@ -16,7 +16,7 @@
         ✅ {{ ordenesListas }} lista{{ ordenesListas > 1 ? 's' : '' }} p/ cobrar
       </div>
       <span class="px-3 py-1.5 text-xs font-bold rounded-full"
-        :class="cajaAbierta ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
+        :class="cajaAbierta ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'">
         {{ cajaAbierta ? '🟢 Caja abierta' : '🔴 Caja cerrada' }}
       </span>
     </div>

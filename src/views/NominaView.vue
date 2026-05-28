@@ -1,17 +1,7 @@
 <template>
   <div class="nomina-root">
 
-    <!-- ── TOASTS ─────────────────────────────────────────────────────── -->
-    <div class="toast-stack">
-      <div
-        v-for="toast in toasts"
-        :key="toast.id"
-        :class="['toast', toast.type === 'success' ? 'toast--success' : 'toast--error']"
-      >
-        <span class="toast__icon">{{ toast.type === 'success' ? '✓' : '✕' }}</span>
-        <span class="toast__msg">{{ toast.message }}</span>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- ── AUTH OVERLAY ───────────────────────────────────────────────── -->
     <transition name="fade">
@@ -357,6 +347,8 @@
 <script setup>
 import { ref, onMounted, reactive, watch, nextTick, computed } from 'vue'
 import { apiClient } from '@/utils/apiClient'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import { useToast } from '@/composables/useToast'
 
 // --- Charts ---
 const chartTendencia = ref(null)
@@ -365,12 +357,7 @@ let tendenciaInst = null
 let composicionInst = null
 
 // --- Toasts ---
-const toasts = ref([])
-const showToast = (message, type = 'success') => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 4000)
-}
+const { toasts, showToast, removeToast } = useToast()
 
 // --- Auth ---
 const isAuthenticated = ref(false)
@@ -496,7 +483,14 @@ const loadConfig = async () => {
 const loadEmpleados = async () => {
   try {
     const resp = await apiClient.get('/empleados', { headers: getTenantHeader() })
-    if (resp.success) empleados.value = resp.data || []
+    if (resp.success) {
+      // Filtrar para excluir cuentas de menú (Rol ID 7) de la nómina
+      const data = resp.data || []
+      empleados.value = data.filter(emp => {
+        const rolId = emp.roles?.[0]?.id || emp.rol_id || emp.rol
+        return String(rolId) !== '7'
+      })
+    }
   } catch (err) { console.error(err) }
 }
 
@@ -739,27 +733,6 @@ onMounted(() => {
   color: var(--c-text);
   min-height: 100vh;
 }
-
-/* ─── Toast ───────────────────────────────────────────────────────────── */
-.toast-stack {
-  position: fixed; top: 1.25rem; right: 1.25rem;
-  z-index: 300; display: flex; flex-direction: column; gap: .625rem;
-  pointer-events: none;
-}
-.toast {
-  display: flex; align-items: center; gap: .625rem;
-  padding: .75rem 1.125rem;
-  border-radius: var(--radius-md);
-  font-size: .8125rem; font-weight: 600;
-  box-shadow: var(--shadow-md);
-  pointer-events: auto;
-  animation: slideIn .25s ease;
-  min-width: 260px;
-}
-.toast--success { background: #f0fdf4; border-left: 3px solid var(--c-green); color: #166534; }
-.toast--error   { background: #fef2f2; border-left: 3px solid var(--c-red);   color: #991b1b; }
-.toast__icon    { font-size: .875rem; }
-@keyframes slideIn { from { opacity:0; transform: translateX(1rem); } to { opacity:1; transform: none; } }
 
 /* ─── Auth overlay ───────────────────────────────────────────────────── */
 .auth-overlay {

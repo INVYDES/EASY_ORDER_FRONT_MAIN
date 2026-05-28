@@ -1,35 +1,16 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-8 p-4 sm:p-6">
 
-    <!-- TOASTS -->
-    <div class="fixed top-4 right-4 z-50 space-y-2">
-      <div
-        v-for="toast in toasts"
-        :key="toast.id"
-        :class="[
-          'px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' : '',
-          toast.type === 'error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800'             : '',
-          toast.type === 'info'    ? 'bg-blue-50 border-l-4 border-blue-500 text-blue-800'           : '',
-          toast.type === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800'        : '',
-        ]"
-      >
-        <span class="text-lg">
-          {{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}
-        </span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <!-- Encabezado -->
     <div>
-      <h2 class="text-2xl font-bold text-gray-900">Licencias</h2>
-      <p class="text-gray-500 text-sm mt-1">Administra tu suscripción y accede a todos los planes disponibles</p>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Licencias</h2>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Administra tu suscripción y accede a todos los planes disponibles</p>
     </div>
 
     <!-- ── LICENCIA ACTIVA ── -->
-    <div v-if="loading.activa" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm">
+    <div v-if="loading.activa" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 text-center text-gray-400 dark:text-gray-500 text-sm">
       Cargando licencia activa...
     </div>
 
@@ -41,7 +22,7 @@
           <p class="text-indigo-200 text-sm mt-1">{{ licenciaActiva.licencia?.tipo || licenciaActiva.tipo }}</p>
         </div>
         <span class="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full">
-          {{ licenciaActiva.dias_restantes }} días restantes
+          {{ Math.round(licenciaActiva.dias_restantes) }} días restantes
         </span>
       </div>
 
@@ -80,25 +61,25 @@
       </div>
     </div>
 
-    <div v-else class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-4">
+    <div v-else class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl p-5 flex items-center gap-4">
       <span class="text-3xl">⚠️</span>
       <div>
-        <p class="font-semibold text-amber-800">Sin licencia activa</p>
-        <p class="text-amber-600 text-sm mt-0.5">Selecciona un plan para comenzar a usar Easy Order</p>
+        <p class="font-semibold text-amber-800 dark:text-amber-200">Sin licencia activa</p>
+        <p class="text-amber-600 dark:text-amber-400 text-sm mt-0.5">Selecciona un plan para comenzar a usar Easy Order</p>
       </div>
     </div>
 
     <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h3 class="text-xl font-bold text-gray-900 tracking-tight">Escoge el plan ideal para tu negocio</h3>
-    <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+    <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Escoge el plan ideal para tu negocio</h3>
+    <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
       <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
       Precios actualizados
     </div>
   </div>
 
-  <div v-if="loading.planes" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-    <div v-for="i in 3" :key="i" class="h-80 bg-gray-100 animate-pulse rounded-3xl"></div>
+    <div v-if="loading.planes" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div v-for="i in 3" :key="i" class="h-80 bg-gray-100 dark:bg-gray-700 animate-pulse rounded-3xl"></div>
   </div>
 
   <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -109,8 +90,8 @@
       :class="[
         'relative group overflow-hidden rounded-[2rem] border transition-all duration-500 cursor-pointer p-8',
         planSeleccionado?.id === plan.id
-          ? 'border-indigo-600 bg-white shadow-[0_20px_50px_rgba(79,70,229,0.15)] scale-[1.02] ring-1 ring-indigo-600'
-          : 'border-gray-200 bg-white/50 hover:bg-white hover:border-indigo-300 hover:shadow-xl hover:-translate-y-1'
+          ? 'border-indigo-600 bg-white dark:bg-gray-800 shadow-[0_20px_50px_rgba(79,70,229,0.15)] scale-[1.02] ring-1 ring-indigo-600'
+          : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-xl hover:-translate-y-1'
       ]"
     >
       <div v-if="planSeleccionado?.id === plan.id" class="absolute -right-8 -top-8 w-24 h-24 bg-indigo-600/5 rounded-full blur-2xl"></div>
@@ -127,8 +108,8 @@
         </span>
       </div>
 
-      <h4 class="text-2xl font-extrabold text-gray-900 mb-2">{{ plan.nombre }}</h4>
-      <p class="text-gray-500 text-sm leading-relaxed mb-6">{{ plan.descripcion || obtenerDescripcionPlan(plan) }}</p>
+      <h4 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">{{ plan.nombre }}</h4>
+      <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">{{ plan.descripcion || obtenerDescripcionPlan(plan) }}</p>
 
       <div class="flex items-baseline gap-1 mb-8">
         <template v-if="plan.tipo === 'PRUEBA'">
@@ -138,22 +119,22 @@
           <span class="text-3xl font-black text-purple-600 italic">Custom</span>
         </template>
         <template v-else>
-          <span class="text-4xl font-black text-gray-900">${{ formatMoney(plan.precio) }}</span>
-          <span class="text-gray-400 font-medium text-sm">/mes</span>
+          <span class="text-4xl font-black text-gray-900 dark:text-gray-100">${{ formatMoney(plan.precio) }}</span>
+          <span class="text-gray-400 dark:text-gray-500 font-medium text-sm">/mes</span>
         </template>
       </div>
 
       <ul class="space-y-4 mb-8">
-        <li class="flex items-center gap-3 text-sm font-medium text-gray-700">
-          <div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        <li class="flex items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
           </div>
           <span v-if="plan.tipo === 'EMPRESA'">Sucursales ilimitadas</span>
           <span v-else>{{ plan.max_restaurantes }} {{ plan.max_restaurantes > 1 ? 'Sucursales' : 'Sucursal' }}</span>
         </li>
-        <li class="flex items-center gap-3 text-sm font-medium text-gray-700">
-          <div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        <li class="flex items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
           </div>
           <span v-if="plan.tipo === 'EMPRESA'">Usuarios ilimitados</span>
           <span v-else>{{ plan.max_usuarios }} Usuarios</span>
@@ -165,7 +146,7 @@
           'w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300',
           planSeleccionado?.id === plan.id
             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-            : 'bg-gray-50 text-gray-600 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+            : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
         ]"
       >
         {{ plan.tipo === 'EMPRESA' ? 'Hablar con Ventas' : (planSeleccionado?.id === plan.id ? 'Seleccionado' : 'Elegir Plan') }}
@@ -176,24 +157,24 @@
 
     <!-- ── COMPARATIVA DE PLANES ── -->
     <div v-if="planesFiltrados.length > 0 && !loading.planes">
-      <h3 class="text-lg font-semibold text-gray-800 mb-4">Comparativa de planes</h3>
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Comparativa de planes</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="bg-gray-50 border-b border-gray-100">
-                <th class="text-left px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide w-48">
+              <tr class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
+                <th class="text-left px-5 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-48">
                   Característica
                 </th>
                 <th
                   v-for="plan in planesFiltrados"
                   :key="plan.id"
                   class="px-5 py-4 text-center"
-                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''"
+                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''"
                 >
-                  <div class="text-xs font-bold uppercase tracking-wider text-gray-500">{{ plan.tipo }}</div>
-                  <div class="text-base font-bold text-gray-900 mt-0.5">{{ plan.nombre }}</div>
-                  <div class="text-indigo-600 font-bold">
+              <div class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ plan.tipo }}</div>
+              <div class="text-base font-bold text-gray-900 dark:text-gray-100 mt-0.5">{{ plan.nombre }}</div>
+                  <div class="text-indigo-600 dark:text-indigo-400 font-bold">
                     <template v-if="plan.tipo === 'PRUEBA'">Gratis</template>
                     <template v-else-if="plan.tipo === 'EMPRESA'">Cotizar</template>
                     <template v-else>${{ formatMoney(plan.precio) }}/mes</template>
@@ -201,50 +182,51 @@
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-5 py-3 text-gray-600 font-medium">Restaurantes</td>
-                <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center font-semibold text-gray-800"
-                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-medium">Restaurantes</td>
+                <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center font-semibold text-gray-800 dark:text-gray-200"
+                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''">
                   <span v-if="plan.tipo === 'EMPRESA'">Ilimitados</span>
                   <span v-else>{{ plan.max_restaurantes ?? '—' }}</span>
                 </td>
               </tr>
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-5 py-3 text-gray-600 font-medium">Usuarios</td>
-                <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center font-semibold text-gray-800"
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-medium">Usuarios</td>
+              <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center font-semibold text-gray-800 dark:text-gray-200"
                   :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
                   <span v-if="plan.tipo === 'EMPRESA'">Ilimitados</span>
                   <span v-else>{{ plan.max_usuarios ?? '—' }}</span>
                 </td>
               </tr>
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-5 py-3 text-gray-600 font-medium">Precio Anual</td>
-                <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center"
-                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
-                  <span v-if="plan.precio_anual" class="font-semibold text-indigo-600">${{ formatMoney(plan.precio_anual) }}</span>
-                  <span v-else class="text-gray-400">—</span>
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-medium">Precio Anual</td>
+                  <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center"
+                    :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''">
+                    <span v-if="plan.precio_anual" class="font-semibold text-indigo-600 dark:text-indigo-400">${{ formatMoney(plan.precio_anual) }}</span>
+                    <span v-else class="text-gray-400 dark:text-gray-500">—</span>
                 </td>
               </tr>
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-5 py-3 text-gray-600 font-medium">Días de prueba</td>
-                <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center"
-                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
-                  <span v-if="plan.dias_prueba > 0" class="text-emerald-600 font-semibold">{{ plan.dias_prueba }} días</span>
-                  <span v-else class="text-gray-400">—</span>
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-medium">Días de prueba</td>
+                  <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center"
+                    :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''">
+                    <span v-if="plan.dias_prueba > 0" class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ plan.dias_prueba }} días</span>
+                    <span v-else class="text-gray-400 dark:text-gray-500">—</span>
                 </td>
               </tr>
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-5 py-3 text-gray-600 font-medium">Soporte</td>
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-medium">Soporte</td>
                 <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center"
-                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
-                  <span class="text-emerald-500">✓</span>
+                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''">
+                  <span v-if="plan.tipo === 'EMPRESA'">Ilimitados</span>
+                  <span v-else>{{ plan.max_restaurantes ?? '—' }}</span>
                 </td>
               </tr>
               <tr>
                 <td class="px-5 py-4"></td>
                 <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-4 text-center"
-                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
+                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''">
                   <button
                     @click="seleccionarPlan(plan)"
                     :disabled="plan.tipo === 'EMPRESA'"
@@ -252,7 +234,7 @@
                       'w-full py-2 rounded-xl text-sm font-semibold transition',
                       planSeleccionado?.id === plan.id
                         ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700',
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400',
                       plan.tipo === 'EMPRESA' ? 'opacity-50 cursor-not-allowed' : ''
                     ]"
                   >
@@ -267,45 +249,45 @@
     </div>
 
     <!-- ── FORMULARIO DE ADQUISICIÓN ── -->
-    <div v-if="planSeleccionado && planSeleccionado.tipo !== 'EMPRESA'" class="bg-white rounded-2xl shadow-sm border border-indigo-100 p-6" data-form-licencia>
-      <h3 class="text-base font-semibold text-gray-800 mb-5 flex items-center gap-2">
+    <div v-if="planSeleccionado && planSeleccionado.tipo !== 'EMPRESA'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-indigo-100 dark:border-indigo-800 p-6" data-form-licencia>
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-5 flex items-center gap-2">
         <span class="text-xl">📋</span> Confirmar adquisición
       </h3>
 
       <!-- Resumen del plan -->
-      <div class="bg-indigo-50 rounded-xl p-4 mb-5">
+      <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-xl p-4 mb-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-semibold text-indigo-900">{{ planSeleccionado.nombre }}</p>
-            <p class="text-indigo-600 text-sm">{{ planSeleccionado.tipo }} · {{ planSeleccionado.max_restaurantes }} restaurante(s)</p>
+            <p class="font-semibold text-indigo-900 dark:text-indigo-200">{{ planSeleccionado.nombre }}</p>
+            <p class="text-indigo-600 dark:text-indigo-400 text-sm">{{ planSeleccionado.tipo }} · {{ planSeleccionado.max_restaurantes }} restaurante(s)</p>
           </div>
           <div class="text-right">
-            <p class="text-2xl font-bold text-indigo-700">${{ formatMoney(planSeleccionado.precio) }}</p>
-            <p v-if="planSeleccionado.precio_anual" class="text-xs text-gray-500">o ${{ formatMoney(planSeleccionado.precio_anual) }}/año</p>
+            <p class="text-2xl font-bold text-indigo-700 dark:text-indigo-400">${{ formatMoney(planSeleccionado.precio) }}</p>
+            <p v-if="planSeleccionado.precio_anual" class="text-xs text-gray-500 dark:text-gray-400">o ${{ formatMoney(planSeleccionado.precio_anual) }}/año</p>
           </div>
         </div>
-        <div v-if="planSeleccionado.dias_prueba > 0" class="mt-3 text-sm text-emerald-600 bg-emerald-50 rounded-lg p-2 text-center">
+        <div v-if="planSeleccionado.dias_prueba > 0" class="mt-3 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-2 text-center">
           🎁 {{ planSeleccionado.dias_prueba }} días de prueba gratis incluidos
         </div>
       </div>
 
       <!-- Opciones de pago -->
       <div class="space-y-4">
-        <div class="bg-amber-50 rounded-xl p-4">
+        <div class="bg-amber-50 dark:bg-amber-900/30 rounded-xl p-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-semibold text-amber-800">💰 Pago con PayPal</p>
-              <p class="text-amber-600 text-sm">Serás redirigido a PayPal para completar el pago seguro</p>
+              <p class="font-semibold text-amber-800 dark:text-amber-200">💰 Pago con PayPal</p>
+              <p class="text-amber-600 dark:text-amber-400 text-sm">Serás redirigido a PayPal para completar el pago seguro</p>
             </div>
             <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal" class="h-8">
           </div>
         </div>
 
-        <div class="bg-blue-50 rounded-xl p-4 cursor-pointer hover:bg-blue-100 transition" @click="comprarConMercadoPago">
+        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition" @click="comprarConMercadoPago">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-semibold text-blue-800">💳 Pago con Tarjeta</p>
-              <p class="text-blue-600 text-sm">Visa, Mastercard, American Express</p>
+              <p class="font-semibold text-blue-800 dark:text-blue-200">💳 Pago con Tarjeta</p>
+              <p class="text-blue-600 dark:text-blue-400 text-sm">Visa, Mastercard, American Express</p>
             </div>
             <div class="flex gap-1">
               <span class="text-2xl">💳</span>
@@ -319,7 +301,7 @@
       <div class="flex gap-3 pt-5">
         <button
           @click="cancelarSeleccion"
-          class="flex-1 py-3 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
+          class="flex-1 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition"
         >
           Cancelar
         </button>
@@ -328,18 +310,18 @@
           :disabled="loading.adquirir"
           class="flex-1 py-3 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          <span v-if="loading.adquirir" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <LoadingSpinner v-if="loading.adquirir" text="Procesando..." />
           {{ loading.adquirir ? 'Procesando...' : 'Pagar con PayPal' }}
         </button>
       </div>
     </div>
 
     <!-- Mensaje para Enterprise -->
-    <div v-if="planSeleccionado && planSeleccionado.tipo === 'EMPRESA'" class="bg-white rounded-2xl shadow-sm border border-purple-100 p-6">
+    <div v-if="planSeleccionado && planSeleccionado.tipo === 'EMPRESA'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-purple-100 dark:border-purple-800 p-6">
       <div class="text-center">
         <span class="text-5xl block mb-4">🏢</span>
-        <h3 class="text-xl font-bold text-gray-800 mb-2">Plan Enterprise</h3>
-        <p class="text-gray-600 mb-4">Contáctanos para obtener una cotización personalizada según tus necesidades.</p>
+        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Plan Enterprise</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">Contáctanos para obtener una cotización personalizada según tus necesidades.</p>
         <button class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition">
           📧 Contactar a ventas
         </button>
@@ -348,21 +330,21 @@
 
     <!-- ── HISTORIAL ── -->
     <div>
-      <h3 class="text-lg font-semibold text-gray-800 mb-4">Historial de licencias</h3>
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Historial de licencias</h3>
 
-      <div v-if="loading.historial" class="text-center py-8 text-gray-400 text-sm">
+      <div v-if="loading.historial" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
         Cargando historial...
       </div>
 
-      <div v-else-if="historial.length === 0" class="text-center py-10 text-gray-400 italic text-sm bg-white rounded-2xl border border-gray-100">
+      <div v-else-if="historial.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 italic text-sm bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
         No hay licencias anteriores
       </div>
 
-      <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div v-else class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100 bg-gray-50">
+              <tr class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                 <th class="text-left px-5 py-3">Plan</th>
                 <th class="text-left px-5 py-3">Tipo</th>
                 <th class="text-left px-5 py-3">Inicio</th>
@@ -370,20 +352,20 @@
                 <th class="text-left px-5 py-3">Estado</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
               <tr
                 v-for="lic in historial"
                 :key="lic.id"
-                class="hover:bg-gray-50 transition"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
               >
-                <td class="px-5 py-3 font-medium text-gray-800">
+                <td class="px-5 py-3 font-medium text-gray-800 dark:text-gray-200">
                   {{ lic.licencia?.nombre || lic.nombre || '—' }}
                 </td>
-                <td class="px-5 py-3 text-gray-500">
+                <td class="px-5 py-3 text-gray-500 dark:text-gray-400">
                   {{ lic.licencia?.tipo || lic.tipo || '—' }}
                 </td>
-                <td class="px-5 py-3 text-gray-500">{{ formatDate(lic.fecha_inicio) }}</td>
-                <td class="px-5 py-3 text-gray-500">{{ formatDate(lic.fecha_expiracion) }}</td>
+                <td class="px-5 py-3 text-gray-500 dark:text-gray-400">{{ formatDate(lic.fecha_inicio) }}</td>
+                <td class="px-5 py-3 text-gray-500 dark:text-gray-400">{{ formatDate(lic.fecha_expiracion) }}</td>
                 <td class="px-5 py-3">
                   <span
                     class="px-2.5 py-1 text-xs font-semibold rounded-full"
@@ -406,6 +388,10 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 
 const router = useRouter()
 
@@ -415,18 +401,7 @@ const historial      = ref([])
 const licenciaActiva = ref(null)
 const planSeleccionado = ref(null)
 const currentUser    = ref(null)
-const toasts = ref([])
-
-const showToast = (message, type = 'info', duration = 5000) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-
-const removeToast = (id) => {
-  const i = toasts.value.findIndex(t => t.id === id)
-  if (i !== -1) toasts.value.splice(i, 1)
-}
+const { toasts, showToast, removeToast } = useToast()
 
 const loading = reactive({
   planes: false, 
@@ -458,15 +433,6 @@ const planesFiltrados = computed(() => {
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : '',
-  }
-}
-
 const formatMoney = (v) =>
   v === undefined || v === null ? '0.00' : Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2 })
 
@@ -626,45 +592,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Toasts con entrada elástica (más moderno) */
-.animate-slide-in {
-  animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes slideIn {
-  from { 
-    transform: translateX(20px); 
-    opacity: 0; 
-  }
-  to { 
-    transform: translateX(0); 
-    opacity: 1; 
-  }
-}
-
-/* Spinner más suave para procesos de pago */
-.animate-spin {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Efecto de pulso sutil para el indicador de "Licencia Activa" */
-.pulse-subtle {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
-/* Sombra personalizada para el plan seleccionado */
-.shadow-premium {
-  box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.1), 0 10px 10px -5px rgba(79, 70, 229, 0.04);
-}
 </style>

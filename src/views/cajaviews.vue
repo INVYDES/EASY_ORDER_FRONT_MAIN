@@ -22,8 +22,25 @@ import CorteXModal from '../components/caja/CorteXModal.vue'
 
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 import { apiClient } from '@/utils/apiClient'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import { useToast } from '@/composables/useToast'
+import { getHeaders } from '@/config/api'
 
 const router = useRouter()
+
+const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const user = JSON.parse(userRaw)
+const esAdminOPropietario = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('PROPIETARIO') || 
+           name.includes('ADMIN') || 
+           name.includes('ADMINISTRADOR') ||
+           name.includes('DUEÑO')
+  })
+})
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 const selectedTab = ref('open')
@@ -48,6 +65,9 @@ const transferSales = ref(0)
 const restauranteActivo = ref(null)
 const ultimaActualizacion = ref(null)
 
+const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
+let pollTimer = null
+
 // ── Propinas (Oficiales de API) ──
 const propinasEfectivo = ref(0)
 const propinasTarjeta = ref(0)
@@ -58,7 +78,7 @@ const propinasTotal = ref(0)
 const orders = ref([])
 const movements = ref([])
 const historial = ref([])
-const toasts = ref([])
+const { toasts, showToast, removeToast } = useToast()
 
 const loading = reactive({
   general: true,
@@ -72,10 +92,17 @@ const loading = reactive({
 const openOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    return s === 'ENTREGADA' || s === 'ENTREGADO'
+    return s === 'ENTREGADA' || s === 'ENTREGADO' ||
+      (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(s) && 
+       (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
   })
 })
-const closedOrders = computed(() => orders.value.filter(o => (o.estado || '').toUpperCase() === 'CERRADA'))
+const closedOrders = computed(() => {
+  return orders.value.filter(o => {
+    const s = (o.estado || '').toUpperCase()
+    return s === 'CERRADA' || s === 'CANCELADA' || (o.detalles || []).some(d => !!d.cancelado)
+  })
+})
 const ordenesListas = computed(() => openOrders.value.length)
 const ordenesEnProceso = computed(() => {
   return orders.value.filter(o => {
@@ -109,17 +136,6 @@ const tabs = computed(() => [
   { key: 'flow', label: 'Flujo Caja', count: movements.value.length },
 ])
 
-// ── Toasts ────────────────────────────────────────────────────────────────────
-const showToast = (message, type = 'info', duration = 4000) => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  if (duration > 0) setTimeout(() => removeToast(id), duration)
-}
-
-const removeToast = (id) => {
-  toasts.value = toasts.value.filter(t => t.id !== id)
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatMoney = (v) => Number(v || 0).toFixed(2)
 
@@ -130,9 +146,9 @@ const toLocalTime = (dateStr) => {
     if (dateStr.includes('/')) {
       const [fecha, hora] = dateStr.split(' ');
       const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}Z`);
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
     } else {
-      d = new Date(dateStr.replace(' ', 'T') + 'Z');
+      d = new Date(dateStr.replace(' ', 'T'));
     }
     if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -140,15 +156,6 @@ const toLocalTime = (dateStr) => {
     return dateStr;
   }
 };
-
-const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: token ? `Bearer ${token}` : ''
-  }
-}
 
 const reproducirSonido = () => {
   try {
@@ -283,11 +290,14 @@ const loadOrders = async () => {
   try {
     const today = new Date().toLocaleDateString('en-CA')
     let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
       closedOrdersQuery = `/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
     } else if (!cajaAbierta.value) {
       closedOrdersQuery = null;
+      cancelledOrdersQuery = null;
     }
 
     const fetches = [
@@ -300,6 +310,9 @@ const loadOrders = async () => {
     
     if (closedOrdersQuery) {
       fetches.push(apiClient.get(closedOrdersQuery));
+    }
+    if (cancelledOrdersQuery) {
+      fetches.push(apiClient.get(cancelledOrdersQuery));
     }
 
     const jsonResults = await Promise.all(fetches)
@@ -340,20 +353,20 @@ const loadHistorial = async () => {
   }
 }
 
-const loadAllData = async () => {
+const loadAllData = async (silent = true) => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   if (!token) {
     router.push('/')
     return
   }
-  loading.general = true
+  if (!silent) loading.general = true
   await loadCajaEstado()
   await Promise.all([
     loadOrders(),
     loadMovements(),
     !cajaAbierta.value ? loadHistorial() : Promise.resolve(),
   ])
-  loading.general = false
+  if (!silent) loading.general = false
   await nextTick()
   if (cajaAbierta.value) initChart()
 }
@@ -435,7 +448,7 @@ const abrirDetalle = (id) => {
 const handleAlreadyOpen = async () => {
   cajaAbierta.value = true
   showOpenModal.value = false
-  await loadAllData()
+  await loadAllData(false)
 }
 
 const handleOpenCaja = async (amount) => {
@@ -443,7 +456,7 @@ const handleOpenCaja = async (amount) => {
   cashInRegister.value = amount
   cajaAbierta.value = true
   showOpenModal.value = false
-  await loadAllData()
+  await loadAllData(false)
   showToast('Caja abierta correctamente', 'success')
 }
 
@@ -451,7 +464,7 @@ const handleCloseCaja = async () => {
   cajaAbierta.value = false
   showCloseModal.value = false
   if (chartInstance) chartInstance.destroy()
-  await loadAllData()
+  await loadAllData(false)
   await loadHistorial()
   showToast('Caja cerrada. Historial actualizado.', 'success')
 }
@@ -466,15 +479,30 @@ const handleMovimientoSaved = async ({ monto, tipo }) => {
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  await loadAllData()
+  // Primera carga explícita no silenciosa para mostrar el spinner inicial
+  await loadAllData(false)
+  
+  // Polling silencioso de seguridad
+  const poll = async () => {
+    await loadAllData(true)
+    pollTimer = setTimeout(poll, POLL_INTERVAL)
+  }
+  pollTimer = setTimeout(poll, POLL_INTERVAL)
+
   try {
     const data = await apiClient.get('/me')
     if (data.success || data.data) {
       const user = data.data || data
       const ra = user?.restaurante_activo
-      restauranteActivo.value = typeof ra === 'object' && ra !== null ? ra.id : (ra ?? null)
+      if (ra) {
+        restauranteActivo.value = (typeof ra === 'object' && ra !== null) ? ra.id : ra
+      }
     }
   } catch { }
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearTimeout(pollTimer)
 })
 </script>
 <template>
@@ -491,15 +519,7 @@ onMounted(async () => {
     <CajaMovimientoModal v-if="showMovimientoModal" @close="showMovimientoModal = false" @saved="handleMovimientoSaved" />
     <CorteXModal v-if="showCorteXModal" @close="showCorteXModal = false" @saved="handleMovimientoSaved" />
 
-    <div class="toast-container">
-      <div v-for="toast in toasts" :key="toast.id" :class="['toast-card', toast.type]">
-        <div class="toast-icon-circle">{{ {'success':'✓','error':'✕','warning':'!','info':'i'}[toast.type] || '•' }}</div>
-        <div class="toast-content">
-          <p class="toast-message">{{ toast.message }}</p>
-        </div>
-        <button @click="removeToast(toast.id)" class="toast-close-btn">×</button>
-      </div>
-    </div>
+    <ToastContainer :toasts="toasts" @remove="removeToast" />
 
     <CajaCorteImprimible :id="'corte-imprimible'" class="is-hidden"
       :opening-amount="openingAmount" :efectivo-sales="efectivoSales"
@@ -517,10 +537,7 @@ onMounted(async () => {
         :fecha-hoy="fechaHoy"
       />
 
-      <div v-if="loading.general" class="loading-wrapper">
-        <div class="custom-spinner"></div>
-        <p>Actualizando registros...</p>
-      </div>
+      <LoadingSpinner v-if="loading.general" text="Actualizando registros..." />
 
       <template v-else>
         <template v-if="!cajaAbierta">
@@ -530,8 +547,12 @@ onMounted(async () => {
               <h2>Caja cerrada</h2>
               <p>Inicia una nueva jornada para registrar ventas y movimientos.</p>
             </div>
-            <button @click="showOpenModal = true" class="btn-primary-action">
-              🔓 Abrir Caja Ahora
+            <button
+              :disabled="esAdminOPropietario"
+              @click="showOpenModal = true"
+              :class="['btn-primary-action', esAdminOPropietario ? 'bg-slate-300 text-slate-500 dark:bg-slate-600 dark:text-slate-400 cursor-not-allowed shadow-none hover:bg-slate-300 dark:hover:bg-slate-600 hover:transform-none' : '']"
+            >
+              {{ esAdminOPropietario ? '🚫 Apertura Bloqueada' : '🔓 Abrir Caja Ahora' }}
             </button>
           </div>
 
@@ -573,6 +594,7 @@ onMounted(async () => {
               :ordenes-en-proceso="ordenesEnProceso"
               :closed-orders-count="closedOrders.length"
               :total-ordenes="orders.length"
+              :es-admin-o-propietario="esAdminOPropietario"
               @movimiento="showMovimientoModal = true"
               @corte-x="showCorteXModal = true"
               @exportar="exportarCorte"
@@ -627,68 +649,14 @@ onMounted(async () => {
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
+:is(.dark) .caja-layout {
+  background-color: #0f172a;
+}
+
 .main-content {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
-}
-
-/* Sistema de Toasts (Estilo App) */
-.toast-container {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  pointer-events: none;
-}
-
-.toast-card {
-  pointer-events: auto;
-  background: white;
-  border-radius: 1rem;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  min-width: 300px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  border: 1px solid #f0f0f0;
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.toast-icon-circle {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  background: #6366f1;
-  color: white;
-}
-
-.toast-card.success .toast-icon-circle { background: #10b981; }
-.toast-card.warning .toast-icon-circle { background: #f59e0b; }
-.toast-card.error .toast-icon-circle { background: #ef4444; }
-
-.toast-message {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.toast-close-btn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.25rem;
-  cursor: pointer;
 }
 
 /* Vista Caja Cerrada */
@@ -705,6 +673,11 @@ onMounted(async () => {
   margin-bottom: 2rem;
 }
 
+:is(.dark) .empty-state-card {
+  background: #1e293b;
+  border-color: #475569;
+}
+
 .empty-state-icon {
   font-size: 4rem;
   background: #f8fafc;
@@ -716,6 +689,10 @@ onMounted(async () => {
   border-radius: 1.5rem;
 }
 
+:is(.dark) .empty-state-icon {
+  background: #334155;
+}
+
 .empty-state-text h2 {
   font-size: 1.5rem;
   font-weight: 800;
@@ -723,9 +700,17 @@ onMounted(async () => {
   margin: 0;
 }
 
+:is(.dark) .empty-state-text h2 {
+  color: #f1f5f9;
+}
+
 .empty-state-text p {
   color: #64748b;
   margin-top: 0.5rem;
+}
+
+:is(.dark) .empty-state-text p {
+  color: #94a3b8;
 }
 
 .btn-primary-action {
@@ -767,6 +752,11 @@ onMounted(async () => {
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
+:is(.dark) .chart-container-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
 .chart-header {
   display: flex;
   justify-content: space-between;
@@ -786,6 +776,11 @@ onMounted(async () => {
   font-size: 0.875rem;
 }
 
+:is(.dark) .chart-total-badge {
+  background: rgba(22, 163, 74, 0.2);
+  color: #4ade80;
+}
+
 .canvas-wrapper {
   height: 250px;
   position: relative;
@@ -800,6 +795,10 @@ onMounted(async () => {
   border-radius: 1rem;
   width: fit-content;
   margin: 2rem 0 1rem 0;
+}
+
+:is(.dark) .tabs-navigation {
+  background: #374151;
 }
 
 .tab-link {
@@ -817,10 +816,20 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 
+:is(.dark) .tab-link {
+  color: #9ca3af;
+}
+
 .tab-link.active {
   background: white;
   color: #0f172a;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+:is(.dark) .tab-link.active {
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 
 .tab-counter-pill {
@@ -829,6 +838,11 @@ onMounted(async () => {
   font-size: 0.75rem;
   padding: 0.1rem 0.5rem;
   border-radius: 99px;
+}
+
+:is(.dark) .tab-counter-pill {
+  background: #4b5563;
+  color: #d1d5db;
 }
 
 .has-alerts {
@@ -843,33 +857,13 @@ onMounted(async () => {
   border: 1px solid #f1f5f9;
   padding: 1.25rem;
   min-height: 400px;
+  overflow-x: auto;
 }
 
-/* Utils */
-.loading-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8rem 0;
-  color: #94a3b8;
-}
-
-.custom-spinner {
-  width: 3rem;
-  height: 3rem;
-  border: 4px solid #f1f5f9;
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: spinner-rotate 0.8s linear infinite;
-  margin-bottom: 1rem;
+:is(.dark) .data-table-container {
+  background: #1e293b;
+  border-color: #334155;
 }
 
 .is-hidden { display: none; }
-
-@keyframes spinner-rotate { to { transform: rotate(360deg); } }
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
 </style>

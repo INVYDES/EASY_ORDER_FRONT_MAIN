@@ -3,8 +3,8 @@
 
     <!-- Encabezado -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Nuevo Pedido</h1>
-      <p class="text-gray-400 text-sm mt-0.5">Selecciona un cliente y agrega productos</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Nuevo Pedido</h1>
+      <p class="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Selecciona un cliente y agrega productos</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -13,16 +13,16 @@
       <div class="lg:col-span-2 space-y-5">
 
         <!-- Selector de cliente -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Cliente <span class="text-red-400">*</span>
           </label>
 
           <div class="flex gap-2">
             <select
               v-model="clienteId"
-              class="flex-1 px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
-              :class="errorCliente ? 'border-red-400' : 'border-gray-200'"
+              class="flex-1 px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white dark:bg-gray-800"
+              :class="errorCliente ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'"
             >
               <option :value="null">— Selecciona un cliente —</option>
               <option
@@ -36,7 +36,7 @@
 
             <button
               @click="showClienteModal = true"
-              class="px-4 py-2.5 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-xl hover:bg-indigo-100 transition whitespace-nowrap"
+              class="px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium rounded-xl hover:bg-indigo-100 transition whitespace-nowrap"
             >
               + Nuevo
             </button>
@@ -48,31 +48,31 @@
         </div>
 
         <!-- Lista de productos -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
 
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold text-gray-800">Productos</h2>
+            <h2 class="text-base font-semibold text-gray-800 dark:text-gray-200">Productos</h2>
             <!-- Buscador -->
             <div class="relative">
               <input
                 v-model="busqueda"
                 type="text"
                 placeholder="Buscar..."
-                class="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-44"
+                class="pl-8 pr-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-44"
               />
-              <svg class="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </div>
           </div>
 
           <!-- Cargando -->
-          <div v-if="loading" class="text-center py-10 text-gray-400 text-sm">
+          <div v-if="loading" class="text-center py-10 text-gray-400 dark:text-gray-500 text-sm">
             Cargando productos...
           </div>
 
           <!-- Vacío -->
-          <div v-else-if="productosFiltrados.length === 0" class="text-center py-10 text-gray-400 italic text-sm">
+          <div v-else-if="productosFiltrados.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 italic text-sm">
             No hay productos disponibles
           </div>
 
@@ -86,10 +86,10 @@
               class="w-full flex items-center gap-3 p-3 rounded-xl transition text-left group"
               :class="(!producto.stock || producto.stock <= 0)
                 ? 'opacity-40 cursor-not-allowed'
-                : 'hover:bg-indigo-50 cursor-pointer'"
+                : 'hover:bg-indigo-50 dark:bg-indigo-900/30 cursor-pointer'"
             >
               <!-- Imagen -->
-              <div class="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+              <div class="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 flex items-center justify-center">
                 <img
                   v-if="resolveImageUrl(producto.imagen_url)"
                   :src="resolveImageUrl(producto.imagen_url)"
@@ -101,8 +101,8 @@
 
               <!-- Info -->
               <div class="flex-1 min-w-0">
-                <p class="font-medium text-gray-800 text-sm">{{ producto.nombre }}</p>
-                <p class="text-xs text-gray-400 truncate">
+                <p class="font-medium text-gray-800 dark:text-gray-200 text-sm">{{ producto.nombre }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 truncate">
                   {{ producto.categoria?.nombre || 'Sin categoría' }}
                   <span v-if="producto.bajo_stock" class="text-amber-500 ml-1">⚠️ Bajo stock</span>
                 </p>
@@ -110,11 +110,11 @@
 
               <!-- Precio + acción -->
               <div class="flex items-center gap-3 shrink-0">
-                <span class="font-semibold text-sm text-gray-800">
+                <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">
                   ${{ formatPrice(producto.precio) }}
                 </span>
                 <div
-                  class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg font-bold group-hover:bg-indigo-600 group-hover:text-white transition"
+                  class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg font-bold group-hover:bg-indigo-600 group-hover:text-white transition"
                 >
                   +
                 </div>
@@ -128,14 +128,14 @@
 
       <!-- ══ COLUMNA DERECHA: Carrito ══ -->
       <div class="lg:col-span-1">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 sticky top-4">
 
-          <h2 class="text-base font-semibold text-gray-800 mb-4">Pedido</h2>
+          <h2 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4">Pedido</h2>
 
           <!-- Vacío -->
           <div v-if="carrito.length === 0" class="text-center py-10">
             <span class="text-4xl block mb-2">🛒</span>
-            <p class="text-gray-400 text-sm italic">Agrega productos</p>
+            <p class="text-gray-400 dark:text-gray-500 text-sm italic">Agrega productos</p>
           </div>
 
           <!-- Items -->
@@ -143,32 +143,32 @@
             <div
               v-for="item in carrito"
               :key="item.id"
-              class="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl"
+              class="flex items-center gap-2.5 p-2.5 bg-gray-50 dark:bg-gray-800/50 rounded-xl"
             >
               <!-- Imagen miniatura -->
-              <div class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+              <div class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 flex items-center justify-center">
                 <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre" class="w-full h-full object-cover" />
                 <span v-else class="text-sm">🍽️</span>
               </div>
 
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-gray-800 truncate">{{ item.nombre }}</p>
+                <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{{ item.nombre }}</p>
                 <!-- Controles cantidad -->
                 <div class="flex items-center gap-1.5 mt-1">
                   <button
                     @click="decrementar(item.id)"
-                    class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 text-xs hover:bg-gray-300 transition flex items-center justify-center"
+                    class="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 text-xs hover:bg-gray-300 transition flex items-center justify-center"
                   >−</button>
                   <span class="text-xs font-semibold w-4 text-center">{{ item.cantidad }}</span>
                   <button
                     @click="incrementar(item.id)"
-                    class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-xs hover:bg-indigo-200 transition flex items-center justify-center"
+                    class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-xs hover:bg-indigo-200 transition flex items-center justify-center"
                   >+</button>
                 </div>
               </div>
 
               <div class="text-right shrink-0">
-                <p class="text-xs font-bold text-gray-800">${{ formatPrice(item.precio * item.cantidad) }}</p>
+                <p class="text-xs font-bold text-gray-800 dark:text-gray-200">${{ formatPrice(item.precio * item.cantidad) }}</p>
                 <button
                   @click="eliminarDelCarrito(item.id)"
                   class="text-gray-300 hover:text-red-400 text-xs transition mt-0.5"
@@ -178,14 +178,14 @@
           </div>
 
           <!-- Total -->
-          <div v-if="carrito.length > 0" class="border-t border-gray-100 pt-4 mb-4">
-            <div class="flex justify-between text-xs text-gray-400 mb-1">
+          <div v-if="carrito.length > 0" class="border-t border-gray-100 dark:border-gray-700 pt-4 mb-4">
+            <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-1">
               <span>{{ totalItems }} productos</span>
               <span>{{ carrito.length }} artículos</span>
             </div>
             <div class="flex justify-between font-bold text-base">
               <span>Total</span>
-              <span class="text-indigo-600">${{ formatPrice(total) }}</span>
+              <span class="text-indigo-600 dark:text-indigo-400">${{ formatPrice(total) }}</span>
             </div>
           </div>
 
@@ -207,7 +207,7 @@
           <button
             v-if="carrito.length > 0"
             @click="carrito = []"
-            class="w-full mt-2 py-2 text-xs text-gray-400 hover:text-red-400 transition"
+            class="w-full mt-2 py-2 text-xs text-gray-400 dark:text-gray-500 hover:text-red-400 transition"
           >
             Vaciar carrito
           </button>

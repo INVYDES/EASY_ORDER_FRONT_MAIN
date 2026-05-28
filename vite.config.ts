@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(() => ({
-  base: '/cws/eorder/',
+  base: process.env.VITE_BASE_PATH || '/cws/eorder/',
   plugins: [
     vue(),
     tailwindcss(),
@@ -39,5 +39,15 @@ export default defineConfig(() => ({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia'],
+          charts: ['apexcharts', 'vue3-apexcharts'],
+          echo: ['laravel-echo', 'pusher-js'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 400,
   },
 }))

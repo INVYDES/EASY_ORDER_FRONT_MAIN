@@ -1,12 +1,12 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border p-4 flex flex-col h-full">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-4 flex flex-col h-full">
 
     <!-- Header fijo con contador -->
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-semibold" :class="headerColor">
         {{ title }}
       </h2>
-      <span class="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+      <span class="text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 px-2 py-1 rounded-full">
         {{ orders.length }}
       </span>
     </div>
@@ -20,7 +20,7 @@
         :order="order"
       />
 
-      <p v-if="orders.length === 0" class="text-sm text-gray-400 text-center py-4">
+      <p v-if="orders.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
         Sin {{ title.toLowerCase() }}
       </p>
 
