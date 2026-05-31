@@ -74,6 +74,7 @@
               <th class="px-6 py-4 font-semibold">Propietario</th>
               <th class="px-6 py-4 font-semibold">Datos Fiscales</th>
               <th class="px-6 py-4 font-semibold text-center">Restaurantes</th>
+              <th class="px-6 py-4 font-semibold text-center">Usuarios / Empleados</th>
               <th class="px-6 py-4 font-semibold">Licencia Actual</th>
               <th class="px-6 py-4 font-semibold text-right">Acciones</th>
             </tr>
@@ -99,9 +100,24 @@
                 <span v-else class="text-gray-400 italic text-xs">No registrado</span>
               </td>
               <td class="px-6 py-4 text-center">
-                <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
-                  {{ prop.total_restaurantes }} locales
-                </span>
+                <div class="flex flex-col items-center">
+                  <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
+                    {{ prop.total_restaurantes }} {{ prop.total_restaurantes === 1 ? 'creado' : 'creados' }}
+                  </span>
+                  <span class="text-[11px] text-gray-400 font-semibold mt-1.5 uppercase tracking-wide">
+                    Límite: {{ prop.licencia_actual?.max_restaurantes ?? 1 }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <div class="flex flex-col items-center">
+                  <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold border border-indigo-100">
+                    {{ prop.total_usuarios ?? 0 }} {{ prop.total_usuarios === 1 ? 'usuario' : 'usuarios' }}
+                  </span>
+                  <span class="text-[11px] text-gray-400 font-semibold mt-1.5 uppercase tracking-wide">
+                    Límite: {{ prop.licencia_actual?.max_usuarios ?? 5 }}
+                  </span>
+                </div>
               </td>
               <td class="px-6 py-4">
                 <div v-if="prop.licencia_actual" class="flex flex-col">

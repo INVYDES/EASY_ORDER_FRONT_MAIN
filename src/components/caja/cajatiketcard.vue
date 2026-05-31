@@ -228,13 +228,47 @@ const formatMoney = (v) =>
     ? '0.00'
     : Number(v).toFixed(2)
 
-const formatTime = (ts) =>
-  !ts
-    ? ''
-    : new Date(ts).toLocaleTimeString('es-MX', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  try {
+    let d;
+    if (typeof dateStr === 'string') {
+      if (dateStr.includes('T')) {
+        if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+          d = new Date(dateStr);
+        } else {
+          d = new Date(dateStr + 'Z');
+        }
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.trim().split(' ');
+        const fecha = parts[0];
+        const hora = parts[1] || '00:00:00';
+        const [dia, mes, anio] = fecha.split('/');
+        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
+      } else {
+        const cleanStr = dateStr.replace(' ', 'T');
+        d = new Date(cleanStr);
+      }
+    } else {
+      d = new Date(dateStr);
+    }
+    if (isNaN(d.getTime())) return null;
+    return d;
+  } catch (e) {
+    return null;
+  }
+}
+
+const formatTime = (ts) => {
+  if (!ts) return ''
+  const d = parseUTCDate(ts)
+  if (!d) return ''
+  return d.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 const getHeaders = () => {
   const token =

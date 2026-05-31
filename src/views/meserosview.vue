@@ -394,18 +394,28 @@
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
               <div class="p-6 border-b border-slate-50">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                  <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
-                    <button @click="subTabActiva = 'productos'"
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
-                        subTabActiva === 'productos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
-                      🍽️ PRODUCTOS
+                  <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit shrink-0 flex-wrap gap-1">
+                    <button @click="subTabActiva = 'alimentos'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'alimentos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍽️ ALIMENTOS
                       <span v-if="tieneProductoNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                       </span>
                     </button>
+                    <button @click="subTabActiva = 'bebidas'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'bebidas' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍹 BEBIDAS
+                    </button>
+                    <button @click="subTabActiva = 'postres'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'postres' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍰 POSTRES
+                    </button>
                     <button @click="subTabActiva = 'paquetes'"
-                      :class="['px-6 py-2.5 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🎁 PAQUETES
                       <span v-if="tienePaqueteNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
@@ -414,9 +424,44 @@
                       </span>
                     </button>
                   </div>
-                  <div class="relative flex-1 max-w-xs">
+                  
+                  <!-- Paginación Superior (en el centro) -->
+                  <div v-if="subTabActiva !== 'paquetes' && totalPaginasProductos > 1" class="flex items-center gap-1.5 justify-center">
+                    <button
+                      type="button"
+                      :disabled="paginaProductos === 1"
+                      @click="paginaProductos--"
+                      class="w-8 h-8 rounded-xl border border-slate-100 hover:border-slate-200 bg-white text-slate-500 disabled:opacity-40 transition active:scale-95 shadow-sm flex items-center justify-center font-bold text-xs"
+                    >
+                      ←
+                    </button>
+                    <div class="flex items-center gap-1">
+                      <button
+                        v-for="page in totalPaginasProductos"
+                        :key="page"
+                        type="button"
+                        @click="paginaProductos = page"
+                        :class="[
+                          'w-8 h-8 rounded-xl text-[10px] font-black transition flex items-center justify-center shadow-sm',
+                          paginaProductos === page ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-white text-slate-500 border border-slate-100 hover:border-slate-200'
+                        ]"
+                      >
+                        {{ page }}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      :disabled="paginaProductos === totalPaginasProductos"
+                      @click="paginaProductos++"
+                      class="w-8 h-8 rounded-xl border border-slate-100 hover:border-slate-200 bg-white text-slate-500 disabled:opacity-40 transition active:scale-95 shadow-sm flex items-center justify-center font-bold text-xs"
+                    >
+                      →
+                    </button>
+                  </div>
+                  
+                  <div class="relative flex-1 max-w-xs sm:ml-auto">
                     <input v-model="busqueda" type="text"
-                      :placeholder="'Buscar en ' + (subTabActiva === 'productos' ? 'productos...' : 'paquetes...')"
+                      :placeholder="'Buscar en ' + (subTabActiva !== 'paquetes' ? 'productos...' : 'paquetes...')"
                       class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                   </div>
@@ -429,56 +474,82 @@
                   <p class="text-sm font-bold uppercase tracking-widest">Sincronizando menú...</p>
                 </div>
 
-                <div v-else-if="subTabActiva === 'productos'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
-                  <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
-                    <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
-                  </div>
-                  <button v-for="p in productosFiltrados" :key="'p-'+p.id" 
-                    @click="agregarAlCarrito(p, 'producto')"
-                    :disabled="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock"
-                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group border border-transparent hover:border-slate-100 bg-white shadow-sm shadow-slate-100/50 hover:bg-slate-50 active:scale-95 active:bg-slate-100/80 active:ring-4 active:ring-indigo-500/10 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale">
-                    <div class="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform relative">
-                      <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
-                      <span v-else class="text-2xl">🍽️</span>
-                      <!-- Indicador de cantidad agregada -->
-                      <div v-if="totalEnCarritoPorId(p.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop">
-                        {{ totalEnCarritoPorId(p.id) }}
+                <template v-else-if="subTabActiva === 'alimentos' || subTabActiva === 'bebidas' || subTabActiva === 'postres'">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                    <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
+                      <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
+                    </div>
+                    <button v-for="p in productosFiltrados" :key="'p-'+p.id" 
+                      @click="agregarAlCarrito(p, 'producto')"
+                      :disabled="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock"
+                      class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group p-1 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale relative">
+                      
+                      <!-- Product Image Container -->
+                      <div class="w-full h-32 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative shadow-sm border border-slate-100/50">
+                        <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <span v-else class="text-3xl">🍽️</span>
+                        
+                        <!-- Agotado Overlay -->
+                        <div v-if="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
+                        
+                        <!-- Indicador de cantidad agregada -->
+                        <div v-if="totalEnCarritoPorId(p.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop z-20">
+                          {{ totalEnCarritoPorId(p.id) }}
+                        </div>
                       </div>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-black text-slate-800 text-base md:text-lg truncate leading-tight">{{ p.nombre.toUpperCase() }}</p>
-                      <p class="text-[11px] md:text-xs text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
-                    </div>
-                    <div class="text-right">
-                      <p class="font-black text-base md:text-lg text-slate-900">${{ Number(p.precio).toFixed(2) }}</p>
-                      <span v-if="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock" class="text-[10px] font-black text-red-500 bg-red-50 px-2.5 py-1 rounded-xl uppercase tracking-wider block mt-1">Sin Stock</span>
-                      <span v-else class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-sm">+</span>
-                    </div>
-                  </button>
-                </div>
 
-                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                      <!-- Product Card Body -->
+                      <div class="p-3 flex-1 flex flex-col justify-between">
+                        <div>
+                          <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ p.nombre }}</p>
+                          <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
+                        </div>
+                        <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
+                          <span class="font-black text-sm text-slate-900">${{ Number(p.precio).toFixed(2) }}</span>
+                          <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
+                            +
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </template>
+
+                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
                   <div v-if="paquetesFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
                     <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
                   </div>
                   <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')"
-                    class="flex items-center gap-4 p-4 rounded-3xl transition-all text-left group hover:bg-indigo-50/50 border border-transparent hover:border-indigo-100 bg-white shadow-sm shadow-slate-100 active:scale-95 active:bg-indigo-100/50 active:ring-4 active:ring-indigo-500/10">
-                    <div class="w-16 h-16 rounded-2xl overflow-hidden bg-indigo-50 shrink-0 flex items-center justify-center border border-indigo-100 shadow-sm relative group-hover:rotate-2 transition-transform">
-                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover" />
+                    :disabled="paq.stock !== undefined && paq.stock !== null && totalEnCarritoPorPaqueteId(paq.id) >= paq.stock"
+                    class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group p-1 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale relative">
+                    
+                    <!-- Package Image Container -->
+                    <div class="w-full h-32 rounded-2xl overflow-hidden bg-indigo-50 flex items-center justify-center relative shadow-sm border border-indigo-100/50">
+                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <span v-else class="text-3xl">🎁</span>
-                      <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm">COMBO</div>
+                      <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm z-20">COMBO</div>
+                      
+                      <!-- Agotado Overlay -->
+                      <div v-if="paq.stock !== undefined && paq.stock !== null && totalEnCarritoPorPaqueteId(paq.id) >= paq.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
+                      
                       <!-- Indicador de cantidad agregada -->
-                      <div v-if="totalEnCarritoPorPaqueteId(paq.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop">
+                      <div v-if="totalEnCarritoPorPaqueteId(paq.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop z-20">
                         {{ totalEnCarritoPorPaqueteId(paq.id) }}
                       </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-black text-slate-800 text-base md:text-lg leading-tight uppercase tracking-tight">{{ paq.nombre }}</p>
-                      <p class="text-[11px] md:text-xs text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
-                    </div>
-                    <div class="text-right">
-                      <p class="font-black text-base md:text-lg text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</p>
-                      <span class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black opacity-0 group-hover:opacity-100 transition-all shadow-lg shadow-indigo-200">+</span>
+
+                    <!-- Package Card Body -->
+                    <div class="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ paq.nombre }}</p>
+                        <p class="text-[9px] text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
+                      </div>
+                      <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
+                        <span class="font-black text-sm text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</span>
+                        <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-600 text-white group-hover:scale-110">
+                          +
+                        </div>
+                      </div>
                     </div>
                   </button>
                 </div>
@@ -548,7 +619,7 @@
                               <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
                               <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
                               <button @click="incrementar(item.cartId)"
-                                :disabled="item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo"
+                                :disabled="(item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo) || (item.tipo === 'paquete' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorPaqueteId(item.id) >= item.stock_maximo)"
                                 class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                             </div>
                             <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
@@ -652,7 +723,7 @@
                             <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
                             <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
                             <button @click="incrementar(item.cartId)"
-                              :disabled="item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo"
+                              :disabled="(item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo) || (item.tipo === 'paquete' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorPaqueteId(item.id) >= item.stock_maximo)"
                               class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                           </div>
                           <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
@@ -790,7 +861,7 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 
 const vistaActual  = ref('ordenes')
 const tabActivo    = ref('todas')
-const subTabActiva = ref('productos')
+const subTabActiva = ref('alimentos')
 const ordenes      = ref([])
 const productos    = ref([])
 const paquetes     = ref([])
@@ -1096,9 +1167,47 @@ const contarOrdenes = (key) => {
 const tabActual      = computed(() => tabs.find(t => t.key === tabActivo.value))
 const totalCarrito   = computed(() => carrito.value.reduce((s, i) => s + (i.precio * i.cantidad), 0))
 const fechaHoy       = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
-const productosFiltrados = computed(() => {
+const paginaProductos = ref(1)
+const itemsPorPagina = 6
+
+watch([busqueda, subTabActiva], () => {
+  paginaProductos.value = 1
+})
+
+const esBebidaProducto = (p) => {
+  const cat = (p.categoria?.nombre || '').toLowerCase()
+  return cat.includes('barra') || cat.includes('bebida')
+}
+const esPostreProducto = (p) => {
+  const cat = (p.categoria?.nombre || '').toLowerCase()
+  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
+}
+const esCocinaProducto = (p) => {
+  return !esBebidaProducto(p) && !esPostreProducto(p)
+}
+
+const productosFiltradosBase = computed(() => {
   const b = busqueda.value?.toLowerCase() || ''
-  return b ? productos.value.filter(p => p.nombre.toLowerCase().includes(b)) : productos.value
+  let list = productos.value
+  
+  if (subTabActiva.value === 'alimentos') {
+    list = list.filter(esCocinaProducto)
+  } else if (subTabActiva.value === 'bebidas') {
+    list = list.filter(esBebidaProducto)
+  } else if (subTabActiva.value === 'postres') {
+    list = list.filter(esPostreProducto)
+  }
+  
+  return b ? list.filter(p => p.nombre.toLowerCase().includes(b)) : list
+})
+
+const totalPaginasProductos = computed(() => {
+  return Math.ceil(productosFiltradosBase.value.length / itemsPorPagina)
+})
+
+const productosFiltrados = computed(() => {
+  const start = (paginaProductos.value - 1) * itemsPorPagina
+  return productosFiltradosBase.value.slice(start, start + itemsPorPagina)
 })
 const paquetesFiltrados = computed(() => {
   const b = busqueda.value?.toLowerCase() || ''
@@ -1211,7 +1320,7 @@ const cargarProductos = async () => {
   loadingProductos.value = true
   try {
     const [pData, paqData] = await Promise.all([
-      apiClient.get('/productos'),
+      apiClient.get('/productos?per_page=500'),
       apiClient.get('/paquetes'),
     ])
     if (pData.success || pData.data) productos.value = pData.data || pData
@@ -1350,6 +1459,12 @@ const agregarAlCarrito = (item, tipo) => {
       return
     }
   }
+  if (tipo === 'paquete' && item.stock !== undefined && item.stock !== null) {
+    if (totalEnCarritoPorPaqueteId(item.id) >= item.stock) {
+      showToast(`No hay suficiente stock para el paquete "${item.nombre}". Límite: ${item.stock} uds`, 'error')
+      return
+    }
+  }
 
   const cIdx = comensalActivoIndex.value
   const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.comensalIndex === cIdx && !i.notas)
@@ -1376,6 +1491,12 @@ const incrementar = (cartId) => {
     if (i.tipo === 'producto' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
       if (totalEnCarritoPorId(i.id) >= i.stock_maximo) {
         showToast(`No hay suficiente stock para "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
+        return
+      }
+    }
+    if (i.tipo === 'paquete' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
+      if (totalEnCarritoPorPaqueteId(i.id) >= i.stock_maximo) {
+        showToast(`No hay suficiente stock para el paquete "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
         return
       }
     }

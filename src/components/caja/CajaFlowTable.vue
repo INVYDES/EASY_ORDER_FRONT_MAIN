@@ -105,8 +105,33 @@ const formatMoney = (v) =>
 
 const formatTime = (ts) => {
   if (!ts) return '—'
-  // Si ya viene formateado del backend (dd/mm/yyyy HH:mm), mostrarlo directo
-  if (typeof ts === 'string' && ts.includes('/')) return ts
-  return new Date(ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  try {
+    let d;
+    if (typeof ts === 'string' && ts.includes('T')) {
+      if (ts.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(ts)) {
+        d = new Date(ts);
+      } else {
+        d = new Date(ts + 'Z');
+      }
+    } else if (typeof ts === 'string' && ts.includes('/')) {
+      const [fecha, hora] = ts.split(' ');
+      const [dia, mes, anio] = fecha.split('/');
+      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
+    } else if (typeof ts === 'string') {
+      d = new Date(ts.replace(' ', 'T') + 'Z');
+    } else {
+      d = new Date(ts);
+    }
+
+    if (isNaN(d.getTime())) return ts;
+
+    return d.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).toLowerCase();
+  } catch (e) {
+    return ts;
+  }
 }
 </script>

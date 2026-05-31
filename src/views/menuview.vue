@@ -147,7 +147,8 @@
                 v-for="pkg in paquetes" 
                 :key="pkg.id"
                 @click="agregarPaqueteAlPedido(pkg)"
-                class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all group p-1"
+                :disabled="pkg.stock !== undefined && pkg.stock !== null && totalEnPedidoPorPaqueteId(pkg.id) >= pkg.stock"
+                class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all group p-1 disabled:opacity-50 disabled:cursor-not-allowed relative"
                 :class="{ 'p-2 scale-105': !sidebarAbierta }"
               >
                 <div class="relative rounded-[1.8rem] overflow-hidden bg-indigo-50"
@@ -158,6 +159,7 @@
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div v-else class="w-full h-full flex items-center justify-center text-5xl text-indigo-100">🎁</div>
+                  <div v-if="pkg.stock !== undefined && pkg.stock !== null && totalEnPedidoPorPaqueteId(pkg.id) >= pkg.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
                   <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
                   <div class="absolute top-3 right-3">
                     <span class="bg-indigo-600 text-white text-[9px] font-black px-3 py-1 rounded-full shadow-lg uppercase tracking-tighter">Promoción</span>
@@ -205,7 +207,7 @@
                   <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre"
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   <span v-else class="text-3xl">🍽️</span>
-                  <div v-if="p.agotado" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest">Agotado</div>
+                  <div v-if="p.agotado" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
                 </div>
                 <div class="p-3 flex-1 flex flex-col justify-between" :class="{ 'p-4': !sidebarAbierta }">
                   <div>
@@ -301,7 +303,7 @@
                       <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
                       <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
                       <button @click="incrementar(item.cartId)"
-                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
                         class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
@@ -418,7 +420,7 @@
                       <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
                       <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
                       <button @click="incrementar(item.cartId)"
-                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
                         class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
@@ -514,7 +516,7 @@
                       <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500">−</button>
                       <span class="text-[10px] font-black w-4 text-center">{{ item.cantidad }}</span>
                       <button @click="incrementar(item.cartId)"
-                        :disabled="!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo"
+                        :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
                         class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
@@ -809,6 +811,12 @@ const totalEnPedidoPorId = (productId) => {
     .reduce((sum, i) => sum + i.cantidad, 0)
 }
 
+const totalEnPedidoPorPaqueteId = (paqueteId) => {
+  return pedido.value
+    .filter(i => i.paquete_id === paqueteId && i.es_paquete)
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
@@ -875,6 +883,13 @@ const agregarOfertaAlPedido = (oferta) => {
 }
 
 const agregarPaqueteAlPedido = (pkg) => {
+  if (pkg.stock !== undefined && pkg.stock !== null) {
+    if (totalEnPedidoPorPaqueteId(pkg.id) >= pkg.stock) {
+      mostrarError(`No hay suficiente stock para el paquete "${pkg.nombre}". Límite: ${pkg.stock} uds`)
+      return
+    }
+  }
+
   const cIdx = comensalActivoIndex.value
   const existe = pedido.value.find(i => i.paquete_id === pkg.id && i.comensalIndex === cIdx && !i.notas)
   if (existe) { 
@@ -889,6 +904,7 @@ const agregarPaqueteAlPedido = (pkg) => {
       imagen: pkg.imagen_url ? getImageUrl(pkg.imagen_url) : null,
       cantidad: 1, 
       es_paquete: true,
+      stock_maximo: pkg.stock,
       notas: '',
       comensalIndex: cIdx,
       minutos_produccion: parseFloat(pkg.minutos_produccion || 0)
@@ -902,6 +918,12 @@ const incrementar = (cartId) => {
     if (!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null) {
       if (totalEnPedidoPorId(item.id) >= item.stock_maximo) {
         mostrarError(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock_maximo} uds`)
+        return
+      }
+    }
+    if (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null) {
+      if (totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo) {
+        mostrarError(`No hay suficiente stock para el paquete "${item.nombre}". Límite: ${item.stock_maximo} uds`)
         return
       }
     }

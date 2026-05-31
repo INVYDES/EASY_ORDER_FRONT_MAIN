@@ -163,16 +163,116 @@
           <p class="text-sm text-amber-800">{{ data.observaciones }}</p>
         </div>
 
-        <!-- Botón imprimir -->
-        <button
-          @click="imprimir"
-          class="w-full py-2.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition"
-        >
-          🖨️ Imprimir corte
-        </button>
+        <!-- Botones de acción -->
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <button
+            @click="imprimir"
+            class="py-2.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition flex items-center justify-center gap-2"
+          >
+            🖨️ Imprimir corte
+          </button>
+          <button
+            @click="abrirTickets"
+            class="py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition flex items-center justify-center gap-2"
+          >
+            🎟️ Ver tickets
+          </button>
+        </div>
 
       </template>
 
+    </div>
+
+    <!-- ══ SUBMODAL: TICKETS CERRADOS ══ -->
+    <div
+      v-if="mostrarTicketsCerrados"
+      class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center px-4"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[85vh] flex flex-col">
+        <!-- Encabezado -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-100 shrink-0">
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Tickets de Caja</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Órdenes cerradas en este corte</p>
+          </div>
+          <button @click="mostrarTicketsCerrados = false" class="text-gray-400 hover:text-gray-600 text-xl transition">✕</button>
+        </div>
+
+        <!-- Cargando -->
+        <div v-if="loadingTickets" class="text-center py-20 text-gray-400 flex-1 flex flex-col items-center justify-center">
+          <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+          Cargando tickets...
+        </div>
+
+        <!-- Sin Tickets -->
+        <div v-else-if="ticketsCerrados.length === 0" class="text-center py-20 text-gray-400 italic flex-1 flex flex-col items-center justify-center">
+          <span class="text-4xl mb-2">🎟️</span>
+          No hay órdenes cerradas registradas en esta caja
+        </div>
+
+        <!-- Listado de Tickets -->
+        <div v-else class="flex-1 overflow-y-auto py-4 space-y-4 pr-1 custom-scroll">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div 
+              v-for="order in ticketsCerrados" 
+              :key="order.id"
+              class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:border-indigo-300 transition group"
+            >
+              <div>
+                <!-- Ticket Header -->
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase">
+                        {{ order.metodo_pago || 'Efectivo' }}
+                      </span>
+                      <span class="text-[10px] text-gray-400 font-bold">
+                        {{ formatFechaHora(order.updated_at || order.created_at) }}
+                      </span>
+                    </div>
+                    <h4 class="text-sm font-black text-gray-800 mt-1.5">{{ order.folio || '#' + order.id }}</h4>
+                  </div>
+                  <span v-if="order.mesa" class="px-2 py-0.5 bg-slate-900 text-white rounded text-[9px] font-black uppercase">
+                    MESA {{ order.mesa }}
+                  </span>
+                </div>
+
+                <!-- Products breakdown -->
+                <div class="space-y-1.5 border-t border-gray-100 pt-2 mb-3">
+                  <div 
+                    v-for="d in order.detalles" 
+                    :key="d.id"
+                    class="flex justify-between text-xs"
+                    :class="d.cancelado ? 'text-red-400 line-through' : 'text-gray-600 font-medium'"
+                  >
+                    <span class="truncate flex-1">
+                      {{ d.cantidad }}× {{ d.producto_nombre }}
+                    </span>
+                    <span class="text-gray-400 ml-2">${{ Number(d.subtotal).toFixed(2) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ticket Footer -->
+              <div class="border-t border-gray-100 pt-2 flex items-center justify-between">
+                <div class="text-left">
+                  <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none">Total</p>
+                  <span class="text-base font-black text-gray-900">${{ Number(order.total).toFixed(2) }}</span>
+                  <span v-if="order.propina > 0" class="text-[8px] block text-emerald-600 font-bold">
+                    +${{ Number(order.propina).toFixed(2) }} propina
+                  </span>
+                </div>
+                <button 
+                  @click="imprimirTicket(order)"
+                  class="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-1 shrink-0"
+                >
+                  🖨️ Reimprimir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -192,6 +292,10 @@ const data    = ref(null)
 const loading = ref(true)
 const error   = ref('')
 
+const mostrarTicketsCerrados = ref(false)
+const ticketsCerrados = ref([])
+const loadingTickets = ref(false)
+
 const getHeaders = () => {
   const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
   return {
@@ -203,30 +307,44 @@ const getHeaders = () => {
 
 const formatMoney = (v) => v === undefined || v === null ? '0.00' : Number(v).toFixed(2)
 
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  try {
+    let d;
+    if (typeof dateStr === 'string') {
+      if (dateStr.includes('T')) {
+        if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+          d = new Date(dateStr);
+        } else {
+          d = new Date(dateStr + 'Z');
+        }
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.trim().split(' ');
+        const fecha = parts[0];
+        const hora = parts[1] || '00:00:00';
+        const [dia, mes, anio] = fecha.split('/');
+        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
+      } else {
+        const cleanStr = dateStr.replace(' ', 'T');
+        d = new Date(cleanStr);
+      }
+    } else {
+      d = new Date(dateStr);
+    }
+    if (isNaN(d.getTime())) return null;
+    return d;
+  } catch (e) {
+    return null;
+  }
+};
+
 // Helper robusto para convertir fecha del servidor (DD/MM/YYYY HH:mm) a hora local
 const toLocalTime = (dateStr) => {
   if (!dateStr) return '—';
+  const d = parseUTCDate(dateStr);
+  if (!d) return dateStr;
   try {
-    let d;
-    // Si ya es un ISO string completo (trae T o Z)
-    if (dateStr.includes('T') || dateStr.endsWith('Z')) {
-      // Si el string termina en Z pero queremos que sea local, se la quitamos
-      d = new Date(dateStr.replace(/Z$/, ''));
-    } 
-    // Si el formato es DD/MM/YYYY HH:mm:ss
-    else if (dateStr.includes('/')) {
-      const [fecha, hora] = dateStr.split(' ');
-      const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
-    } 
-    // Otros formatos (YYYY-MM-DD HH:mm:ss)
-    else {
-      d = new Date(dateStr.replace(' ', 'T'));
-    }
-
-    if (isNaN(d.getTime())) return dateStr;
-    
-    // Devolver hora local en formato 24h
     return d.toLocaleTimeString('es-MX', { 
       hour: '2-digit', 
       minute: '2-digit', 
@@ -362,6 +480,143 @@ const imprimir = () => {
   win.document.close()
   win.focus()
   setTimeout(() => { win.print(); win.close() }, 300)
+}
+
+const formatFechaHora = (dateStr) => {
+  if (!dateStr) return '—'
+  const d = parseUTCDate(dateStr);
+  if (!d) return dateStr;
+  try {
+    return d.toLocaleString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  } catch (e) {
+    return dateStr
+  }
+}
+
+const cargarTicketsCerrados = async () => {
+  if (!data.value?.caja?.id) return
+  loadingTickets.value = true
+  try {
+    const endpoint = `/caja/historial/${data.value.caja.id}/ordenes`
+    const resp = await apiClient.get(endpoint)
+    if (resp?.success) {
+      ticketsCerrados.value = resp.data || []
+    }
+  } catch (err) {
+    console.error('Error cargando tickets de caja:', err)
+  } finally {
+    loadingTickets.value = false
+  }
+}
+
+const abrirTickets = async () => {
+  mostrarTicketsCerrados.value = true
+  await cargarTicketsCerrados()
+}
+
+const imprimirTicket = (order) => {
+  const win = window.open('', '_blank', 'width=400,height=700')
+  
+  // Agrupar detalles por comensal
+  const grouped = {}
+  order.detalles.forEach(d => {
+    const nom = d.nom_comensal || d.comensal || 'General'
+    if (!grouped[nom]) grouped[nom] = []
+    grouped[nom].push(d)
+  })
+
+  let itemsHtml = ''
+  for (const [comensal, items] of Object.entries(grouped)) {
+    itemsHtml += `
+      <tr>
+        <td colspan="3" style="padding: 2mm 0 1mm 0; font-weight: bold; font-size: 11px; text-transform: uppercase; border-bottom: 1px dotted #ccc;">
+          ${comensal === 'Compartido' || comensal === 'General' ? '--- General ---' : `--- Comensal: ${comensal} ---`}
+        </td>
+      </tr>
+    `
+    items.forEach(item => {
+      itemsHtml += `
+        <tr style="${item.cancelado ? 'color: #999; text-decoration: line-through;' : ''}">
+          <td style="padding: 1mm 0; vertical-align: top;">${item.cantidad}</td>
+          <td style="padding: 1mm 0; text-transform: uppercase;">
+            ${item.producto_nombre || 'Producto'}
+            ${item.cancelado ? `<span style="font-size: 8px; text-decoration: none !important; display: inline-block; background: #eee; padding: 0 1mm;">[CANCELADO]</span>` : ''}
+            ${item.notas && !item.cancelado ? `<div style="font-size: 9px; font-style: italic; color: #555;">* ${item.notas}</div>` : ''}
+          </td>
+          <td style="text-align: right; padding: 1mm 0; vertical-align: top;">$${Number(item.subtotal).toFixed(2)}</td>
+        </tr>
+      `
+    })
+  }
+
+  const pId = data.value?.caja?.propietario_id || ''
+  const rId = data.value?.caja?.restaurante_id || ''
+  const uniqueIdentifier = `${pId}${rId}${order.id}`
+
+  win.document.write(`
+    <html><head><title>Ticket_${uniqueIdentifier}</title>
+    <style>
+      body{font-family:monospace;font-size:12px;padding:10px;max-width:280px;margin:0 auto;color:#000;}
+      table{width:100%;border-collapse:collapse;margin:5px 0;}
+      td{padding:2px 0;vertical-align:top;}
+      .right{text-align:right;}
+      .border-top{border-top:1px dashed #000;margin-top:8px;padding-top:8px;}
+      .border-bottom{border-bottom:1px dashed #000;margin-bottom:8px;padding-bottom:8px;}
+      .header{text-align:center;}
+      .bold{font-weight:bold;}
+    </style></head><body>
+      <div class="header border-bottom">
+        <h2 style="margin:0;font-size:16px;">EASY ORDER</h2>
+        <p style="margin:2px 0;">COMPROBANTE DE PAGO</p>
+        <p style="margin:2px 0;font-size:10px;">FECHA: ${formatFechaHora(order.updated_at || order.created_at)}</p>
+      </div>
+
+      <table>
+        <tr><td>MESA</td><td class="right">${order.mesa || 'N/A'}</td></tr>
+        <tr><td>FOLIO</td><td class="right">${order.folio || '#' + order.id}</td></tr>
+        <tr><td>ATENDIO</td><td class="right">${order.usuario?.name || 'Personal'}</td></tr>
+        <tr><td>METODO PAGO</td><td class="right">${(order.metodo_pago || 'efectivo').toUpperCase()}</td></tr>
+        ${order.referencia ? `<tr><td>REFERENCIA</td><td class="right">${order.referencia}</td></tr>` : ''}
+      </table>
+
+      <div class="border-top">
+        <table style="width:100%;">
+          <thead>
+            <tr style="border-bottom: 1px dashed #000;">
+              <th style="text-align: left;">CANT</th>
+              <th style="text-align: left;">DESCRIPCION</th>
+              <th style="text-align: right;">IMPORTE</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border-top" style="text-align: right;">
+        <p style="margin:2px 0;">SUBTOTAL: <span class="bold">$${Number(order.total - (order.propina || 0)).toFixed(2)}</span></p>
+        <p style="margin:2px 0;">PROPINA: <span class="bold">$${Number(order.propina || 0).toFixed(2)}</span></p>
+        <h3 style="margin:4px 0;font-size:14px;">TOTAL: $${Number(order.total).toFixed(2)}</h3>
+      </div>
+
+      <div class="header border-top" style="margin-top:20px;">
+        <p style="font-size:9px;font-weight:bold;">ESTE NO ES UN COMPROBANTE FISCAL</p>
+        <p style="font-size:9px;">¡Gracias por su visita!</p>
+        <p style="font-size:8px;color:#666;">*** EASY ORDER SYSTEM ***</p>
+      </div>
+    </body></html>
+  `)
+  win.document.close()
+  win.focus()
+  setTimeout(() => { win.print(); win.close() }, 500)
 }
 
 onMounted(loadDetalle)

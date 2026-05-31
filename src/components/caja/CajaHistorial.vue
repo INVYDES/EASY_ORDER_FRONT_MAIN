@@ -13,7 +13,7 @@
     <div v-else-if="filtrados.length === 0" class="text-center py-10 text-gray-400 italic text-sm">
       No hay cajas anteriores registradas
     </div>
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
       <div v-for="caja in filtrados" :key="caja.id"
         class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer"
         @click="$emit('ver-detalle', caja.id)">
@@ -70,29 +70,65 @@ const parseFecha = (f) => {
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(f)) { const [d,m,y]=f.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`) }
   return new Date(f + 'T00:00:00')
 }
-const toLocalTime = (dateStr) => {
-  if (!dateStr) return '—';
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
   try {
     let d;
-    // El servidor a veces manda solo la hora "HH:mm:ss" o el datetime "DD/MM/YYYY HH:mm:ss"
-    if (dateStr.includes('/')) {
-      const [fecha, hora] = dateStr.split(' ');
-      const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
-    } else if (dateStr.includes(':') && !dateStr.includes('-') && !dateStr.includes('/')) {
-      // Si solo es la hora, asumimos la fecha de hoy
-      const hoy = new Date().toLocaleDateString('en-CA');
-      d = new Date(`${hoy}T${dateStr}`);
+    if (typeof dateStr === 'string') {
+      if (dateStr.includes('T')) {
+        if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+          d = new Date(dateStr);
+        } else {
+          d = new Date(dateStr + 'Z');
+        }
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.trim().split(' ');
+        const fecha = parts[0];
+        const hora = parts[1] || '00:00:00';
+        const [dia, mes, anio] = fecha.split('/');
+        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
+      } else if (dateStr.includes(':') && !dateStr.includes('-')) {
+        const hoy = new Date().toLocaleDateString('en-CA');
+        d = new Date(`${hoy}T${dateStr}`);
+      } else {
+        const cleanStr = dateStr.replace(' ', 'T');
+        d = new Date(cleanStr);
+      }
     } else {
-      d = new Date(dateStr.replace(' ', 'T'));
+      d = new Date(dateStr);
     }
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (isNaN(d.getTime())) return null;
+    return d;
   } catch (e) {
-    return dateStr;
+    return null;
   }
+};
+
+const toLocalTime = (dateStr) => {
+  if (!dateStr) return '—';
+  const d = parseUTCDate(dateStr);
+  if (!d) return dateStr;
+  return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
 const formatDia = (f) => { const d=parseFecha(f); return d&&!isNaN(d)?d.getDate().toString().padStart(2,'0'):'--' }
 const formatMes = (f) => { const d=parseFecha(f); return d&&!isNaN(d)?d.toLocaleDateString('es-MX',{month:'short'}).toUpperCase():'' }
 </script>
+
+<style scoped>
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+}
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+}
+</style>

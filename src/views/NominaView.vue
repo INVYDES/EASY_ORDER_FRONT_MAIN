@@ -17,6 +17,7 @@
     <transition name="fade">
       <div v-if="!isAuthenticated" class="auth-overlay">
         <div class="auth-card">
+          <button type="button" @click="goBack" class="auth-card__close" title="Volver al panel">✕</button>
           <div class="auth-card__icon">🔐</div>
           <h2 class="auth-card__title">Acceso Restringido</h2>
           <p class="auth-card__desc">Ingresa tu contraseña de administrador para ver la información de nómina.</p>
@@ -37,6 +38,9 @@
             <button type="submit" :disabled="verifying" class="btn btn--primary btn--full">
               <span v-if="verifying" class="spinner"></span>
               {{ verifying ? 'Verificando…' : 'Desbloquear' }}
+            </button>
+            <button type="button" @click="goBack" class="btn btn--ghost btn--full" style="margin-top: 0.5rem">
+              Cancelar y Volver
             </button>
           </form>
         </div>
@@ -356,7 +360,13 @@
 
 <script setup>
 import { ref, onMounted, reactive, watch, nextTick, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
+
+const router = useRouter()
+const goBack = () => {
+  window.location.href = '/cws/eorder/panel/Gestion'
+}
 
 // --- Charts ---
 const chartTendencia = ref(null)
@@ -783,6 +793,29 @@ onMounted(() => {
   padding: 2.5rem;
   box-shadow: var(--shadow-lg);
   text-align: center;
+  position: relative;
+}
+.auth-card__close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--c-text-3);
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s;
+}
+.auth-card__close:hover {
+  background: var(--c-bg);
+  color: var(--c-text-2);
 }
 .auth-card__icon {
   width: 3.5rem; height: 3.5rem;
