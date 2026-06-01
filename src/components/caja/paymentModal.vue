@@ -248,6 +248,14 @@ const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') |
 const user = JSON.parse(userRaw)
 const userName = computed(() => user.name || 'Personal')
 
+const esMesero = computed(() => {
+  const roles = user.roles || []
+  return roles.some(r => {
+    if (typeof r === 'string') return r.toUpperCase() === 'MESERO'
+    return r.id === 3 || r.id === '3' || r.nombre?.toUpperCase() === 'MESERO'
+  })
+})
+
 // BUSCADOR DE ID INFALIBLE
 const restauranteId = computed(() => {
   // 1. Prioridad: Lo que detectamos por API o por productos
@@ -396,7 +404,9 @@ const processPayment = async () => {
   await syncIdentity()
   await nextTick()
 
-  imprimirTicket()
+  if (!esMesero.value) {
+    imprimirTicket()
+  }
 
   emit('payment-processed', {
     metodo_pago:  paymentMethod.value,

@@ -130,33 +130,59 @@ const cortesXAmount = computed(() => {
 const corteFecha = computed(() => new Date().toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' }))
 const fechaHoy = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 
-const tabs = computed(() => [
-  { key: 'open', label: 'Abiertos', count: openOrders.value.length },
-  { key: 'closed', label: 'Cerrados', count: closedOrders.value.length },
-  { key: 'flow', label: 'Flujo Caja', count: movements.value.length },
-])
+const tabs = computed(() => {
+  const t = [
+    { key: 'open', label: 'Abiertos', count: openOrders.value.length },
+    { key: 'closed', label: 'Cerrados', count: closedOrders.value.length },
+    { key: 'flow', label: 'Flujo Caja', count: movements.value.length },
+  ]
+  if (esAdminOPropietario.value) {
+    t.push({ key: 'history', label: 'Historial Cajas', count: historial.value.length })
+  }
+  return t
+})
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatMoney = (v) => Number(v || 0).toFixed(2)
 
-const toLocalTime = (dateStr) => {
-  if (!dateStr) return '—';
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
   try {
     let d;
-    if (dateStr.includes('/')) {
-      const [fecha, hora] = dateStr.split(' ');
-      const [dia, mes, anio] = fecha.split('/');
-      d = new Date(`${anio}-${mes}-${dia}T${hora || '00:00:00'}`);
+    if (typeof dateStr === 'string') {
+      if (dateStr.includes('T')) {
+        if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+          d = new Date(dateStr);
+        } else {
+          d = new Date(dateStr + 'Z');
+        }
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.trim().split(' ');
+        const fecha = parts[0];
+        const hora = parts[1] || '00:00:00';
+        const [dia, mes, anio] = fecha.split('/');
+        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
+      } else {
+        const cleanStr = dateStr.replace(' ', 'T');
+        d = new Date(cleanStr);
+      }
     } else {
-      d = new Date(dateStr.replace(' ', 'T'));
+      d = new Date(dateStr);
     }
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (isNaN(d.getTime())) return null;
+    return d;
   } catch (e) {
-    return dateStr;
+    return null;
   }
 };
 
+const toLocalTime = (dateStr) => {
+  if (!dateStr) return '—';
+  const d = parseUTCDate(dateStr);
+  if (!d) return dateStr;
+  return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+};
 const reproducirSonido = () => {
   try {
     audioNuevaOrden.value?.play()
@@ -185,7 +211,9 @@ const initChart = async () => {
   
   closedOrders.value.forEach(o => {
     if (!o.created_at) return
-    const h = new Date(o.created_at).getHours()
+    const parsed = parseUTCDate(o.created_at)
+    if (!parsed) return
+    const h = parsed.getHours()
     if (h >= 8 && h <= 23) {
       totals[h - 8] += Number(o.total || 0)
     }
@@ -364,7 +392,7 @@ const loadAllData = async (silent = true) => {
   await Promise.all([
     loadOrders(),
     loadMovements(),
-    !cajaAbierta.value ? loadHistorial() : Promise.resolve(),
+    (!cajaAbierta.value || esAdminOPropietario.value) ? loadHistorial() : Promise.resolve(),
   ])
   if (!silent) loading.general = false
   await nextTick()
@@ -634,6 +662,12 @@ onUnmounted(() => {
               v-else-if="selectedTab === 'flow'" 
               :movements="movements" 
               :loading="loading.movements" 
+            />
+            <CajaHistorial 
+              v-else-if="selectedTab === 'history' && esAdminOPropietario" 
+              :historial="historial" 
+              :loading="loading.historial" 
+              @ver-detalle="abrirDetalle" 
             />
           </div>
         </template>

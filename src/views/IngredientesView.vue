@@ -9,10 +9,16 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">🧄 Ingredientes</h1>
         <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Inventario y costos de ingredientes</p>
       </div>
-      <button @click="abrirModal()"
-        class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
-        ＋ Nuevo ingrediente
-      </button>
+      <div class="flex items-center gap-2">
+        <button @click="showListaCompras = true"
+          class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition shadow-sm cursor-pointer">
+          📦 Lista de compras
+        </button>
+        <button @click="abrirModal()"
+          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer">
+          ＋ Nuevo ingrediente
+        </button>
+      </div>
     </div>
 
     <!-- KPI Cards -->
@@ -171,9 +177,12 @@
                 class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock mínimo</label>
-              <input v-model="form.stock_minimo" type="number" min="0" step="0.001"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" title="Se calcula de forma automática en base a las recetas y al stock mínimo de los productos que lo usan">Stock mínimo</label>
+              <div class="relative">
+                <input v-model="form.stock_minimo" type="number" readonly disabled
+                  class="w-full px-3 py-2.5 bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded-xl text-sm cursor-not-allowed font-medium" />
+                <span class="absolute right-3 top-3 text-[10px] font-bold text-indigo-500 dark:text-indigo-400" title="Autocalculado por recetas de productos">Calculado</span>
+              </div>
             </div>
           </div>
           <div>
@@ -195,13 +204,20 @@
 
     <!-- ══ MODAL AJUSTE STOCK ══ -->
     <AjustarStockModal
-  v-if="showAjuste"
-  :ingrediente="ingredienteAjuste"
-  :form="ajusteForm"
-  @close="showAjuste = false"
-  @guardar="onStockActualizado"
-  @saved="cargar"
-/>
+      v-if="showAjuste"
+      :ingrediente="ingredienteAjuste"
+      :form="ajusteForm"
+      @close="showAjuste = false"
+      @guardar="onStockActualizado"
+      @saved="cargar"
+    />
+
+    <!-- ══ MODAL LISTA DE COMPRAS ══ -->
+    <ListaComprasModal
+      v-if="showListaCompras"
+      :ingredientes="ingredientes"
+      @close="showListaCompras = false"
+    />
 
   </div>
 </template>
@@ -210,7 +226,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AjustarStockModal from '../components/ingredientes/AjusteStockModal.vue'
-import { STORAGE_URL, getHeaders } from '@/config/api'
+import ListaComprasModal from '../components/ingredientes/ListaComprasModal.vue'
+import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useToast } from '@/composables/useToast'
@@ -234,6 +251,7 @@ const filtroBajoStock = ref(false)
 
 const showModal = ref(false)
 const showAjuste = ref(false)
+const showListaCompras = ref(false)
 const editando = ref(null)
 const formError = ref('')
 const ingredienteAjuste = ref(null)
