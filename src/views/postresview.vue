@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 p-4 sm:p-6">
+  <div class="min-h-screen bg-gray-950 p-4 sm:p-6" :style="{ zoom }">
 
     <SucursalBadge />
 
@@ -232,7 +232,9 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { useToast } from '@/composables/useToast'
 import { getHeaders } from '@/config/api'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
 
+const { zoom } = useDeviceZoom()
 const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
 
