@@ -475,7 +475,7 @@
                 </div>
 
                 <template v-else-if="subTabActiva === 'alimentos' || subTabActiva === 'bebidas' || subTabActiva === 'postres'">
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[750px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
                     <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
                       <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
                     </div>
@@ -515,7 +515,7 @@
                   </div>
                 </template>
 
-                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[750px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
                   <div v-if="paquetesFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
                     <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
                   </div>
@@ -1168,7 +1168,7 @@ const tabActual      = computed(() => tabs.find(t => t.key === tabActivo.value))
 const totalCarrito   = computed(() => carrito.value.reduce((s, i) => s + (i.precio * i.cantidad), 0))
 const fechaHoy       = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 const paginaProductos = ref(1)
-const itemsPorPagina = 6
+const itemsPorPagina = 9
 
 watch([busqueda, subTabActiva], () => {
   paginaProductos.value = 1
