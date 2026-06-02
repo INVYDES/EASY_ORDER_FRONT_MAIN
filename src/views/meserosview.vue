@@ -392,10 +392,13 @@
 
             <!-- Catálogo -->
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-              <div class="p-6 border-b border-slate-50">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+              <div class="p-6 border-b border-slate-50 space-y-4">
+                <!-- Fila 1: Pestañas y Buscador -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <!-- Pestañas -->
                   <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit shrink-0 flex-wrap gap-1">
                     <button @click="subTabActiva = 'alimentos'"
+                      type="button"
                       :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'alimentos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🍽️ ALIMENTOS
@@ -405,16 +408,19 @@
                       </span>
                     </button>
                     <button @click="subTabActiva = 'bebidas'"
+                      type="button"
                       :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'bebidas' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🍹 BEBIDAS
                     </button>
                     <button @click="subTabActiva = 'postres'"
+                      type="button"
                       :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'postres' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🍰 POSTRES
                     </button>
                     <button @click="subTabActiva = 'paquetes'"
+                      type="button"
                       :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
                         subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
                       🎁 PAQUETES
@@ -424,9 +430,19 @@
                       </span>
                     </button>
                   </div>
-                  
-                  <!-- Paginación Superior (en el centro) -->
-                  <div v-if="subTabActiva !== 'paquetes' && totalPaginasProductos > 1" class="flex items-center gap-1.5 justify-center">
+
+                  <!-- Buscador -->
+                  <div class="relative w-full sm:max-w-xs">
+                    <input v-model="busqueda" type="text"
+                      :placeholder="'Buscar en ' + (subTabActiva !== 'paquetes' ? 'productos...' : 'paquetes...')"
+                      class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+                  </div>
+                </div>
+
+                <!-- Fila 2: Paginación -->
+                <div v-if="subTabActiva !== 'paquetes' && totalPaginasProductos > 1" class="flex justify-center border-t border-slate-100/50 pt-4 animate-fade-in">
+                  <div class="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-sm">
                     <button
                       type="button"
                       :disabled="paginaProductos === 1"
@@ -457,13 +473,6 @@
                     >
                       →
                     </button>
-                  </div>
-                  
-                  <div class="relative flex-1 max-w-xs sm:ml-auto">
-                    <input v-model="busqueda" type="text"
-                      :placeholder="'Buscar en ' + (subTabActiva !== 'paquetes' ? 'productos...' : 'paquetes...')"
-                      class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                   </div>
                 </div>
               </div>
