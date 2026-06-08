@@ -648,12 +648,18 @@ const handleCheckout = async (checkoutData) => {
     return
   }
   try {
+    const mapTipoOrden = { recoger: 'pickup', domicilio: 'delivery' }
+    const direccionStr = checkoutData.direccion
+      ? [checkoutData.direccion.calle, checkoutData.direccion.colonia, checkoutData.direccion.referencias].filter(Boolean).join(', ')
+      : null
+
     const body = {
-      restaurante_id: restauranteSeleccionado.value.id,
-      productos:      pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null })),
-      metodo_pago:    checkoutData.metodo_pago,
-      tipo_entrega:   checkoutData.tipo_entrega,
-      notas:          checkoutData.notas || null,
+      restaurante_id:    restauranteSeleccionado.value.id,
+      productos:         pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null })),
+      metodo_pago:       checkoutData.metodo_pago,
+      tipo_orden:        mapTipoOrden[checkoutData.tipo_entrega] || 'pickup',
+      direccion_entrega: direccionStr,
+      notas:             checkoutData.notas || null,
     }
     if (clienteId) body.cliente_id = clienteId
 

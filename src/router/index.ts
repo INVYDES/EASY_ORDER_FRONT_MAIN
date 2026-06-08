@@ -25,6 +25,16 @@ const routes = [
   },
 
   // -------------------------
+  // PICKUP (Pedido para llevar, sin barra lateral)
+  // -------------------------
+  {
+    path: "/pickup",
+    name: "pickup",
+    component: () => import("../views/pickupview.vue"),
+    meta: { requiresAuth: true, roles: ["PICKUP", "CLIENTE", "ADMIN", "PROPIETARIO"] }
+  },
+
+  // -------------------------
   // PANEL
   // -------------------------
 
@@ -172,6 +182,7 @@ const defaultRouteForRole = (role?: string): string => {
     CAJA:        "/panel/caja",
     BARRA:       "/panel/barra",
     MENU:        "/menu",
+    PICKUP:      "/pickup",
     ADMIN:       "/panel/Gestion",
     PROPIETARIO: "/panel/Gestion",
     CLIENTE:     "/panel/cliente",

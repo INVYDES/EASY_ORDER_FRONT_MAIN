@@ -21,7 +21,7 @@ if errorlevel 1 (
 REM 2. Copiar al backend
 echo.
 echo Copiando dist/ al backend...
-set BACKEND_PATH=..\Back-endApi\public\dist
+set BACKEND_PATH=..\EASY_ORDER_BACK_MAIN\public\dist
 
 REM Limpiar dist anterior del backend
 if exist "%BACKEND_PATH%" rmdir /s /q "%BACKEND_PATH%"

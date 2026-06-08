@@ -948,7 +948,7 @@ const handleCheckout = async (checkoutData) => {
         notas: i.notas,
         nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General'
       })),
-      metodo_pago: 'efectivo', tipo_entrega: 'comer_aqui',
+      metodo_pago: 'efectivo', tipo_orden: 'local',
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
       estado: 'ABIERTA', mesa: checkoutData.numero_mesa, usuario_id: empleadoId,
     }
