@@ -128,61 +128,256 @@
 
         <div class="flex items-center justify-between gap-3 mb-4">
           <div class="flex items-center gap-3">
-            <button @click="vistaActual = 'mapa'; carritoSimple = []" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 hover:shadow-md transition-all font-bold text-lg">←</button>
-            <div>
-              <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">Mesa {{ nuevaOrden.mesa }} <span v-if="ordenAbiertaMesa" class="text-base">📋</span></h2>
-              <p class="text-xs text-gray-400 dark:text-slate-500">{{ ordenAbiertaMesa ? 'Agregando productos al pedido actual' : 'Toca los productos para agregarlos' }}</p>
-            </div>
+            <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
+            <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold shadow-sm border border-indigo-200 dark:border-indigo-700">{{ carritoSimple.length }} producto(s)</span>
-            <button v-if="carritoSimple.length > 0" @click="vistaActual = 'resumen'" class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.97] flex items-center gap-1.5">
-              Revisar y enviar <span class="text-lg">→</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="flex gap-2 mb-4 overflow-x-auto pb-1 custom-scrollbar">
-          <button v-for="cat in categoriasProducto" :key="cat.key"
-            @click="subTabActiva = cat.key"
-            class="shrink-0 px-5 py-3 rounded-xl text-sm font-bold transition-all border-2"
-            :class="subTabActiva === cat.key ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 scale-[1.02]' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md'">
-            <span class="text-lg mr-1.5">{{ cat.icon }}</span> {{ cat.label }}
+          <!-- Botón fijo para ver el pedido actual en tablets y móviles -->
+          <button 
+            type="button"
+            @click="showCarritoFlotante = true" 
+            class="lg:hidden flex items-center gap-2.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-md transition active:scale-95 border border-indigo-500 font-black text-xs uppercase tracking-wider animate-fade-in"
+          >
+            <span>🛒 Ver Pedido</span>
+            <span class="bg-indigo-800 text-white px-2 py-0.5 rounded-full text-[10px] font-black">{{ carrito.length }}</span>
           </button>
         </div>
 
-        <div v-if="loadingProductos" class="flex items-center justify-center py-20">
-          <div class="flex flex-col items-center gap-3">
-            <div class="w-10 h-10 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p class="text-gray-400 dark:text-slate-500 text-sm font-medium">Cargando productos...</p>
-          </div>
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Formulario y Catálogo -->
+          <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
+                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl p-1 h-[52px] w-full">
+                    <button 
+                      type="button"
+                      @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" 
+                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
+                    >
+                      −
+                    </button>
+                    <input 
+                      v-model="numeroComensales" 
+                      type="number" 
+                      min="1" 
+                      max="50" 
+                      @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales"
+                      class="flex-1 text-center text-sm font-black text-slate-800 outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                    />
+                    <button 
+                      type="button"
+                      @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" 
+                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                    Número de Mesa
+                    <!-- Indicador: mesa tiene orden abierta -->
+                    <span v-if="mesaTieneOrdenAbierta" class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-lg text-[9px] normal-case font-black">
+                      ⚠️ Tiene orden abierta
+                    </span>
+                  </label>
+                  <select v-if="esMesero && mesasAsignadas.length > 0" v-model="nuevaOrden.mesa"
+                    class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
+                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : ''">
+                    <option :value="null">Selecciona una mesa</option>
+                    <option v-for="m in mesasAsignadas" :key="m" :value="m">
+                      Mesa {{ m }}{{ mesaConOrden(m) ? ' ⚠️ orden abierta' : '' }}
+                    </option>
+                  </select>
+                  <select v-else v-model="nuevaOrden.mesa"
+                    class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
+                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : ''">
+                    <option :value="null">Selecciona una mesa</option>
+                    <option v-for="n in totalMesasRestaurante" :key="n" :value="n">
+                      Mesa {{ n }}{{ mesaConOrden(n) ? ' ⚠️ abierta' : '' }}
+                    </option>
+                    <option v-if="totalMesasRestaurante === 0" disabled>No hay mesas configuradas</option>
+                  </select>
 
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          <button v-for="p in productosFiltrados" :key="'p-'+p.id"
-            @click="agregarSimple(p)"
-            class="group bg-white dark:bg-slate-800 rounded-[1.25rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 active:scale-[0.97] relative">
-            <div class="w-full h-28 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-700/50 flex items-center justify-center overflow-hidden">
-              <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <span v-else class="text-4xl opacity-60 dark:opacity-30">🍽️</span>
+                  <!-- Aviso inline si la mesa tiene orden abierta -->
+                  <div v-if="mesaTieneOrdenAbierta" class="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <span class="text-amber-500 text-sm mt-0.5">ℹ️</span>
+                    <p class="text-xs text-amber-700 font-bold">
+                      La mesa {{ nuevaOrden.mesa }} ya tiene una orden abierta ({{ ordenAbiertaMesa?.folio }}).
+                      Al confirmar, los productos se <strong>agregarán al ticket existente</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="p-3">
-              <p class="text-xs font-bold text-gray-800 dark:text-slate-200 truncate">{{ p.nombre }}</p>
-              <p class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-1.5">${{ Number(p.precio).toFixed(2) }}</p>
-            </div>
-            <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shadow-indigo-300">+</div>
-          </button>
-        </div>
-      </div>
 
-      <div v-if="vistaActual === 'resumen'" class="max-w-lg mx-auto">
-        <div class="flex items-center gap-3 mb-6">
-          <button @click="vistaActual = 'productos'" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 hover:shadow-md transition-all font-bold text-lg">←</button>
-          <div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Mesa {{ nuevaOrden.mesa }} <span v-if="ordenAbiertaMesa" class="text-sm font-normal text-amber-600 dark:text-amber-400">· Agregando</span></h2>
-            <p class="text-xs text-gray-400 dark:text-slate-500">Revisa los productos antes de enviar</p>
+            <!-- Catálogo -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+              <div class="p-6 border-b border-slate-50">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                  <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit shrink-0 flex-wrap gap-1">
+                    <button @click="subTabActiva = 'alimentos'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'alimentos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍽️ ALIMENTOS
+                      <span v-if="tieneProductoNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
+                    </button>
+                    <button @click="subTabActiva = 'bebidas'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'bebidas' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍹 BEBIDAS
+                    </button>
+                    <button @click="subTabActiva = 'postres'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'postres' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🍰 POSTRES
+                    </button>
+                    <button @click="subTabActiva = 'paquetes'"
+                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
+                        subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
+                      🎁 PAQUETES
+                      <span v-if="tienePaqueteNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <!-- Paginación Superior (en el centro) -->
+                  <div v-if="subTabActiva !== 'paquetes' && totalPaginasProductos > 1" class="flex items-center gap-1.5 justify-center">
+                    <button
+                      type="button"
+                      :disabled="paginaProductos === 1"
+                      @click="paginaProductos--"
+                      class="w-8 h-8 rounded-xl border border-slate-100 hover:border-slate-200 bg-white text-slate-500 disabled:opacity-40 transition active:scale-95 shadow-sm flex items-center justify-center font-bold text-xs"
+                    >
+                      ←
+                    </button>
+                    <div class="flex items-center gap-1">
+                      <button
+                        v-for="page in totalPaginasProductos"
+                        :key="page"
+                        type="button"
+                        @click="paginaProductos = page"
+                        :class="[
+                          'w-8 h-8 rounded-xl text-[10px] font-black transition flex items-center justify-center shadow-sm',
+                          paginaProductos === page ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-white text-slate-500 border border-slate-100 hover:border-slate-200'
+                        ]"
+                      >
+                        {{ page }}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      :disabled="paginaProductos === totalPaginasProductos"
+                      @click="paginaProductos++"
+                      class="w-8 h-8 rounded-xl border border-slate-100 hover:border-slate-200 bg-white text-slate-500 disabled:opacity-40 transition active:scale-95 shadow-sm flex items-center justify-center font-bold text-xs"
+                    >
+                      →
+                    </button>
+                  </div>
+                  
+                  <div class="relative flex-1 max-w-xs sm:ml-auto">
+                    <input v-model="busqueda" type="text"
+                      :placeholder="'Buscar en ' + (subTabActiva !== 'paquetes' ? 'productos...' : 'paquetes...')"
+                      class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-4 min-h-[450px]">
+                <div v-if="loadingProductos" class="flex flex-col items-center justify-center py-24 text-slate-300 italic">
+                  <div class="w-10 h-10 border-4 border-slate-50 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                  <p class="text-sm font-bold uppercase tracking-widest">Sincronizando menú...</p>
+                </div>
+
+                <template v-else-if="subTabActiva === 'alimentos' || subTabActiva === 'bebidas' || subTabActiva === 'postres'">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                    <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
+                      <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
+                    </div>
+                    <button v-for="p in productosFiltrados" :key="'p-'+p.id" 
+                      @click="agregarAlCarrito(p, 'producto')"
+                      :disabled="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock"
+                      class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group p-1 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale relative">
+                      
+                      <!-- Product Image Container -->
+                      <div class="w-full h-32 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative shadow-sm border border-slate-100/50">
+                        <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <span v-else class="text-3xl">🍽️</span>
+                        
+                        <!-- Agotado Overlay -->
+                        <div v-if="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
+                        
+                        <!-- Indicador de cantidad agregada -->
+                        <div v-if="totalEnCarritoPorId(p.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop z-20">
+                          {{ totalEnCarritoPorId(p.id) }}
+                        </div>
+                      </div>
+
+                      <!-- Product Card Body -->
+                      <div class="p-3 flex-1 flex flex-col justify-between">
+                        <div>
+                          <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ p.nombre }}</p>
+                          <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
+                        </div>
+                        <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
+                          <span class="font-black text-sm text-slate-900">${{ Number(p.precio).toFixed(2) }}</span>
+                          <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
+                            +
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </template>
+
+                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
+                  <div v-if="paquetesFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
+                    <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
+                  </div>
+                  <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')"
+                    :disabled="paq.stock !== undefined && paq.stock !== null && totalEnCarritoPorPaqueteId(paq.id) >= paq.stock"
+                    class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group p-1 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale relative">
+                    
+                    <!-- Package Image Container -->
+                    <div class="w-full h-32 rounded-2xl overflow-hidden bg-indigo-50 flex items-center justify-center relative shadow-sm border border-indigo-100/50">
+                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <span v-else class="text-3xl">🎁</span>
+                      <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm z-20">COMBO</div>
+                      
+                      <!-- Agotado Overlay -->
+                      <div v-if="paq.stock !== undefined && paq.stock !== null && totalEnCarritoPorPaqueteId(paq.id) >= paq.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
+                      
+                      <!-- Indicador de cantidad agregada -->
+                      <div v-if="totalEnCarritoPorPaqueteId(paq.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop z-20">
+                        {{ totalEnCarritoPorPaqueteId(paq.id) }}
+                      </div>
+                    </div>
+
+                    <!-- Package Card Body -->
+                    <div class="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ paq.nombre }}</p>
+                        <p class="text-[9px] text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
+                      </div>
+                      <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
+                        <span class="font-black text-sm text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</span>
+                        <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-600 text-white group-hover:scale-110">
+                          +
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-1">
           <div v-for="item in carritoSimple" :key="item.id + (item.notas || '')" class="py-3 border-b border-slate-50 dark:border-slate-700 last:border-0">
@@ -689,7 +884,7 @@ const tabActual      = computed(() => tabs.find(t => t.key === tabActivo.value))
 const totalCarrito   = computed(() => carrito.value.reduce((s, i) => s + (i.precio * i.cantidad), 0))
 const fechaHoy       = computed(() => new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 const paginaProductos = ref(1)
-const itemsPorPagina = 6
+const itemsPorPagina = 9
 
 watch([busqueda, subTabActiva], () => {
   paginaProductos.value = 1
