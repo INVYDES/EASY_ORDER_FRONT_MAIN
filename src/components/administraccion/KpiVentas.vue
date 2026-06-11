@@ -232,6 +232,16 @@ const props = defineProps({
 // --- ESTADO ---
 const loading = ref(true)
 
+// Variables de estado (refs faltantes)
+const kpiData = ref({ ventas: [], totales: null })
+const kpiAnterior = ref({ ventas: [], totales: null })
+const kpiPeriodo = ref('semana')
+const kpiFechaInicio = ref('')
+const kpiFechaFin = ref('')
+const kpiMeseroId = ref('')
+const kpiGrupo = ref('dia')
+const mostrarComparacion = ref(false)
+const topProductos = ref([])
 
 // Datos nuevos
 const tiempos = ref({ cocina: null, barra: null, postres: null })
