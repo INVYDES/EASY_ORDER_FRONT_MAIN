@@ -91,6 +91,28 @@
           </p>
         </div>
 
+        <!-- Comisión por tarjeta -->
+        <div v-if="paymentMethod === 'tarjeta'">
+          <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-amber-800 dark:text-amber-300">Comisión por tarjeta</label>
+              <div class="flex items-center gap-2">
+                <input v-model.number="comisionTarjeta" type="number" step="0.1" min="0" max="100"
+                  class="w-20 px-2 py-1 text-sm text-center border border-amber-200 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                <span class="text-sm font-bold text-amber-700 dark:text-amber-400">%</span>
+              </div>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-amber-700 dark:text-amber-300">Comisión calculada</span>
+              <span class="font-bold text-amber-800 dark:text-amber-200">-${{ formatMoney(comisionCalculada) }}</span>
+            </div>
+            <div class="flex justify-between text-sm font-bold border-t border-amber-200 dark:border-amber-700 pt-2">
+              <span class="text-amber-800 dark:text-amber-200">Neto a depositar</span>
+              <span class="text-emerald-700 dark:text-emerald-400">${{ formatMoney(netoDepositar) }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Propina -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -236,6 +258,7 @@ const paymentMethod  = ref('efectivo')
 const amountReceived = ref(0)
 const propina        = ref(0)
 const folio          = ref('')
+const comisionTarjeta = ref(3.5)
 const errorMsg       = ref('')
 const fieldError     = ref('')
 const processing     = ref(false)
@@ -330,6 +353,8 @@ const metodos = [
 
 const total           = computed(() => Number(props.ticket.total || 0))
 const totalConPropina = computed(() => total.value + Number(propina.value || 0))
+const comisionCalculada = computed(() => (totalConPropina.value * comisionTarjeta.value) / 100)
+const netoDepositar     = computed(() => totalConPropina.value - comisionCalculada.value)
 
 const normalizedItems = computed(() => {
   const items = props.ticket.detalles || props.ticket.items || []
@@ -415,6 +440,9 @@ const processPayment = async () => {
     monto_pagado: paymentMethod.value === 'efectivo' ? amountReceived.value : totalConPropina.value,
     cambio:       cambio.value,
     folio:        folio.value.trim() || null,
+    comision_pct: paymentMethod.value === 'tarjeta' ? comisionTarjeta.value : 0,
+    comision_monto: paymentMethod.value === 'tarjeta' ? comisionCalculada.value : 0,
+    neto_depositar: paymentMethod.value === 'tarjeta' ? netoDepositar.value : totalConPropina.value,
   })
   
   processing.value = false

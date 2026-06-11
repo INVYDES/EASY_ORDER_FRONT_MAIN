@@ -357,7 +357,7 @@ import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
 const goBack = () => {
-  window.location.href = '/cws/eorder/panel/Gestion'
+  router.push({ name: 'Gestion' })
 }
 
 // --- Charts ---

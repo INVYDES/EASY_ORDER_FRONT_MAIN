@@ -1,865 +1,285 @@
 <template>
-  <div class="p-4 sm:p-6 space-y-5 min-h-screen bg-slate-50/50">
-
-    <!-- ══ TOASTS ══ -->
+  <div class="p-4 sm:p-6 space-y-5 min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900 dark:to-slate-800/80">
     <div class="fixed top-4 right-4 z-50 space-y-2">
       <div v-for="toast in toasts" :key="toast.id"
         :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[280px] max-w-sm animate-slide-in',
-          toast.type==='success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' :
-          toast.type==='error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800'             :
-          toast.type==='warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800'       :
-          'bg-blue-50 border-l-4 border-blue-500 text-blue-800']">
+          toast.type==='success' ? 'bg-emerald-50 dark:bg-emerald-900/80 dark:text-emerald-200 border-l-4 border-emerald-500 text-emerald-800' :
+          toast.type==='error'   ? 'bg-red-50 dark:bg-red-900/80 dark:text-red-200 border-l-4 border-red-500 text-red-800'             :
+          toast.type==='warning' ? 'bg-amber-50 dark:bg-amber-900/80 dark:text-amber-200 border-l-4 border-amber-500 text-amber-800'       :
+          'bg-blue-50 dark:bg-blue-900/80 dark:text-blue-200 border-l-4 border-blue-500 text-blue-800']">
         <span>{{ toast.type==='success' ? '✅' : toast.type==='error' ? '❌' : toast.type==='warning' ? '⚠️' : 'ℹ️' }}</span>
         <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600">×</button>
+        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
       </div>
     </div>
 
-    <!-- ══ MODAL: Orden existente encontrada ══ -->
-    <div v-if="ordenExistente" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-slide-in">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-2xl">🔔</div>
-          <div>
-            <h3 class="font-black text-slate-800">Mesa {{ nuevaOrden.mesa }} tiene orden abierta</h3>
-            <p class="text-xs text-slate-400 font-medium">{{ ordenExistente.folio }} · {{ ordenExistente.detalles?.length || 0 }} producto(s)</p>
-          </div>
-        </div>
-
-        <!-- Productos ya en la orden -->
-        <div class="bg-slate-50 rounded-xl p-4 mb-5 space-y-1.5 max-h-40 overflow-y-auto">
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Productos actuales</p>
-          <div v-for="d in ordenExistente.detalles" :key="d.id" class="flex justify-between text-xs font-bold text-slate-600">
-            <span class="text-sm font-black text-gray-800">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
-            <span class="text-slate-400">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
-          </div>
-        </div>
-
-        <!-- Productos nuevos a agregar -->
-        <div class="bg-indigo-50 rounded-xl p-4 mb-5 space-y-1.5">
-          <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2">Productos a agregar</p>
-          <div v-for="item in carrito" :key="item.id + item.tipo" class="flex justify-between text-xs font-bold text-indigo-700">
-            <span>{{ item.cantidad }}× {{ item.nombre }}</span>
-            <span>${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
-          </div>
-        </div>
-
-        <div class="flex gap-3">
-          <button @click="ordenExistente = null"
-            class="flex-1 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">
-            Cancelar
-          </button>
-          <button @click="confirmarAgregarAOrden"
-            :disabled="creando"
-            class="flex-1 py-2.5 text-sm font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
-            {{ creando ? 'Agregando...' : '➕ Agregar al ticket' }}
-          </button>
-        </div>
-      </div>
+    <div v-if="loadingCaja" class="flex flex-col items-center justify-center min-h-[70vh] gap-4">
+      <div class="w-12 h-12 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p class="text-gray-400 dark:text-slate-500 text-sm font-medium">Sincronizando con el sistema...</p>
     </div>
 
-    <!-- ══ CARGANDO CAJA ══ -->
-    <div v-if="loadingCaja" class="flex flex-col items-center justify-center min-h-[70vh] gap-3">
-      <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      <p class="text-gray-400 text-sm font-medium">Sincronizando con el sistema...</p>
-    </div>
-
-    <!-- ══ CAJA CERRADA ══ -->
-    <div v-else-if="!cajaAbierta" class="flex flex-col items-center justify-center min-h-[70vh] text-center gap-5">
-      <div class="w-24 h-24 rounded-3xl bg-red-50 flex items-center justify-center text-5xl shadow-sm">🔒</div>
+    <div v-else-if="!cajaAbierta" class="flex flex-col items-center justify-center min-h-[70vh] text-center gap-6">
+      <div class="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 flex items-center justify-center text-5xl shadow-sm border border-red-200 dark:border-red-700">🔒</div>
       <div>
-        <h2 class="text-2xl font-bold text-gray-800">Caja cerrada</h2>
-        <p class="text-gray-400 text-sm mt-2 max-w-xs">No se pueden registrar órdenes mientras la caja esté cerrada.</p>
+        <h2 class="text-2xl font-black text-gray-800 dark:text-white">Caja cerrada</h2>
+        <p class="text-gray-400 dark:text-slate-500 text-sm mt-2 max-w-xs">No se pueden registrar órdenes mientras la caja esté cerrada.</p>
       </div>
-      <button @click="verificarCaja" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">🔄 Verificar estado</button>
+      <button @click="verificarCaja" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.97]">🔄 Verificar estado</button>
     </div>
 
-    <!-- ══ CONTENIDO PRINCIPAL ══ -->
-    <template v-else>
-      <!-- Marquesina de Anuncios General -->
-      <div class="rounded-3xl overflow-hidden shadow-sm border border-slate-100 mb-6">
-        <Marquesitawidget 
-          :apiUrl="API_URL" 
-          :getHeaders="() => ({})" 
-          tipo="interno" 
-          :variant="marquesinaVariant" 
-        />
-      </div>
-
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
-        <!-- Izquierda: Título y Fecha -->
+    <div v-else>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white dark:bg-slate-800 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm">
         <div class="shrink-0">
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight">Órdenes del día</h1>
-          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
+          <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Mapa de Mesas</h1>
+          <p class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
         </div>
-
-        <!-- Centro: Indicadores de tiempo estimados por estación -->
-        <div class="flex flex-wrap items-center justify-center gap-3 flex-1">
-          <!-- Cocina -->
-          <div class="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/80 border border-amber-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
-            <span class="text-lg animate-bounce inline-block" style="animation-duration: 2s;">🍳</span>
-            <div>
-              <p class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Cocina</p>
-              <p class="text-sm font-black text-amber-800 mt-1">{{ formatTiempo(tiempoCocinaActual) }}</p>
-            </div>
-          </div>
-
-          <!-- Barra -->
-          <div class="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-50/80 border border-indigo-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
-            <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.2s;">🍹</span>
-            <div>
-              <p class="text-[8px] font-black text-indigo-500 uppercase tracking-widest leading-none">Barra</p>
-              <p class="text-sm font-black text-indigo-800 mt-1">{{ formatTiempo(tiempoBarraActual) }}</p>
-            </div>
-          </div>
-
-          <!-- Postres -->
-          <div class="flex items-center gap-2.5 px-4 py-2.5 bg-rose-50/80 border border-rose-100/80 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
-            <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.4s;">🍰</span>
-            <div>
-              <p class="text-[8px] font-black text-rose-500 uppercase tracking-widest leading-none">Postres</p>
-              <p class="text-sm font-black text-rose-800 mt-1">{{ formatTiempo(tiempoPostresActual) }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Derecha: Botón de Nueva Orden e Indicador de Caja -->
-        <div class="flex items-center gap-3 shrink-0 self-end md:self-auto">
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-[10px] font-black uppercase">Caja abierta</span>
-          </div>
-          <button
-            :disabled="esAdminOPropietario"
-            @click="vistaActual = 'nueva'"
-            :class="['flex items-center gap-2 px-5 py-3.5 text-sm font-bold rounded-2xl transition shadow-lg active:scale-95',
-                     esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100']"
-          >
-            <span class="text-lg leading-none">{{ esAdminOPropietario ? '🚫' : '＋' }}</span>
-            {{ esAdminOPropietario ? 'Nueva Orden Bloqueada' : 'Nueva Orden' }}
+        <div class="flex items-center gap-2">
+          <button @click="vistaActual = vistaActual === 'admin' ? 'mapa' : 'admin'"
+            class="px-4 py-3 text-sm font-bold rounded-2xl transition-all shadow-sm active:scale-95"
+            :class="vistaActual === 'admin' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'">
+            <span class="flex items-center gap-2">📋 {{ vistaActual === 'admin' ? 'Ver mapa' : 'Admin' }}</span>
           </button>
-        </div>
-      </div>
-
-      <!-- ══ VISTA LISTADO ══ -->
-      <div v-if="vistaActual === 'ordenes'">
-        <div class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
-          <button v-for="tab in tabs" :key="tab.key" @click="tabActivo = tab.key"
-            :class="['flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all border shrink-0',
-              tabActivo === tab.key ? 'text-white border-transparent shadow-md scale-105' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 shadow-sm']"
-            :style="tabActivo === tab.key ? { backgroundColor: tab.color } : {}">
-            <span>{{ tab.icon }}</span> {{ tab.label.toUpperCase() }}
-            <span class="px-1.5 py-0.5 rounded-lg text-[10px]"
-              :class="tabActivo === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'">
-              {{ contarOrdenes(tab.key) }}
-            </span>
-          </button>
-        </div>
-
-        <!-- Tab Cobrar -->
-        <div v-if="tabActivo === 'cobrar'" class="animate-fade-in space-y-4">
-          <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 min-h-[500px]">
-            <CajaTicketGrid
-              type="open"
-              :orders="ordenesParaCobrar"
-              @order-paid="handleOrderPaid"
-              @refresh="cargarOrdenes"
-            />
-          </div>
-        </div>
-
-        <div v-else>
-          <div v-if="loading" class="flex flex-col items-center justify-center py-32 gap-3">
-            <div class="w-8 h-8 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p class="text-slate-400 text-sm">Actualizando órdenes...</p>
-          </div>
-
-          <div v-else-if="subOrdenesFiltradas.length === 0" class="text-center py-24 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <span class="text-6xl block mb-4 opacity-20">{{ tabActual?.icon }}</span>
-            <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Sin órdenes en {{ tabActual?.label }}</p>
-          </div>
-
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-in">
-            <div v-for="sub in subOrdenesFiltradas" :key="sub.uid"
-              class="bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
-              :class="borderColor(sub.estado_estacion)">
-
-              <div class="px-5 py-4 flex items-center justify-between" :class="bgEstado(sub.estado_estacion)">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center text-xl shadow-sm group-hover:rotate-12 transition-transform">
-                    {{ iconEstado(sub.estado_estacion) }}
-                  </div>
-                  <div>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-tighter">Orden</p>
-                    <div class="flex items-center gap-2 mt-0.5">
-                      <p class="text-base font-black text-slate-800 leading-none">{{ sub.folio || '#'+sub.id }}</p>
-                      <button 
-                        v-if="['ENTREGADA', 'ABIERTA'].includes(sub.estado_estacion) && !['CERRADA','CANCELADA','PAGADA'].includes(sub.estado)" 
-                        @click.stop="prepararEdicionOrden(sub)" 
-                        title="Agregar productos / comensales"
-                        class="w-6 h-6 rounded-lg bg-white/90 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 flex items-center justify-center text-[10px] shadow-sm hover:scale-110 active:scale-95 transition-all duration-200"
-                      >
-                        ✏️
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <span class="text-[10px] font-black px-3 py-1.5 rounded-xl border" :class="badgeEstado(sub.estado_estacion)">
-                  {{ labelEstado(sub.estado_estacion).toUpperCase() }}
-                </span>
-              </div>
-
-              <div class="px-5 py-5 flex-1 space-y-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-lg">👤</span>
-                    <span class="font-black text-indigo-700 truncate text-sm">{{ getNombreMostrable(sub) }}</span>
-                  </div>
-                  <div v-if="sub.mesa" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black">
-                    MESA {{ sub.mesa }}
-                  </div>
-                </div>
-                <div class="space-y-4">
-                  <div v-for="(detalles, nomComensal) in agruparPorComensal(sub.detalles_estacion)" :key="nomComensal"
-                    class="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                    
-                    <!-- Encabezado del Comensal -->
-                    <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-100">
-                      <span class="text-[10px]">👤</span>
-                      <span class="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{{ nomComensal }}</span>
-                      <span v-if="calcularTiempoSubOrdenComensal(detalles) >= 0 && detalles.length > 0" class="text-[9px] text-slate-500 font-bold ml-auto">⏱️ {{ calcularTiempoSubOrdenComensal(detalles) }} min</span>
-                    </div>
-
-                    <!-- Lista de Productos -->
-                    <div class="space-y-2">
-                      <div v-for="detalle in detalles" :key="detalle.id"
-                        :class="['flex flex-col gap-1.5 p-2 rounded-xl border shadow-sm group/item transition-all', 
-                                detalle.cancelado ? 'bg-red-50/50 border-red-100 opacity-80' : 'bg-white border-slate-50']">
-                        
-                        <div class="flex items-center justify-between gap-2">
-                          <div class="min-w-0 flex-1">
-                            <p class="text-[11px] font-black leading-tight uppercase truncate"
-                               :class="detalle.cancelado ? 'text-red-400 line-through' : 'text-slate-700'">
-                              {{ detalle.cantidad }}× {{ detalle.producto_nombre || detalle.nombre || (typeof detalle.producto === 'string' ? detalle.producto : detalle.producto?.nombre) || 'Producto' }}
-                            </p>
-                            <!-- Leyenda de cancelado -->
-                            <p v-if="detalle.cancelado" class="text-[9px] font-black uppercase tracking-widest text-red-600 mt-0.5">
-                              🚫 Cancelado: {{ detalle.motivo_cancelacion }}
-                            </p>
-                            <!-- Notas del producto (solo si no está cancelado para no saturar) -->
-                            <p v-else-if="detalle.notas" class="text-[9px] text-amber-600 font-bold italic mt-0.5">
-                              "{{ detalle.notas }}"
-                            </p>
-                          </div>
-
-                          <!-- Acciones rápidas (Solo si no está cancelado y la orden está ABIERTA) -->
-                          <div v-if="!detalle.cancelado && sub.estado_estacion === 'ABIERTA' && detalle.estado_preparacion === 'ABIERTA' && !esAdminOPropietario" class="flex items-center gap-2">
-                            <button @click="abrirEditorNotas(detalle, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100 active:scale-90 transition-all">
-                              <span class="text-base">📝</span>
-                            </button>
-                            <button @click="eliminarProductoDeOrden(detalle.id, sub.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 shadow-sm border border-red-100 active:scale-90 transition-all">
-                              <span class="text-base">🗑️</span>
-                            </button>
-                          </div>
-
-                          <!-- Badge de estado para informativos -->
-                          <div v-else class="flex items-center">
-                            <span v-if="detalle.cancelado" class="text-[8px] font-black text-red-600 bg-red-100 px-2 py-0.5 rounded-lg uppercase">Anulado</span>
-                            <span v-else-if="detalle.estado_preparacion === 'LISTO'" class="text-[10px] font-black text-white bg-emerald-500 px-3 py-1 rounded-xl shadow-sm">LISTO</span>
-                            <span v-else-if="detalle.estado_preparacion === 'ENTREGADO'" class="text-emerald-500 text-sm">●</span>
-                          </div>
-                        </div>
-
-                        <!-- Controles de Cantidad (Solo en ABIERTAS y no cancelados) -->
-                        <div v-if="sub.estado_estacion === 'ABIERTA' && detalle.estado_preparacion === 'ABIERTA' && !detalle.cancelado && !esAdminOPropietario" class="flex items-center justify-end gap-4 pt-2 border-t border-slate-100">
-                          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-auto">Cantidad:</span>
-                          <div class="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                            <span class="text-sm font-black text-slate-800 min-w-[20px] text-center">{{ detalle.cantidad }}</span>
-                            <button @click="actualizarCantidadItem(detalle, sub.id, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-indigo-600 font-black text-base shadow-sm active:scale-90 transition-all">+</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="px-5 pb-5">
-                <button
-                  v-if="(tabActivo !== 'todas' || sub.estado_estacion === 'ABIERTA') && siguienteEstado(sub.estado_estacion)"
-                  @click="sub.estado_estacion === 'LISTA' ? entregarProductosSubOrden(sub) : cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))"
-                  :disabled="cambiando === sub.uid || esAdminOPropietario"
-                  class="w-full py-3.5 text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 uppercase tracking-widest"
-                  :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : btnEstado(sub.estado_estacion)">
-                  {{ esAdminOPropietario ? '🚫 Acciones Bloqueadas' : (cambiando === sub.uid ? 'PROCESANDO...' : accionEstado(sub.estado_estacion)) }}
-                </button>
-                <div v-else class="w-full py-3.5 text-[10px] font-black text-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-widest">
-                  {{ sub.estado_estacion === 'ENTREGADA' ? '✓ Entregado' : sub.estado_estacion === 'CERRADA' ? '🔒 Cobrada' : sub.estado_estacion === 'CANCELADA' ? '🚫 Cancelada' : 'En proceso' }}
-                </div>
-              </div>
-            </div>
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-300"></span>
+            <span class="text-[10px] font-black uppercase tracking-wider">Caja abierta</span>
           </div>
         </div>
       </div>
 
-      <!-- ══ VISTA NUEVA ORDEN ══ -->
-      <div v-else-if="vistaActual === 'nueva'" class="animate-fade-in">
-        <div class="flex items-center justify-between gap-3 mb-6">
-          <div class="flex items-center gap-3">
-            <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
-            <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
-          </div>
-          <!-- Botón fijo para ver el pedido actual en tablets y móviles -->
-          <button 
-            type="button"
-            @click="showCarritoFlotante = true" 
-            class="lg:hidden flex items-center gap-2.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-md transition active:scale-95 border border-indigo-500 font-black text-xs uppercase tracking-wider animate-fade-in"
-          >
-            <span>🛒 Ver Pedido</span>
-            <span class="bg-indigo-800 text-white px-2 py-0.5 rounded-full text-[10px] font-black">{{ carrito.length }}</span>
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Formulario y Catálogo -->
-          <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
-                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl p-1 h-[52px] w-full">
-                    <button 
-                      type="button"
-                      @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" 
-                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
-                    >
-                      −
-                    </button>
-                    <input 
-                      v-model="numeroComensales" 
-                      type="number" 
-                      min="1" 
-                      max="50" 
-                      @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales"
-                      class="flex-1 text-center text-sm font-black text-slate-800 outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                    />
-                    <button 
-                      type="button"
-                      @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" 
-                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                    Número de Mesa
-                    <!-- Indicador: mesa tiene orden abierta -->
-                    <span v-if="mesaTieneOrdenAbierta" class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-lg text-[9px] normal-case font-black">
-                      ⚠️ Tiene orden abierta
-                    </span>
-                  </label>
-                  <select v-if="esMesero && mesasAsignadas.length > 0" v-model="nuevaOrden.mesa"
-                    class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
-                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : ''">
-                    <option :value="null">Selecciona una mesa</option>
-                    <option v-for="m in mesasAsignadas" :key="m" :value="m">
-                      Mesa {{ m }}{{ mesaConOrden(m) ? ' ⚠️ orden abierta' : '' }}
-                    </option>
-                  </select>
-                  <select v-else v-model="nuevaOrden.mesa"
-                    class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
-                    :class="mesaTieneOrdenAbierta ? 'border-amber-300 bg-amber-50' : ''">
-                    <option :value="null">Selecciona una mesa</option>
-                    <option v-for="n in totalMesasRestaurante" :key="n" :value="n">
-                      Mesa {{ n }}{{ mesaConOrden(n) ? ' ⚠️ abierta' : '' }}
-                    </option>
-                    <option v-if="totalMesasRestaurante === 0" disabled>No hay mesas configuradas</option>
-                  </select>
-
-                  <!-- Aviso inline si la mesa tiene orden abierta -->
-                  <div v-if="mesaTieneOrdenAbierta" class="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                    <span class="text-amber-500 text-sm mt-0.5">ℹ️</span>
-                    <p class="text-xs text-amber-700 font-bold">
-                      La mesa {{ nuevaOrden.mesa }} ya tiene una orden abierta ({{ ordenAbiertaMesa?.folio }}).
-                      Al confirmar, los productos se <strong>agregarán al ticket existente</strong>.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Catálogo -->
-            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-              <div class="p-6 border-b border-slate-50">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                  <div class="flex bg-slate-100 p-1.5 rounded-2xl w-fit shrink-0 flex-wrap gap-1">
-                    <button @click="subTabActiva = 'alimentos'"
-                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
-                        subTabActiva === 'alimentos' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
-                      🍽️ ALIMENTOS
-                      <span v-if="tieneProductoNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                      </span>
-                    </button>
-                    <button @click="subTabActiva = 'bebidas'"
-                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
-                        subTabActiva === 'bebidas' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
-                      🍹 BEBIDAS
-                    </button>
-                    <button @click="subTabActiva = 'postres'"
-                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
-                        subTabActiva === 'postres' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
-                      🍰 POSTRES
-                    </button>
-                    <button @click="subTabActiva = 'paquetes'"
-                      :class="['px-4 py-2 text-[10px] font-black rounded-xl transition-all tracking-widest relative',
-                        subTabActiva === 'paquetes' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600']">
-                      🎁 PAQUETES
-                      <span v-if="tienePaqueteNuevoHoy" class="absolute top-1 right-1 flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                      </span>
-                    </button>
-                  </div>
-                  
-                  <!-- Paginación Superior (en el centro) -->
-                  <div v-if="subTabActiva !== 'paquetes' && totalPaginasProductos > 1" class="flex items-center gap-1.5 justify-center">
-                    <button
-                      type="button"
-                      :disabled="paginaProductos === 1"
-                      @click="paginaProductos--"
-                      class="w-8 h-8 rounded-xl border border-slate-100 hover:border-slate-200 bg-white text-slate-500 disabled:opacity-40 transition active:scale-95 shadow-sm flex items-center justify-center font-bold text-xs"
-                    >
-                      ←
-                    </button>
-                    <div class="flex items-center gap-1">
-                      <button
-                        v-for="page in totalPaginasProductos"
-                        :key="page"
-                        type="button"
-                        @click="paginaProductos = page"
-                        :class="[
-                          'w-8 h-8 rounded-xl text-[10px] font-black transition flex items-center justify-center shadow-sm',
-                          paginaProductos === page ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-white text-slate-500 border border-slate-100 hover:border-slate-200'
-                        ]"
-                      >
-                        {{ page }}
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      :disabled="paginaProductos === totalPaginasProductos"
-                      @click="paginaProductos++"
-                      class="w-8 h-8 rounded-xl border border-slate-100 hover:border-slate-200 bg-white text-slate-500 disabled:opacity-40 transition active:scale-95 shadow-sm flex items-center justify-center font-bold text-xs"
-                    >
-                      →
-                    </button>
-                  </div>
-                  
-                  <div class="relative flex-1 max-w-xs sm:ml-auto">
-                    <input v-model="busqueda" type="text"
-                      :placeholder="'Buscar en ' + (subTabActiva !== 'paquetes' ? 'productos...' : 'paquetes...')"
-                      class="w-full pl-11 pr-4 py-3 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-medium" />
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="p-4 min-h-[450px]">
-                <div v-if="loadingProductos" class="flex flex-col items-center justify-center py-24 text-slate-300 italic">
-                  <div class="w-10 h-10 border-4 border-slate-50 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                  <p class="text-sm font-bold uppercase tracking-widest">Sincronizando menú...</p>
-                </div>
-
-                <template v-else-if="subTabActiva === 'alimentos' || subTabActiva === 'bebidas' || subTabActiva === 'postres'">
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
-                    <div v-if="productosFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
-                      <p class="text-sm font-bold italic uppercase">No hay productos que coincidan</p>
-                    </div>
-                    <button v-for="p in productosFiltrados" :key="'p-'+p.id" 
-                      @click="agregarAlCarrito(p, 'producto')"
-                      :disabled="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock"
-                      class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group p-1 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale relative">
-                      
-                      <!-- Product Image Container -->
-                      <div class="w-full h-32 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative shadow-sm border border-slate-100/50">
-                        <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        <span v-else class="text-3xl">🍽️</span>
-                        
-                        <!-- Agotado Overlay -->
-                        <div v-if="p.stock !== undefined && p.stock !== null && totalEnCarritoPorId(p.id) >= p.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
-                        
-                        <!-- Indicador de cantidad agregada -->
-                        <div v-if="totalEnCarritoPorId(p.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop z-20">
-                          {{ totalEnCarritoPorId(p.id) }}
-                        </div>
-                      </div>
-
-                      <!-- Product Card Body -->
-                      <div class="p-3 flex-1 flex flex-col justify-between">
-                        <div>
-                          <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ p.nombre }}</p>
-                          <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
-                        </div>
-                        <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
-                          <span class="font-black text-sm text-slate-900">${{ Number(p.precio).toFixed(2) }}</span>
-                          <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
-                            +
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </template>
-
-                <div v-else-if="subTabActiva === 'paquetes'" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2 custom-scrollbar animate-fade-in">
-                  <div v-if="paquetesFiltrados.length === 0" class="col-span-full py-24 text-center text-slate-300">
-                    <p class="text-sm font-bold italic uppercase">No hay paquetes disponibles ahora</p>
-                  </div>
-                  <button v-for="paq in paquetesFiltrados" :key="'paq-'+paq.id" @click="agregarAlCarrito(paq, 'paquete')"
-                    :disabled="paq.stock !== undefined && paq.stock !== null && totalEnCarritoPorPaqueteId(paq.id) >= paq.stock"
-                    class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group p-1 disabled:opacity-50 disabled:pointer-events-none disabled:grayscale relative">
-                    
-                    <!-- Package Image Container -->
-                    <div class="w-full h-32 rounded-2xl overflow-hidden bg-indigo-50 flex items-center justify-center relative shadow-sm border border-indigo-100/50">
-                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                      <span v-else class="text-3xl">🎁</span>
-                      <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm z-20">COMBO</div>
-                      
-                      <!-- Agotado Overlay -->
-                      <div v-if="paq.stock !== undefined && paq.stock !== null && totalEnCarritoPorPaqueteId(paq.id) >= paq.stock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-red-500 font-black text-xs uppercase tracking-widest z-10">Agotado</div>
-                      
-                      <!-- Indicador de cantidad agregada -->
-                      <div v-if="totalEnCarritoPorPaqueteId(paq.id) > 0" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-black w-6.5 h-6.5 rounded-full flex items-center justify-center shadow-md border-2 border-white animate-pop z-20">
-                        {{ totalEnCarritoPorPaqueteId(paq.id) }}
-                      </div>
-                    </div>
-
-                    <!-- Package Card Body -->
-                    <div class="p-3 flex-1 flex flex-col justify-between">
-                      <div>
-                        <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ paq.nombre }}</p>
-                        <p class="text-[9px] text-indigo-500 font-black uppercase mt-1 tracking-tighter">✨ Promoción Especial</p>
-                      </div>
-                      <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
-                        <span class="font-black text-sm text-indigo-600">${{ Number(paq.precio).toFixed(2) }}</span>
-                        <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-600 text-white group-hover:scale-110">
-                          +
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Carrito -->
-          <div class="hidden lg:block lg:col-span-1">
-            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden sticky top-6">
-              <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
-                <div>
-                  <h3 class="font-black text-xs tracking-widest uppercase opacity-60">Resumen</h3>
-                  <p class="text-lg font-black leading-none mt-1">PEDIDO ACTUAL</p>
-                </div>
-                <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center font-black text-sm">
-                  {{ carrito.length }}
-                </div>
-              </div>
-
-              <!-- Banner: se agregará a orden existente -->
-              <div v-if="mesaTieneOrdenAbierta" class="px-6 pt-4">
-                <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <span class="text-amber-500">⚡</span>
-                  <p class="text-xs font-black text-amber-700">Se añadirán a {{ ordenAbiertaMesa?.folio }}</p>
-                </div>
-              </div>
-
-              <div class="p-6">
-                <div class="animate-fade-in">
-                  <div class="space-y-4 mb-8 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
-                    <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                         class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
-                         :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
-                      
-                      <!-- Box Header -->
-                      <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
-                        <div class="flex items-center gap-2">
-                           <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                           <div class="flex flex-col">
-                             <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                             <span v-if="tiempoPorComensal(cIdx) > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
-                           </div>
-                        </div>
-                        <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
-                        <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
-                      </div>
-
-                      <!-- Box Items -->
-                      <div class="p-3 space-y-3 bg-white">
-                        <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-6 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
-                          CAJA VACÍA
-                        </div>
-                        <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:border-indigo-200 group transition-all">
-                          <div class="flex justify-between items-start gap-3 mb-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                              <span class="text-lg bg-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
-                              <p class="text-[11px] font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
-                            </div>
-                            <button @click="eliminarDelCarrito(item.cartId)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
-                          </div>
-                          <div class="mb-3">
-                            <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
-                          </div>
-                          <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-100">
-                              <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
-                              <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                              <button @click="incrementar(item.cartId)"
-                                :disabled="(item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo) || (item.tipo === 'paquete' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorPaqueteId(item.id) >= item.stock_maximo)"
-                                class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
-                            </div>
-                            <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="space-y-3 pt-6 border-t border-slate-100">
-                    <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      <span>Subtotal</span>
-                      <span>${{ Number(totalCarrito).toFixed(2) }}</span>
-                    </div>
-                    <div class="flex justify-between items-end">
-                      <span class="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Total Final</span>
-                      <span class="text-2xl font-black text-indigo-600 leading-none">${{ Number(totalCarrito).toFixed(2) }}</span>
-                    </div>
-                  </div>
-
-                  <button @click="crearOrden" :disabled="creando || !nuevaOrden.mesa || esAdminOPropietario"
-                    class="w-full py-4 font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs text-white"
-                    :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : (mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100')">
-                    <template v-if="creando">
-                      <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Enviando...
-                    </template>
-                    <template v-else>
-                      {{ esAdminOPropietario ? '🚫 PEDIDO BLOQUEADO' : (mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀') }}
-                    </template>
-                  </button>
-                  <p v-if="!nuevaOrden.mesa" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sliding Cart Drawer (for tablets & mobile) -->
-          <div v-if="showCarritoFlotante" class="lg:hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex justify-end animate-fade-in" @click.self="showCarritoFlotante = false">
-            <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-left overflow-hidden">
-              <!-- Header -->
-              <div class="p-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                <div>
-                  <h3 class="font-black text-xs tracking-widest uppercase opacity-60">Resumen</h3>
-                  <p class="text-lg font-black leading-none mt-1">PEDIDO ACTUAL</p>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center font-black text-sm">
-                    {{ carrito.length }}
-                  </div>
-                  <button @click="showCarritoFlotante = false" class="text-white hover:text-slate-300 text-xl font-bold p-1">✕</button>
-                </div>
-              </div>
-
-              <!-- Banner: se agregará a orden existente -->
-              <div v-if="mesaTieneOrdenAbierta" class="px-6 pt-4 shrink-0">
-                <div class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <span class="text-amber-500">⚡</span>
-                  <p class="text-xs font-black text-amber-700">Se añadirán a {{ ordenAbiertaMesa?.folio }}</p>
-                </div>
-              </div>
-
-              <!-- Cuerpo del pedido -->
-              <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
-                <div class="space-y-4 mb-8">
-                  <div v-for="(nombre, cIdx) in comensalesNombres" :key="'flo-'+cIdx" 
-                       class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
-                       :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
-                    
-                    <!-- Box Header -->
-                    <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
-                      <div class="flex items-center gap-2">
-                         <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                         <div class="flex flex-col">
-                           <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                           <span v-if="tiempoPorComensal(cIdx) > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
-                         </div>
-                      </div>
-                      <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
-                      <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
-                    </div>
-
-                    <!-- Box Items -->
-                    <div class="p-3 space-y-3 bg-white">
-                      <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-6 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
-                        CAJA VACÍA
-                      </div>
-                      <div v-for="item in getItemsForComensal(cIdx)" :key="'flo-'+item.cartId" class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:border-indigo-200 group transition-all">
-                        <div class="flex justify-between items-start gap-3 mb-2">
-                          <div class="flex items-center gap-2 min-w-0">
-                            <span class="text-lg bg-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
-                            <p class="text-[11px] font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
-                          </div>
-                          <button @click="eliminarDelCarrito(item.cartId)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
-                        </div>
-                        <div class="mb-3">
-                          <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
-                        </div>
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-100">
-                            <button @click="decrementar(item.cartId)" class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-slate-400 hover:text-red-500 transition-colors font-black">−</button>
-                            <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                            <button @click="incrementar(item.cartId)"
-                              :disabled="(item.tipo === 'producto' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorId(item.id) >= item.stock_maximo) || (item.tipo === 'paquete' && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnCarritoPorPaqueteId(item.id) >= item.stock_maximo)"
-                              class="w-6 h-6 flex items-center justify-center bg-slate-50 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors font-black disabled:opacity-30 disabled:cursor-not-allowed">+</button>
-                          </div>
-                          <span class="font-black text-xs text-slate-900">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="space-y-3 pt-6 border-t border-slate-100">
-                  <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <span>Subtotal</span>
-                    <span>${{ Number(totalCarrito).toFixed(2) }}</span>
-                  </div>
-                  <div class="flex justify-between items-end">
-                    <span class="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Total Final</span>
-                    <span class="text-2xl font-black text-indigo-600 leading-none">${{ Number(totalCarrito).toFixed(2) }}</span>
-                  </div>
-                </div>
-
-                <button @click="crearOrden(); showCarritoFlotante = false" :disabled="creando || !nuevaOrden.mesa || esAdminOPropietario"
-                  class="w-full py-4 font-black rounded-2xl mt-8 disabled:opacity-50 disabled:grayscale shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs text-white"
-                  :class="esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : (mesaTieneOrdenAbierta ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100')">
-                  <template v-if="creando">
-                    <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Enviando...
-                  </template>
-                  <template v-else>
-                    {{ esAdminOPropietario ? '🚫 PEDIDO BLOQUEADO' : (mesaTieneOrdenAbierta ? '➕ AGREGAR AL TICKET' : 'CONFIRMAR ORDEN 🚀') }}
-                  </template>
-                </button>
-                <p v-if="!nuevaOrden.mesa" class="text-[9px] text-center text-red-500 font-black mt-3 uppercase tracking-tighter animate-pulse">⚠️ Debes indicar el número de mesa</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <!-- ══ MODAL: EDITAR NOTAS ══ -->
-    <div v-if="editorNotas.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4">
-      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in border border-slate-100">
-        <div class="p-6 bg-slate-50 border-b border-slate-100">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">📝</span>
+      <div v-if="vistaActual === 'mapa' || vistaActual === 'admin'">
+        <div v-if="vistaActual === 'mapa'" class="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-5">
             <div>
-              <h3 class="font-black text-slate-800 text-sm">Editar notas</h3>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ editorNotas.detalle?.producto_nombre || 'Producto' }}</p>
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><span class="text-2xl">🗺️</span> Mesas del restaurante</h2>
+              <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5 ml-9">Toca una mesa libre para comenzar un pedido</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+              <span class="flex items-center gap-1.5 font-medium text-gray-500 dark:text-slate-400"><span class="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-emerald-200 to-emerald-300 border border-emerald-400 shadow-sm"></span> Libre</span>
+              <span class="flex items-center gap-1.5 font-medium text-gray-500 dark:text-slate-400"><span class="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-amber-200 to-amber-300 border border-amber-400 shadow-sm"></span> Ocupada</span>
             </div>
           </div>
-        </div>
-        <div class="p-6">
-          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Instrucciones especiales</label>
-          <textarea v-model="editorNotas.nota" rows="3" 
-            class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none transition font-bold"
-            placeholder="Ej: Sin cebolla, extra picante..."></textarea>
-        </div>
-        <div class="p-6 bg-slate-50 flex gap-3">
-          <button @click="editorNotas.visible = false" 
-            class="flex-1 py-3 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
-            Cancelar
-          </button>
-          <button @click="guardarNota" 
-            class="flex-1 py-3 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 uppercase tracking-widest">
-            Guardar
-          </button>
-        </div>
-      </div>
-    </div>
-    <!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
-    <div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4" @click.self="cancelacionModal.visible = false">
-      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in border border-slate-100">
-        <div class="p-6 bg-red-50 border-b border-red-100">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">⚠️</span>
-            <div>
-              <h3 class="font-black text-red-800 text-sm">Motivo de cancelación</h3>
-              <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Se requiere registrar el motivo</p>
-            </div>
+          <div class="rounded-xl bg-slate-50/50 dark:bg-slate-700/50 p-3">
+            <TableMap :model-value="mesaSeleccionada" :ordenes="ordenes" :total-mesas="totalMesasRestaurante" @update:model-value="onMesaClick" />
           </div>
         </div>
-        <div class="p-6">
-          <!-- Selector de Cantidad a Cancelar (solo si max > 1) -->
-          <div v-if="cancelacionModal.cantidadMaxima > 1" class="mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center">Cantidad a Cancelar</label>
-            <div class="flex items-center justify-center gap-4">
-              <button @click="cancelacionModal.cantidadCancelar > 1 ? cancelacionModal.cantidadCancelar-- : null"
-                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 font-black transition active:scale-95 text-sm">
-                −
-              </button>
-              <span class="text-lg font-black text-slate-800 w-12 text-center">{{ cancelacionModal.cantidadCancelar }}</span>
-              <button @click="cancelacionModal.cantidadCancelar < cancelacionModal.cantidadMaxima ? cancelacionModal.cantidadCancelar++ : null"
-                class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-indigo-600 hover:bg-indigo-50 font-black transition active:scale-95 text-sm">
-                +
-              </button>
-            </div>
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center mt-1">De un total de {{ cancelacionModal.cantidadMaxima }} unidades</p>
-          </div>
 
-          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">¿Por qué se cancela este producto?</label>
-          <div class="grid grid-cols-1 gap-2 mb-4">
-            <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
-              @click="cancelacionModal.motivo = m"
-              :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition text-left', 
-                cancelacionModal.motivo === m ? 'bg-red-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100']">
-              {{ m }}
+        <div v-if="vistaActual === 'admin'" class="mt-6">
+          <div class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+            <button v-for="tab in tabs" :key="tab.key" @click="tabActivo = tab.key"
+              :class="['flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-black transition-all border shrink-0',
+                tabActivo === tab.key ? 'text-white border-transparent shadow-lg scale-[1.02]' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-sm']"
+              :style="tabActivo === tab.key ? { background: `linear-gradient(135deg, ${tab.color}, ${tab.color}dd)`, boxShadow: `0 4px 12px ${tab.color}44` } : {}">
+              <span class="text-lg">{{ tab.icon }}</span>
+              <span>{{ tab.label.toUpperCase() }}</span>
+              <span class="px-1.5 py-0.5 rounded-lg text-[10px] font-bold"
+                :class="tabActivo === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'">
+                {{ contarOrdenes(tab.key) }}
+              </span>
             </button>
           </div>
-          <textarea v-model="cancelacionModal.motivo" rows="2" 
-            class="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition font-bold"
-            placeholder="Escribe otro motivo..."></textarea>
+          <div v-if="tabActivo === 'cobrar'" class="animate-fade-in">
+            <div class="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm p-6 min-h-[400px]">
+              <CajaTicketGrid type="open" :orders="ordenesParaCobrar" @order-paid="handleOrderPaid" @refresh-orders="loadOrdersForCashier" />
+            </div>
+          </div>
+          <div v-else class="animate-fade-in">
+            <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
+              <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+              <p class="text-gray-400 text-sm font-medium">Cargando órdenes...</p>
+            </div>
+            <div v-else-if="ordenesFiltradas.length === 0" class="text-center py-20 bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+              <span class="text-6xl block mb-4">📋</span>
+              <p class="text-gray-500 dark:text-slate-300 font-bold text-lg">Sin órdenes</p>
+              <p class="text-gray-400 dark:text-slate-500 text-xs mt-1">No hay órdenes en esta categoría</p>
+            </div>
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div v-for="orden in ordenesFiltradas" :key="orden.id" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                <div class="px-4 py-3.5 flex items-center justify-between border-b border-slate-50 dark:border-slate-700" :class="bgEstado(orden.estado)">
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-xl">{{ iconEstado(orden.estado) }}</span>
+                    <div>
+                      <p class="text-sm font-bold text-gray-800 dark:text-white">{{ orden.folio || 'Orden #'+orden.id }}</p>
+                      <p class="text-[10px] text-gray-400 dark:text-slate-500 font-medium">{{ formatHora(orden.created_at) }}</p>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold px-3 py-1.5 rounded-full border" :class="badgeEstado(orden.estado)">{{ labelEstado(orden.estado) }}</span>
+                </div>
+                <div class="px-4 py-3.5 flex-1 space-y-2.5">
+                  <div class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-slate-300">
+                    <span class="text-lg">👤</span>
+                    <span class="font-semibold">{{ getNombreMostrable(orden) }}</span>
+                  </div>
+                  <div v-if="orden.mesa" class="flex items-center gap-2.5 text-sm text-gray-500 dark:text-slate-400">
+                    <span class="text-lg">🪑</span>
+                    <span class="font-semibold">Mesa {{ orden.mesa }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="p-6 bg-slate-50 flex gap-3">
-          <button @click="cancelacionModal.visible = false" 
-            class="flex-1 py-3 text-xs font-black text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
-            Cerrar
+      </div>
+
+      <div v-if="vistaActual === 'productos'">
+        <div v-if="ordenAbiertaMesa" class="mb-4 px-4 py-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl flex items-center gap-3 shadow-sm">
+          <span class="text-xl">📋</span>
+          <span class="text-xs font-bold text-amber-800 dark:text-amber-300 flex-1">Mesa tiene pedido activo — los productos se agregarán al ticket existente</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-3">
+            <button @click="vistaActual = 'mapa'; carritoSimple = []" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 hover:shadow-md transition-all font-bold text-lg">←</button>
+            <div>
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">Mesa {{ nuevaOrden.mesa }} <span v-if="ordenAbiertaMesa" class="text-base">📋</span></h2>
+              <p class="text-xs text-gray-400 dark:text-slate-500">{{ ordenAbiertaMesa ? 'Agregando productos al pedido actual' : 'Toca los productos para agregarlos' }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold shadow-sm border border-indigo-200 dark:border-indigo-700">{{ carritoSimple.length }} producto(s)</span>
+            <button v-if="carritoSimple.length > 0" @click="vistaActual = 'resumen'" class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.97] flex items-center gap-1.5">
+              Revisar y enviar <span class="text-lg">→</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mb-4 overflow-x-auto pb-1 custom-scrollbar">
+          <button v-for="cat in categoriasProducto" :key="cat.key"
+            @click="subTabActiva = cat.key"
+            class="shrink-0 px-5 py-3 rounded-xl text-sm font-bold transition-all border-2"
+            :class="subTabActiva === cat.key ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 scale-[1.02]' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md'">
+            <span class="text-lg mr-1.5">{{ cat.icon }}</span> {{ cat.label }}
           </button>
-          <button @click="confirmarCancelacion" :disabled="!cancelacionModal.motivo || creando"
-            class="flex-1 py-3 text-xs font-black text-white bg-red-600 rounded-xl hover:bg-red-700 transition shadow-lg shadow-red-100 uppercase tracking-widest disabled:opacity-50">
-            {{ creando ? 'Cancelando...' : 'Confirmar' }}
+        </div>
+
+        <div v-if="loadingProductos" class="flex items-center justify-center py-20">
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-10 h-10 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin"></div>
+            <p class="text-gray-400 dark:text-slate-500 text-sm font-medium">Cargando productos...</p>
+          </div>
+        </div>
+
+        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <button v-for="p in productosFiltrados" :key="'p-'+p.id"
+            @click="agregarSimple(p)"
+            class="group bg-white dark:bg-slate-800 rounded-[1.25rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 active:scale-[0.97] relative">
+            <div class="w-full h-28 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-700/50 flex items-center justify-center overflow-hidden">
+              <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <span v-else class="text-4xl opacity-60 dark:opacity-30">🍽️</span>
+            </div>
+            <div class="p-3">
+              <p class="text-xs font-bold text-gray-800 dark:text-slate-200 truncate">{{ p.nombre }}</p>
+              <p class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-1.5">${{ Number(p.precio).toFixed(2) }}</p>
+            </div>
+            <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shadow-indigo-300">+</div>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="vistaActual === 'resumen'" class="max-w-lg mx-auto">
+        <div class="flex items-center gap-3 mb-6">
+          <button @click="vistaActual = 'productos'" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 hover:shadow-md transition-all font-bold text-lg">←</button>
+          <div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Mesa {{ nuevaOrden.mesa }} <span v-if="ordenAbiertaMesa" class="text-sm font-normal text-amber-600 dark:text-amber-400">· Agregando</span></h2>
+            <p class="text-xs text-gray-400 dark:text-slate-500">Revisa los productos antes de enviar</p>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-1">
+          <div v-for="item in carritoSimple" :key="item.id + (item.notas || '')" class="py-3 border-b border-slate-50 dark:border-slate-700 last:border-0">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">{{ item.nombre }}</p>
+                <p class="text-xs text-gray-400 dark:text-slate-500">${{ Number(item.precio).toFixed(2) }} c/u</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-700 rounded-lg p-1 border border-slate-100 dark:border-slate-600">
+                  <button @click="item.cantidad > 1 && item.cantidad--" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-gray-500 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">−</button>
+                  <span class="w-7 text-center text-sm font-black text-gray-800 dark:text-white">{{ item.cantidad }}</span>
+                  <button @click="item.cantidad++" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">+</button>
+                </div>
+                <span class="text-sm font-black text-indigo-600 dark:text-indigo-400 w-16 text-right">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
+                <button @click="carritoSimple = carritoSimple.filter(i => i !== item)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm transition-colors">✕</button>
+              </div>
+            </div>
+            <div class="mt-2 ml-1 flex items-center gap-2">
+              <span class="text-slate-300 dark:text-slate-600 text-xs">📝</span>
+              <input v-model="item.notas" placeholder="Comentario (ej. sin cebolla, término medio...)"
+                class="flex-1 text-xs px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-indigo-200/50 dark:focus:ring-indigo-500/50 focus:border-indigo-300 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 text-gray-800 dark:text-slate-200" />
+            </div>
+          </div>
+          <div v-if="carritoSimple.length === 0" class="text-center py-10 text-gray-400 dark:text-slate-500 text-sm">
+            <span class="text-4xl block mb-2">🛒</span>
+            Carrito vacío
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-5 px-1">
+          <span class="text-sm text-gray-500 dark:text-slate-400 font-medium">Total</span>
+          <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ Number(totalSimple).toFixed(2) }}</span>
+        </div>
+
+        <button @click="enviarOrdenSimple" :disabled="creando || carritoSimple.length === 0"
+          class="w-full mt-5 py-4 text-white text-sm font-black rounded-2xl transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 uppercase tracking-wider"
+          :class="creando || carritoSimple.length === 0 ? 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-green-200 dark:shadow-green-900/50'">
+          <span v-if="creando" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ creando ? 'ENVIANDO...' : '🚀 ENVIAR A COCINA' }}
+        </button>
+      </div>
+
+      <div v-if="showTicketModal && ticketActivo" class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4" @click.self="showTicketModal = false">
+        <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto animate-pop">
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40 flex items-center justify-center text-2xl border border-amber-200 dark:border-amber-700">🧾</div>
+              <div>
+                <h3 class="font-bold text-gray-900 dark:text-white text-lg">Mesa {{ ticketActivo.mesa }}</h3>
+                <p class="text-xs text-gray-400 dark:text-slate-500 font-medium">{{ ticketActivo.folio }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold px-3 py-1.5 rounded-full border shadow-sm" :class="badgeEstado(ticketActivo.estado)">{{ labelEstado(ticketActivo.estado) }}</span>
+              <button @click="showTicketModal = false" class="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center justify-center text-lg transition-colors">✕</button>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
+            <div v-for="d in ticketActivo.detalles" :key="d.id" class="text-sm py-2 border-b border-slate-100 dark:border-slate-600 last:border-0">
+              <div class="flex justify-between items-center">
+                <span class="font-semibold text-gray-700 dark:text-slate-300">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                <span class="font-bold text-gray-900 dark:text-white">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+              </div>
+              <p v-if="d.notas" class="text-[11px] text-gray-400 dark:text-slate-500 italic mt-0.5 ml-1 flex items-center gap-1">
+                <span>📝</span> {{ d.notas }}
+              </p>
+            </div>
+            <div v-if="!ticketActivo.detalles?.length" class="text-center py-6 text-gray-400 dark:text-slate-500 text-sm">
+              Sin productos en esta orden
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center mt-5 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <span class="font-bold text-gray-700 dark:text-slate-300">Total</span>
+            <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ Number(ticketActivo.total || 0).toFixed(2) }}</span>
+          </div>
+
+          <button @click="showTicketModal = false; nuevaOrden.mesa = ticketActivo.mesa; carritoSimple = []; vistaActual = 'productos'"
+            class="w-full mt-5 py-3.5 text-sm font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.98] flex items-center justify-center gap-2">
+            ➕ Agregar productos a esta mesa
           </button>
         </div>
       </div>
     </div>
   </div>
-</template>
-
-<script setup>
+</template><script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
 import Marquesitawidget from '../components/Marquesitawidget.vue'
 import { useRestauranteChannel } from '../composables/useRestauranteChannel'
+import TableMap from '@/components/mesero/TableMap.vue'
 
-const vistaActual  = ref('ordenes')
+const vistaActual  = ref('mapa')
 const tabActivo    = ref('todas')
 const subTabActiva = ref('alimentos')
 const ordenes      = ref([])
@@ -878,9 +298,105 @@ const cambiando       = ref(null)
 const toasts          = ref([])
 const cajaAbierta     = ref(false)
 const nuevaOrden      = ref({ clienteId: null, mesa: null })
+const carritoSimple   = ref([])
+const mesaSeleccionada = ref(null)
+
+const onMesaClick = (numMesa) => {
+  mesaSeleccionada.value = numMesa
+  if (!numMesa) return
+  const ocupada = ordenes.value.some(o => Number(o.mesa) === Number(numMesa) && !['CERRADA','CANCELADA','PAGADA'].includes(o.estado))
+  if (ocupada) {
+    mostrarTicketMesa(numMesa)
+  } else {
+    nuevaOrden.value.mesa = numMesa
+    carritoSimple.value = []
+    vistaActual.value = 'productos'
+  }
+}
+
+const mostrarTicketMesa = (numMesa) => {
+  const orden = ordenes.value.find(o => Number(o.mesa) === Number(numMesa) && !['CERRADA','CANCELADA','PAGADA'].includes(o.estado))
+  if (orden) {
+    ticketActivo.value = orden
+    showTicketModal.value = true
+  }
+}
+
+const showTicketModal = ref(false)
+const ticketActivo = ref(null)
+
+const categoriasProducto = [
+  { key:'alimentos', icon:'🍽️', label:'Comida' },
+  { key:'bebidas',   icon:'🥤', label:'Bebidas' },
+  { key:'postres',   icon:'🍰', label:'Postres' },
+  { key:'paquetes',  icon:'🎁', label:'Paquetes' },
+]
+
+const productosFiltrados = computed(() => {
+  if (subTabActiva.value === 'paquetes') return paquetes.value
+  let items = productos.value.filter(p => {
+    const cat = (p.categoria?.nombre || '').toLowerCase()
+    if (subTabActiva.value === 'alimentos') return !cat.includes('barra') && !cat.includes('bebida') && !cat.includes('postre')
+    if (subTabActiva.value === 'bebidas')   return cat.includes('barra') || cat.includes('bebida')
+    if (subTabActiva.value === 'postres')   return cat.includes('postre')
+    return true
+  })
+  if (busqueda.value) {
+    const t = busqueda.value.toLowerCase()
+    items = items.filter(p => p.nombre?.toLowerCase().includes(t))
+  }
+  return items
+})
+
+const totalSimple = computed(() => carritoSimple.value.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0))
+
+const agregarSimple = (p) => {
+  const exist = carritoSimple.value.find(i => i.id === p.id)
+  if (exist) { exist.cantidad++ }
+  else { carritoSimple.value.push({ id: p.id, nombre: p.nombre, precio: Number(p.precio), cantidad: 1, tipo: 'producto', notas: '' }) }
+}
+
+const enviarOrdenSimple = async () => {
+  if (!nuevaOrden.value.mesa || carritoSimple.value.length === 0) return
+  if (!cajaAbierta.value) { showToast('La caja está cerrada', 'error'); return }
+  creando.value = true
+  try {
+    const ordenExistente = ordenes.value.find(o =>
+      Number(o.mesa) === Number(nuevaOrden.value.mesa) &&
+      !['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)
+    )
+    const url = ordenExistente ? `${API_URL}/ordenes/${ordenExistente.id}/productos` : `${API_URL}/ordenes`
+    const method = ordenExistente ? 'PUT' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') ?? sessionStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        mesa: nuevaOrden.value.mesa,
+        productos: carritoSimple.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: i.notas || '' }))
+      })
+    })
+    const data = await res.json()
+    if (res.ok && data.success) {
+      carritoSimple.value = []
+      vistaActual.value = 'mapa'
+      showToast(ordenExistente ? '➕ Productos agregados al pedido' : '🚀 ¡Pedido enviado a cocina!', 'success')
+      cargarOrdenes(true)
+    } else {
+      showToast(data.message || 'Error al crear orden', 'error')
+    }
+  } catch {
+    showToast('Error de conexión', 'error')
+  } finally {
+    creando.value = false
+  }
+}
 const mesasAsignadas  = ref([])
 const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
-const totalMesasRestaurante = ref(0)
+const totalMesasRestaurante = ref(24)
 const ultimaActualizacion = ref(null)
 
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
@@ -1153,6 +669,11 @@ const ordenesParaCobrar = computed(() =>
   )
 )
 
+const ordenesFiltradas = computed(() => {
+  if (tabActivo.value === 'todas' || tabActivo.value === 'cobrar') return ordenes.value
+  return ordenes.value.filter(o => o.estado === tabActivo.value)
+})
+
 const contarOrdenes = (key) => {
   if (key === 'cobrar')   return ordenesParaCobrar.value.length
   if (key === 'todas')    return ordenes.value.length
@@ -1204,11 +725,6 @@ const productosFiltradosBase = computed(() => {
 const totalPaginasProductos = computed(() => {
   return Math.ceil(productosFiltradosBase.value.length / itemsPorPagina)
 })
-
-const productosFiltrados = computed(() => {
-  const start = (paginaProductos.value - 1) * itemsPorPagina
-  return productosFiltradosBase.value.slice(start, start + itemsPorPagina)
-})
 const paquetesFiltrados = computed(() => {
   const b = busqueda.value?.toLowerCase() || ''
   return b ? paquetes.value.filter(p => p.nombre.toLowerCase().includes(b)) : paquetes.value
@@ -1247,10 +763,10 @@ const cargarOrdenes = async (silent = true) => {
   try {
     const d = new Date()
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    
+    const base = esAdminOPropietario.value ? '/ordenes' : '/meseros/mis-ordenes'
     const states = ['ABIERTA','POR_PREPARAR','EN_PREPARACION','LISTA','ENTREGADA']
-    const urls   = states.map(s => `/meseros/mis-ordenes?estado=${s}&per_page=100`)
-    urls.push(`/meseros/mis-ordenes?fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
+    const urls   = states.map(s => `${base}?estado=${s}&per_page=100`)
+    urls.push(`${base}?fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
     const results = await Promise.all(urls.map(url => apiClient.get(url)))
     const map = new Map()
     results.forEach(res => { 
@@ -1438,6 +954,10 @@ const handleOrderPaid = async () => {
   showToast('Orden cobrada con éxito ✅', 'success')
   await cargarOrdenes()
   tabActivo.value = 'todas'
+}
+
+const loadOrdersForCashier = async () => {
+  await cargarOrdenes()
 }
 
 const totalEnCarritoPorId = (productId) => {
@@ -1636,13 +1156,18 @@ const entregarProductosSubOrden = async (sub) => {
   const ids = sub.detalles_estacion.filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado).map(d => d.id)
   
   if (!ids.length) {
-    // Si no hay productos "LISTOS" (por ej. fueron cancelados), forzamos avanzar la orden a ENTREGADA
     return cambiarEstadoSubOrden(sub, 'ENTREGADA');
   }
 
   cambiando.value = sub.uid
   try {
-    const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, { detalles: ids, estado_preparacion: 'ENTREGADO' })
+    const ahora = new Date().toISOString()
+    const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, {
+      detalles: ids,
+      estado_preparacion: 'ENTREGADO',
+      entregado_en: ahora,
+      recogido_en: ahora,
+    })
     if (data.success || data.data) { await cargarOrdenes(); showToast('Pedido entregado ✨', 'success') }
   } finally { cambiando.value = null }
 }
@@ -1652,6 +1177,7 @@ const resolveImageUrl  = (path) => { if (!path) return null; if (path.startsWith
 const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
 const showToast        = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3500) }
 const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
+const formatHora       = (d) => { if (!d) return ''; return new Date(d).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
 
 const handleStorageEvent = (e) => {
   if (e.key === 'marquesina_variant') {
@@ -1711,6 +1237,8 @@ onUnmounted(() => {
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 @keyframes pop {
   0% { transform: scale(0.6); }
   50% { transform: scale(1.2); }

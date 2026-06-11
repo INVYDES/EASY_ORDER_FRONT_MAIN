@@ -170,6 +170,19 @@
         </div>
       </div>
 
+      <!-- SECCIÓN: TEMA -->
+      <div class="pt-2 border-t border-gray-100 dark:border-gray-800">
+        <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
+          <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Tema</p>
+        </div>
+        <button @click="toggleDarkMode"
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+          :class="{ 'justify-center': isCollapsed && !isMobile }">
+          <i class="fa-solid text-lg w-6 text-center" :class="darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
+          <span v-show="!isCollapsed || isMobile" class="text-sm">{{ darkMode ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+        </button>
+      </div>
+
     </nav>
   </aside>
 </template>
@@ -196,6 +209,19 @@ const isCollapsed = ref(false)
 const isMobile = ref(window.innerWidth < 1024)
 const showUserMenu = ref(false)
 const showRestMenu = ref(false)
+
+const darkMode = ref(localStorage.getItem('darkMode') === 'true')
+
+const toggleDarkMode = () => {
+  darkMode.value = !darkMode.value
+  localStorage.setItem('darkMode', darkMode.value)
+  document.documentElement.classList.toggle('dark', darkMode.value)
+}
+
+const applyDarkMode = () => {
+  if (darkMode.value) document.documentElement.classList.add('dark')
+  else document.documentElement.classList.remove('dark')
+}
 
 const pendingCounts = ref({
   cocina: 0,
@@ -350,6 +376,7 @@ watch(() => props.restauranteActivo, (newVal) => {
 }, { immediate: true })
 
 onMounted(() => {
+  applyDarkMode()
   window.addEventListener('resize', handleResize)
   const saved = localStorage.getItem('sidebar_collapsed')
   if (saved !== null && !isMobile.value) isCollapsed.value = saved === 'true'

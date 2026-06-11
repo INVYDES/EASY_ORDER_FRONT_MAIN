@@ -8,6 +8,11 @@
       <p v-if="!modoEdicion" class="text-xs text-gray-400 dark:text-gray-500 mt-1">El usuario y correo se generarán automáticamente.</p>
     </div>
 
+    <!-- ✅ Permisos -->
+    <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+      <PermissionSelector v-model="form.permisos" :role-id="form.rol_id" />
+    </div>
+
     <!-- ✅ Cadena de acceso -->
     <div v-if="cadenaAcceso" class="mb-5 p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 rounded-xl">
       <p class="text-sm font-medium text-indigo-800 mb-1">✅ Empleado registrado correctamente</p>
@@ -105,6 +110,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import PermissionSelector from '@/components/administraccion/PermissionSelector.vue'
 
 const props = defineProps({
   empleado:     { type: Object, default: null },
@@ -126,7 +132,8 @@ const getInitialForm = () => ({
   password_confirmation: '',
   rol_id:                '',
   restaurante_id:        null,
-  es_activo:             true
+  es_activo:             true,
+  permisos:              []
 })
 
 const form = ref(getInitialForm())
@@ -153,7 +160,8 @@ watch(() => props.empleado, (newVal) => {
       password_confirmation: '',
       rol_id:                rolId ? String(rolId) : '',
       restaurante_id:        restId ? Number(restId) : null,
-      es_activo:             newVal.es_activo !== false
+      es_activo:             newVal.es_activo !== false,
+      permisos:              newVal.permisos || []
     }
   } else {
     form.value = getInitialForm()
@@ -181,6 +189,7 @@ const handleSubmit = () => {
     rol_id:         form.value.rol_id,
     restaurante_id: form.value.restaurante_id,
     es_activo:      form.value.es_activo,
+    permisos:       form.value.permisos,
     // email y username se envían como null para que el backend los genere
     email:          null,
     username:       null
