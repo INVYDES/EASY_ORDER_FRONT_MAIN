@@ -26,7 +26,7 @@
               <span :class="{'line-through': d.cancelado}">
                 ${{ Number(d.subtotal || 0).toFixed(2) }}
               </span>
-              <button v-if="!d.cancelado && !esMesero" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)" 
+              <button v-if="!d.cancelado && !esMesero && !esAdminOPropietario" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)"
                 class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all">
                 <span class="text-xs">🗑️</span>
               </button>
@@ -313,7 +313,7 @@
                   <div class="flex items-center gap-2">
                     <span class="text-slate-400 dark:text-gray-500">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
                     <!-- Botón eliminar producto en caja -->
-                    <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
+                    <button v-if="type === 'open' && !d.cancelado && !esMesero && !esAdminOPropietario" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
                       class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
                       title="Eliminar Producto">
                       <span class="text-[10px]">🗑️</span>

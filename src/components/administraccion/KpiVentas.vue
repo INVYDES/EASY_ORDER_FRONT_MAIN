@@ -232,6 +232,15 @@ const props = defineProps({
 // --- ESTADO ---
 const loading = ref(true)
 
+const kpiData = ref({ ventas: [], totales: null })
+const kpiPeriodo = ref('semana')
+const kpiFechaInicio = ref('')
+const kpiFechaFin = ref('')
+const kpiMeseroId = ref('')
+const kpiGrupo = ref('dia')
+const topProductos = ref([])
+const kpiAnterior = ref({ totales: null, ventas: [] })
+const mostrarComparacion = ref(false)
 
 // Datos nuevos
 const tiempos = ref({ cocina: null, barra: null, postres: null })
