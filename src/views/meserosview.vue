@@ -113,6 +113,18 @@
                     <span class="text-lg">🪑</span>
                     <span class="font-semibold">Mesa {{ orden.mesa }}</span>
                   </div>
+                  <div v-if="orden.estado !== 'CERRADA' && orden.estado !== 'CANCELADA' && orden.estado !== 'PAGADA'" class="flex flex-wrap gap-2 pt-2">
+                    <button v-if="tieneListos(orden) && orden.detalles?.some(d => !d.recogido_en)" @click="recogerDeCocina(orden)" :disabled="cambiando === `recoger-${orden.id}`"
+                      class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
+                      <span v-if="cambiando === `recoger-${orden.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span v-else>🍳 Recoger</span>
+                    </button>
+                    <button v-if="tieneRecogidosSinEntregar(orden)" @click="entregarACliente(orden)" :disabled="cambiando === `entregar-${orden.id}`"
+                      class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
+                      <span v-if="cambiando === `entregar-${orden.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span v-else>🤝 Entregar</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -475,6 +487,7 @@ const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebi
 
 let pollTimer = null
 let pollingEnProgreso = false
+let recordatorioTimer = null
 
 const tabs = [
   { key: 'todas',          label: 'Todas',          icon: '📋', color: '#6366f1' },
@@ -747,14 +760,14 @@ const tienePaqueteNuevoHoy = computed(() => {
 })
 
 // ── Estilos ────────────────────────────────────────────────────────────────
-const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50' : ({ ABIERTA:'bg-yellow-50', ENTREGADA:'bg-purple-50', CERRADA:'bg-slate-50', CANCELADA:'bg-red-50' }[e] || 'bg-slate-50')
-const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100' : ({ ABIERTA:'border-yellow-200', ENTREGADA:'border-purple-200', CERRADA:'border-slate-200', CANCELADA:'border-red-200' }[e] || 'border-slate-100')
-const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300', CANCELADA:'bg-red-100 text-red-700 border-red-200' }[e] || 'bg-slate-100 text-slate-500')
+const bgEstado    = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-50 dark:bg-slate-800' : ({ ABIERTA:'bg-yellow-50 dark:bg-yellow-950', ENTREGADA:'bg-purple-50 dark:bg-purple-950', CERRADA:'bg-slate-50 dark:bg-slate-800', CANCELADA:'bg-red-50 dark:bg-red-950' }[e] || 'bg-slate-50 dark:bg-slate-800')
+const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'border-slate-100 dark:border-slate-700' : ({ ABIERTA:'border-yellow-200 dark:border-yellow-800', ENTREGADA:'border-purple-200 dark:border-purple-800', CERRADA:'border-slate-200 dark:border-slate-600', CANCELADA:'border-red-200 dark:border-red-800' }[e] || 'border-slate-100 dark:border-slate-700')
+const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600' : ({ ABIERTA:'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800', ENTREGADA:'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800', CERRADA:'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-500', CANCELADA:'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' }[e] || 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400')
 const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒', CANCELADA:'🚫' }[e] || '📋')
 const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
 const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregada' }[e] || '')
-const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
+const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-400')
 
 // ── API ────────────────────────────────────────────────────────────────────
 
@@ -1152,32 +1165,66 @@ const actualizarCantidadItem = async (detalle, ordenId, delta) => {
   }
 }
 
-const entregarProductosSubOrden = async (sub) => {
-  const ids = sub.detalles_estacion.filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado).map(d => d.id)
-  
-  if (!ids.length) {
-    return cambiarEstadoSubOrden(sub, 'ENTREGADA');
-  }
+// ── Acciones tiempos recoger/entregar ─────────────────────────────────────
 
-  cambiando.value = sub.uid
+const idsListos = (orden) => (orden.detalles || []).filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado).map(d => d.id)
+const idsRecogidosSinEntregar = (orden) => (orden.detalles || []).filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado && d.recogido_en && !d.entregado_en).map(d => d.id)
+
+const tieneListos = (orden) => idsListos(orden).length > 0
+const tieneRecogidosSinEntregar = (orden) => idsRecogidosSinEntregar(orden).length > 0
+
+const recogerDeCocina = async (orden) => {
+  const ids = idsListos(orden)
+  if (!ids.length) { showToast('No hay productos listos para recoger', 'warning'); return }
+  cambiando.value = `recoger-${orden.id}`
   try {
     const ahora = new Date().toISOString()
-    const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, {
+    const data = await apiClient.put(`/ordenes/${orden.id}/station-status`, {
+      detalles: ids,
+      estado_preparacion: 'LISTO',
+      recogido_en: ahora,
+    })
+    if (data.success || data.data) { await cargarOrdenes(); showToast('Productos recogidos de cocina ✅', 'success') }
+  } catch { showToast('Error al recoger productos', 'error') }
+  finally { cambiando.value = null }
+}
+
+const entregarACliente = async (orden) => {
+  const ids = idsRecogidosSinEntregar(orden)
+  if (!ids.length) { showToast('No hay productos para entregar', 'warning'); return }
+  cambiando.value = `entregar-${orden.id}`
+  try {
+    const ahora = new Date().toISOString()
+    const data = await apiClient.put(`/ordenes/${orden.id}/station-status`, {
       detalles: ids,
       estado_preparacion: 'ENTREGADO',
       entregado_en: ahora,
-      recogido_en: ahora,
     })
-    if (data.success || data.data) { await cargarOrdenes(); showToast('Pedido entregado ✨', 'success') }
-  } finally { cambiando.value = null }
+    if (data.success || data.data) { await cargarOrdenes(); showToast('Pedido entregado al cliente ✨', 'success') }
+  } catch { showToast('Error al entregar pedido', 'error') }
+  finally { cambiando.value = null }
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const resolveImageUrl  = (path) => { if (!path) return null; if (path.startsWith('http')) return path; return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}` }
 const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
-const showToast        = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3500) }
+const showToast        = (m, t = 'info', duration = 3500) => { const id = Date.now(); toasts.value.push({ id, message: m, type: t, duration }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), duration) }
 const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
 const formatHora       = (d) => { if (!d) return ''; return new Date(d).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+
+const MINUTOS_INACTIVIDAD = 15
+const mesasRecordadas = ref(new Set())
+const recordarMesasInactivas = () => {
+  if (!esMesero.value) return
+  ordenes.value.forEach(o => {
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
+    const mins = Math.floor((Date.now() - new Date(o.updated_at || o.created_at).getTime()) / 60000)
+    if (mins >= MINUTOS_INACTIVIDAD && !mesasRecordadas.value.has(o.id)) {
+      mesasRecordadas.value.add(o.id)
+      showToast(`⏰ Mesa ${o.mesa} — ${mins} min sin actividad`, 'warning', 8000)
+    }
+  })
+}
 
 const handleStorageEvent = (e) => {
   if (e.key === 'marquesina_variant') {
@@ -1206,6 +1253,9 @@ onMounted(async () => {
     } catch {}
   }
 
+  // Recordatorio cada 60s
+  recordatorioTimer = setInterval(recordarMesasInactivas, 60000)
+
   // Iniciar un único polling silencioso de seguridad
   const poll = async () => {
     if (cajaAbierta.value) {
@@ -1218,6 +1268,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
+  if (recordatorioTimer) clearInterval(recordatorioTimer)
   window.removeEventListener('storage', handleStorageEvent)
 })
 

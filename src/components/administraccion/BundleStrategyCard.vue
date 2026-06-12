@@ -68,16 +68,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
 const emit = defineEmits(['execute'])
 
 const props = defineProps({
   products: { type: Array, required: true, default: () => [] }
-})
-
-onMounted(() => {
-  console.log('📊 BundleStrategyCard montado. Productos:', props.products?.length)
 })
 
 const num = (v) => {

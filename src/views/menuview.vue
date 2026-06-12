@@ -951,6 +951,7 @@ const handleCheckout = async (checkoutData) => {
       metodo_pago: 'efectivo', tipo_orden: 'local',
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
       estado: 'ABIERTA', mesa: checkoutData.numero_mesa, usuario_id: empleadoId,
+      programado_para: checkoutData.programado_para || null,
     }
     const data = await apiClient.post('/ordenes', body)
     if (data?.success) { 

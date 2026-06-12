@@ -180,7 +180,7 @@
           <span>💎</span> Mayor Margen (fuera del Top 5 ventas)
         </h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">Productos con alta utilidad y bajo volumen — oportunidad de impulso</p>
-        <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+        <div class="space-y-3 max-h-52 overflow-y-auto pr-1">
           <div v-if="productosMargenFueraTop.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm italic">
             Sin datos disponibles
           </div>
@@ -192,7 +192,7 @@
               <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ p.nombre }}</span>
             </div>
             <div class="text-right">
-              <p class="text-sm font-black text-emerald-600">{{ fm(p.margen_pct) }}%</p>
+              <p class="text-sm font-black text-emerald-600">${{ fm(p.margen) }}</p>
               <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ p.ventas }} uds</p>
             </div>
           </div>
@@ -315,48 +315,24 @@ const loadKpis = async () => {
     const uId  = kpiMeseroId.value ? `&user_id=${kpiMeseroId.value}` : ''
     const params = `?grupo=${kpiGrupo.value}${fIni}${fFin}${uId}`
 
-    const [vRes, pRes, mRes] = await Promise.all([
+    const [vRes, pRes] = await Promise.all([
       fetch(`${props.apiUrl}/reportes/ventas${params}`, { headers }),
-      fetch(`${props.apiUrl}/reportes/productos-mas-vendidos${params}&limite=20`, { headers }),
-      fetch(`${props.apiUrl}/reportes/productos-mayor-margen${params}&limite=10`, { headers })
+      fetch(`${props.apiUrl}/reportes/productos-mas-vendidos${params}&limite=20`, { headers })
     ])
 
     const vData = await vRes.json()
     const pData = await pRes.json()
-    const mData = await mRes.json()
 
     if (vData.success) kpiData.value = vData.data
     if (pData.success) topProductos.value = pData.data || []
 
     // Calcular productos con mayor margen fuera del Top 5
-    if (mData.success && mData.data && Array.isArray(mData.data.productos) && mData.data.productos.length > 0) {
-      productosMargenFueraTop.value = mData.data.productos.map(p => ({
-        ...p,
-        margen: parseFloat(p.utilidad_unitaria ?? (p.precio - (p.costo || 0))),
-        margen_pct: parseFloat(p.margen_pct ?? (p.precio > 0 ? ((p.precio - (p.costo || 0)) / p.precio) * 100 : 0)),
-        ventas: parseInt(p.total_vendido ?? 0)
-      })).slice(0, 5)
-    } else if (topProductos.value.length > 0) {
-      // Fallback local robusto
+    if (topProductos.value.length > 0) {
       const top5ids = new Set(topProductos.value.slice(0, 5).map(p => p.id))
       productosMargenFueraTop.value = topProductos.value
-        .map(p => {
-          const precio = parseFloat(p.precio || 0);
-          const costo = parseFloat(p.costo || 0);
-          const margen = parseFloat(p.margen ?? (precio - costo));
-          const margen_pct = parseFloat(p.margen_pct ?? (precio > 0 ? (margen / precio) * 100 : 0));
-          return {
-            ...p,
-            margen,
-            margen_pct,
-            ventas: parseInt(p.ventas ?? p.total_vendido ?? 0)
-          }
-        })
         .filter(p => !top5ids.has(p.id) && p.margen > 0)
-        .sort((a, b) => (b.margen_pct || 0) - (a.margen_pct || 0))
-        .slice(0, 5)
-    } else {
-      productosMargenFueraTop.value = []
+        .sort((a, b) => (b.margen || 0) - (a.margen || 0))
+        .slice(0, 8)
     }
 
     // Cargar tiempos de preparación

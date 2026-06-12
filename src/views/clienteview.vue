@@ -660,6 +660,7 @@ const handleCheckout = async (checkoutData) => {
       tipo_orden:        mapTipoOrden[checkoutData.tipo_entrega] || 'pickup',
       direccion_entrega: direccionStr,
       notas:             checkoutData.notas || null,
+      programado_para:   checkoutData.programado_para || null,
     }
     if (clienteId) body.cliente_id = clienteId
 

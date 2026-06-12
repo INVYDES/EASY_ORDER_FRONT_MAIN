@@ -1,20 +1,20 @@
 <template>
   <div
-    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center px-4 transition-all"
+    class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center px-4 transition-all"
     @click.self="$emit('close')"
   >
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-gray-700">
       
-      <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+      <div class="px-6 py-4 border-b border-slate-50 dark:border-gray-700 flex items-center justify-between bg-slate-50/50 dark:bg-gray-800/50">
         <div>
-          <h3 class="text-lg font-bold text-slate-800">
+          <h3 class="text-lg font-bold text-slate-800 dark:text-gray-200">
             {{ ingrediente ? `Editar: ${ingrediente.nombre}` : 'Nuevo Ingrediente' }}
           </h3>
-          <p class="text-xs text-slate-500 italic">
+          <p class="text-xs text-slate-500 dark:text-gray-400 italic">
             ID: {{ ingrediente ? ingrediente.id : 'Autogenerado' }}
           </p>
         </div>
-        <button @click="$emit('close')" class="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm border border-transparent hover:border-slate-100">
+        <button @click="$emit('close')" class="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-full text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 transition-colors shadow-sm border border-transparent hover:border-slate-100 dark:hover:border-gray-600">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -22,20 +22,20 @@
       </div>
 
       <div class="p-6">
-        <div v-if="formError" class="mb-5 p-3 flex items-center gap-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl">
+        <div v-if="formError" class="mb-5 p-3 flex items-center gap-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 rounded-xl">
           <span class="font-medium">{{ formError }}</span>
         </div>
 
         <div class="space-y-5">
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre *</label>
-            <input v-model="form.nombre" type="text" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition-all" />
+            <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nombre *</label>
+            <input v-model="form.nombre" type="text" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-900 focus:outline-none transition-all dark:text-gray-200" />
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Unidad *</label>
-              <select v-model="form.unidad" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer">
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Unidad *</label>
+              <select v-model="form.unidad" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-900 focus:outline-none transition-all appearance-none cursor-pointer dark:text-gray-200">
                 <option value="gr">gramos (gr)</option>
                 <option value="kg">kilogramos (kg)</option>
                 <option value="ml">mililitros (ml)</option>
@@ -44,37 +44,37 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Costo Unitario *</label>
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Costo Unitario *</label>
               <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                <input v-model="form.costo_unitario" type="number" step="0.01" class="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition-all" />
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500">$</span>
+                <input v-model="form.costo_unitario" type="number" step="0.01" class="w-full pl-8 pr-4 py-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-900 focus:outline-none transition-all dark:text-gray-200" />
               </div>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Stock Actual</label>
-              <input v-model="form.stock_actual" type="number" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition-all" />
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Stock Actual</label>
+              <input v-model="form.stock_actual" type="number" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-900 focus:outline-none transition-all dark:text-gray-200" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5" title="Se calcula de forma automática en base a las recetas y al stock mínimo de los productos que lo usan">Stock Mínimo</label>
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5" title="Se calcula de forma automática en base a las recetas y al stock mínimo de los productos que lo usan">Stock Mínimo</label>
               <div class="relative">
-                <input v-model="form.stock_minimo" type="number" readonly disabled class="w-full px-4 py-2.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-sm cursor-not-allowed font-medium" />
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-indigo-500" title="Autocalculado por recetas de productos">Calculado</span>
+                <input v-model="form.stock_minimo" type="number" readonly disabled class="w-full px-4 py-2.5 bg-slate-100 dark:bg-gray-800 text-slate-400 dark:text-gray-500 border border-slate-200 dark:border-gray-700 rounded-xl text-sm cursor-not-allowed font-medium" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-indigo-500 dark:text-indigo-400" title="Autocalculado por recetas de productos">Calculado</span>
               </div>
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Proveedor</label>
-            <input v-model="form.proveedor" type="text" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition-all" />
+            <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Proveedor</label>
+            <input v-model="form.proveedor" type="text" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-900 focus:outline-none transition-all dark:text-gray-200" />
           </div>
         </div>
       </div>
 
-      <div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex gap-3">
-        <button @click="$emit('close')" class="flex-1 py-2.5 text-sm font-bold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition active:scale-95">
+      <div class="px-6 py-5 bg-slate-50/50 dark:bg-gray-800/50 border-t border-slate-100 dark:border-gray-700 flex gap-3">
+        <button @click="$emit('close')" class="flex-1 py-2.5 text-sm font-bold text-slate-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-600 transition active:scale-95">
           Cancelar
         </button>
         <button @click="guardar" :disabled="loading" class="flex-1 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md transition active:scale-95 disabled:opacity-50">

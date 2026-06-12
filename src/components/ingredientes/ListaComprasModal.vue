@@ -1,21 +1,21 @@
 <template>
   <div
-    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all no-print"
+    class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all no-print"
     @click.self="$emit('close')"
   >
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 dark:border-gray-700 animate-in fade-in zoom-in-95 duration-200">
       
       <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between bg-slate-50/50 dark:bg-gray-800/50">
         <div>
-          <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h3 class="text-xl font-bold text-slate-800 dark:text-gray-200 flex items-center gap-2">
             📦 Lista de Compras de Ingredientes
           </h3>
-          <p class="text-xs text-slate-500 mt-1 font-medium">
+          <p class="text-xs text-slate-500 dark:text-gray-400 mt-1 font-medium">
             Genera y exporta la lista de insumos que necesitas adquirir según el stock mínimo requerido.
           </p>
         </div>
-        <button @click="$emit('close')" class="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm border border-transparent hover:border-slate-100">
+        <button @click="$emit('close')" class="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-full text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 transition-colors shadow-sm border border-transparent hover:border-slate-100 dark:hover:border-gray-600">
           <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -27,30 +27,30 @@
         
         <!-- Summary KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-4 flex flex-col">
-            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Insumos en lista</span>
-            <span class="text-2xl font-black text-slate-800 mt-1">{{ ingredientesFiltrados.length }}</span>
-            <span class="text-[10px] text-slate-400 mt-0.5 font-medium">Filtrados de {{ totalIngredientes }} en catálogo</span>
+          <div class="bg-slate-50 dark:bg-gray-800/50 border border-slate-200/60 dark:border-gray-700 rounded-xl p-4 flex flex-col">
+            <span class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Insumos en lista</span>
+            <span class="text-2xl font-black text-slate-800 dark:text-gray-200 mt-1">{{ ingredientesFiltrados.length }}</span>
+            <span class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5 font-medium">Filtrados de {{ totalIngredientes }} en catálogo</span>
           </div>
-          <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col">
-            <span class="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Items por comprar</span>
-            <span class="text-2xl font-black text-indigo-700 mt-1">{{ itemsAComprar.length }}</span>
-            <span class="text-[10px] text-indigo-400 mt-0.5 font-medium">Ingredientes por debajo de su stock mínimo</span>
+          <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl p-4 flex flex-col">
+            <span class="text-[10px] text-indigo-600 dark:text-indigo-300 font-bold uppercase tracking-wider">Items por comprar</span>
+            <span class="text-2xl font-black text-indigo-700 dark:text-indigo-200 mt-1">{{ itemsAComprar.length }}</span>
+            <span class="text-[10px] text-indigo-400 dark:text-indigo-400 mt-0.5 font-medium">Ingredientes por debajo de su stock mínimo</span>
           </div>
-          <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex flex-col">
-            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Presupuesto estimado</span>
-            <span class="text-2xl font-black text-emerald-700 mt-1">${{ fm(presupuestoTotal) }}</span>
-            <span class="text-[10px] text-emerald-400 mt-0.5 font-medium">Costo estimado total de adquisición</span>
+          <div class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-xl p-4 flex flex-col">
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-300 font-bold uppercase tracking-wider">Presupuesto estimado</span>
+            <span class="text-2xl font-black text-emerald-700 dark:text-emerald-200 mt-1">${{ fm(presupuestoTotal) }}</span>
+            <span class="text-[10px] text-emerald-400 dark:text-emerald-400 mt-0.5 font-medium">Costo estimado total de adquisición</span>
           </div>
         </div>
 
         <!-- Filters Section -->
-        <div class="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 space-y-4">
+        <div class="bg-slate-50/50 dark:bg-gray-800/30 rounded-2xl p-5 border border-slate-200/50 dark:border-gray-700 space-y-4">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             
             <!-- State Multi-select Filters -->
             <div class="space-y-2">
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Filtrar por Estado de Stock</label>
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Filtrar por Estado de Stock</label>
               <div class="flex flex-wrap items-center gap-2">
                 <button
                   v-for="state in states"
@@ -60,14 +60,14 @@
                   :class="[
                     isStateActive(state.value)
                       ? state.activeClass
-                      : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                      : 'bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:border-slate-300 dark:hover:border-gray-600'
                   ]"
                 >
                   <span class="text-sm leading-none">{{ state.emoji }}</span>
                   <span>{{ state.label }}</span>
                   <span
                     class="ml-1 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px] font-black"
-                    :class="[isStateActive(state.value) ? state.badgeActive : 'bg-slate-100 text-slate-500']"
+                    :class="[isStateActive(state.value) ? state.badgeActive : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400']"
                   >
                     {{ getCountByState(state.value) }}
                   </span>
@@ -77,15 +77,15 @@
 
             <!-- Search Field -->
             <div class="space-y-2 flex-1 md:max-w-xs">
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Buscar por nombre / proveedor</label>
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Buscar por nombre / proveedor</label>
               <div class="relative">
                 <input
                   v-model="search"
                   type="text"
                   placeholder="Ej. Verduras, Café..."
-                  class="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  class="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-gray-200"
                 />
-                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">🔍</span>
+                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 text-sm pointer-events-none">🔍</span>
               </div>
             </div>
 
@@ -93,55 +93,55 @@
         </div>
 
         <!-- Ingredients List Table -->
-        <div class="border border-slate-200/80 rounded-xl overflow-hidden bg-white shadow-sm">
+        <div class="border border-slate-200/80 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
           <div class="max-h-[35vh] overflow-y-auto custom-scrollbar">
-            <table class="min-w-full divide-y divide-slate-100">
-              <thead class="bg-slate-50 sticky top-0 z-10">
+            <table class="min-w-full divide-y divide-slate-100 dark:divide-gray-700">
+              <thead class="bg-slate-50 dark:bg-gray-800 sticky top-0 z-10">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ingrediente</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Proveedor</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Precio Unit.</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock Actual</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock Mínimo</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">A comprar</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Costo Aprox.</th>
-                  <th class="px-5 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Ingrediente</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Proveedor</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Precio Unit.</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Stock Actual</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Stock Mínimo</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">A comprar</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Costo Aprox.</th>
+                  <th class="px-5 py-3 text-center text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100">
+              <tbody class="divide-y divide-slate-100 dark:divide-gray-700">
                 <tr v-if="ingredientesFiltrados.length === 0">
-                  <td colspan="8" class="text-center py-12 text-slate-400 italic text-sm">
+                  <td colspan="8" class="text-center py-12 text-slate-400 dark:text-gray-500 italic text-sm">
                     No se encontraron ingredientes con los filtros seleccionados.
                   </td>
                 </tr>
                 <tr
                   v-for="ing in ingredientesFiltrados"
                   :key="ing.id"
-                  class="hover:bg-slate-50/50 transition-colors"
+                  class="hover:bg-slate-50/50 dark:hover:bg-gray-700/50 transition-colors"
                 >
                   <!-- Name -->
                   <td class="px-5 py-3.5 text-sm">
-                    <div class="font-semibold text-slate-800">{{ ing.nombre }}</div>
-                    <div class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">{{ ing.unidad }}</div>
+                    <div class="font-semibold text-slate-800 dark:text-gray-200">{{ ing.nombre }}</div>
+                    <div class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider">{{ ing.unidad }}</div>
                   </td>
                   
                   <!-- Provider -->
-                  <td class="px-5 py-3.5 text-sm text-slate-500">
+                  <td class="px-5 py-3.5 text-sm text-slate-500 dark:text-gray-400">
                     {{ ing.proveedor || 'Sin Proveedor' }}
                   </td>
 
                   <!-- Precio Unitario -->
-                  <td class="px-5 py-3.5 text-sm text-right font-medium text-slate-700">
+                  <td class="px-5 py-3.5 text-sm text-right font-medium text-slate-700 dark:text-gray-300">
                     ${{ fm(ing.costo_unitario) }}
                   </td>
 
                   <!-- Stock Actual -->
-                  <td class="px-5 py-3.5 text-sm text-right font-medium text-slate-700">
+                  <td class="px-5 py-3.5 text-sm text-right font-medium text-slate-700 dark:text-gray-300">
                     {{ fmQty(ing.stock_actual) }} {{ ing.unidad }}
                   </td>
 
                   <!-- Stock Mínimo -->
-                  <td class="px-5 py-3.5 text-sm text-right text-slate-400 font-medium">
+                  <td class="px-5 py-3.5 text-sm text-right text-slate-400 dark:text-gray-500 font-medium">
                     {{ fmQty(ing.stock_minimo) }} {{ ing.unidad }}
                   </td>
 
@@ -149,19 +149,19 @@
                   <td class="px-5 py-3.5 text-sm text-right font-black">
                     <span
                       v-if="qtyToBuy(ing) > 0"
-                      class="text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100"
+                      class="text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800"
                     >
                       +{{ fmQty(qtyToBuy(ing)) }} {{ ing.unidad }}
                     </span>
-                    <span v-else class="text-slate-400">-</span>
+                    <span v-else class="text-slate-400 dark:text-gray-500">-</span>
                   </td>
 
                   <!-- Estimated Cost -->
-                  <td class="px-5 py-3.5 text-sm text-right font-bold text-slate-700">
-                    <span v-if="costToBuy(ing) > 0" class="text-emerald-600">
+                  <td class="px-5 py-3.5 text-sm text-right font-bold text-slate-700 dark:text-gray-300">
+                    <span v-if="costToBuy(ing) > 0" class="text-emerald-600 dark:text-emerald-400">
                       ${{ fm(costToBuy(ing)) }}
                     </span>
-                    <span v-else class="text-slate-400">$0.00</span>
+                    <span v-else class="text-slate-400 dark:text-gray-500">$0.00</span>
                   </td>
 
                   <!-- Badge Status -->
@@ -184,10 +184,10 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+      <div class="px-6 py-5 bg-slate-50/50 dark:bg-gray-800/50 border-t border-slate-100 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
         <button
           @click="$emit('close')"
-          class="w-full sm:w-auto px-6 py-3 text-sm font-bold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition shadow-sm active:scale-95"
+          class="w-full sm:w-auto px-6 py-3 text-sm font-bold text-slate-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-600 hover:text-slate-700 dark:hover:text-gray-300 transition shadow-sm active:scale-95"
         >
           Cerrar
         </button>
@@ -196,7 +196,7 @@
           <!-- Print Button -->
           <button
             @click="imprimirLista"
-            class="flex-1 sm:flex-initial px-5 py-3 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition shadow-sm active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            class="flex-1 sm:flex-initial px-5 py-3 text-sm font-bold text-slate-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-600 hover:border-slate-300 dark:hover:border-gray-500 transition shadow-sm active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             🖨️ Imprimir
           </button>
@@ -311,21 +311,21 @@ const states = [
     value: 'sin_stock',
     emoji: '🚨',
     label: 'Sin Stock',
-    activeClass: 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100/50',
+    activeClass: 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-100/50 dark:hover:bg-red-900/50',
     badgeActive: 'bg-red-500 text-white',
   },
   {
     value: 'bajo_stock',
     emoji: '⚠️',
     label: 'Bajo Stock',
-    activeClass: 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100/50',
+    activeClass: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100/50 dark:hover:bg-amber-900/50',
     badgeActive: 'bg-amber-500 text-white',
   },
   {
     value: 'ok',
     emoji: '✅',
     label: 'Estado OK',
-    activeClass: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100/50',
+    activeClass: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50',
     badgeActive: 'bg-emerald-500 text-white',
   }
 ]
@@ -355,9 +355,9 @@ const getEstado = (ing) => {
 
 const getStateInfo = (ing) => {
   const state = getEstado(ing)
-  if (state === 'sin_stock') return { label: 'Sin Stock', class: 'bg-red-50 border-red-200 text-red-700' }
-  if (state === 'bajo_stock') return { label: 'Bajo Stock', class: 'bg-amber-50 border-amber-200 text-amber-700' }
-  return { label: 'OK', class: 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+  if (state === 'sin_stock') return { label: 'Sin Stock', class: 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300' }
+  if (state === 'bajo_stock') return { label: 'Bajo Stock', class: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300' }
+  return { label: 'OK', class: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' }
 }
 
 const qtyToBuy = (ing) => {
@@ -481,8 +481,14 @@ const exportarCSV = () => {
   background: #cbd5e1;
   border-radius: 10px;
 }
+:is(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+:is(.dark) .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 @keyframes slideIn {

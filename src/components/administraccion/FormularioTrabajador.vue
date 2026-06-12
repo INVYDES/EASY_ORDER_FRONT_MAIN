@@ -37,12 +37,12 @@
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nombre *</label>
           <input v-model="form.nombre" type="text" required maxlength="100"
-            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+            class="w-full px-4 py-3 border border-gray-200 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
         </div>
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Apellidos *</label>
           <input v-model="form.apellidos" type="text" required maxlength="120"
-            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+            class="w-full px-4 py-3 border border-gray-200 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
         </div>
       </div>
 
@@ -52,7 +52,7 @@
           {{ modoEdicion ? 'Nueva contraseña (vacío para no cambiar)' : 'Establecer Contraseña *' }}
         </label>
         <input v-model="form.password" type="password" :required="!modoEdicion" minlength="6"
-          class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+          class="w-full px-4 py-3 border border-gray-200 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
       </div>
 
       <!-- Rol y Sucursal -->
@@ -60,7 +60,7 @@
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Rol *</label>
           <select v-model="form.rol_id" required
-            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800 text-sm shadow-sm">
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800 dark:text-gray-200 text-sm shadow-sm">
             <option value="">Seleccionar rol</option>
             <option value="2">Administrador</option>
             <option value="3">Mesero</option>
@@ -72,7 +72,7 @@
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Sucursal *</label>
            <select v-model="form.restaurante_id" required
-            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800 text-sm shadow-sm">
+            class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-800 dark:text-gray-200 text-sm shadow-sm">
             <option :value="null">Elegir sucursal</option>
             <option v-for="r in restaurantes" :key="r.id" :value="r.id">{{ r.nombre }}</option>
           </select>
@@ -87,7 +87,7 @@
       </div>
 
       <!-- Error -->
-      <div v-if="errorMessage" class="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex items-center gap-2">
+      <div v-if="errorMessage" class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 rounded-xl px-4 py-3 flex items-center gap-2">
         <span>⚠️</span>
         {{ errorMessage }}
       </div>
@@ -95,7 +95,7 @@
       <!-- Botones -->
       <div class="flex justify-end gap-3 pt-6">
         <button type="button" @click="cancelar"
-          class="flex-1 py-3 bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition text-sm">
+          class="flex-1 py-3 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition text-sm">
           {{ modoEdicion ? 'Cerrar' : 'Cancelar' }}
         </button>
         <button type="submit" :disabled="loading || passwordsMismatch"

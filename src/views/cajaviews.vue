@@ -183,6 +183,7 @@ const toLocalTime = (dateStr) => {
   if (!d) return dateStr;
   return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
 };
+
 const reproducirSonido = () => {
   try {
     audioNuevaOrden.value?.play()

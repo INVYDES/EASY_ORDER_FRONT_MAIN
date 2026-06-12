@@ -36,6 +36,22 @@
           <p v-if="!numeroMesa && intentoEnvio" class="text-xs text-red-500 mt-1">Por favor, ingresa el número de mesa</p>
         </div>
 
+        <!-- ── SCHEDULED ORDER ── -->
+        <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" v-model="programar" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            <span class="text-sm font-bold text-gray-700 dark:text-gray-300">📅 Programar pedido</span>
+          </label>
+          <transition name="fade">
+            <div v-if="programar" class="pt-2">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">¿Para cuándo lo quieres?</label>
+              <input type="datetime-local" v-model="programadoPara"
+                :min="fechaMinima"
+                class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200">
+            </div>
+          </transition>
+        </div>
+
         <!-- ── 2. NOTA ── -->
         <div>
           <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nota para el restaurante <span class="text-gray-400 dark:text-gray-500 dark:text-gray-400 font-normal">(opcional)</span></label>
@@ -76,6 +92,13 @@ const nota         = ref(props.notaInicial)
 const procesando   = ref(false)
 const error        = ref('')
 const intentoEnvio = ref(false)
+const programar        = ref(false)
+const programadoPara   = ref('')
+const fechaMinima      = computed(() => {
+  const now = new Date()
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+  return now.toISOString().slice(0, 16)
+})
 
 // ── Computed ───────────────────────────────────────────────
 const totalItems   = computed(() => props.pedido.reduce((s,i) => s + i.cantidad, 0))
@@ -101,6 +124,7 @@ const confirmar = async () => {
   emit('confirmar', {
     numero_mesa: numeroMesa.value,
     notas: notaCompleta,
+    programado_para: programar.value && programadoPara.value ? new Date(programadoPara.value).toISOString() : null,
   })
 }
 

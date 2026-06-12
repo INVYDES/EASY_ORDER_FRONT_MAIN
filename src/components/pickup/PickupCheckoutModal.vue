@@ -75,7 +75,7 @@
                 </span>
                 <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
                   :style="metodoPago===m.value ? { borderColor: m.hex, backgroundColor: m.hex } : { borderColor:'#d1d5db' }">
-                  <div v-if="metodoPago===m.value" class="w-2 h-2 rounded-full bg-white dark:bg-gray-800"></div>
+                  <div v-if="metodoPago===m.value" class="w-2 h-2 rounded-full bg-white"></div>
                 </div>
               </button>
             </div>
@@ -83,7 +83,7 @@
 
           <!-- PAYMENT INFO -->
           <transition name="fade">
-            <div v-if="infoPago.titulo" class="rounded-xl p-4 text-sm border" :style="{ backgroundColor: metodoActivo?.hexBg||'#f9fafb', borderColor: metodoActivo?.hex+'44'||'#e5e7eb' }">
+            <div v-if="infoPago.titulo" class="rounded-xl p-4 text-sm border dark:border-gray-700" :style="{ backgroundColor: metodoActivo?.hexBg||'#f9fafb', borderColor: metodoActivo?.hex+'44'||'#e5e7eb' }">
               <p class="font-semibold mb-1" :style="{ color: metodoActivo?.hex||'#374151' }">{{ infoPago.titulo }}</p>
               <p class="text-xs leading-relaxed text-gray-600 dark:text-gray-400">{{ infoPago.descripcion }}</p>
               <div v-if="metodoActivo?.online" class="mt-2 flex items-center gap-1.5 text-xs font-medium" :style="{ color: metodoActivo?.hex }">
@@ -93,15 +93,31 @@
             </div>
           </transition>
 
+          <!-- SCHEDULED ORDER -->
+          <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" v-model="programar" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+              <span class="text-sm font-bold text-gray-700 dark:text-gray-300">📅 Programar pedido</span>
+            </label>
+            <transition name="fade">
+              <div v-if="programar" class="pt-2">
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">¿Para cuándo lo quieres?</label>
+                <input type="datetime-local" v-model="programadoPara"
+                  :min="fechaMinima"
+                  class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200">
+              </div>
+            </transition>
+          </div>
+
           <!-- NOTE -->
           <div>
             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nota <span class="text-gray-400 font-normal">(opcional)</span></label>
             <textarea v-model="nota" rows="2" placeholder="Alergias, preferencias, instrucciones..."
-              class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+              class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none dark:bg-gray-900 dark:text-gray-200"></textarea>
           </div>
 
           <!-- ERROR -->
-          <div v-if="error" class="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl flex items-center gap-2">
+          <div v-if="error" class="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm rounded-xl flex items-center gap-2">
             <span>❌</span><span>{{ error }}</span>
           </div>
 
@@ -139,6 +155,13 @@ const procesando          = ref(false)
 const procesandoPagoOnline= ref(false)
 const error               = ref('')
 const intentoEnvio        = ref(false)
+const programar           = ref(false)
+const programadoPara      = ref('')
+const fechaMinima         = computed(() => {
+  const now = new Date()
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+  return now.toISOString().slice(0, 16)
+})
 
 const metodosPago = [
   { value:'efectivo',      label:'Efectivo',       sub:'Paga al recoger',           icon:'💵', hex:'#10b981', hexBg:'#f0fdf4', online:false },
@@ -179,6 +202,7 @@ const confirmar = async () => {
     metodo_pago: metodoPago.value,
     notas: [nota.value, '🏪 Recoger en local', `💳 Pago: ${metodoPago.value}`].filter(Boolean).join(' | '),
     online: metodoActivo.value?.online || false,
+    programado_para: programar.value && programadoPara.value ? new Date(programadoPara.value).toISOString() : null,
   })
 }
 

@@ -18,7 +18,7 @@
           </span>
         </p>
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-          {{ formatTime(ticket.created_at) }}
+          {{ formatTimeShort(ticket.fecha_apertura) }}
         </p>
       </div>
 
@@ -228,6 +228,14 @@ const formatMoney = (v) =>
     ? '0.00'
     : Number(v).toFixed(2)
 
+const formatTime = (ts) =>
+  !ts
+    ? ''
+    : new Date(ts).toLocaleTimeString('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+
 const parseUTCDate = (dateStr) => {
   if (!dateStr) return null;
   if (dateStr instanceof Date) return dateStr;
@@ -260,7 +268,7 @@ const parseUTCDate = (dateStr) => {
   }
 }
 
-const formatTime = (ts) => {
+const formatTimeShort = (ts) => {
   if (!ts) return ''
   const d = parseUTCDate(ts)
   if (!d) return ''
@@ -301,6 +309,9 @@ const handlePaymentProcessed = async (paymentData) => {
       propina: paymentData.propina || 0,
       folio: paymentData.folio || null,
       referencia: paymentData.folio || null,
+      comision_pct: paymentData.comision_pct || 0,
+      comision_monto: paymentData.comision_monto || 0,
+      neto_depositar: paymentData.neto_depositar || 0,
     }
 
     let updateData
@@ -321,6 +332,9 @@ const handlePaymentProcessed = async (paymentData) => {
       propina: paymentData.propina,
       cambio: paymentData.cambio,
       folio: paymentData.folio,
+      comision_pct: paymentData.comision_pct || 0,
+      comision_monto: paymentData.comision_monto || 0,
+      neto_depositar: paymentData.neto_depositar || 0,
     })
   } catch (e) {
     alert(e.message || 'Error al procesar el pago')

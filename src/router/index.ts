@@ -122,6 +122,13 @@ const routes = [
       },
 
       {
+        path: "nomina",
+        name: "nomina",
+        component: () => import("../views/NominaView.vue"),
+        meta: { roles: ["PROPIETARIO", "ADMIN"] }
+      },
+
+      {
         path: "plataforma",
         name: "plataforma",
         component: () => import("../views/PlataformaView.vue"),

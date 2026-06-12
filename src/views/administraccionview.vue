@@ -7,20 +7,20 @@
     <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
       <div v-for="toast in toasts" :key="toast.id"
         :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-72 animate-slide-in pointer-events-auto',
-          toast.type==='success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' :
-          toast.type==='error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800' :
-          'bg-blue-50 border-l-4 border-blue-500 text-blue-800']">
+          toast.type==='success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-700' :
+          toast.type==='error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800 dark:bg-red-900/30 dark:text-red-200 dark:border-red-700' :
+          'bg-blue-50 border-l-4 border-blue-500 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-700']">
         <span>{{ toast.type==='success' ? '✅' : toast.type==='error' ? '❌' : 'ℹ️' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600">×</button>
+        <span class="text-sm font-medium flex-1 dark:text-gray-200">{{ toast.message }}</span>
+        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400">×</button>
       </div>
     </div>
 
     <!-- Encabezado -->
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Administración</h2>
-        <p class="text-gray-500 text-sm mt-1">Panel de control del restaurante</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Administración</h2>
+        <p class="text-gray-500 text-sm mt-1 dark:text-gray-400">Panel de control del restaurante</p>
       </div>
       <div class="flex gap-2">
         <button 
@@ -63,10 +63,10 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+    <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
       <button v-for="t in mainTabs" :key="t.key" @click="mainTab = t.key"
         :class="['px-5 py-2 text-sm font-medium rounded-lg transition',
-          mainTab === t.key ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200']">
+          mainTab === t.key ? 'bg-white shadow-sm text-gray-800 dark:bg-gray-700 dark:text-gray-100' : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600']">
         {{ t.label }}
       </button>
     </div>
@@ -81,61 +81,61 @@
       <template v-else>
         <!-- Título de sección operativa -->
         <div class="mb-6">
-          <h3 class="text-lg font-bold text-gray-800">Control Operativo</h3>
-          <p class="text-xs text-gray-500">Gestión de personal y sucursales activas</p>
+          <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Control Operativo</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Gestión de personal y sucursales activas</p>
         </div>
 
         <!-- Tabs CRUD -->
-        <div class="border-b border-gray-200 mb-6">
+        <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
           <nav class="-mb-px flex space-x-6">
             <button v-for="tab in crudTabs" :key="tab.key" @click="activeTab = tab.key"
               :class="['py-4 px-1 border-b-2 font-medium text-sm transition',
-                activeTab===tab.key ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
+                activeTab===tab.key ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300']">
               {{ tab.label }}
-              <span v-if="tab.key !== 'sesiones'" class="ml-1.5 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-semibold">{{ tab.count }}</span>
+              <span v-if="tab.key !== 'sesiones'" class="ml-1.5 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-semibold dark:bg-gray-700 dark:text-gray-300">{{ tab.count }}</span>
             </button>
           </nav>
         </div>
 
         <!-- Tabla empleados -->
-        <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+        <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
           <!-- ... (Contenido de tabla empleados se mantiene igual) ... -->
-          <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando empleados...</div>
+          <div v-if="loading.empleados" class="text-center py-12 text-gray-400 dark:text-gray-500">Cargando empleados...</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Empleado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Rol</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Usuario</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 <tr v-if="personalNomina.length===0">
-                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados registrados</td>
+                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic dark:text-gray-500">No hay empleados registrados</td>
                 </tr>
-                <tr v-for="emp in personalNomina" :key="emp.id" class="hover:bg-gray-50">
+                <tr v-for="emp in personalNomina" :key="emp.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0 dark:bg-indigo-900/30 dark:text-indigo-300">
                         {{ getInitials(emp.name) }}
                       </div>
                       <div class="flex flex-col">
-                        <span class="font-bold text-gray-900 text-sm">{{ emp.name }}</span>
+                        <span class="font-bold text-gray-900 text-sm dark:text-gray-100">{{ emp.name }}</span>
                         <!-- <span class="text-[10px] text-gray-400">{{ emp.email }}</span> -->
                       </div>
                     </div>
                   </td>
                   <td class="px-5 py-4">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                       {{ getRolNombre(emp) }}
                     </span>
                   </td>
                   <td class="px-5 py-4">
-                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 dark:text-gray-300 dark:bg-gray-800/50 dark:border-gray-700">
                       {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
                     </span>
                   </td>
@@ -143,22 +143,22 @@
                     <div class="flex items-center gap-2">
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-gray-600"></div>
                       </label>
                       <span :class="['text-[10px] font-bold uppercase w-12', emp.activo !== false ? 'text-emerald-600' : 'text-rose-500']">
                         {{ emp.activo !== false ? 'Activo' : 'Inactivo' }}
                       </span>
                     </div>
                   </td>
-                  <td class="px-5 py-4 text-sm text-gray-500">{{ emp.username }}</td>
+                  <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">{{ emp.username }}</td>
                   <td class="px-5 py-4 text-right">
                     <div class="flex justify-end gap-2">
                       <button @click="editarEmpleado(emp)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
+                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition dark:text-indigo-400 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30">
                         ✏️ Editar
                       </button>
                       <button @click="eliminarEmpleado(emp)"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
+                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition dark:text-red-400 dark:bg-red-900/30">
                         🗑️ Eliminar
                       </button>
                     </div>
@@ -170,34 +170,34 @@
         </div>
 
         <!-- Tabla Cuentas de Menú -->
-        <div v-if="activeTab === 'menu'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-          <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando cuentas...</div>
+        <div v-if="activeTab === 'menu'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+          <div v-if="loading.empleados" class="text-center py-12 text-gray-400 dark:text-gray-500">Cargando cuentas...</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nombre de Cuenta</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Cadena de Acceso</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Nombre de Cuenta</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Cadena de Acceso</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 <tr v-if="cuentasMenu.length===0">
-                  <td colspan="5" class="px-5 py-10 text-center text-gray-400 italic">No hay cuentas de menú creadas</td>
+                  <td colspan="5" class="px-5 py-10 text-center text-gray-400 italic dark:text-gray-500">No hay cuentas de menú creadas</td>
                 </tr>
-                <tr v-for="emp in cuentasMenu" :key="emp.id" class="hover:bg-gray-50">
+                <tr v-for="emp in cuentasMenu" :key="emp.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                      <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0 dark:bg-amber-900/30 dark:text-amber-300">
                         🛒
                       </div>
-                      <span class="font-bold text-gray-900 text-sm">{{ emp.name }}</span>
+                      <span class="font-bold text-gray-900 text-sm dark:text-gray-100">{{ emp.name }}</span>
                     </div>
                   </td>
                   <td class="px-5 py-4">
-                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 dark:text-gray-300 dark:bg-gray-800/50 dark:border-gray-700">
                       {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
                     </span>
                   </td>
@@ -205,19 +205,19 @@
                     <div class="flex items-center gap-2">
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-gray-600"></div>
                       </label>
                     </div>
                   </td>
-                  <td class="px-5 py-4 text-sm font-mono text-indigo-600 font-bold">{{ emp.username }}</td>
+                  <td class="px-5 py-4 text-sm font-mono text-indigo-600 font-bold dark:text-indigo-400">{{ emp.username }}</td>
                   <td class="px-5 py-4 text-right">
                     <div class="flex justify-end gap-2">
                       <button @click="editarCuentaMenu(emp)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
+                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition dark:text-indigo-400 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30">
                         ✏️ Editar
                       </button>
                       <button @click="eliminarEmpleado(emp)"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
+                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition dark:text-red-400 dark:bg-red-900/30">
                         🗑️ Eliminar
                       </button>
                     </div>
@@ -229,22 +229,22 @@
         </div>
 
         <!-- Tabla Entradas y Salidas (Sesiones) -->
-        <div v-if="activeTab === 'sesiones'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 animate-fade-in">
+        <div v-if="activeTab === 'sesiones'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 animate-fade-in dark:bg-gray-800 dark:border-gray-700">
           <!-- Filtros de Sesiones y Botón Imprimir -->
-          <div class="flex flex-wrap items-center justify-between gap-4 bg-gray-50 p-4 border-b border-gray-100">
+          <div class="flex flex-wrap items-center justify-between gap-4 bg-gray-50 p-4 border-b border-gray-100 dark:bg-gray-800/50 dark:border-gray-700">
             <div class="flex items-center gap-4 flex-wrap">
               <!-- Filtro por Rango de Fechas -->
               <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Filtrar por:</span>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Filtrar por:</span>
                 <div class="relative">
-                  <select v-model="filtroSesiones" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition">
+                  <select v-model="filtroSesiones" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                     <option value="hoy">📅 Hoy</option>
                     <option value="7d">📅 Últimos 7 días</option>
                     <option value="14d">📅 Últimos 14 días</option>
                     <option value="30d">📅 Últimos 30 días</option>
                     <option value="todos">📅 Todos los registros</option>
                   </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 dark:text-gray-500">
                     ▼
                   </div>
                 </div>
@@ -252,15 +252,15 @@
 
               <!-- Filtro por Empleado -->
               <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Empleado:</span>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Empleado:</span>
                 <div class="relative">
-                  <select v-model="filtroEmpleadoId" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition">
+                  <select v-model="filtroEmpleadoId" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                     <option value="todos">👥 Todos los empleados</option>
                     <option v-for="emp in empleadosFiltrados" :key="emp.id" :value="emp.id">
                       👤 {{ emp.name }}
                     </option>
                   </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 dark:text-gray-500">
                     ▼
                   </div>
                 </div>
@@ -273,46 +273,46 @@
             </button>
           </div>
 
-          <div v-if="loading.general" class="text-center py-12 text-gray-400">
+          <div v-if="loading.general" class="text-center py-12 text-gray-400 dark:text-gray-500">
             <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
             Cargando historial de entradas y salidas...
           </div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Hora Entrada</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Hora Salida / Estado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Duración</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Empleado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Rol</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Hora Entrada</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Hora Salida / Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Duración</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 <tr v-if="sesionesFiltradas.length===0">
-                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay registros de entradas y salidas en esta sucursal</td>
+                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic dark:text-gray-500">No hay registros de entradas y salidas en esta sucursal</td>
                 </tr>
-                <tr v-for="ses in sesionesFiltradas" :key="ses.id" class="hover:bg-gray-50">
+                <tr v-for="ses in sesionesFiltradas" :key="ses.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0 dark:bg-indigo-900/30 dark:text-indigo-300">
                         {{ getInitials(ses.user?.name) }}
                       </div>
-                      <span class="font-bold text-gray-900 text-sm">{{ ses.user?.name || 'Empleado Eliminado' }}</span>
+                      <span class="font-bold text-gray-900 text-sm dark:text-gray-100">{{ ses.user?.name || 'Empleado Eliminado' }}</span>
                     </div>
                   </td>
                   <td class="px-5 py-4">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                       {{ ses.user ? getRolNombre(ses.user) : '—' }}
                     </span>
                   </td>
                   <td class="px-5 py-4">
-                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 dark:text-gray-300 dark:bg-gray-800/50 dark:border-gray-700">
                       {{ ses.restaurante?.nombre || '—' }}
                     </span>
                   </td>
-                  <td class="px-5 py-4 text-sm text-gray-600 font-medium">
+                  <td class="px-5 py-4 text-sm text-gray-600 font-medium dark:text-gray-400">
                     {{ formatDateTime(ses.hora_entrada) }}
                   </td>
                   <td class="px-5 py-4">
@@ -320,11 +320,11 @@
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                       En línea / Activo
                     </span>
-                    <span v-else class="text-sm text-gray-600 font-medium">
+                    <span v-else class="text-sm text-gray-600 font-medium dark:text-gray-400">
                       {{ formatDateTime(ses.hora_salida) }}
                     </span>
                   </td>
-                  <td class="px-5 py-4 text-sm font-semibold text-indigo-600">
+                  <td class="px-5 py-4 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                     {{ calcularDuracion(ses.hora_entrada, ses.hora_salida) }}
                   </td>
                 </tr>
@@ -334,44 +334,44 @@
         </div>
 
         <!-- Tabla restaurantes -->
-        <div v-if="activeTab === 'restaurantes'" class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div v-if="loading.restaurantes" class="text-center py-12 text-gray-400">Cargando restaurantes...</div>
+        <div v-if="activeTab === 'restaurantes'" class="bg-white rounded-xl shadow-sm overflow-hidden dark:bg-gray-800">
+          <div v-if="loading.restaurantes" class="text-center py-12 text-gray-400 dark:text-gray-500">Cargando restaurantes...</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nombre</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Dirección</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Nombre</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Dirección</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Estado</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 <tr v-if="restaurantes.length===0">
-                  <td colspan="4" class="px-5 py-10 text-center text-gray-400 italic">No hay restaurantes</td>
+                  <td colspan="4" class="px-5 py-10 text-center text-gray-400 italic dark:text-gray-500">No hay restaurantes</td>
                 </tr>
-                <tr v-for="rest in restaurantes" :key="rest.id" class="hover:bg-gray-50">
+                <tr v-for="rest in restaurantes" :key="rest.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td class="px-5 py-4">
-                    <p class="text-sm font-medium text-gray-900">{{ rest.nombre }}</p>
-                    <p class="text-xs text-gray-500">{{ rest.telefono || 'Sin teléfono' }}</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ rest.nombre }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ rest.telefono || 'Sin teléfono' }}</p>
                   </td>
-                  <td class="px-5 py-4 text-sm text-gray-600">
+                  <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                     {{ [rest.calle, rest.ciudad, rest.estado].filter(Boolean).join(', ') || '—' }}
                   </td>
                   <td class="px-5 py-4">
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                      :class="rest.es_activo!==false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
+                      :class="rest.es_activo!==false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
                       {{ rest.es_activo!==false ? 'Activo' : 'Inactivo' }}
                     </span>
                   </td>
                   <td class="px-5 py-4 text-right">
                     <div class="flex justify-end gap-2">
                       <button @click="editarRestaurante(rest)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
+                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition dark:text-indigo-400 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30">
                         ✏️ Editar
                       </button>
                       <button @click="eliminarRestaurante(rest.id)"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
+                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition dark:text-red-400 dark:bg-red-900/30">
                         🗑️ Eliminar
                       </button>
                     </div>
@@ -379,6 +379,106 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Tabla Estaciones -->
+        <div v-if="activeTab === 'estaciones'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:bg-gray-800 dark:border-gray-700 animate-fade-in">
+          <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+            <p class="text-sm font-bold text-gray-700 dark:text-gray-300">Estaciones de trabajo</p>
+            <button @click="abrirModalEstacion()"
+              class="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-1 shadow-sm">
+              <span>+</span> Nueva
+            </button>
+          </div>
+          <div v-if="estaciones.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 text-sm">
+            No hay estaciones registradas
+          </div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800/50">
+                <tr>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Nombre</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Descripción</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Activo</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tr v-for="est in estaciones" :key="est.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="px-5 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">{{ est.nombre }}</td>
+                  <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">{{ est.descripcion || '—' }}</td>
+                  <td class="px-5 py-4">
+                    <span class="text-xs font-bold px-2 py-1 rounded-full"
+                      :class="est.activo !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'">
+                      {{ est.activo !== false ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-right">
+                    <div class="flex justify-end gap-2">
+                      <button @click="editarEstacion(est)"
+                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition dark:text-indigo-400 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30">
+                        ✏️ Editar
+                      </button>
+                      <button @click="showConfirmEliminarEstacion = est.id"
+                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition dark:text-red-400 dark:bg-red-900/30">
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Modal Estación -->
+        <div v-if="showModalEstacion" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4" @click.self="cerrarModalEstacion">
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ estacionEditando ? 'Editar Estación' : 'Nueva Estación' }}</h3>
+              <button @click="cerrarModalEstacion" class="text-gray-400 hover:text-gray-600 text-xl dark:text-gray-500 dark:hover:text-gray-400">✕</button>
+            </div>
+            <div v-if="estFormError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl dark:bg-red-900/30">{{ estFormError }}</div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nombre *</label>
+                <input v-model="estForm.nombre" type="text" placeholder="Ej. Cocina, Barra, Postres"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Descripción</label>
+                <textarea v-model="estForm.descripcion" rows="2" placeholder="Descripción breve de la estación"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"></textarea>
+              </div>
+              <div class="flex items-center justify-between pt-2">
+                <button @click="cerrarModalEstacion" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition">
+                  Cancelar
+                </button>
+                <button @click="guardarEstacion" :disabled="estGuardando"
+                  class="px-6 py-2 text-sm font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2 shadow-sm">
+                  <span v-if="estGuardando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  {{ estacionEditando ? 'Actualizar' : 'Crear' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirmación eliminar estación -->
+        <div v-if="showConfirmEliminarEstacion" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4" @click.self="showConfirmEliminarEstacion = null">
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+            <span class="text-4xl block mb-3">🗑️</span>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">¿Eliminar estación?</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-3 justify-center">
+              <button @click="showConfirmEliminarEstacion = null" class="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition">
+                Cancelar
+              </button>
+              <button @click="eliminarEstacion(showConfirmEliminarEstacion)" class="px-5 py-2 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition shadow-sm">
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -410,9 +510,9 @@
     <!-- ══ MODAL EMPLEADO (Componente Nuevo) ══ -->
     <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalEmpleado">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative dark:bg-gray-800">
         <!-- Botón cerrar X -->
-        <button @click="cerrarModalEmpleado" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl z-10">✕</button>
+        <button @click="cerrarModalEmpleado" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl z-10 dark:text-gray-500 dark:hover:text-gray-400">✕</button>
         
         <FormularioTrabajador 
           ref="formEmpleadoRef"
@@ -428,44 +528,44 @@
     <!-- ══ MODAL RESTAURANTE ══ -->
     <div v-if="showModalRestaurante" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalRestaurante">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto dark:bg-gray-800">
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-lg font-semibold text-gray-800">{{ restauranteEditando ? 'Editar Restaurante' : 'Nuevo Restaurante' }}</h3>
-          <button @click="cerrarModalRestaurante" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ restauranteEditando ? 'Editar Restaurante' : 'Nuevo Restaurante' }}</h3>
+          <button @click="cerrarModalRestaurante" class="text-gray-400 hover:text-gray-600 text-xl dark:text-gray-500 dark:hover:text-gray-400">✕</button>
         </div>
-        <div v-if="formError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{{ formError }}</div>
+        <div v-if="formError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl dark:bg-red-900/30">{{ formError }}</div>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nombre *</label>
             <input v-model="restForm.nombre" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Teléfono</label>
             <input v-model="restForm.telefono" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Calle y número</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Calle y número</label>
             <input v-model="restForm.calle" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Ciudad</label>
               <input v-model="restForm.ciudad" type="text"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Estado</label>
               <input v-model="restForm.estado" type="text"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
             </div>
           </div>
           <div class="space-y-3 pt-2">
-            <label class="block text-sm font-medium text-gray-700">Logo o Foto del Restaurante</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Logo o Foto del Restaurante</label>
             <div class="flex items-center gap-4">
-              <div class="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+              <div class="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0 dark:bg-gray-800/50 dark:border-gray-700">
                 <img v-if="imgPreview || restForm.imagen_url" :src="imgPreview || getImageUrl(restForm.imagen_url)" class="w-full h-full object-cover" />
                 <span v-else class="text-gray-300 text-2xl">📸</span>
               </div>
@@ -473,30 +573,30 @@
                 <input type="file" @change="onFileChange" accept="image/*" class="hidden" ref="fileInput" />
                 <div class="flex flex-wrap gap-2">
                   <button @click="$refs.fileInput.click()" type="button"
-                    class="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition uppercase tracking-wider">
+                    class="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition uppercase tracking-wider dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/30">
                     {{ (imgPreview || restForm.imagen_url) ? 'Cambiar imagen' : 'Seleccionar imagen' }}
                   </button>
                   <button v-if="imgPreview || restForm.imagen_url" @click="quitarImagen" type="button"
-                    class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition uppercase tracking-wider">
+                    class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition uppercase tracking-wider dark:bg-red-900/30 dark:text-red-400">
                     Quitar
                   </button>
                 </div>
-                <div v-if="errorMsg" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
+                <div v-if="errorMsg" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake dark:bg-red-900/30">
                   <i class="fa-solid fa-circle-exclamation text-red-400"></i>
                   <span class="font-medium">{{ typeof errorMsg === 'object' ? Object.values(errorMsg)[0][0] : errorMsg }}</span>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 5MB.</p>
+                <p class="text-[10px] text-gray-400 mt-2 dark:text-gray-500">JPG, PNG o WebP. Máx 5MB.</p>
               </div>
             </div>
           </div>
           <div v-if="restauranteEditando" class="flex items-center gap-2 pt-2">
             <input v-model="restForm.activo" type="checkbox" id="activo-check" class="accent-indigo-600 w-4 h-4" />
-            <label for="activo-check" class="text-sm text-gray-700 cursor-pointer">Restaurante activo</label>
+            <label for="activo-check" class="text-sm text-gray-700 cursor-pointer dark:text-gray-300">Restaurante activo</label>
           </div>
         </div>
         <div class="flex gap-3 mt-6">
           <button @click="cerrarModalRestaurante"
-            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancelar</button>
+            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Cancelar</button>
           <button @click="guardarRestaurante" :disabled="loading.guardando"
             class="flex-1 py-2.5 text-sm font-semibold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition disabled:opacity-50">
             {{ loading.guardando ? 'Guardando...' : (restauranteEditando ? 'Guardar cambios' : 'Crear restaurante') }}
@@ -508,14 +608,14 @@
     <!-- ══ MODAL CONFIRMACIÓN ELIMINAR (Nuevo Estético) ══ -->
     <div v-if="showConfirmDelete" class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm animate-fade-in"
       @click.self="cancelarEliminacion">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up dark:bg-gray-800">
         <div class="p-8 text-center">
-          <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce-subtle">
+          <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce-subtle dark:text-red-400">
             <i class="fa-solid fa-user-slash"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">¿Eliminar usuario?</h3>
-          <p class="text-gray-500 text-sm leading-relaxed mb-6">
-            Estás a punto de eliminar permanentemente a <span class="font-bold text-gray-800">{{ nameToDelete }}</span>. 
+          <h3 class="text-xl font-bold text-gray-900 mb-2 dark:text-gray-100">¿Eliminar usuario?</h3>
+          <p class="text-gray-500 text-sm leading-relaxed mb-6 dark:text-gray-400">
+            Estás a punto de eliminar permanentemente a <span class="font-bold text-gray-800 dark:text-gray-200">{{ nameToDelete }}</span>. 
             Esta acción es definitiva y no se puede deshacer.
           </p>
           
@@ -525,7 +625,7 @@
               {{ loading.guardando ? 'Eliminando...' : 'Sí, Eliminar' }}
             </button>
             <button @click="cancelarEliminacion"
-              class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-2xl hover:bg-gray-100 transition">
+              class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-2xl hover:bg-gray-100 transition dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-700">
               No, Mantener
             </button>
           </div>
@@ -563,6 +663,11 @@ const restaurantes = ref([])
 const currentUser  = ref(null)
 const toasts       = ref([])
 const formError    = ref('')
+const estaciones   = ref([])
+const estacionEditando = ref(null)
+const showModalEstacion = ref(false)
+const estForm = ref({ nombre: '', descripcion: '' })
+const showConfirmEliminarEstacion = ref(null)
 
 const licenciaActiva = ref(null)
 const totalUsuariosSistema = ref(0)
@@ -676,6 +781,7 @@ const crudTabs = computed(() => [
   { key:'menu',         label:'Cuentas de Menú',   count: cuentasMenu.value.length    },
   { key:'sesiones',     label:'Entradas y Salidas', count: sesiones.value.length       },
   { key:'restaurantes', label:'Restaurantes',      count: restaurantes.value.length   },
+  { key:'estaciones',   label:'Estaciones',        count: estaciones.value.length      },
 ])
 
 const personalNomina = computed(() => empleados.value.filter(e => {
@@ -802,6 +908,9 @@ const loadData = async () => {
     await cargarSucursalesDueno()
     if (activeTab.value === 'sesiones') {
       await cargarSesiones()
+    }
+    if (activeTab.value === 'estaciones') {
+      await cargarEstaciones()
     }
 
   } catch(e) { console.error('Error loadData:', e) }
@@ -1248,8 +1357,83 @@ const eliminarRestaurante = async (id) => {
   
 }
 
+// ── Estaciones CRUD ────────────────────────────────────────────────────────
+const estFormError = ref('')
+const estGuardando = ref(false)
+
+const abrirModalEstacion = () => {
+  estacionEditando.value = null; estFormError.value = ''
+  estForm.value = { nombre: '', descripcion: '' }
+  showModalEstacion.value = true
+}
+
+const editarEstacion = (est) => {
+  estacionEditando.value = est; estFormError.value = ''
+  estForm.value = { nombre: est.nombre || '', descripcion: est.descripcion || '' }
+  showModalEstacion.value = true
+}
+
+const cerrarModalEstacion = () => {
+  showModalEstacion.value = false; estacionEditando.value = null
+  estFormError.value = ''
+}
+
+const guardarEstacion = async () => {
+  estFormError.value = ''
+  if (!estForm.value.nombre.trim()) { estFormError.value = 'El nombre es obligatorio'; return }
+  estGuardando.value = true
+  try {
+    const isEdit = !!estacionEditando.value
+    const payload = { nombre: estForm.value.nombre.trim(), descripcion: estForm.value.descripcion.trim() }
+    const r = isEdit
+      ? await apiClient.put(`/estaciones/${estacionEditando.value.id}`, payload)
+      : await apiClient.post('/estaciones', payload)
+    if (r.success) {
+      if (isEdit) {
+        const idx = estaciones.value.findIndex(x => x.id === estacionEditando.value.id)
+        if (idx !== -1) estaciones.value[idx] = r.data || { ...estacionEditando.value, ...payload }
+      } else {
+        estaciones.value.push(r.data || { id: Date.now(), ...payload, activo: true })
+      }
+      showToast(isEdit ? 'Estación actualizada' : 'Estación creada', 'success')
+      cerrarModalEstacion()
+    } else {
+      estFormError.value = r.message || 'Error al guardar'
+    }
+  } catch {
+    estFormError.value = 'Error de conexión'
+  } finally {
+    estGuardando.value = false
+  }
+}
+
+const eliminarEstacion = async (id) => {
+  try {
+    const r = await apiClient.delete(`/estaciones/${id}`)
+    if (r.success) {
+      estaciones.value = estaciones.value.filter(x => x.id !== id)
+      showToast('Estación eliminada', 'success')
+    } else {
+      showToast(r.message || 'Error al eliminar', 'error')
+    }
+  } catch {
+    showToast('Error de conexión', 'error')
+  } finally {
+    showConfirmEliminarEstacion.value = null
+  }
+}
+
+const cargarEstaciones = async () => {
+  try {
+    const r = await apiClient.get('/estaciones')
+    if (r.success) estaciones.value = r.data || []
+  } catch (e) {
+    console.error('Error cargando estaciones:', e)
+  }
+}
+
 watch(filtroSesiones, () => { cargarSesiones() })
-watch(activeTab, (val) => { if (val === 'sesiones') cargarSesiones() })
+watch(activeTab, (val) => { if (val === 'sesiones') cargarSesiones(); if (val === 'estaciones') cargarEstaciones() })
 watch(mainTab, (val) => { if (val === 'resumen') loadData() })
 onMounted(loadData)
 </script>

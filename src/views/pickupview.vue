@@ -373,6 +373,7 @@ const handleCheckout = async (checkoutData) => {
       metodo_pago:    checkoutData.metodo_pago,
       tipo_orden:     'pickup',
       notas:          checkoutData.notas || null,
+      programado_para: checkoutData.programado_para || null,
     }
 
     // Crear la orden
