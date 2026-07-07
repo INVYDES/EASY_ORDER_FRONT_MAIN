@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 dark:bg-gray-950 p-4 sm:p-6">
+  <div class="min-h-screen bg-gray-950 dark:bg-gray-950 p-4 sm:p-6" :style="{ zoom }">
 
     <SucursalBadge />
 
@@ -219,7 +219,9 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { useToast } from '@/composables/useToast'
 import { getHeaders } from '@/config/api'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
 
+const { zoom } = useDeviceZoom()
 const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
 
@@ -267,7 +269,9 @@ const fechaHoy = computed(() =>
 const esBarra = (detalle) => {
   const prodRaw = detalle.producto
   const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
-  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
+  if (cat) return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
 }
 const tieneBarra = (orden) => (orden.detalles || []).some(d => esBarra(d) && !d.cancelado)
 
@@ -278,7 +282,7 @@ const pendingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isBarraOrder(o)) return false
     const detalles = getDetallesBarra(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => ['PENDIENTE', 'ABIERTA'].includes(d.estado_preparacion || d.estado))
   })
 })
 
@@ -321,6 +325,8 @@ const loadOrders = async (silent = false) => {
       orders.value = lista
         .filter(tieneBarra)
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    } else {
+      console.warn('🍹 Barra: respuesta sin datos', data)
     }
   } catch (e) { console.error('Error barra:', e) }
   finally { 
@@ -353,7 +359,8 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
   // Solo los detalles que son bebidas (barra) y coinciden con el filtro
   let detallesBebida = (orden.detalles ?? []).filter(d => esBarra(d) && !d.cancelado)
   if (estadoFiltro) {
-    detallesBebida = detallesBebida.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+    const estadosValidos = estadoFiltro === 'PENDIENTE' ? ['PENDIENTE', 'ABIERTA'] : [estadoFiltro]
+    detallesBebida = detallesBebida.filter(d => estadosValidos.includes(d.estado_preparacion || d.estado))
   }
 
   modalIngredientes.value = {
@@ -369,7 +376,7 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
   try {
     const resultados = await Promise.all(
       detallesBebida.map(d =>
-        apiClient.get(`/ingredientes/producto/${d.producto_id}`)
+        apiClient.get(`/ingredientes/producto/${d.producto_id}${d.tamano ? `?tamano=${d.tamano}` : ''}`)
           .then(data => ({ detalle: d, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
           .catch(() => ({ detalle: d, ingredientes: [] }))
       )

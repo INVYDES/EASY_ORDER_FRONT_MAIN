@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-800/50 flex flex-col">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-800/50 flex flex-col" :style="{ zoom }">
 
     <!-- MARQUESITA -->
     <MarquesitaWidget
@@ -221,6 +221,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import { getHeaders } from '@/config/api'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
+
+const { zoom } = useDeviceZoom()
 
 const restauranteSeleccionado = ref(null)
 const productos               = ref([])

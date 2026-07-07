@@ -14,21 +14,27 @@
     </div>
 
     <!-- ✅ Cadena de acceso -->
-    <div v-if="cadenaAcceso" class="mb-5 p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 rounded-xl">
-      <p class="text-sm font-medium text-indigo-800 mb-1">✅ Empleado registrado correctamente</p>
-      <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-2">
-        Comparte esta cadena al empleado — la usará para iniciar sesión:
-      </p>
-      <div class="flex items-center gap-2">
-        <span class="flex-1 font-mono text-lg font-bold tracking-widest text-indigo-900 bg-white dark:bg-gray-800 border border-indigo-300 rounded px-3 py-2 text-center">
-          {{ cadenaAcceso }}
-        </span>
-        <button type="button" @click="copiarCadena"
-          class="px-3 py-2 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition whitespace-nowrap">
-          {{ copiado ? '¡Copiado!' : 'Copiar' }}
-        </button>
+    <transition name="fade-up">
+      <div v-if="cadenaAcceso" class="mb-5 p-5 bg-gradient-to-br from-indigo-50 to-indigo-100/80 dark:from-indigo-900/40 dark:to-indigo-800/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl shadow-inner">
+        <div class="flex items-center gap-2.5 mb-3">
+          <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center text-white text-lg shadow-lg shadow-emerald-200/50">✅</span>
+          <div>
+            <p class="text-sm font-bold text-indigo-800 dark:text-indigo-300">Empleado registrado correctamente</p>
+            <p class="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">Comparte la siguiente cadena de acceso con el empleado</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-white dark:bg-gray-900/50 rounded-xl border border-indigo-200 dark:border-indigo-700 p-1">
+          <span class="flex-1 font-mono text-lg font-black tracking-[0.25em] text-indigo-900 dark:text-indigo-200 px-4 py-3 text-center select-all">
+            {{ cadenaAcceso }}
+          </span>
+          <button type="button" @click="copiarCadena"
+            class="shrink-0 px-4 py-3 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all whitespace-nowrap flex items-center gap-1.5 shadow-md shadow-indigo-200/50">
+            <span>{{ copiado ? '✓' : '📋' }}</span>
+            {{ copiado ? '¡Copiado!' : 'Copiar' }}
+          </button>
+        </div>
       </div>
-    </div>
+    </transition>
 
     <form @submit.prevent="handleSubmit" class="space-y-5">
 
@@ -98,9 +104,13 @@
           class="flex-1 py-3 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition text-sm">
           {{ modoEdicion ? 'Cerrar' : 'Cancelar' }}
         </button>
-        <button type="submit" :disabled="loading || passwordsMismatch"
-          class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition text-sm shadow-md shadow-indigo-100">
-          {{ loading ? 'Procesando...' : (modoEdicion ? 'Guardar Cambios' : 'Registrar Empleado') }}
+        <button type="submit" :disabled="guardando || loading || passwordsMismatch"
+          class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm shadow-md shadow-indigo-100">
+          <span v-if="guardando || loading" class="flex items-center justify-center gap-2">
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            Procesando...
+          </span>
+          <span v-else>{{ modoEdicion ? 'Guardar Cambios' : 'Registrar Empleado' }}</span>
         </button>
       </div>
 
@@ -114,7 +124,8 @@ import PermissionSelector from '@/components/administraccion/PermissionSelector.
 
 const props = defineProps({
   empleado:     { type: Object, default: null },
-  restaurantes: { type: Array,  default: () => [] }
+  restaurantes: { type: Array,  default: () => [] },
+  guardando:    { type: Boolean, default: false }
 })
 const emit = defineEmits(['guardar', 'cancelar'])
 
@@ -201,7 +212,6 @@ const handleSubmit = () => {
   }
 
   emit('guardar', payload)
-  loading.value = false
 }
 
 const cancelar = () => {
@@ -209,6 +219,7 @@ const cancelar = () => {
   form.value         = getInitialForm()
   cadenaAcceso.value = ''
   errorMessage.value = ''
+  loading.value      = false
 }
 
 const setError = (msg) => { errorMessage.value = msg }
@@ -226,3 +237,16 @@ const copiarCadena = async () => {
 
 defineExpose({ setError, setCadena })
 </script>
+
+<style scoped>
+.fade-up-enter-active { animation: fadeUpIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.fade-up-leave-active { animation: fadeUpIn 0.2s ease-in reverse; }
+@keyframes fadeUpIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin { animation: spin 0.8s linear infinite; }
+</style>

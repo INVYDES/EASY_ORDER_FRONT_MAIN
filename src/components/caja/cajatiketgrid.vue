@@ -26,7 +26,7 @@
               <span :class="{'line-through': d.cancelado}">
                 ${{ Number(d.subtotal || 0).toFixed(2) }}
               </span>
-              <button v-if="!d.cancelado && !esMesero && !esAdminOPropietario" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)"
+              <button v-if="!d.cancelado && !esMesero" @click="eliminarProductoDeOrden(d.id, ordenCobrar.id)"
                 class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all">
                 <span class="text-xs">🗑️</span>
               </button>
@@ -313,7 +313,7 @@
                   <div class="flex items-center gap-2">
                     <span class="text-slate-400 dark:text-gray-500">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
                     <!-- Botón eliminar producto en caja -->
-                    <button v-if="type === 'open' && !d.cancelado && !esMesero && !esAdminOPropietario" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
+                    <button v-if="type === 'open' && !d.cancelado && !esMesero" @click.stop="eliminarProductoDeOrden(d.id, order.id)"
                       class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition-all"
                       title="Eliminar Producto">
                       <span class="text-[10px]">🗑️</span>
@@ -499,7 +499,7 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-import { API_URL, getHeaders } from '@/config/api'
+import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const parseUTCDate = (dateStr) => {
@@ -1030,17 +1030,11 @@ const cobrarOrden = async () => {
 
     // 1. Cerrar la orden con método de pago y propina
     let dataCerrar
-    const comisionPct = metodoPago.value === 'tarjeta' ? 3.5 : 0
-    const comisionMonto = (totalConPropina.value * comisionPct) / 100
-    const netoDepositar = totalConPropina.value - comisionMonto
     try {
       dataCerrar = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/cerrar`, {
         metodo_pago: metodoPago.value,
         propina:     propinaCalculada.value,
         referencia:  folio.value.trim(),
-        comision_pct: comisionPct,
-        comision_monto: comisionMonto,
-        neto_depositar: netoDepositar,
       })
     } catch (e) {
       dataCerrar = await apiClient.put(`/ordenes/${ordenCobrar.value.id}`, {
@@ -1048,9 +1042,6 @@ const cobrarOrden = async () => {
         metodo_pago: metodoPago.value,
         propina:     propinaCalculada.value,
         referencia:  folio.value.trim(),
-        comision_pct: comisionPct,
-        comision_monto: comisionMonto,
-        neto_depositar: netoDepositar,
       })
     }
     if (!dataCerrar?.success && !dataCerrar?.data) {
@@ -1195,7 +1186,7 @@ const detalleSeleccionado = ref(null)
 const detallesSinAsignar = computed(() => {
   if (!ordenCobrar.value?.detalles) return []
   const asignados = comensalesManual.value.flatMap(c => c.detalles.map(d => d.id))
-  return ordenCobrar.value.detalles.filter(d => !asignados.includes(d.id))
+  return ordenCobrar.value.detalles.filter(d => !d.cancelado && !asignados.includes(d.id))
 })
 
 const subtotalComensal = (idx) => {

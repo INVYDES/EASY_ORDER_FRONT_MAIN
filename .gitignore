@@ -5,3 +5,5 @@ dist
 /dist
 .env
 resumen_mejores_versiones.txt
+DOCUMENTACION_TECNICA.md
+MANUAL_DE_USUARIO.MD

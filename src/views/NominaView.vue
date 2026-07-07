@@ -5,7 +5,7 @@
 
     <!-- ── AUTH OVERLAY ───────────────────────────────────────────────── -->
     <transition name="fade">
-      <div v-if="!isAuthenticated" class="auth-overlay">
+      <div v-if="!isAuthenticated" class="auth-overlay" @click.self="goBack">
         <div class="auth-card">
           <button type="button" @click="goBack" class="auth-card__close" title="Volver al panel">✕</button>
           <div class="auth-card__icon">🔐</div>
@@ -47,9 +47,11 @@
           <h1 class="page-header__title">Gestión de Nóminas</h1>
         </div>
         <div class="page-header__right">
-          <!-- Tab switcher eliminado -->
           <button @click="showGenerateModal = true" class="btn btn--primary">
             <i class="fa-solid fa-plus"></i> Nueva Nómina
+          </button>
+          <button @click="goBack" class="btn btn--ghost" title="Cerrar">
+            ✕
           </button>
         </div>
       </header>
@@ -135,6 +137,7 @@
       <div v-if="showGenerateModal" class="modal-overlay" @click.self="showGenerateModal = false">
         <div class="modal">
           <div class="modal__stripe modal__stripe--indigo"></div>
+          <button @click="showGenerateModal = false" class="modal__close" title="Cerrar">✕</button>
           <h3 class="modal__title">Generar Nómina</h3>
           <p class="modal__desc">Selecciona el empleado y el periodo. Los campos opcionales sobreescriben los valores configurados.</p>
 
@@ -206,6 +209,7 @@
       <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
         <div class="modal modal--sm">
           <div class="modal__stripe modal__stripe--blue"></div>
+          <button @click="showEditModal = false" class="modal__close" title="Cerrar">✕</button>
           <h3 class="modal__title">Modificar Nómina <span class="modal__id">#{{ editNomina.id }}</span></h3>
           <p class="modal__desc">Ajusta los montos. El total se recalculará en el servidor.</p>
 
@@ -240,6 +244,7 @@
       <div v-if="showPaymentModal" class="modal-overlay" @click.self="showPaymentModal = false">
         <div class="modal modal--sm">
           <div class="modal__stripe modal__stripe--green"></div>
+          <button @click="showPaymentModal = false" class="modal__close" title="Cerrar">✕</button>
           <h3 class="modal__title">Registrar Pago</h3>
           <p class="modal__desc">Marca la nómina como pagada y añade los detalles de la transacción.</p>
 
@@ -282,6 +287,7 @@
       <div v-if="showEmpConfigModal" class="modal-overlay" @click.self="showEmpConfigModal = false">
         <div class="modal">
           <div class="modal__stripe modal__stripe--indigo"></div>
+          <button @click="showEmpConfigModal = false" class="modal__close" title="Cerrar">✕</button>
           <div class="modal__emp-head">
             <div class="modal__emp-avatar">⚙️</div>
             <div>
@@ -349,15 +355,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch, nextTick, computed } from 'vue'
+import { ref, onMounted, reactive, watch, nextTick, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const closeNomina = inject('closeNomina', null)
 const goBack = () => {
-  router.push({ name: 'Gestion' })
+  if (closeNomina) {
+    closeNomina()
+  } else if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push({ name: 'Gestion' })
+  }
 }
 
 // --- Charts ---
@@ -1090,6 +1103,17 @@ onMounted(() => {
 .modal__id      { color: var(--c-text-3); font-weight: 500; font-size: 1rem; }
 .modal__desc    { font-size: .8125rem; color: var(--c-text-2); margin-bottom: 1.5rem; line-height: 1.6; }
 .modal__body    { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
+.modal__close {
+  position: absolute; top: 1.25rem; right: 1.25rem;
+  background: transparent; border: none;
+  font-size: 1.25rem; font-weight: bold;
+  color: var(--c-text-3); cursor: pointer;
+  width: 2rem; height: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: all 0.15s;
+  z-index: 1;
+}
+.modal__close:hover { background: var(--c-bg); color: var(--c-text-2); }
 .modal__actions { display: flex; gap: .75rem; }
 .modal__emp-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
 .modal__emp-avatar { width: 3rem; height: 3rem; background: var(--c-indigo-lt); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.375rem; flex-shrink: 0; }

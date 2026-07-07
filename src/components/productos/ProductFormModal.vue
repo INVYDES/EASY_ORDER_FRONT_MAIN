@@ -127,27 +127,115 @@
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm resize-none"></textarea>
             </div>
 
-            <!-- Precio y Stock -->
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Precio de Venta *</label>
+            <!-- Toggle Subdividir por tamaños -->
+            <div class="mb-6 bg-indigo-50/50 dark:bg-indigo-900/20 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-800">
+              <label class="flex items-center gap-3 cursor-pointer">
                 <div class="relative">
-                  <span class="absolute left-4 top-3 text-gray-400 dark:text-gray-500 font-bold">$</span>
-                  <input v-model.number="form.precio" type="number" step="0.01" min="0" placeholder="0.00"
-                    class="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 transition text-sm font-black"
-                    :class="errors.precio ? 'ring-2 ring-red-400' : ''" />
+                  <input v-model="form.tiene_tamanos" type="checkbox" class="sr-only" />
+                  <div class="block bg-gray-200 dark:bg-gray-700 w-10 h-6 rounded-full transition-colors" :class="form.tiene_tamanos ? 'bg-indigo-500' : ''"></div>
+                  <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform" :class="form.tiene_tamanos ? 'transform translate-x-4' : ''"></div>
                 </div>
-                <p v-if="errors.precio" class="text-xs text-red-500 mt-1">{{ errors.precio }}</p>
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Stock Actual</label>
-                <div class="relative">
-                  <input v-model.number="form.stock" type="number" readonly placeholder="0"
-                    class="w-full px-4 py-3 border-none bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 rounded-xl focus:outline-none text-sm cursor-not-allowed font-black" />
-                  <span v-if="receta.length" class="absolute right-3 top-3 text-indigo-500 text-[10px]" title="Calculado por receta">Sincronizado</span>
+                <div>
+                  <span class="text-sm font-bold text-gray-800 dark:text-gray-200 block">Subdividir por Tamaños</span>
+                  <span class="text-[10px] text-gray-500">Permite configurar precios y stock independiente para Pequeño, Mediano y Grande</span>
                 </div>
-                <p v-if="receta.length" class="text-[10px] text-indigo-500 mt-1 font-medium">Calculado por receta</p>
+              </label>
+            </div>
+
+            <!-- Precios (Diseño Llamativo Premium) -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Configuración de Precios</label>
+                <span v-if="form.tiene_tamanos" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 dark:text-indigo-400 px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm">Tamaños S, M, L</span>
+                <span v-else class="text-[10px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 shadow-sm">Precio Único</span>
               </div>
+              
+              <div :class="form.tiene_tamanos ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-1 gap-3'">
+                <!-- Talla Pequeña (Base) -->
+                <div class="relative group">
+                  <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300 pointer-events-none"></div>
+                  <div class="border-2 rounded-2xl p-3 transition-all duration-300 relative overflow-hidden backdrop-blur-sm"
+                       :class="form.precio_pequeno > 0 ? 'border-emerald-400 bg-emerald-50/40 dark:bg-emerald-900/40 shadow-emerald-100 dark:shadow-none' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/60 hover:border-emerald-200 dark:hover:border-emerald-700'">
+                    <div class="flex items-center gap-2 mb-2">
+                      <div v-if="form.tiene_tamanos" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-600/30 dark:to-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] dark:shadow-none border border-emerald-300/30 dark:border-emerald-500/30">S</div>
+                      <span class="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ form.tiene_tamanos ? 'Pequeño *' : 'Precio *' }}</span>
+                    </div>
+                    <div class="relative group-hover:transform group-hover:-translate-y-0.5 transition-transform">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-black text-sm">$</span>
+                      <input v-model.number="form.precio_pequeno" type="number" step="0.01" min="0" placeholder="0.00"
+                        class="w-full pl-7 pr-2 py-2 bg-white dark:bg-black/30 border border-transparent rounded-xl focus:border-emerald-300 dark:focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/20 dark:focus:ring-emerald-500/30 transition-all text-base font-black text-gray-800 dark:text-gray-100 shadow-sm dark:shadow-none"
+                        :class="errors.precio_pequeno ? 'ring-2 ring-red-400 dark:ring-red-500' : ''" />
+                    </div>
+                  </div>
+                  <p v-if="errors.precio_pequeno" class="text-[10px] text-red-500 mt-1 font-bold">{{ errors.precio_pequeno }}</p>
+                </div>
+
+                <!-- Talla Mediana -->
+                <div v-if="form.tiene_tamanos" class="relative group">
+                  <div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300 pointer-events-none"></div>
+                  <div class="border-2 rounded-2xl p-3 transition-all duration-300 relative overflow-hidden backdrop-blur-sm"
+                       :class="(form.precio_mediano ?? 0) > 0 ? 'border-blue-400 bg-blue-50/40 dark:bg-blue-900/40 shadow-blue-100 dark:shadow-none' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/60 hover:border-blue-200 dark:hover:border-blue-700'">
+                    <div class="flex items-center gap-2 mb-2">
+                      <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-600/30 dark:to-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center text-xs font-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] dark:shadow-none border border-blue-300/30 dark:border-blue-500/30">M</div>
+                      <span class="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mediano</span>
+                    </div>
+                    <div class="relative group-hover:transform group-hover:-translate-y-0.5 transition-transform">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-black text-sm">$</span>
+                      <input v-model.number="form.precio_mediano" type="number" step="0.01" min="0" placeholder="0.00"
+                        class="w-full pl-7 pr-2 py-2 bg-white dark:bg-black/30 border border-transparent rounded-xl focus:border-blue-300 dark:focus:border-blue-600 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/30 transition-all text-base font-black text-gray-800 dark:text-gray-100 shadow-sm dark:shadow-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Talla Grande -->
+                <div v-if="form.tiene_tamanos" class="relative group">
+                  <div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-15 transition-opacity duration-300 pointer-events-none"></div>
+                  <div class="border-2 rounded-2xl p-3 transition-all duration-300 relative overflow-hidden backdrop-blur-sm"
+                       :class="(form.precio_grande ?? 0) > 0 ? 'border-purple-400 bg-purple-50/40 dark:bg-purple-900/40 shadow-purple-100 dark:shadow-none' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/60 hover:border-purple-200 dark:hover:border-purple-700'">
+                    <div class="flex items-center gap-2 mb-2">
+                      <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-600/30 dark:to-purple-500/20 text-purple-700 dark:text-purple-400 flex items-center justify-center text-xs font-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] dark:shadow-none border border-purple-300/30 dark:border-purple-500/30">L</div>
+                      <span class="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grande</span>
+                    </div>
+                    <div class="relative group-hover:transform group-hover:-translate-y-0.5 transition-transform">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-black text-sm">$</span>
+                      <input v-model.number="form.precio_grande" type="number" step="0.01" min="0" placeholder="0.00"
+                        class="w-full pl-7 pr-2 py-2 bg-white dark:bg-black/30 border border-transparent rounded-xl focus:border-purple-300 dark:focus:border-purple-600 focus:ring-4 focus:ring-purple-500/20 dark:focus:ring-purple-500/30 transition-all text-base font-black text-gray-800 dark:text-gray-100 shadow-sm dark:shadow-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stock por Tamaño -->
+            <div class="mt-4">
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">{{ form.tiene_tamanos ? 'Stock por Tamaño' : 'Stock Disponible' }}</label>
+              <div :class="form.tiene_tamanos ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-1 gap-3'">
+                <div>
+                  <div class="flex items-center gap-1 mb-1">
+                    <span v-if="form.tiene_tamanos" class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-black">S</span>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Stock</span>
+                  </div>
+                  <input v-model.number="form.stock_pequeno" type="number" min="0" placeholder="0"
+                    class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-medium" />
+                </div>
+                <div v-if="form.tiene_tamanos">
+                  <div class="flex items-center gap-1 mb-1">
+                    <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[9px] font-black">M</span>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Stock</span>
+                  </div>
+                  <input v-model.number="form.stock_mediano" type="number" min="0" placeholder="0"
+                    class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-medium" />
+                </div>
+                <div v-if="form.tiene_tamanos">
+                  <div class="flex items-center gap-1 mb-1">
+                    <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[9px] font-black">L</span>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Stock</span>
+                  </div>
+                  <input v-model.number="form.stock_grande" type="number" min="0" placeholder="0"
+                    class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-medium" />
+                </div>
+              </div>
+              <p v-if="form.tiene_tamanos" class="text-[10px] text-gray-400 mt-1">Stock general del producto (calculado de la suma)</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -195,6 +283,23 @@
             </template>
 
             <template v-else>
+              <!-- ── SELECTOR DE TAMAÑO PARA RECETA ── -->
+              <div v-if="tieneMultiplesTamanos" class="flex gap-2 mb-4">
+                <button v-for="t in tamanosDisponibles" :key="t.key"
+                  @click="tamanoRecetaActivo = t.key"
+                  class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 shrink-0"
+                  :class="tamanoRecetaActivo === t.key
+                    ? 'text-white border-transparent shadow-lg'
+                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300'"
+                  :style="tamanoRecetaActivo === t.key ? { background: t.gradient } : {}">
+                  <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black"
+                    :class="tamanoRecetaActivo === t.key ? 'bg-white/20 text-white' : t.bgClass">
+                    {{ t.label[0] }}
+                  </span>
+                  <span>{{ t.label }}</span>
+                </button>
+              </div>
+
               <!-- ── PANEL DE COSTOS Y MÁRGENES ── -->
               <div class="grid grid-cols-2 gap-3">
                 <div class="bg-indigo-600 rounded-2xl p-4 shadow-sm shadow-indigo-200">
@@ -267,15 +372,15 @@
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
                   <p class="text-xs font-black text-gray-500 uppercase tracking-widest">Ingredientes en Receta</p>
-                  <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ receta.length }} items</span>
+                  <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ recetaFiltrada.length }} items</span>
                 </div>
 
-                <div v-if="!receta.length" class="py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl">
-                  <p class="text-sm text-gray-400 italic">No hay ingredientes asignados</p>
+                <div v-if="!recetaFiltrada.length" class="py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+                  <p class="text-sm text-gray-400 italic">No hay ingredientes asignados para este tamaño</p>
                 </div>
 
                 <div v-else class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  <div v-for="(item, idx) in receta" :key="item.id"
+                  <div v-for="(item, idx) in recetaFiltrada" :key="item.id"
                     class="group flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 hover:border-indigo-300 transition-all">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-bold text-gray-800 truncate">{{ item.nombre }}</p>
@@ -288,7 +393,7 @@
                           @input="recetaModificada = true" />
                         <span class="text-[10px] text-gray-400 font-bold uppercase">{{ item.unidad }}</span>
                       </div>
-                      <button @click="quitarDeReceta(idx)" type="button"
+                      <button @click="quitarDeRecetaPorFiltro(item.id)" type="button"
                         class="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
                         ✕
                       </button>
@@ -402,33 +507,49 @@ const isDragging   = ref(false)
 const imageInput   = ref<HTMLInputElement | null>(null)
 const imagePreview = ref<string | null>(null)
 const newImageFile = ref<File | null>(null)
-const categorias   = ref<any[]>(props.categorias || [])
+const categorias   = computed(() => props.categorias || [])
 const activeTab    = ref<'info' | 'receta'>('info')
 const productoCreado = ref(false)
 const productoId     = ref<number | null>(null)
 const recetaGuardada = ref(false)
 
 const form = reactive({
-  nombre: '', descripcion: '', precio: 0, costo: 0, stock: 0,
+  nombre: '', descripcion: '', precio: 0, precio_pequeno: 0, precio_mediano: null as number | null, precio_grande: null as number | null, costo: 0, stock: 0,
+  stock_pequeno: 0, stock_mediano: 0, stock_grande: 0,
   stock_minimo: 5, categoria_id: null as number | null,
   activo: true, eliminar_imagen: false,
-  minutos_produccion: 0
+  minutos_produccion: 0,
+  tiene_tamanos: false
 })
 
 const totalSueldosBaseReal = ref(0)
 const loadingNomina = ref(false)
 
-const errors = reactive({ nombre: '', precio: '', categoria_id: '' })
+const errors = reactive({ nombre: '', precio_pequeno: '', categoria_id: '' })
 
-// ── Estado Receta ─────────────────────────────────────────────────────────────
-const receta               = ref<any[]>([])
-const loadingReceta        = ref(false)
-const guardandoReceta      = ref(false)
-const recetaModificada     = ref(false)
-const busquedaIngrediente  = ref('')
+// ── Estado Receta (multi-tamaño) ──────────────────────────────────────────────
+const tamanoRecetaActivo = ref<'pequeno' | 'mediano' | 'grande'>('pequeno')
+const receta             = ref<any[]>([])
+const loadingReceta      = ref(false)
+const guardandoReceta    = ref(false)
+const recetaModificada   = ref(false)
+const busquedaIngrediente = ref('')
 const ingredientesBusqueda = ref<any[]>([])
-const todosIngredientes    = ref<any[]>([])
-const showDropdown         = ref(false)
+const todosIngredientes   = ref<any[]>([])
+const showDropdown        = ref(false)
+
+const recetaFiltrada = computed(() =>
+  receta.value.filter(i => (i.tamano || 'pequeno') === tamanoRecetaActivo.value)
+)
+
+const tieneMultiplesTamanos = computed(() => form.tiene_tamanos)
+
+const tamanosDisponibles = computed(() => {
+  const list = [{ key: 'pequeno', label: 'Pequeño', gradient: 'linear-gradient(135deg, #10b981, #059669)', bgClass: 'bg-emerald-100 text-emerald-700' }]
+  if (form.precio_mediano !== null && form.precio_mediano > 0) list.push({ key: 'mediano', label: 'Mediano', gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)', bgClass: 'bg-blue-100 text-blue-700' })
+  if (form.precio_grande !== null && form.precio_grande > 0) list.push({ key: 'grande', label: 'Grande', gradient: 'linear-gradient(135deg, #a855f7, #7c3aed)', bgClass: 'bg-purple-100 text-purple-700' })
+  return list
+})
 
 // ── Cargar Receta automáticamente al montar o cambiar producto ────────────────
 const initReceta = async () => {
@@ -452,7 +573,7 @@ const factorCargaSocial = ref(1.36) // Carga social por defecto
 
 // ── Computed: Costos y precio sugerido ───────────────────────────────────────
 const costoTotalReceta = computed(() =>
-  receta.value.reduce((s, i) => s + (Number(i.cantidad_receta) * Number(i.costo_unitario || 0)), 0)
+  recetaFiltrada.value.reduce((s, i) => s + (Number(i.cantidad_receta) * Number(i.costo_unitario || 0)), 0)
 )
 
 /**
@@ -498,8 +619,8 @@ const margenSugeridoPct = computed(() => {
 
 // Porciones posibles con el stock actual de ingredientes
 const porcionesDisponibles = computed<number | null>(() => {
-  if (!receta.value.length) return null
-  const valores = receta.value.map(i => {
+  if (!recetaFiltrada.value.length) return null
+  const valores = recetaFiltrada.value.map(i => {
     const cant  = Number(i.cantidad_receta)
     const stock = Number(i.stock_actual ?? 0)
     if (cant <= 0) return Infinity
@@ -509,9 +630,12 @@ const porcionesDisponibles = computed<number | null>(() => {
   return min === Infinity ? 0 : min
 })
 
-// ── Link de Stock Automático (Ahora en el orden correcto) ────────────────────
+// ── Link de Stock Automático por Tamaño ──────────────────────────────────────
 watch(porcionesDisponibles, (newVal) => {
-  if (newVal !== null && receta.value.length > 0) {
+  if (newVal !== null && recetaFiltrada.value.length > 0) {
+    if (tamanoRecetaActivo.value === 'pequeno') form.stock_pequeno = newVal
+    else if (tamanoRecetaActivo.value === 'mediano') form.stock_mediano = newVal
+    else if (tamanoRecetaActivo.value === 'grande') form.stock_grande = newVal
     form.stock = newVal
   }
 })
@@ -522,18 +646,18 @@ watch(costoTotalReceta, (newVal) => {
 })
 
 const margenEstimado = computed(() => {
-  const precio = Number(form.precio) || 0
+  const precio = Number(form.precio_pequeno) || 0
   const costos = costoTotalReceta.value + costoManoObra.value + costoIndirectos.value
   return precio - costos
 })
 
 const margenPct = computed(() => {
-  const precio = Number(form.precio) || 0
+  const precio = Number(form.precio_pequeno) || 0
   return precio > 0 ? Math.round((margenEstimado.value / precio) * 100) : 0
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const yaEnReceta = (id: number) => receta.value.some(r => r.id === id)
+const yaEnReceta = (id: number) => receta.value.some(r => r.id === id && (r.tamano || 'pequeno') === tamanoRecetaActivo.value)
 
 // ── Cargar ingredientes del catálogo (una sola vez) ───────────────────────────
 const loadTodosIngredientes = async () => {
@@ -584,15 +708,14 @@ const cargarReceta = async () => {
       return
     }
 
-    const data = await apiClient.get(`/ingredientes/producto/${props.product.id}`)
+    const data = await apiClient.get(`/ingredientes/producto/${props.product.id}?per_page=500`)
 
     const arrayData = data.data || data
     if ((data.success || arrayData) && Array.isArray(arrayData)) {
       receta.value = arrayData.map((i: any) => ({
         ...i,
-        // El backend devuelve cantidad_receta (v2) o cantidad (pivot v1)
-        // Tomamos el primero que exista y no sea 0
         cantidad_receta: parseFloat(i.cantidad_receta ?? i.cantidad ?? 0),
+        tamano: i.tamano || 'pequeno',
       }))
     }
   } catch (e) {
@@ -617,7 +740,7 @@ const buscarIngredientes = () => {
 
 const seleccionarIngrediente = (ing: any) => {
   if (!yaEnReceta(ing.id)) {
-    receta.value.push({ ...ing, cantidad_receta: 1 })
+    receta.value.push({ ...ing, cantidad_receta: 1, tamano: tamanoRecetaActivo.value })
     recetaModificada.value = true
   }
   busquedaIngrediente.value  = ''
@@ -628,6 +751,14 @@ const seleccionarIngrediente = (ing: any) => {
 const quitarDeReceta = (idx: number) => {
   receta.value.splice(idx, 1)
   recetaModificada.value = true
+}
+
+const quitarDeRecetaPorFiltro = (ingId: number) => {
+  const idx = receta.value.findIndex((i: any) => i.id === ingId && (i.tamano || 'pequeno') === tamanoRecetaActivo.value)
+  if (idx !== -1) {
+    receta.value.splice(idx, 1)
+    recetaModificada.value = true
+  }
 }
 
 // ── Guardar receta ────────────────────────────────────────────────────────────
@@ -641,6 +772,7 @@ const guardarReceta = async () => {
       ingredientes: receta.value.map(i => ({
         id:       i.id,
         cantidad: Number(i.cantidad_receta),
+        tamano:   i.tamano || 'pequeno',
       })),
     }
     const data = await apiClient.post(`/ingredientes/producto/${pid}/sync`, payload)
@@ -693,18 +825,25 @@ const resetForm = () => {
   const p = props.product
   form.nombre          = p?.nombre       ?? ''
   form.descripcion     = p?.descripcion  ?? ''
-  form.precio          = p?.precio       ?? 0
+  form.precio          = p?.precio_pequeno ?? p?.precio ?? 0
+  form.precio_pequeno  = p?.precio_pequeno ?? p?.precio ?? 0
+  form.precio_mediano  = p?.precio_mediano ?? null
+  form.precio_grande   = p?.precio_grande  ?? null
   form.costo           = p?.costo        ?? 0
   form.stock           = p?.stock        ?? 0
+  form.stock_pequeno   = p?.stock_pequeno ?? p?.stock ?? 0
+  form.stock_mediano   = p?.stock_mediano ?? 0
+  form.stock_grande    = p?.stock_grande  ?? 0
   form.stock_minimo    = p?.stock_minimo ?? 5
   form.categoria_id    = p?.categoria_id ?? null
   form.activo          = p?.activo       ?? true
   form.eliminar_imagen = false
+  form.tiene_tamanos   = p?.tiene_tamanos ? true : false
   imagePreview.value     = p?.imagen_url   ?? null
   newImageFile.value     = null
   form.minutos_produccion = p?.minutos_produccion ?? 0
   errors.nombre          = ''
-  errors.precio        = ''
+  errors.precio_pequeno  = ''
   errors.categoria_id  = ''
   errorMessage.value   = ''
   // Reset receta — se cargará al abrir el tab
@@ -714,6 +853,7 @@ const resetForm = () => {
   productoCreado.value   = false
   productoId.value       = null
   recetaGuardada.value   = false
+  tamanoRecetaActivo.value = 'pequeno'
 }
 
 watch(() => props.product, resetForm, { immediate: true })
@@ -721,9 +861,9 @@ watch(() => props.product, resetForm, { immediate: true })
 // ── Validación ────────────────────────────────────────────────────────────────
 const validate = () => {
   errors.nombre       = form.nombre.trim()   ? '' : 'El nombre es obligatorio'
-  errors.precio       = form.precio > 0      ? '' : 'El precio debe ser mayor a 0'
+  errors.precio_pequeno = form.precio_pequeno > 0 ? '' : 'El precio pequeño debe ser mayor a 0'
   errors.categoria_id = form.categoria_id    ? '' : 'Selecciona una categoría'
-  return !errors.nombre && !errors.precio && !errors.categoria_id
+  return !errors.nombre && !errors.precio_pequeno && !errors.categoria_id
 }
 
 // ── Crear Producto (Paso 1) ───────────────────────────────────────────────────
@@ -739,11 +879,18 @@ const crearProducto = async () => {
       const fd = new FormData()
       fd.append('nombre',       form.nombre)
       fd.append('descripcion',  form.descripcion || '')
-      fd.append('precio',       String(form.precio))
+      fd.append('precio',       String(form.precio_pequeno))
+      fd.append('precio_pequeno', String(form.precio_pequeno))
+      if (form.precio_mediano !== null) fd.append('precio_mediano', String(form.precio_mediano))
+      if (form.precio_grande !== null) fd.append('precio_grande', String(form.precio_grande))
       fd.append('costo',        String(form.costo))
-      fd.append('stock',        String(form.stock))
-      fd.append('stock_minimo', String(form.stock_minimo))
+      fd.append('stock',          String(form.stock_pequeno))
+      fd.append('stock_pequeno',  String(form.stock_pequeno))
+      fd.append('stock_mediano',  String(form.stock_mediano))
+      fd.append('stock_grande',   String(form.stock_grande))
+      fd.append('stock_minimo',   String(form.stock_minimo))
       if (form.categoria_id) fd.append('categoria_id', String(form.categoria_id))
+      fd.append('tiene_tamanos',      tieneMultiplesTamanos.value ? '1' : '0')
       fd.append('activo',             form.activo ? '1' : '0')
       fd.append('minutos_produccion', String(form.minutos_produccion))
       fd.append('imagen',             newImageFile.value)
@@ -753,11 +900,18 @@ const crearProducto = async () => {
       data = await apiClient.post('/productos', {
         nombre:          form.nombre,
         descripcion:     form.descripcion,
-        precio:          form.precio,
+        precio:          form.precio_pequeno,
+        precio_pequeno:  form.precio_pequeno,
+        precio_mediano:  form.precio_mediano,
+        precio_grande:   form.precio_grande,
         costo:           form.costo,
-        stock:           form.stock,
+        stock:           form.stock_pequeno,
+        stock_pequeno:   form.stock_pequeno,
+        stock_mediano:   form.stock_mediano,
+        stock_grande:    form.stock_grande,
         stock_minimo:    form.stock_minimo,
         categoria_id:    form.categoria_id,
+        tiene_tamanos:   tieneMultiplesTamanos.value,
         activo:             form.activo,
         minutos_produccion: form.minutos_produccion,
       })
@@ -799,11 +953,18 @@ const save = async () => {
       const fd = new FormData()
       fd.append('nombre',       form.nombre)
       fd.append('descripcion',  form.descripcion || '')
-      fd.append('precio',       String(form.precio))
+      fd.append('precio',       String(form.precio_pequeno))
+      fd.append('precio_pequeno', String(form.precio_pequeno))
+      if (form.precio_mediano !== null) fd.append('precio_mediano', String(form.precio_mediano))
+      if (form.precio_grande !== null) fd.append('precio_grande', String(form.precio_grande))
       fd.append('costo',        String(form.costo))
-      fd.append('stock',        String(form.stock))
-      fd.append('stock_minimo', String(form.stock_minimo))
+      fd.append('stock',          String(form.stock_pequeno))
+      fd.append('stock_pequeno',  String(form.stock_pequeno))
+      fd.append('stock_mediano',  String(form.stock_mediano))
+      fd.append('stock_grande',   String(form.stock_grande))
+      fd.append('stock_minimo',   String(form.stock_minimo))
       if (form.categoria_id) fd.append('categoria_id', String(form.categoria_id))
+      fd.append('tiene_tamanos',      tieneMultiplesTamanos.value ? '1' : '0')
       fd.append('activo',             form.activo ? '1' : '0')
       fd.append('minutos_produccion', String(form.minutos_produccion))
       fd.append('imagen',             newImageFile.value)
@@ -815,11 +976,18 @@ const save = async () => {
       data = await apiClient[method](endpoint, {
         nombre:          form.nombre,
         descripcion:     form.descripcion,
-        precio:          form.precio,
+        precio:          form.precio_pequeno,
+        precio_pequeno:  form.precio_pequeno,
+        precio_mediano:  form.precio_mediano,
+        precio_grande:   form.precio_grande,
         costo:           form.costo,
-        stock:           form.stock,
+        stock:           form.stock_pequeno,
+        stock_pequeno:   form.stock_pequeno,
+        stock_mediano:   form.stock_mediano,
+        stock_grande:    form.stock_grande,
         stock_minimo:    form.stock_minimo,
         categoria_id:    form.categoria_id,
+        tiene_tamanos:   tieneMultiplesTamanos.value,
         activo:             form.activo,
         eliminar_imagen:    form.eliminar_imagen,
         minutos_produccion: form.minutos_produccion,
@@ -840,21 +1008,10 @@ const save = async () => {
   }
 }
 
-// ── Categorías (si no vienen como prop) ──────────────────────────────────────
-const loadCategorias = async () => {
-  try {
-    const data = await apiClient.get('/categorias')
-    if (data.success || data.data) categorias.value = data.data || data || []
-  } catch (e) {
-    console.error('Error categorías:', e)
-  }
-}
-
 // ── Cerrar dropdown al hacer clic fuera ──────────────────────────────────────
 const handleClickOutside = () => { showDropdown.value = false }
 
 onMounted(() => {
-  if (!categorias.value.length) loadCategorias()
   document.addEventListener('click', handleClickOutside)
   initReceta()
 })

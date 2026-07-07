@@ -133,16 +133,18 @@ const tiempoClass = computed(() => {
 const urgente = computed(() => minutosTranscurridos.value > 20)
 
 // --- Lógica de filtrado de cocina ---
-const esProductoCocina = (detalle) => {
-  const prodRaw = detalle.producto
-  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').toLowerCase()
-  
-  if (cat === 'cocina') return true
-  if (cat === 'barra' || cat === 'bebida' || cat === 'postres' || cat === 'postre') return false
-  
-  // Por defecto va a cocina
-  return true
+const esBebida = (detalle) => {
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  if (cat) return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
 }
+const esPostre = (detalle) => {
+  const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  if (cat) return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
+  return false
+}
+const esCocinaFunc = (detalle) => !esBebida(detalle) && !esPostre(detalle)
 
 const getNombreProducto = (detalle) => {
   const prodRaw = detalle.producto
@@ -151,7 +153,7 @@ const getNombreProducto = (detalle) => {
 
 const detallesComida = computed(() => {
   if (!props.order.detalles) return []
-  let list = props.order.detalles.filter(d => esProductoCocina(d) && !d.cancelado)
+  let list = props.order.detalles.filter(d => esCocinaFunc(d) && !d.cancelado)
   if (props.estadoFiltro) {
     list = list.filter(d => (d.estado_preparacion || d.estado) === props.estadoFiltro)
   }

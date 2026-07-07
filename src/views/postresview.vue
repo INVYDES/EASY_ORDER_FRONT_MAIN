@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 p-4 sm:p-6">
+  <div class="min-h-screen bg-gray-950 p-4 sm:p-6" :style="{ zoom }">
 
     <SucursalBadge />
 
@@ -232,7 +232,9 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { useToast } from '@/composables/useToast'
 import { getHeaders } from '@/config/api'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
 
+const { zoom } = useDeviceZoom()
 const POLL_INTERVAL = 15000 // Aumentamos ya que hay WS
 const router        = useRouter()
 
@@ -289,7 +291,7 @@ const pendingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isPostreOrder(o)) return false
     const detalles = getDetallesPostres(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => ['PENDIENTE', 'ABIERTA'].includes(d.estado_preparacion || d.estado))
   })
 })
 
@@ -323,6 +325,8 @@ const loadOrders = async (silent = false) => {
       orders.value = lista
         .filter(o => isPostreOrder(o))
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    } else {
+      console.warn('🍰 Postres: respuesta sin datos', data)
     }
   } catch (e) { console.error('Error postres:', e) }
   finally { 
@@ -355,7 +359,8 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
   // Solo los detalles que son postres y coinciden con el filtro
   let detallesPostres = (orden.detalles ?? []).filter(esPostre)
   if (estadoFiltro) {
-    detallesPostres = detallesPostres.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+    const estadosValidos = estadoFiltro === 'PENDIENTE' ? ['PENDIENTE', 'ABIERTA'] : [estadoFiltro]
+    detallesPostres = detallesPostres.filter(d => estadosValidos.includes(d.estado_preparacion || d.estado))
   }
 
   modalIngredientes.value = {

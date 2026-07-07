@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="min-h-screen bg-gray-50 flex flex-col" :style="{ zoom }">
 
     <!-- Header Menú Kiosko -->
     <div class="bg-gradient-to-br from-indigo-600 to-purple-700 shadow-md">
@@ -201,7 +201,7 @@
               <button v-for="p in cat.productos" :key="p.id"
                 @click="agregarAlPedido(p)"
                 :disabled="p.agotado"
-                class="bg-white rounded-3xl border border-slate-50 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl transition-all group disabled:opacity-50 relative p-1">
+                class="glass-card bg-white rounded-3xl border border-slate-50 shadow-sm overflow-hidden flex flex-col text-left hover:shadow-xl transition-all group disabled:opacity-50 relative p-1">
                 <div class="w-full rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative transition-all duration-700"
                      :class="sidebarAbierta ? 'h-28' : 'h-52'">
                   <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre"
@@ -217,7 +217,14 @@
                        :class="sidebarAbierta ? 'text-[8px]' : 'text-sm'">Últimas {{ p.stock }}</p>
                   </div>
                   <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                    <span class="font-black text-slate-900 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
+                    <div class="flex flex-col">
+                       <span class="font-black text-slate-900 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
+                   <div v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && (p.precio_pequeno > 0 || p.precio_mediano > 0 || p.precio_grande > 0)" class="flex items-center gap-1 mt-1 text-xs font-medium text-slate-700">
+                        <span v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && p.precio_pequeno !== null && p.precio_pequeno > 0" class="price-badge">S ${{ Number(p.precio_pequeno).toFixed(2) }}</span>
+                        <span v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && p.precio_mediano !== null && p.precio_mediano > 0" class="price-badge medi">M ${{ Number(p.precio_mediano).toFixed(2) }}</span>
+                        <span v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && p.precio_grande !== null && p.precio_grande > 0" class="price-badge grande">L ${{ Number(p.precio_grande).toFixed(2) }}</span>
+                      </div>
+                     </div>
                     <div class="w-7 h-7 rounded-xl flex items-center justify-center text-base font-bold transition-all shadow-sm"
                       :class="!p.agotado ? 'bg-slate-900 text-white group-hover:scale-110' : 'bg-slate-100 text-slate-300'">
                       {{ !p.agotado ? '+' : '✕' }}
@@ -458,92 +465,6 @@
       </button>
     </div>
 
-    <!-- Modal carrito móvil -->
-    <div v-if="showCarritoMobile" class="sm:hidden fixed inset-0 bg-black/50 z-30 flex items-end animate-fade-in"
-      @click.self="showCarritoMobile = false">
-      <div class="bg-white w-full rounded-t-3xl p-5 max-h-[85vh] flex flex-col animate-slide-up">
-        
-        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
-          <div>
-            <h3 class="font-black text-slate-800 text-lg">Tu Pedido</h3>
-            <span class="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">{{ totalItems }} items</span>
-          </div>
-          <button @click="showCarritoMobile = false" class="text-slate-400 text-xl hover:text-slate-600">✕</button>
-        </div>
-        
-        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-2 border border-slate-100 shadow-sm mb-4">
-          <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-          <input v-model="numeroComensales" type="number" min="1" max="50" @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
-        </div>
-
-        <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
-          <div v-if="pedido.length === 0" class="text-center py-10 opacity-50">
-            <span class="text-5xl mb-4 block">🍽️</span>
-            <p class="text-slate-900 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
-          </div>
-          
-          <div v-else class="space-y-4">
-            <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
-              
-              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
-                <div class="flex items-center gap-2">
-                   <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                   <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-24 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
-                   </div>
-                </div>
-                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
-              </div>
-
-              <div class="p-3 space-y-3 bg-white">
-                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-2 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
-                  Caja Vacía
-                </div>
-                
-                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                  <div class="flex items-center justify-between mb-2">
-                    <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none flex-1">{{ item.nombre }}</p>
-                    <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
-                  </div>
-                  <div class="mb-2">
-                    <input v-model="item.notas" type="text" placeholder="Notas" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-1 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
-                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500">−</button>
-                      <span class="text-[10px] font-black w-4 text-center">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)"
-                        :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
-                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed">+</button>
-                    </div>
-                    <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-slate-100 space-y-3 shrink-0">
-          <div class="flex justify-between items-end">
-            <span class="text-sm font-black text-slate-900 uppercase tracking-widest">Total</span>
-            <span class="text-2xl font-black text-indigo-600 leading-none">${{ totalPedido.toFixed(2) }}</span>
-          </div>
-          <button @click="showCheckout = true; showCarritoMobile = false" :disabled="pedido.length === 0"
-            class="w-full py-4 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-40 uppercase tracking-widest shadow-lg shadow-indigo-100">
-            Confirmar Orden ✨
-          </button>
-          <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest text-center">
-            Limpiar Carrito
-          </button>
-        </div>
-
-      </div>
-    </div>
-
     <!-- Modal Checkout -->
     <MenuCheckoutModal
       v-if="showCheckout"
@@ -553,6 +474,98 @@
       @close="showCheckout = false"
       @confirmar="handleCheckout"
     />
+
+    <!-- Modal Seleccionar Tamaño -->
+    <div v-if="showTamanosModal" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
+         @click.self="showTamanosModal = false">
+      <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
+        <button @click="showTamanosModal = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 font-bold">✕</button>
+        
+        <div class="mb-6">
+          <h3 class="font-black text-slate-900 text-2xl tracking-tight leading-tight pr-8">{{ productoSeleccionado?.nombre }}</h3>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Selecciona el tamaño deseado</p>
+        </div>
+
+        <div class="space-y-3">
+          <button v-if="productoSeleccionado?.precio_pequeno > 0 || productoSeleccionado?.precio > 0" 
+                  @click="agregarProductoConTamano(productoSeleccionado, 'pequeno', productoSeleccionado.precio_pequeno || productoSeleccionado.precio)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 group transition-all"
+                  :disabled="!tieneStockTamano(productoSeleccionado, 'pequeno')">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-lg">S</div>
+              <div>
+                <span class="font-black text-slate-700 uppercase tracking-widest group-hover:text-emerald-700 block">Pequeño</span>
+                <span v-if="productoSeleccionado?.stock_pequeno !== undefined" class="text-[10px] font-medium text-slate-400">{{ productoSeleccionado.stock_pequeno }} disp.</span>
+              </div>
+            </div>
+            <span class="font-black text-slate-900 text-xl">${{ Number(productoSeleccionado?.precio_pequeno || productoSeleccionado?.precio).toFixed(2) }}</span>
+          </button>
+          
+          <button v-if="productoSeleccionado?.precio_mediano > 0" 
+                  @click="agregarProductoConTamano(productoSeleccionado, 'mediano', productoSeleccionado.precio_mediano)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 group transition-all"
+                  :disabled="!tieneStockTamano(productoSeleccionado, 'mediano')">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">M</div>
+              <div>
+                <span class="font-black text-slate-700 uppercase tracking-widest group-hover:text-blue-700 block">Mediano</span>
+                <span v-if="productoSeleccionado?.stock_mediano !== undefined" class="text-[10px] font-medium text-slate-400">{{ productoSeleccionado.stock_mediano }} disp.</span>
+              </div>
+            </div>
+            <span class="font-black text-slate-900 text-xl">${{ Number(productoSeleccionado?.precio_mediano).toFixed(2) }}</span>
+          </button>
+
+          <button v-if="productoSeleccionado?.precio_grande > 0" 
+                  @click="agregarProductoConTamano(productoSeleccionado, 'grande', productoSeleccionado.precio_grande)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-purple-500 hover:bg-purple-50 group transition-all"
+                  :disabled="!tieneStockTamano(productoSeleccionado, 'grande')">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-lg">L</div>
+              <div>
+                <span class="font-black text-slate-700 uppercase tracking-widest group-hover:text-purple-700 block">Grande</span>
+                <span v-if="productoSeleccionado?.stock_grande !== undefined" class="text-[10px] font-medium text-slate-400">{{ productoSeleccionado.stock_grande }} disp.</span>
+              </div>
+            </div>
+            <span class="font-black text-slate-900 text-xl">${{ Number(productoSeleccionado?.precio_grande).toFixed(2) }}</span>
+          </button>
+        </div>
+
+        <!-- Opción precio personalizado -->
+        <div class="mt-4 pt-4 border-t border-slate-100">
+          <button @click="abrirPrecioPersonalizado(productoSeleccionado)" class="w-full py-3 text-sm font-bold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">
+            ✏️ Precio personalizado
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Precio Personalizado -->
+    <div v-if="showPrecioPersonalizado" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
+         @click.self="showPrecioPersonalizado = false">
+      <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
+        <button @click="showPrecioPersonalizado = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 font-bold">✕</button>
+        <div class="mb-6">
+          <h3 class="font-black text-slate-900 text-2xl tracking-tight leading-tight pr-8">{{ productoSeleccionado?.nombre }}</h3>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Define un precio y cantidad personalizados</p>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Precio unitario</label>
+            <input v-model.number="precioPersonalizadoValor" type="number" step="0.01" min="0" placeholder="0.00"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-bold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cantidad</label>
+            <input v-model.number="precioPersonalizadoCantidad" type="number" min="1" placeholder="1"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-bold" />
+          </div>
+          <button @click="agregarConPrecioPersonalizado" :disabled="!precioPersonalizadoValor || precioPersonalizadoValor <= 0"
+            class="w-full py-4 bg-indigo-600 text-white text-sm font-black rounded-2xl hover:bg-indigo-700 shadow-lg transition disabled:opacity-50">
+            {{ !precioPersonalizadoValor || precioPersonalizadoValor <= 0 ? 'Ingresa un precio' : `Agregar $${Number(precioPersonalizadoValor).toFixed(2)} × ${precioPersonalizadoCantidad || 1}` }}
+          </button>
+        </div>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -567,6 +580,9 @@ const router = useRouter()
 const API_URL     = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
+
+const { zoom } = useDeviceZoom()
 
 // --- Estado ---
 const restauranteSeleccionado = ref(null)
@@ -579,6 +595,11 @@ const errorOrden              = ref('')
 const loading                 = ref({ productos: true })
 const debugMsg                = ref('')
 const showCheckout            = ref(false)
+const showTamanosModal        = ref(false)
+const productoSeleccionado    = ref(null)
+const showPrecioPersonalizado = ref(false)
+const precioPersonalizadoValor = ref(0)
+const precioPersonalizadoCantidad = ref(1)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const paquetes                = ref([])
@@ -675,8 +696,14 @@ const normalizar = (p) => {
       nombre:      p.nombre || 'Sin nombre',
       descripcion: p.descripcion || '',
       precio:      parseFloat(p.precio || 0),
+      precio_pequeno: p.precio_pequeno !== null ? parseFloat(p.precio_pequeno) : null,
+      precio_mediano: p.precio_mediano !== null ? parseFloat(p.precio_mediano) : null,
+      precio_grande:  p.precio_grande !== null ? parseFloat(p.precio_grande) : null,
       imagen_url:  p.imagen_url  || p.imagen || null,
       stock:       parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
+      stock_pequeno: parseFloat(p.stock_pequeno ?? p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
+      stock_mediano: parseFloat(p.stock_mediano ?? 0),
+      stock_grande:  parseFloat(p.stock_grande ?? 0),
       agotado:     parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
       bajo_stock:  p.bajo_stock ?? false,
       minutos_produccion: parseFloat(p.minutos_produccion || 0),
@@ -817,31 +844,64 @@ const totalEnPedidoPorPaqueteId = (paqueteId) => {
     .reduce((sum, i) => sum + i.cantidad, 0)
 }
 
+const totalEnPedidoPorTamano = (productId, tamano) => {
+  return pedido.value
+    .filter(i => i.id === productId && i.tamano === tamano && !i.es_paquete && !i.es_oferta)
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
+const tieneStockTamano = (p, tamano) => {
+  const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
+  const stock = p[stockKey] ?? p.stock ?? 0
+  if (stock <= 0) return false
+  return totalEnPedidoPorTamano(p.id, tamano) < stock
+}
+
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
 
-  if (p.stock !== undefined && p.stock !== null) {
-    if (totalEnPedidoPorId(p.id) >= p.stock) {
-      mostrarError(`No hay suficiente stock para "${p.nombre}". Límite: ${p.stock} uds`)
-      return
-    }
+  if (p.tiene_tamanos == true || p.tiene_tamanos == '1') {
+    productoSeleccionado.value = p
+    showTamanosModal.value = true
+    return
+  }
+
+  agregarProductoConTamano(p, 'pequeno', p.precio_pequeno || p.precio)
+}
+
+const agregarProductoConTamano = (p, tamano, precio) => {
+  showTamanosModal.value = false
+
+  const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
+  const stockDisp = p[stockKey] ?? p.stock ?? 0
+  if (stockDisp > 0 && totalEnPedidoPorTamano(p.id, tamano) >= stockDisp) {
+    mostrarError(`No hay suficiente stock de tamaño "${tamano}" para "${p.nombre}". Límite: ${stockDisp} uds`)
+    return
   }
 
   const cIdx = comensalActivoIndex.value
-  const existe = pedido.value.find(i => i.id === p.id && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
+  const existe = pedido.value.find(i => i.id === p.id && i.tamano === tamano && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
   if (existe) { 
     existe.cantidad++ 
   } else { 
+    const sizeMap = { 'pequeno': 'Pequeño', 'mediano': 'Mediano', 'grande': 'Grande', 'personalizado': 'Personalizado' }
+    let nombreMostrar = p.nombre
+    if (tamano !== 'pequeno') {
+      nombreMostrar = `${p.nombre} (${sizeMap[tamano] || tamano})`
+    }
+    
     pedido.value.push({ 
       cartId: Date.now() + Math.random(),
       id: p.id, 
-      nombre: p.nombre, 
-      precio: parseFloat(p.precio), 
+      nombre: nombreMostrar, 
+      precio: parseFloat(precio), 
       imagen: p.imagen_url ? getImageUrl(p.imagen_url) : null, 
       cantidad: 1, 
-      stock_maximo: p.stock,
+      stock_maximo: stockDisp,
       notas: '',
+      tamano: tamano,
+      tamano: tamano,
       comensalIndex: cIdx,
       minutos_produccion: parseFloat(p.minutos_produccion || 0)
     }) 
@@ -937,6 +997,38 @@ const decrementar = (cartId) => {
 const eliminarDelPedido = (cartId) => { pedido.value = pedido.value.filter(i => i.cartId !== cartId) }
 const vaciarPedido = () => { if (confirm('¿Vaciar todo el pedido?')) pedido.value = [] }
 
+const abrirPrecioPersonalizado = (p) => {
+  showTamanosModal.value = false
+  productoSeleccionado.value = p
+  precioPersonalizadoValor.value = p.precio || 0
+  precioPersonalizadoCantidad.value = 1
+  showPrecioPersonalizado.value = true
+}
+
+const agregarConPrecioPersonalizado = () => {
+  if (!precioPersonalizadoValor.value || precioPersonalizadoValor.value <= 0) return
+  const p = productoSeleccionado.value
+  if (!p) return
+  showPrecioPersonalizado.value = false
+  const cantidad = precioPersonalizadoCantidad.value || 1
+  for (let i = 0; i < cantidad; i++) {
+    const cIdx = comensalActivoIndex.value
+    pedido.value.push({
+      cartId: Date.now() + Math.random(),
+      id: p.id,
+      nombre: `${p.nombre} (Personalizado)`,
+      precio: parseFloat(precioPersonalizadoValor.value),
+      imagen: p.imagen_url ? getImageUrl(p.imagen_url) : null,
+      cantidad: 1,
+      stock_maximo: 9999,
+      notas: '',
+      tamano: 'personalizado',
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(p.minutos_produccion || 0)
+    })
+  }
+}
+
 const handleCheckout = async (checkoutData) => {
   try {
     const body = {
@@ -946,6 +1038,7 @@ const handleCheckout = async (checkoutData) => {
         paquete_id: i.es_paquete ? i.paquete_id : null,
         cantidad: i.cantidad,
         notas: i.notas,
+        tamano: i.tamano && i.tamano !== 'pequeno' ? i.tamano : null,
         nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General'
       })),
       metodo_pago: 'efectivo', tipo_orden: 'local',
@@ -1036,4 +1129,29 @@ onUnmounted(() => {
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 .custom-scrollbar::-webkit-scrollbar { width: 5px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+@layer utilities {
+  .glass-card {
+    background: hsla(0,0%,100%,0.8);
+    backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  }
+  .price-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    background: hsl(210, 70%, 55%);
+    color: white;
+    margin-right: 2px;
+  }
+  .price-badge.medi { background: hsl(340, 75%, 55%); }
+  .price-badge.grande { background: hsl(210, 70%, 40%); }
+}
 </style>

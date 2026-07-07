@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-800/50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-800/50" :style="{ zoom }">
 
     <!-- ══ MARQUESITA ══ -->
     <MarquesitaWidget
@@ -199,7 +199,14 @@
                     </span>
                   </div>
                   <div class="flex items-center justify-between mt-2">
-                    <span class="font-bold text-indigo-600 dark:text-indigo-400">${{ Number(p.precio||0).toFixed(2) }}</span>
+                    <div>
+                      <span class="font-bold text-indigo-600 dark:text-indigo-400">${{ Number(p.precio||0).toFixed(2) }}</span>
+                      <div v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && (p.precio_pequeno > 0 || p.precio_mediano > 0 || p.precio_grande > 0)" class="flex items-center gap-1 mt-1 flex-wrap">
+                        <span v-if="p.precio_pequeno > 0" class="text-[8px] font-bold px-1 py-0.5 rounded bg-emerald-100 text-emerald-700 leading-none">S ${{ Number(p.precio_pequeno).toFixed(2) }}</span>
+                        <span v-if="p.precio_mediano > 0" class="text-[8px] font-bold px-1 py-0.5 rounded bg-blue-100 text-blue-700 leading-none">M ${{ Number(p.precio_mediano).toFixed(2) }}</span>
+                        <span v-if="p.precio_grande > 0" class="text-[8px] font-bold px-1 py-0.5 rounded bg-purple-100 text-purple-700 leading-none">L ${{ Number(p.precio_grande).toFixed(2) }}</span>
+                      </div>
+                    </div>
                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition"
                       :class="!p.agotado ? 'bg-indigo-100 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'">
                       {{ !p.agotado ? '+' : '✕' }}
@@ -229,18 +236,21 @@
                 <span v-else class="text-lg">🍽️</span>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{{ item.nombre }}</p>
+                <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                  {{ item.nombre }}
+                  <span v-if="item.tamano && item.tamano !== 'pequeno' && item.tamano !== 'personalizado'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano === 'mediano' ? 'M' : 'L' }})</span>
+                </p>
                 <div class="flex items-center gap-1.5 mt-1.5">
-                  <button @click="decrementar(item.id)"
+                  <button @click="decrementar(item.id, item.tamano)"
                     class="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xs hover:bg-gray-300 transition flex items-center justify-center font-bold">−</button>
                   <span class="text-xs font-bold w-4 text-center">{{ item.cantidad }}</span>
-                  <button @click="incrementar(item.id)"
+                  <button @click="incrementar(item.id, item.tamano)"
                     class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-xs hover:bg-indigo-200 transition flex items-center justify-center font-bold">+</button>
                 </div>
               </div>
               <div class="text-right shrink-0">
                 <p class="text-xs font-bold text-gray-800 dark:text-gray-200">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
-                <button @click="eliminarDelPedido(item.id)" class="text-gray-300 hover:text-red-400 transition text-xs mt-0.5 block ml-auto">✕</button>
+                <button @click="eliminarDelPedido(item.id, item.tamano)" class="text-gray-300 hover:text-red-400 transition text-xs mt-0.5 block ml-auto">✕</button>
               </div>
             </div>
           </div>
@@ -290,15 +300,18 @@
             <button @click="showCarritoMobile = false" class="text-gray-400 dark:text-gray-500 text-xl hover:text-gray-600 dark:text-gray-400 dark:text-gray-500">✕</button>
           </div>
           <div class="space-y-2 mb-4 max-h-[45vh] overflow-y-auto">
-            <div v-for="item in pedido" :key="item.id" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+            <div v-for="item in pedido" :key="item.id + (item.tamano || '')" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
               <div class="flex-1">
-                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ item.nombre }}</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  {{ item.nombre }}
+                  <span v-if="item.tamano && item.tamano !== 'pequeno' && item.tamano !== 'personalizado'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano === 'mediano' ? 'M' : 'L' }})</span>
+                </p>
                 <p class="text-xs text-gray-400 dark:text-gray-500">${{ item.precio.toFixed(2) }} c/u</p>
               </div>
               <div class="flex items-center gap-2">
-                <button @click="decrementar(item.id)" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 text-sm flex items-center justify-center font-bold">−</button>
+                <button @click="decrementar(item.id, item.tamano)" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 text-sm flex items-center justify-center font-bold">−</button>
                 <span class="text-sm font-bold w-5 text-center">{{ item.cantidad }}</span>
-                <button @click="incrementar(item.id)" class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-sm flex items-center justify-center font-bold">+</button>
+                <button @click="incrementar(item.id, item.tamano)" class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-sm flex items-center justify-center font-bold">+</button>
               </div>
               <span class="text-sm font-bold text-gray-800 dark:text-gray-200 w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
             </div>
@@ -324,6 +337,80 @@
 
     </div>
 
+    <!-- ══ MODAL SELECCIONAR TAMAÑO (Cliente) ══ -->
+    <div v-if="showTamanosModal" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
+         @click.self="showTamanosModal = false">
+      <div class="bg-white dark:bg-gray-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
+        <button @click="showTamanosModal = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 font-bold">✕</button>
+        <div class="mb-6">
+          <h3 class="font-black text-slate-900 dark:text-white text-2xl tracking-tight leading-tight pr-8">{{ productoSeleccionado?.nombre }}</h3>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Selecciona el tamaño deseado</p>
+        </div>
+        <div class="space-y-3">
+          <button v-if="productoSeleccionado?.precio_pequeno > 0 || productoSeleccionado?.precio > 0"
+                  @click="agregarProductoConTamano(productoSeleccionado, 'pequeno', productoSeleccionado.precio_pequeno || productoSeleccionado.precio)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 group transition-all">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-lg">S</div>
+              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-emerald-700">Pequeño</span>
+            </div>
+            <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoSeleccionado?.precio_pequeno || productoSeleccionado?.precio).toFixed(2) }}</span>
+          </button>
+          <button v-if="productoSeleccionado?.precio_mediano > 0"
+                  @click="agregarProductoConTamano(productoSeleccionado, 'mediano', productoSeleccionado.precio_mediano)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 group transition-all">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">M</div>
+              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-blue-700">Mediano</span>
+            </div>
+            <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoSeleccionado?.precio_mediano).toFixed(2) }}</span>
+          </button>
+          <button v-if="productoSeleccionado?.precio_grande > 0"
+                  @click="agregarProductoConTamano(productoSeleccionado, 'grande', productoSeleccionado.precio_grande)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 group transition-all">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-lg">L</div>
+              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-purple-700">Grande</span>
+            </div>
+            <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoSeleccionado?.precio_grande).toFixed(2) }}</span>
+          </button>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <button @click="abrirPrecioPersonalizado(productoSeleccionado)" class="w-full py-3 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition flex items-center justify-center gap-2">
+            ✏️ Precio personalizado
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MODAL PRECIO PERSONALIZADO (Cliente) ══ -->
+    <div v-if="showPrecioPersonalizado" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
+         @click.self="showPrecioPersonalizado = false">
+      <div class="bg-white dark:bg-gray-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
+        <button @click="showPrecioPersonalizado = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 font-bold">✕</button>
+        <div class="mb-6">
+          <h3 class="font-black text-slate-900 dark:text-white text-2xl tracking-tight leading-tight pr-8">{{ productoSeleccionado?.nombre }}</h3>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Define un precio y cantidad personalizados</p>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Precio unitario</label>
+            <input v-model.number="precioPersonalizadoValor" type="number" step="0.01" min="0" placeholder="0.00"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-bold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Cantidad</label>
+            <input v-model.number="precioPersonalizadoCantidad" type="number" min="1" placeholder="1"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-bold" />
+          </div>
+          <button @click="agregarConPrecioPersonalizadoCliente" :disabled="!precioPersonalizadoValor || precioPersonalizadoValor <= 0"
+            class="w-full py-4 bg-indigo-600 text-white text-sm font-black rounded-2xl hover:bg-indigo-700 shadow-lg transition disabled:opacity-50">
+            {{ !precioPersonalizadoValor || precioPersonalizadoValor <= 0 ? 'Ingresa un precio' : `Agregar $${Number(precioPersonalizadoValor).toFixed(2)} × ${precioPersonalizadoCantidad || 1}` }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ MODAL CHECKOUT ══ -->
     <ClienteCheckoutModal
       v-if="showCheckout"
@@ -347,6 +434,9 @@ import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { getHeaders } from '@/config/api'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
+
+const { zoom } = useDeviceZoom()
 
 // ── ESTADO ─────────────────────────────────────────────────
 const vista                   = ref('restaurantes')
@@ -355,6 +445,11 @@ const restauranteSeleccionado = ref(null)
 const productos               = ref([])
 const pedido                  = ref([])
 const categoriaActiva         = ref(null)
+const showTamanosModal        = ref(false)
+const productoSeleccionado    = ref(null)
+const showPrecioPersonalizado = ref(false)
+const precioPersonalizadoValor = ref(0)
+const precioPersonalizadoCantidad = ref(1)
 const busquedaRestaurante     = ref('')
 const confirmando             = ref(false)
 const showCarritoMobile       = ref(false)
@@ -428,8 +523,15 @@ const normalizar = (p) => ({
   nombre:      p.nombre,
   descripcion: p.descripcion || '',
   precio:      parseFloat(p.precio || 0),
+  precio_pequeno: p.precio_pequeno !== null ? parseFloat(p.precio_pequeno) : null,
+  precio_mediano: p.precio_mediano !== null ? parseFloat(p.precio_mediano) : null,
+  precio_grande:  p.precio_grande !== null ? parseFloat(p.precio_grande) : null,
+  tiene_tamanos:  p.tiene_tamanos == true || p.tiene_tamanos == '1',
   imagen_url:  p.imagen_url  || p.imagen || null,
   stock:       p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0,
+  stock_pequeno: parseFloat(p.stock_pequeno ?? p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
+  stock_mediano: parseFloat(p.stock_mediano ?? 0),
+  stock_grande:  parseFloat(p.stock_grande ?? 0),
   agotado:     (p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
   bajo_stock:  p.bajo_stock ?? false,
   categoria:   p.categoria ? {
@@ -591,12 +693,46 @@ const volverARestaurantes = () => {
 // ── CARRITO ────────────────────────────────────────────────
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" no está disponible`); return }
-  const existe = pedido.value.find(i => i.id === p.id)
+
+  if (p.tiene_tamanos && ((p.precio_mediano > 0) || (p.precio_grande > 0))) {
+    productoSeleccionado.value = p
+    showTamanosModal.value = true
+    return
+  }
+
+  agregarProductoConTamano(p, 'pequeno', p.precio_pequeno || p.precio)
+}
+
+const agregarProductoConTamano = (p, tamano, precio) => {
+  showTamanosModal.value = false
+  const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
+  const stockDisp = p[stockKey] ?? p.stock ?? 0
+
+  if (stockDisp > 0) {
+    const totalTamano = pedido.value.filter(i => i.id === p.id && i.tamano === tamano).reduce((s, i) => s + i.cantidad, 0)
+    if (totalTamano >= stockDisp) {
+      mostrarError(`No hay suficiente stock de tamaño "${tamano}" para "${p.nombre}". Límite: ${stockDisp} uds`)
+      return
+    }
+  }
+
+  const sizeMap = { 'pequeno': '', 'mediano': ' (M)', 'grande': ' (L)', 'personalizado': ' (Personalizado)' }
+  const nombreMostrar = tamano !== 'pequeno' ? `${p.nombre}${sizeMap[tamano] || ''}` : p.nombre
+
+  const existe = pedido.value.find(i => i.id === p.id && i.tamano === tamano && !i.es_oferta)
   if (existe) {
-    if (existe.cantidad + 1 > p.stock && p.stock > 0) { mostrarError(`Solo hay ${p.stock} unidades de "${p.nombre}"`); return }
     existe.cantidad++
   } else {
-    pedido.value.push({ id:p.id, nombre:p.nombre, precio:parseFloat(p.precio), imagen:p.imagen_url?getImageUrl(p.imagen_url):null, cantidad:1, stock_maximo:p.stock })
+    pedido.value.push({
+      id: p.id,
+      nombre: nombreMostrar,
+      precio: parseFloat(precio),
+      imagen: p.imagen_url ? getImageUrl(p.imagen_url) : null,
+      cantidad: 1,
+      stock_maximo: stockDisp,
+      tamano: tamano,
+      es_oferta: false
+    })
   }
 }
 
@@ -624,20 +760,52 @@ const agregarOfertaAlPedido = (oferta) => {
   }
 }
 
-const incrementar = (id) => {
-  const item = pedido.value.find(i => i.id === id)
+const abrirPrecioPersonalizado = (p) => {
+  showTamanosModal.value = false
+  productoSeleccionado.value = p
+  precioPersonalizadoValor.value = p.precio || 0
+  precioPersonalizadoCantidad.value = 1
+  showPrecioPersonalizado.value = true
+}
+
+const agregarConPrecioPersonalizadoCliente = () => {
+  if (!precioPersonalizadoValor.value || precioPersonalizadoValor.value <= 0) return
+  const p = productoSeleccionado.value
+  if (!p) return
+  showPrecioPersonalizado.value = false
+  const cantidad = precioPersonalizadoCantidad.value || 1
+  for (let i = 0; i < cantidad; i++) {
+    pedido.value.push({
+      id: p.id,
+      nombre: `${p.nombre} (Personalizado)`,
+      precio: parseFloat(precioPersonalizadoValor.value),
+      imagen: p.imagen_url ? getImageUrl(p.imagen_url) : null,
+      cantidad: 1,
+      stock_maximo: 9999,
+      tamano: 'personalizado',
+      es_oferta: false
+    })
+  }
+}
+
+const incrementar = (id, tamano = null) => {
+  const item = pedido.value.find(i => i.id === id && (tamano ? i.tamano === tamano : true))
   if (!item) return
   if (item.stock_maximo > 0 && item.cantidad + 1 > item.stock_maximo) { mostrarError(`Límite de stock para "${item.nombre}"`); return }
   item.cantidad++
 }
 
-const decrementar = (id) => {
-  const idx = pedido.value.findIndex(i => i.id === id)
+const decrementar = (id, tamano = null) => {
+  const idx = pedido.value.findIndex(i => i.id === id && (tamano ? i.tamano === tamano : true))
   if (idx === -1) return
   pedido.value[idx].cantidad > 1 ? pedido.value[idx].cantidad-- : pedido.value.splice(idx, 1)
 }
 
-const eliminarDelPedido = (id) => { pedido.value = pedido.value.filter(i => i.id !== id) }
+const eliminarDelPedido = (id, tamano = null) => {
+  pedido.value = tamano
+    ? pedido.value.filter(i => !(i.id === id && i.tamano === tamano))
+    : pedido.value.filter(i => i.id !== id)
+}
 
 const vaciarPedido = () => { if (confirm('¿Vaciar todo el pedido?')) { pedido.value = []; notaGeneral.value = '' } }
 
@@ -655,7 +823,7 @@ const handleCheckout = async (checkoutData) => {
 
     const body = {
       restaurante_id:    restauranteSeleccionado.value.id,
-      productos:         pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null })),
+      productos:         pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null, tamano: i.tamano && i.tamano !== 'pequeno' ? i.tamano : null })),
       metodo_pago:       checkoutData.metodo_pago,
       tipo_orden:        mapTipoOrden[checkoutData.tipo_entrega] || 'pickup',
       direccion_entrega: direccionStr,

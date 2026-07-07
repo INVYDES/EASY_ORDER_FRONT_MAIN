@@ -260,6 +260,250 @@
       </div>
     </div>
 
+    <!-- ── INSUMOS PREPARADOS ─────────────────────────────── -->
+    <div v-else-if="activeTab === 'insumos_preparados'" class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">🥘 Insumos Preparados</h1>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Mise en place — ingredientes pre-preparados (salsas, cortes, porciones)</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button @click="abrirModalInsumoPreparado()"
+            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer">
+            ＋ Nuevo insumo preparado
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-indigo-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total insumos</p>
+          <p class="text-2xl font-black text-gray-900 dark:text-gray-100 mt-1">{{ insumosPreparados.length }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-amber-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Bajo stock ⚠️</p>
+          <p class="text-2xl font-black text-amber-600 mt-1">{{ statsInsumos.bajo_stock }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-red-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Sin stock 🚨</p>
+          <p class="text-2xl font-black text-red-600 mt-1">{{ statsInsumos.sin_stock }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-emerald-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Valor inventario</p>
+          <p class="text-2xl font-black text-emerald-600 mt-1">${{ formatearMoneda(statsInsumos.costo_total) }}</p>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <input v-model="buscarInsumo" type="text" placeholder="🔍 Buscar insumo preparado..."
+          class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-64" />
+        <span class="text-xs text-gray-400 dark:text-gray-500 ml-auto">{{ insumosFiltrados.length }} insumos</span>
+      </div>
+
+      <!-- Tabla -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+        <LoadingSpinner v-if="loading.insumosPreparados" text="Cargando insumos preparados..." />
+        <div v-else-if="insumosFiltrados.length === 0" class="text-center py-16 text-gray-400 dark:text-gray-500">
+          <span class="text-4xl block mb-3">🥘</span>
+          <p>No hay insumos preparados{{ buscarInsumo ? ' con ese nombre' : ' registrados' }}</p>
+          <button @click="abrirModalInsumoPreparado()" class="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition">
+            Agregar el primero
+          </button>
+        </div>
+        <div v-else class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800/50">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Insumo</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Unidad</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Costo/unidad</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Stock actual</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Stock mín.</th>
+                <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Estado</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr v-for="ins in insumosFiltrados" :key="ins.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                :class="ins.sin_stock ? 'bg-red-50/40' : ins.bajo_stock ? 'bg-amber-50/40' : ''">
+                <td class="px-5 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
+                      :class="ins.sin_stock ? 'bg-red-100' : ins.bajo_stock ? 'bg-amber-100' : 'bg-indigo-50 dark:bg-indigo-900/30'">
+                      {{ ins.sin_stock ? '🚨' : ins.bajo_stock ? '⚠️' : '🥘' }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ins.nombre }}</p>
+                      <p v-if="ins.receta_count" class="text-xs text-gray-400 dark:text-gray-500">{{ ins.receta_count }} ingrediente(s) en receta</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ ins.unidad }}</td>
+                <td class="px-5 py-4 text-sm font-medium text-right text-gray-800 dark:text-gray-200">{{ ins.costo_formateado }}</td>
+                <td class="px-5 py-4 text-right">
+                  <span class="text-sm font-bold" :class="ins.sin_stock?'text-red-600':ins.bajo_stock?'text-amber-600':'text-gray-800 dark:text-gray-200'">
+                    {{ ins.stock_actual }}
+                  </span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">{{ ins.unidad }}</span>
+                </td>
+                <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 text-right">{{ ins.stock_minimo }} {{ ins.unidad }}</td>
+                <td class="px-5 py-4 text-center">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
+                    :class="ins.sin_stock ? 'bg-red-100 text-red-700' : ins.bajo_stock ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'">
+                    {{ ins.sin_stock ? 'Sin stock' : ins.bajo_stock ? 'Bajo stock' : 'OK' }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex justify-end gap-1">
+                    <button @click="abrirAjusteStockInsumo(ins)"
+                      class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition font-medium">
+                      📦 Stock
+                    </button>
+                    <button @click="editarInsumoPreparado(ins)"
+                      class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition font-medium">
+                      ✏️
+                    </button>
+                    <button @click="eliminarInsumoPreparado(ins.id)"
+                      class="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition font-medium">
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Insumo Preparado -->
+      <div v-if="showModalInsumo" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+        @click.self="showModalInsumo=false">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ editandoInsumo ? 'Editar insumo preparado' : 'Nuevo insumo preparado' }}</h3>
+            <button @click="showModalInsumo=false" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xl">✕</button>
+          </div>
+          <div v-if="formErrorInsumo" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{{ formErrorInsumo }}</div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+              <input v-model="formInsumo.nombre" type="text" placeholder="Ej. Salsa de tomate"
+                class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unidad *</label>
+                <select v-model="formInsumo.unidad"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                  <option value="gramos">gramos</option>
+                  <option value="kilogramos">kilogramos</option>
+                  <option value="mililitros">mililitros</option>
+                  <option value="litros">litros</option>
+                  <option value="piezas">piezas</option>
+                  <option value="porciones">porciones</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Costo unitario *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-gray-400 dark:text-gray-500 text-xs">$</span>
+                  <input v-model="formInsumo.costo_unitario" type="number" min="0" step="0.0001" placeholder="0.00"
+                    class="w-full pl-7 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock actual</label>
+                <input v-model="formInsumo.stock_actual" type="number" min="0" step="0.001"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock mínimo</label>
+                <input v-model="formInsumo.stock_minimo" type="number" min="0" step="0.001"
+                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vida útil (días)</label>
+              <input v-model="formInsumo.vida_util_dias" type="number" min="0" step="1" placeholder="Ej. 7"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Receta (ingredientes crudos)</label>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Define qué ingredientes crudos componen este insumo preparado.</p>
+              <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+                <div v-for="(ri, idx) in formInsumo.receta" :key="idx" class="flex items-center gap-2">
+                  <select v-model="ri.ingrediente_id" class="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs">
+                    <option value="">Seleccionar ingrediente</option>
+                    <option v-for="ing in ingredientes" :key="ing.id" :value="ing.id">{{ ing.nombre }}</option>
+                  </select>
+                  <input v-model="ri.cantidad" type="number" min="0" step="0.001" placeholder="Cant."
+                    class="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-xs text-center" />
+                  <span class="text-xs text-gray-400 w-12">{{ unidadIngrediente(ri.ingrediente_id) }}</span>
+                  <button @click="formInsumo.receta.splice(idx, 1)" class="text-red-400 hover:text-red-600 text-sm">✕</button>
+                </div>
+                <button @click="formInsumo.receta.push({ ingrediente_id: '', cantidad: '' })"
+                  class="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline">＋ Agregar ingrediente</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button @click="showModalInsumo=false"
+              class="flex-1 py-2.5 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancelar</button>
+            <button @click="guardarInsumoPreparado" :disabled="guardandoInsumo"
+              class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
+              {{ guardandoInsumo ? 'Guardando...' : (editandoInsumo ? 'Guardar cambios' : 'Crear insumo') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Ajuste Stock Insumo -->
+      <div v-if="showAjusteStockInsumo" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+        @click.self="showAjusteStockInsumo=false">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">📦 Ajustar stock</h3>
+            <button @click="showAjusteStockInsumo=false" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xl">✕</button>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4"><strong>{{ insumoAjuste?.nombre }}</strong> — Stock actual: <strong>{{ insumoAjuste?.stock_actual }} {{ insumoAjuste?.unidad }}</strong></p>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+              <select v-model="ajusteFormInsumo.tipo"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
+                <option value="entrada">Entrada</option>
+                <option value="salida">Salida</option>
+                <option value="ajuste">Ajuste</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad</label>
+              <input v-model="ajusteFormInsumo.cantidad" type="number" min="0" step="0.001"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motivo</label>
+              <input v-model="ajusteFormInsumo.motivo" type="text" placeholder="Ej. Producción diaria"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button @click="showAjusteStockInsumo=false"
+              class="flex-1 py-2.5 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancelar</button>
+            <button @click="guardarAjusteStockInsumo" :disabled="guardandoInsumo"
+              class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
+              Guardar ajuste
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── ANUNCIOS / OFERTAS ───────────────────────────────────── -->
     <div v-else-if="activeTab === 'anuncios'">
       <AnunciosView />
@@ -406,15 +650,17 @@ const loading = reactive({
   products: false, 
   categories: false, 
   ingredientes: false,
-  paquetes: false
+  paquetes: false,
+  insumosPreparados: false
 })
 
 // ── TABS ───────────────────────────────────────────────────
 const tabs = [
   { key: 'productos',    label: '📦 Productos' },
   { key: 'paquetes',     label: '🎁 Paquetes' },
-  { key: 'ingredientes', label: '🧄 Ingredientes' },
-  { key: 'anuncios',     label: '📢 Anuncios' },
+  { key: 'ingredientes',      label: '🧄 Ingredientes' },
+  { key: 'insumos_preparados', label: '🥘 Insumos Preparados' },
+  { key: 'anuncios',          label: '📢 Anuncios' },
 ]
 
 const getTabCount = (key) => {
@@ -422,6 +668,7 @@ const getTabCount = (key) => {
   if (key === 'paquetes') return paquetes.value.length
   if (key === 'categorias') return categories.value.length
   if (key === 'ingredientes') return ingredientes.value.length
+  if (key === 'insumos_preparados') return insumosPreparados.value.length
   if (key === 'anuncios') return anuncios.value.length
   return 0
 }
@@ -779,6 +1026,150 @@ const handleDeleteIngrediente = async (id) => {
   }
 }
 
+// ── INSUMOS PREPARADOS ──────────────────────────────────────
+const insumosPreparados = ref([])
+const statsInsumos = ref({ total: 0, bajo_stock: 0, sin_stock: 0, costo_total: 0 })
+const buscarInsumo = ref('')
+const showModalInsumo = ref(false)
+const showAjusteStockInsumo = ref(false)
+const editandoInsumo = ref(null)
+const guardandoInsumo = ref(false)
+const formErrorInsumo = ref('')
+const insumoAjuste = ref(null)
+
+const formInsumo = ref({
+  nombre: '',
+  unidad: 'porciones',
+  costo_unitario: '',
+  stock_actual: '',
+  stock_minimo: '',
+  vida_util_dias: '',
+  receta: [],
+})
+
+const ajusteFormInsumo = ref({
+  tipo: 'entrada',
+  cantidad: '',
+  motivo: ''
+})
+
+const insumosFiltrados = computed(() => {
+  let lista = insumosPreparados.value
+  if (buscarInsumo.value) {
+    const b = buscarInsumo.value.toLowerCase()
+    lista = lista.filter(i => i.nombre.toLowerCase().includes(b))
+  }
+  return lista
+})
+
+const unidadIngrediente = (ingredienteId) => {
+  if (!ingredienteId) return ''
+  const ing = ingredientes.value.find(i => i.id === Number(ingredienteId))
+  return ing?.unidad || ''
+}
+
+const loadInsumosPreparados = async () => {
+  loading.insumosPreparados = true
+  try {
+    const data = await apiClient.get('/insumos-preparados')
+    if (data.success || data.data) {
+      insumosPreparados.value = data.data || data || []
+      statsInsumos.value = data.stats || { total: 0, bajo_stock: 0, sin_stock: 0, costo_total: 0 }
+    }
+  } catch (error) {
+    console.error('Error loading insumos preparados:', error)
+    showToast('Error al cargar insumos preparados', 'error')
+  } finally {
+    loading.insumosPreparados = false
+  }
+}
+
+const abrirModalInsumoPreparado = () => {
+  editandoInsumo.value = null
+  formErrorInsumo.value = ''
+  formInsumo.value = { nombre: '', unidad: 'porciones', costo_unitario: '', stock_actual: '', stock_minimo: '', vida_util_dias: '', receta: [] }
+  showModalInsumo.value = true
+}
+
+const editarInsumoPreparado = (ins) => {
+  editandoInsumo.value = ins
+  formErrorInsumo.value = ''
+  formInsumo.value = {
+    nombre: ins.nombre,
+    unidad: ins.unidad,
+    costo_unitario: ins.costo_unitario,
+    stock_actual: ins.stock_actual,
+    stock_minimo: ins.stock_minimo,
+    vida_util_dias: ins.vida_util_dias || '',
+    receta: (ins.receta || []).length ? ins.receta.map(r => ({ ingrediente_id: r.ingrediente_id || r.id, cantidad: r.cantidad })) : [],
+  }
+  showModalInsumo.value = true
+}
+
+const guardarInsumoPreparado = async () => {
+  formErrorInsumo.value = ''
+  if (!formInsumo.value.nombre) { formErrorInsumo.value = 'El nombre es obligatorio'; return }
+  if (!formInsumo.value.costo_unitario) { formErrorInsumo.value = 'El costo es obligatorio'; return }
+
+  guardandoInsumo.value = true
+  try {
+    const endpoint = editandoInsumo.value ? `/insumos-preparados/${editandoInsumo.value.id}` : '/insumos-preparados'
+    const apiMethod = editandoInsumo.value ? apiClient.put : apiClient.post
+    const data = await apiMethod(endpoint, formInsumo.value)
+    if (data.success || data.data) {
+      showToast(editandoInsumo.value ? 'Insumo actualizado' : 'Insumo creado', 'success')
+      showModalInsumo.value = false
+      await loadInsumosPreparados()
+    } else {
+      formErrorInsumo.value = data.message || 'Error al guardar'
+    }
+  } catch {
+    formErrorInsumo.value = 'Error de conexión'
+  } finally {
+    guardandoInsumo.value = false
+  }
+}
+
+const abrirAjusteStockInsumo = (ins) => {
+  insumoAjuste.value = ins
+  ajusteFormInsumo.value = { tipo: 'entrada', cantidad: '', motivo: '' }
+  showAjusteStockInsumo.value = true
+}
+
+const guardarAjusteStockInsumo = async () => {
+  if (!ajusteFormInsumo.value.cantidad) return
+  guardandoInsumo.value = true
+  try {
+    const data = await apiClient.post(`/insumos-preparados/${insumoAjuste.value.id}/ajustar-stock`, ajusteFormInsumo.value)
+    if (data.success || data.data) {
+      showToast('Stock actualizado', 'success')
+      showAjusteStockInsumo.value = false
+      await loadInsumosPreparados()
+    } else {
+      showToast(data.message || 'Error al ajustar stock', 'error')
+    }
+  } catch {
+    showToast('Error de conexión', 'error')
+  } finally {
+    guardandoInsumo.value = false
+  }
+}
+
+const eliminarInsumoPreparado = async (id) => {
+  if (!confirm('¿Estás seguro de eliminar este insumo preparado?')) return
+  try {
+    const data = await apiClient.delete(`/insumos-preparados/${id}`)
+    if (data.success || data.data) {
+      showToast('Insumo eliminado', 'success')
+      await loadInsumosPreparados()
+    } else {
+      showToast(data.message || 'Error al eliminar', 'error')
+    }
+  } catch {
+    showToast('Error de conexión', 'error')
+  }
+}
+
 const totalSueldosBase = ref(0)
 const cargarNominaTotal = async () => {
   try {
@@ -797,6 +1188,7 @@ onMounted(() => {
   loadProducts(1)  // Cargar primera página
   loadCategories()
   loadIngredientes()
+  loadInsumosPreparados()
   loadAnuncios()
   loadPaquetes()
   loadAllProductsForSelection()

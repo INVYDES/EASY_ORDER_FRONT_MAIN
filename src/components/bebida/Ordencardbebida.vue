@@ -101,8 +101,10 @@ defineEmits(['accion', 'secondary-action'])
 // ✅ Lógica de filtrado estricta: busca la categoría en el producto
 const esBarra = (detalle) => {
   const prodRaw = detalle.producto
-  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').toLowerCase()
-  return cat.includes('barra') || cat.includes('bebida')
+  const cat = (prodRaw?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  if (cat) return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
+  const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
+  return ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
 }
 
 const getNombreProducto = (detalle) => {

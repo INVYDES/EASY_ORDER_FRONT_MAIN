@@ -13,7 +13,7 @@
     <div v-else-if="filtrados.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 italic text-sm">
       No hay cajas anteriores registradas
     </div>
-    <div v-else class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
+    <div v-else class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
       <div v-for="caja in filtrados" :key="caja.id"
         class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
         @click="$emit('ver-detalle', caja.id)">
@@ -117,22 +117,18 @@ const formatMes = (f) => { const d=parseFecha(f); return d&&!isNaN(d)?d.toLocale
 </script>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
 }
-:is(.dark) .custom-scrollbar::-webkit-scrollbar-track {
-  background: #1e293b;
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-:is(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
 }
 </style>

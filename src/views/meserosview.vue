@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 sm:p-6 space-y-5 min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900 dark:to-slate-800/80">
+  <div class="p-4 sm:p-6 space-y-5 min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900 dark:to-slate-800/80" :style="{ zoom }">
     <div class="fixed top-4 right-4 z-50 space-y-2">
       <div v-for="toast in toasts" :key="toast.id"
         :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[280px] max-w-sm animate-slide-in',
@@ -36,11 +36,14 @@
         <div class="flex items-center gap-2">
           <button @click="vistaActual = vistaActual === 'admin' ? 'mapa' : 'admin'"
             class="px-4 py-3 text-sm font-bold rounded-2xl transition-all shadow-sm active:scale-95"
-            :class="vistaActual === 'admin' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'">
-            <span class="flex items-center gap-2">📋 {{ vistaActual === 'admin' ? 'Ver mapa' : 'Admin' }}</span>
+            :class="vistaActual === 'admin' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-indigo-200' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'">
+            <span class="flex items-center gap-2">📋 {{ vistaActual === 'admin' ? 'Ver mapa' : 'Pedidos' }}</span>
           </button>
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-300"></span>
+          <div v-if="restauranteNombre" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 shadow-sm">
+            <span class="text-[10px] font-black uppercase tracking-wider">{{ restauranteNombre }}</span>
+          </div>
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-300 dark:shadow-emerald-900/50"></span>
             <span class="text-[10px] font-black uppercase tracking-wider">Caja abierta</span>
           </div>
         </div>
@@ -59,11 +62,51 @@
             </div>
           </div>
           <div class="rounded-xl bg-slate-50/50 dark:bg-slate-700/50 p-3">
-            <TableMap :model-value="mesaSeleccionada" :ordenes="ordenes" :total-mesas="totalMesasRestaurante" @update:model-value="onMesaClick" />
+            <TableMap :model-value="mesaSeleccionada" :ordenes="ordenes" :total-mesas="totalMesasRestaurante" :mesas-asignadas="mesasAsignadas" :es-mesero="esMesero" @update:model-value="onMesaClick" />
           </div>
         </div>
 
         <div v-if="vistaActual === 'admin'" class="mt-6">
+          <!-- ══ Órdenes del día / Estaciones ══ -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="shrink-0">
+              <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Órdenes del día</h1>
+              <p class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">{{ fechaHoy }}</p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-3 flex-1">
+              <div class="flex items-center gap-2.5 px-4 py-2.5 bg-amber-50/80 dark:bg-amber-900/30 border border-amber-100/80 dark:border-amber-700/60 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+                <span class="text-lg animate-bounce inline-block" style="animation-duration: 2s;">🍳</span>
+                <div>
+                  <p class="text-[8px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest leading-none">Cocina</p>
+                  <p class="text-sm font-black text-amber-800 dark:text-amber-300 mt-1">{{ formatTiempo(tiempoCocinaActual) }}</p>
+                  <p v-if="countCocinaActual > 0" class="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/70 -mt-0.5">{{ countCocinaActual }} producto(s)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-50/80 dark:bg-indigo-900/30 border border-indigo-100/80 dark:border-indigo-700/60 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+                <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.2s;">🍹</span>
+                <div>
+                  <p class="text-[8px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest leading-none">Barra</p>
+                  <p class="text-sm font-black text-indigo-800 dark:text-indigo-300 mt-1">{{ formatTiempo(tiempoBarraActual) }}</p>
+                  <p v-if="countBarraActual > 0" class="text-[9px] font-bold text-indigo-600/70 dark:text-indigo-400/70 -mt-0.5">{{ countBarraActual }} producto(s)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2.5 px-4 py-2.5 bg-rose-50/80 dark:bg-rose-900/30 border border-rose-100/80 dark:border-rose-700/60 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-200">
+                <span class="text-lg animate-bounce inline-block" style="animation-duration: 2.4s;">🍰</span>
+                <div>
+                  <p class="text-[8px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-widest leading-none">Postres</p>
+                  <p class="text-sm font-black text-rose-800 dark:text-rose-300 mt-1">{{ formatTiempo(tiempoPostresActual) }}</p>
+                  <p v-if="countPostresActual > 0" class="text-[9px] font-bold text-rose-600/70 dark:text-rose-400/70 -mt-0.5">{{ countPostresActual }} producto(s)</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0 self-end md:self-auto">
+              <div v-if="cajaAbierta" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-700">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[10px] font-black uppercase">Caja abierta</span>
+              </div>
+            </div>
+          </div>
+
           <div class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
             <button v-for="tab in tabs" :key="tab.key" @click="tabActivo = tab.key"
               :class="['flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-black transition-all border shrink-0',
@@ -82,46 +125,133 @@
               <CajaTicketGrid type="open" :orders="ordenesParaCobrar" @order-paid="handleOrderPaid" @refresh-orders="loadOrdersForCashier" />
             </div>
           </div>
+          <div v-else-if="tabActivo === 'tiempos'" class="animate-fade-in">
+            <div class="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm p-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl p-5 border border-purple-100 dark:border-purple-800">
+                  <p class="text-xs font-bold text-purple-500 dark:text-purple-400 uppercase tracking-wider">Tiempo promedio recogida</p>
+                  <p class="text-3xl font-black text-purple-700 dark:text-purple-300 mt-2">{{ formatTiempo(kpiTiempoRecogidaPromedio) }}</p>
+                  <p class="text-xs text-purple-400 dark:text-purple-500 mt-1">Desde que la cocina marca LISTO hasta que el mesero recoge</p>
+                </div>
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-2xl p-5 border border-emerald-100 dark:border-emerald-800">
+                  <p class="text-xs font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">Tiempo promedio entrega</p>
+                  <p class="text-3xl font-black text-emerald-700 dark:text-emerald-300 mt-2">{{ formatTiempo(kpiTiempoEntregaPromedio) }}</p>
+                  <p class="text-xs text-emerald-400 dark:text-emerald-500 mt-1">Desde que recoge hasta que entrega al cliente</p>
+                </div>
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl p-5 border border-amber-100 dark:border-amber-800">
+                  <p class="text-xs font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Tiempo total del día</p>
+                  <p class="text-3xl font-black text-amber-700 dark:text-amber-300 mt-2">{{ formatTiempo(kpiTiempoTotalPromedio) }}</p>
+                  <p class="text-xs text-amber-400 dark:text-amber-500 mt-1">Ciclo completo desde que se crea hasta que se entrega</p>
+                </div>
+              </div>
+              <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6">
+                <div class="flex items-center gap-4 flex-wrap">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-gray-600 dark:text-slate-300">Órdenes hoy:</span>
+                    <span class="text-lg font-black text-indigo-600 dark:text-indigo-400">{{ kpiTotalOrdenesHoy }}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-gray-600 dark:text-slate-300">Pendientes de recoger:</span>
+                    <span class="text-lg font-black text-amber-600 dark:text-amber-400">{{ kpiPendientesRecoger }}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-gray-600 dark:text-slate-300">Pendientes de entregar:</span>
+                    <span class="text-lg font-black text-emerald-600 dark:text-emerald-400">{{ kpiPendientesEntregar }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-slate-200 dark:border-slate-600">
+                      <th class="text-left py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">Orden</th>
+                      <th class="text-left py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">Mesa</th>
+                      <th class="text-left py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">Producto</th>
+                      <th class="text-right py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">T. Preparación</th>
+                      <th class="text-right py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">T. Recogida</th>
+                      <th class="text-right py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">T. Entrega</th>
+                      <th class="text-right py-3 px-3 font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="det in kpiDetallesConTiempos" :key="det.detalleId" class="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                      <td class="py-3 px-3 font-medium text-gray-800 dark:text-slate-200">#{{ det.ordenId }}</td>
+                      <td class="py-3 px-3 text-gray-600 dark:text-slate-300">{{ det.mesa }}</td>
+                      <td class="py-3 px-3 text-gray-600 dark:text-slate-300 max-w-[200px] truncate">{{ det.producto }}</td>
+                      <td class="py-3 px-3 text-right font-mono text-gray-600 dark:text-slate-300">{{ det.tiempoPreparacion ? det.tiempoPreparacion + 'm' : '—' }}</td>
+                      <td class="py-3 px-3 text-right font-mono" :class="det.tiempoRecogida > 5 ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-slate-300'">{{ det.tiempoRecogida ? det.tiempoRecogida + 'm' : '—' }}</td>
+                      <td class="py-3 px-3 text-right font-mono" :class="det.tiempoEntrega > 5 ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-slate-300'">{{ det.tiempoEntrega ? det.tiempoEntrega + 'm' : '—' }}</td>
+                      <td class="py-3 px-3 text-right font-mono font-bold text-indigo-600 dark:text-indigo-400">{{ det.tiempoTotal ? det.tiempoTotal + 'm' : '—' }}</td>
+                    </tr>
+                    <tr v-if="!kpiDetallesConTiempos.length">
+                      <td colspan="7" class="text-center py-10 text-gray-400 dark:text-slate-500">Sin datos de tiempos para mostrar hoy</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
           <div v-else class="animate-fade-in">
             <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
               <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-              <p class="text-gray-400 text-sm font-medium">Cargando órdenes...</p>
+              <p class="text-gray-400 dark:text-slate-400 text-sm font-medium">Cargando órdenes...</p>
             </div>
-            <div v-else-if="ordenesFiltradas.length === 0" class="text-center py-20 bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div v-else-if="subOrdenesFiltradas.length === 0" class="text-center py-20 bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm">
               <span class="text-6xl block mb-4">📋</span>
               <p class="text-gray-500 dark:text-slate-300 font-bold text-lg">Sin órdenes</p>
               <p class="text-gray-400 dark:text-slate-500 text-xs mt-1">No hay órdenes en esta categoría</p>
             </div>
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              <div v-for="orden in ordenesFiltradas" :key="orden.id" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                <div class="px-4 py-3.5 flex items-center justify-between border-b border-slate-50 dark:border-slate-700" :class="bgEstado(orden.estado)">
+              <div v-for="sub in subOrdenesFiltradas" :key="sub.uid" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                <div class="px-4 py-3.5 flex items-center justify-between border-b border-slate-50 dark:border-slate-700" :class="bgEstado(sub.estado_estacion)">
                   <div class="flex items-center gap-2.5">
-                    <span class="text-xl">{{ iconEstado(orden.estado) }}</span>
+                    <span class="text-xl">{{ iconEstado(sub.estado_estacion) }}</span>
                     <div>
-                      <p class="text-sm font-bold text-gray-800 dark:text-white">{{ orden.folio || 'Orden #'+orden.id }}</p>
-                      <p class="text-[10px] text-gray-400 dark:text-slate-500 font-medium">{{ formatHora(orden.created_at) }}</p>
+                      <p class="text-sm font-bold text-gray-800 dark:text-white">{{ sub.folio || 'Orden #'+sub.id }}</p>
+                      <p class="text-[10px] text-gray-400 dark:text-slate-500 font-medium">{{ formatHora(sub.created_at) }}</p>
                     </div>
                   </div>
-                  <span class="text-[10px] font-bold px-3 py-1.5 rounded-full border" :class="badgeEstado(orden.estado)">{{ labelEstado(orden.estado) }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-bold px-2 py-1 rounded-full" :class="estacionBadge(sub._estacion)">{{ sub._estacion }}</span>
+                    <span class="text-[10px] font-bold px-3 py-1.5 rounded-full border" :class="badgeEstado(sub.estado_estacion)">{{ labelEstado(sub.estado_estacion) }}</span>
+                  </div>
                 </div>
-                <div class="px-4 py-3.5 flex-1 space-y-2.5">
+                <div class="px-4 py-3.5 flex-1 space-y-3">
                   <div class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-slate-300">
                     <span class="text-lg">👤</span>
-                    <span class="font-semibold">{{ getNombreMostrable(orden) }}</span>
+                    <span class="font-semibold">{{ getNombreMostrable(sub) }}</span>
                   </div>
-                  <div v-if="orden.mesa" class="flex items-center gap-2.5 text-sm text-gray-500 dark:text-slate-400">
+                  <div v-if="sub.mesa" class="flex items-center gap-2.5 text-sm text-gray-500 dark:text-slate-400">
                     <span class="text-lg">🪑</span>
-                    <span class="font-semibold">Mesa {{ orden.mesa }}</span>
+                    <span class="font-semibold">Mesa {{ sub.mesa }}</span>
                   </div>
-                  <div v-if="orden.estado !== 'CERRADA' && orden.estado !== 'CANCELADA' && orden.estado !== 'PAGADA'" class="flex flex-wrap gap-2 pt-2">
-                    <button v-if="tieneListos(orden) && orden.detalles?.some(d => !d.recogido_en)" @click="recogerDeCocina(orden)" :disabled="cambiando === `recoger-${orden.id}`"
+                  <!-- Productos -->
+                  <div class="space-y-2">
+                    <div v-for="d in (sub.detalles_estacion || [])" :key="d.id" class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                      <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <span class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                      </div>
+                      <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 shrink-0 ml-2">${{ Number(d.subtotal || d.precio || 0).toFixed(2) }}</span>
+                    </div>
+                    <div v-if="!sub.detalles_estacion?.length" class="text-xs text-gray-400 dark:text-slate-500 italic text-center py-2">
+                      Sin productos
+                    </div>
+                  </div>
+                  <div v-if="sub.estado_estacion !== 'CERRADA' && sub.estado_estacion !== 'CANCELADA' && sub.estado_estacion !== 'PAGADA'" class="flex flex-wrap gap-2 pt-2">
+                    <button v-if="siguienteEstado(sub.estado_estacion)" @click="cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))" :disabled="cambiando === sub.uid"
+                      class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5"
+                      :class="btnEstado(sub.estado_estacion)">
+                      <span v-if="cambiando === sub.uid" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span v-else>{{ accionEstado(sub.estado_estacion) }}</span>
+                    </button>
+                    <button v-if="sub.estado_estacion === 'LISTA' && tieneListos(sub) && sub.detalles?.some(d => !d.recogido_en)" @click="recogerDeCocina(sub)" :disabled="cambiando === `recoger-${sub.id}`"
                       class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
-                      <span v-if="cambiando === `recoger-${orden.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span v-if="cambiando === `recoger-${sub.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                       <span v-else>🍳 Recoger</span>
                     </button>
-                    <button v-if="tieneRecogidosSinEntregar(orden)" @click="entregarACliente(orden)" :disabled="cambiando === `entregar-${orden.id}`"
+                    <button v-if="sub.estado_estacion === 'ENTREGADA' && tieneRecogidosSinEntregar(sub)" @click="entregarACliente(sub)" :disabled="cambiando === `entregar-${sub.id}`"
                       class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
-                      <span v-if="cambiando === `entregar-${orden.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span v-if="cambiando === `entregar-${sub.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                       <span v-else>🤝 Entregar</span>
                     </button>
                   </div>
@@ -140,15 +270,15 @@
 
         <div class="flex items-center justify-between gap-3 mb-4">
           <div class="flex items-center gap-3">
-            <button @click="vistaActual = 'mapa'; carritoSimple = []" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 hover:shadow-md transition-all font-bold text-lg">←</button>
+            <button @click="vistaActual = 'mapa'; carrito = []" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 hover:shadow-md transition-all font-bold text-lg">←</button>
             <div>
               <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">Mesa {{ nuevaOrden.mesa }} <span v-if="ordenAbiertaMesa" class="text-base">📋</span></h2>
               <p class="text-xs text-gray-400 dark:text-slate-500">{{ ordenAbiertaMesa ? 'Agregando productos al pedido actual' : 'Toca los productos para agregarlos' }}</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold shadow-sm border border-indigo-200 dark:border-indigo-700">{{ carritoSimple.length }} producto(s)</span>
-            <button v-if="carritoSimple.length > 0" @click="vistaActual = 'resumen'" class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.97] flex items-center gap-1.5">
+            <span class="px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold shadow-sm border border-indigo-200 dark:border-indigo-700">{{ carrito.length }} producto(s)</span>
+            <button v-if="carrito.length > 0" @click="vistaActual = 'resumen'" class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.97] flex items-center gap-1.5">
               Revisar y enviar <span class="text-lg">→</span>
             </button>
           </div>
@@ -171,8 +301,8 @@
         </div>
 
         <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          <button v-for="p in productosFiltrados" :key="'p-'+p.id"
-            @click="agregarSimple(p)"
+          <button v-for="p in productosFiltrados" :key="'p-'+p.id + (p.tipo || 'producto')"
+            @click="agregarAlCarrito(p, subTabActiva === 'paquetes' ? 'paquete' : 'producto')"
             class="group bg-white dark:bg-slate-800 rounded-[1.25rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 active:scale-[0.97] relative">
             <div class="w-full h-28 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-700/50 flex items-center justify-center overflow-hidden">
               <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -181,10 +311,30 @@
             <div class="p-3">
               <p class="text-xs font-bold text-gray-800 dark:text-slate-200 truncate">{{ p.nombre }}</p>
               <p class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-1.5">${{ Number(p.precio).toFixed(2) }}</p>
+              <div v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && (p.precio_pequeno > 0 || p.precio_mediano > 0 || p.precio_grande > 0)" class="flex items-center gap-1 mt-1.5 flex-wrap">
+                <span v-if="p.precio_pequeno > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 leading-none">S ${{ Number(p.precio_pequeno).toFixed(2) }}</span>
+                <span v-if="p.precio_mediano > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 leading-none">M ${{ Number(p.precio_mediano).toFixed(2) }}</span>
+                <span v-if="p.precio_grande > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 leading-none">L ${{ Number(p.precio_grande).toFixed(2) }}</span>
+              </div>
             </div>
-            <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shadow-indigo-300">+</div>
+            <div v-if="subTabActiva !== 'paquetes' && totalEnCarritoPorId(p.id)" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-lg shadow-indigo-300 animate-pop">
+              {{ totalEnCarritoPorId(p.id) }}
+            </div>
+            <div v-if="subTabActiva === 'paquetes' && totalEnCarritoPorPaqueteId(p.id)" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-lg shadow-indigo-300 animate-pop">
+              {{ totalEnCarritoPorPaqueteId(p.id) }}
+            </div>
           </button>
         </div>
+
+        <!-- Carrito flotante -->
+        <button v-if="carrito.length > 0" @click="vistaActual = 'resumen'"
+          class="fixed bottom-6 right-6 z-40 px-5 py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-2xl shadow-2xl shadow-indigo-300/50 dark:shadow-indigo-900/60 hover:from-indigo-700 hover:to-indigo-800 transition-all active:scale-95 flex items-center gap-3 font-bold text-sm">
+          <span class="relative">
+            🛒
+            <span class="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg">{{ carrito.length }}</span>
+          </span>
+          <span>${{ totalCarrito.toFixed(2) }}</span>
+        </button>
       </div>
 
       <div v-if="vistaActual === 'resumen'" class="max-w-lg mx-auto">
@@ -197,20 +347,23 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-1">
-          <div v-for="item in carritoSimple" :key="item.id + (item.notas || '')" class="py-3 border-b border-slate-50 dark:border-slate-700 last:border-0">
+          <div v-for="item in carrito" :key="item.cartId" class="py-3 border-b border-slate-50 dark:border-slate-700 last:border-0">
             <div class="flex items-center justify-between gap-2">
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">{{ item.nombre }}</p>
+                <p class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">
+                  {{ item.nombre }}
+                  <span v-if="item.tamano && item.tamano !== 'pequeno'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano === 'mediano' ? 'M' : 'L' }})</span>
+                </p>
                 <p class="text-xs text-gray-400 dark:text-slate-500">${{ Number(item.precio).toFixed(2) }} c/u</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-700 rounded-lg p-1 border border-slate-100 dark:border-slate-600">
-                  <button @click="item.cantidad > 1 && item.cantidad--" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-gray-500 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">−</button>
+                  <button @click="decrementar(item.cartId)" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-gray-500 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">−</button>
                   <span class="w-7 text-center text-sm font-black text-gray-800 dark:text-white">{{ item.cantidad }}</span>
-                  <button @click="item.cantidad++" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">+</button>
+                  <button @click="incrementar(item.cartId)" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">+</button>
                 </div>
                 <span class="text-sm font-black text-indigo-600 dark:text-indigo-400 w-16 text-right">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
-                <button @click="carritoSimple = carritoSimple.filter(i => i !== item)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm transition-colors">✕</button>
+                <button @click="eliminarDelCarrito(item.cartId)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm transition-colors">✕</button>
               </div>
             </div>
             <div class="mt-2 ml-1 flex items-center gap-2">
@@ -219,23 +372,113 @@
                 class="flex-1 text-xs px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-indigo-200/50 dark:focus:ring-indigo-500/50 focus:border-indigo-300 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 text-gray-800 dark:text-slate-200" />
             </div>
           </div>
-          <div v-if="carritoSimple.length === 0" class="text-center py-10 text-gray-400 dark:text-slate-500 text-sm">
+          <div v-if="carrito.length === 0" class="text-center py-10 text-gray-400 dark:text-slate-500 text-sm">
             <span class="text-4xl block mb-2">🛒</span>
-            Carrito vacío
+            Sin productos en el ticket
           </div>
         </div>
 
         <div class="flex justify-between items-center mt-5 px-1">
           <span class="text-sm text-gray-500 dark:text-slate-400 font-medium">Total</span>
-          <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ Number(totalSimple).toFixed(2) }}</span>
+          <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ totalCarrito.toFixed(2) }}</span>
         </div>
 
-        <button @click="enviarOrdenSimple" :disabled="creando || carritoSimple.length === 0"
+        <button @click="crearOrden" :disabled="creando || carrito.length === 0"
           class="w-full mt-5 py-4 text-white text-sm font-black rounded-2xl transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 uppercase tracking-wider"
-          :class="creando || carritoSimple.length === 0 ? 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-green-200 dark:shadow-green-900/50'">
+          :class="creando || carrito.length === 0 ? 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-green-200 dark:shadow-green-900/50'">
           <span v-if="creando" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ creando ? 'ENVIANDO...' : '🚀 ENVIAR A COCINA' }}
+          {{ creando ? 'ENVIANDO...' : ordenAbiertaMesa ? '➕ AGREGAR A PEDIDO' : '🚀 ENVIAR A COCINA' }}
         </button>
+
+        <!-- Modal de confirmación cuando la mesa ya tiene orden abierta -->
+        <div v-if="ordenExistente" class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4" @click.self="ordenExistente = null">
+          <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl w-full max-w-sm p-6 animate-pop">
+            <div class="text-center mb-5">
+              <span class="text-5xl block mb-3">📋</span>
+              <h3 class="font-bold text-gray-900 dark:text-white text-lg">Mesa con pedido activo</h3>
+              <p class="text-sm text-gray-400 dark:text-slate-500 mt-2">La mesa {{ nuevaOrden.mesa }} ya tiene un pedido en curso.<br>¿Agregar productos al ticket existente?</p>
+            </div>
+            <div class="flex gap-3">
+              <button @click="ordenExistente = null" class="flex-1 py-3 text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">Cancelar</button>
+              <button @click="confirmarAgregarAOrden" class="flex-1 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transition shadow-lg">Agregar y enviar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Seleccionar Tamaño (Mesero) -->
+      <div v-if="showTamanosModal" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
+           @click.self="showTamanosModal = false">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
+          <button @click="showTamanosModal = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 font-bold">✕</button>
+          <div class="mb-6">
+            <h3 class="font-black text-slate-900 dark:text-white text-2xl tracking-tight leading-tight pr-8">{{ productoTamanos?.nombre }}</h3>
+            <p class="text-sm text-slate-500 mt-1 font-medium">Selecciona el tamaño deseado</p>
+          </div>
+          <div class="space-y-3">
+            <button v-if="productoTamanos?.precio_pequeno > 0 || productoTamanos?.precio > 0"
+                    @click="agregarConTamano(productoTamanos, 'pequeno', productoTamanos.precio_pequeno || productoTamanos.precio, 'producto')"
+                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 group transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-lg">S</div>
+                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-emerald-700">Pequeño</span>
+              </div>
+              <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoTamanos?.precio_pequeno || productoTamanos?.precio).toFixed(2) }}</span>
+            </button>
+            <button v-if="productoTamanos?.precio_mediano > 0"
+                    @click="agregarConTamano(productoTamanos, 'mediano', productoTamanos.precio_mediano, 'producto')"
+                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 group transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">M</div>
+                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-blue-700">Mediano</span>
+              </div>
+              <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoTamanos?.precio_mediano).toFixed(2) }}</span>
+            </button>
+            <button v-if="productoTamanos?.precio_grande > 0"
+                    @click="agregarConTamano(productoTamanos, 'grande', productoTamanos.precio_grande, 'producto')"
+                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 group transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-lg">L</div>
+                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-purple-700">Grande</span>
+              </div>
+              <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoTamanos?.precio_grande).toFixed(2) }}</span>
+            </button>
+          </div>
+          <!-- Opción precio personalizado -->
+          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <button @click="abrirPrecioPersonalizado(productoTamanos)" class="w-full py-3 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition flex items-center justify-center gap-2">
+              ✏️ Precio personalizado
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Precio Personalizado (Mesero) -->
+      <div v-if="showPrecioPersonalizado" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
+           @click.self="showPrecioPersonalizado = false">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
+          <button @click="showPrecioPersonalizado = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 font-bold">✕</button>
+          <div class="mb-6">
+            <h3 class="font-black text-slate-900 dark:text-white text-2xl tracking-tight leading-tight pr-8">{{ productoTamanos?.nombre }}</h3>
+            <p class="text-sm text-slate-500 mt-1 font-medium">Define un precio y cantidad personalizados</p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Precio unitario</label>
+              <input v-model.number="precioPersonalizadoValor" type="number" step="0.01" min="0" placeholder="0.00"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Cantidad</label>
+              <input v-model.number="precioPersonalizadoCantidad" type="number" min="1" placeholder="1"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-bold" />
+            </div>
+            <button @click="agregarConPrecioPersonalizado" :disabled="!precioPersonalizadoValor || precioPersonalizadoValor <= 0"
+              class="w-full py-4 bg-indigo-600 text-white text-sm font-black rounded-2xl hover:bg-indigo-700 shadow-lg transition disabled:opacity-50">
+              {{ !precioPersonalizadoValor || precioPersonalizadoValor <= 0 ? 'Ingresa un precio' : `Agregar $${Number(precioPersonalizadoValor).toFixed(2)} × ${precioPersonalizadoCantidad || 1}` }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div v-if="showTicketModal && ticketActivo" class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4" @click.self="showTicketModal = false">
@@ -274,7 +517,7 @@
             <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ Number(ticketActivo.total || 0).toFixed(2) }}</span>
           </div>
 
-          <button @click="showTicketModal = false; nuevaOrden.mesa = ticketActivo.mesa; carritoSimple = []; vistaActual = 'productos'"
+          <button @click="showTicketModal = false; nuevaOrden.mesa = ticketActivo.mesa; carrito = []; vistaActual = 'productos'"
             class="w-full mt-5 py-3.5 text-sm font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.98] flex items-center justify-center gap-2">
             ➕ Agregar productos a esta mesa
           </button>
@@ -286,11 +529,14 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
-import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
-import Marquesitawidget from '../components/Marquesitawidget.vue'
-import { useRestauranteChannel } from '../composables/useRestauranteChannel'
+import { useToast } from '@/composables/useToast'
+import { useRestauranteChannel } from '@/composables/useRestauranteChannel'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
 import TableMap from '@/components/mesero/TableMap.vue'
+import CajaTicketGrid from '@/components/caja/cajatiketgrid.vue'
+import Marquesitawidget from '@/components/Marquesitawidget.vue'
 
+const { zoom } = useDeviceZoom()
 const vistaActual  = ref('mapa')
 const tabActivo    = ref('todas')
 const subTabActiva = ref('alimentos')
@@ -300,6 +546,11 @@ const paquetes     = ref([])
 const clientes     = ref([])
 const carrito      = ref([])
 const busqueda     = ref('')
+const showTamanosModal = ref(false)
+const productoTamanos  = ref(null)
+const showPrecioPersonalizado = ref(false)
+const precioPersonalizadoValor = ref(0)
+const precioPersonalizadoCantidad = ref(1)
 const marquesinaVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 
 const loading         = ref(true)
@@ -307,10 +558,9 @@ const loadingCaja     = ref(true)
 const loadingProductos = ref(true)
 const creando         = ref(false)
 const cambiando       = ref(null)
-const toasts          = ref([])
+const { toasts, showToast, removeToast } = useToast()
 const cajaAbierta     = ref(false)
 const nuevaOrden      = ref({ clienteId: null, mesa: null })
-const carritoSimple   = ref([])
 const mesaSeleccionada = ref(null)
 
 const onMesaClick = (numMesa) => {
@@ -321,7 +571,7 @@ const onMesaClick = (numMesa) => {
     mostrarTicketMesa(numMesa)
   } else {
     nuevaOrden.value.mesa = numMesa
-    carritoSimple.value = []
+    carrito.value = []
     vistaActual.value = 'productos'
   }
 }
@@ -344,70 +594,9 @@ const categoriasProducto = [
   { key:'paquetes',  icon:'🎁', label:'Paquetes' },
 ]
 
-const productosFiltrados = computed(() => {
-  if (subTabActiva.value === 'paquetes') return paquetes.value
-  let items = productos.value.filter(p => {
-    const cat = (p.categoria?.nombre || '').toLowerCase()
-    if (subTabActiva.value === 'alimentos') return !cat.includes('barra') && !cat.includes('bebida') && !cat.includes('postre')
-    if (subTabActiva.value === 'bebidas')   return cat.includes('barra') || cat.includes('bebida')
-    if (subTabActiva.value === 'postres')   return cat.includes('postre')
-    return true
-  })
-  if (busqueda.value) {
-    const t = busqueda.value.toLowerCase()
-    items = items.filter(p => p.nombre?.toLowerCase().includes(t))
-  }
-  return items
-})
-
-const totalSimple = computed(() => carritoSimple.value.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0))
-
-const agregarSimple = (p) => {
-  const exist = carritoSimple.value.find(i => i.id === p.id)
-  if (exist) { exist.cantidad++ }
-  else { carritoSimple.value.push({ id: p.id, nombre: p.nombre, precio: Number(p.precio), cantidad: 1, tipo: 'producto', notas: '' }) }
-}
-
-const enviarOrdenSimple = async () => {
-  if (!nuevaOrden.value.mesa || carritoSimple.value.length === 0) return
-  if (!cajaAbierta.value) { showToast('La caja está cerrada', 'error'); return }
-  creando.value = true
-  try {
-    const ordenExistente = ordenes.value.find(o =>
-      Number(o.mesa) === Number(nuevaOrden.value.mesa) &&
-      !['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)
-    )
-    const url = ordenExistente ? `${API_URL}/ordenes/${ordenExistente.id}/productos` : `${API_URL}/ordenes`
-    const method = ordenExistente ? 'PUT' : 'POST'
-    const res = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token') ?? sessionStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        mesa: nuevaOrden.value.mesa,
-        productos: carritoSimple.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: i.notas || '' }))
-      })
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
-      carritoSimple.value = []
-      vistaActual.value = 'mapa'
-      showToast(ordenExistente ? '➕ Productos agregados al pedido' : '🚀 ¡Pedido enviado a cocina!', 'success')
-      cargarOrdenes(true)
-    } else {
-      showToast(data.message || 'Error al crear orden', 'error')
-    }
-  } catch {
-    showToast('Error de conexión', 'error')
-  } finally {
-    creando.value = false
-  }
-}
 const mesasAsignadas  = ref([])
 const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
+const restauranteNombre = ref(localStorage.getItem('restaurante_nombre_activo') || '')
 const totalMesasRestaurante = ref(24)
 const ultimaActualizacion = ref(null)
 
@@ -419,41 +608,7 @@ const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, m
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
 const ordenExistente = ref(null)   // se muestra el modal de confirmación
 
-// ── ESTADO DE COMENSALES ───────────────────────────────────────────────────
-const numeroComensales    = ref(1)
-const comensalesNombres   = ref(['Comensal 1'])
-const comensalActivoIndex = ref(0)
-const showCarritoFlotante = ref(false)
 
-watch(numeroComensales, (newVal) => {
-  if (newVal === '' || newVal === null || newVal === undefined) {
-    return
-  }
-  const numVal = parseInt(newVal)
-  if (isNaN(numVal) || numVal < 1) {
-    return
-  }
-  const diff = numVal - comensalesNombres.value.length
-  if (diff > 0) {
-    for (let i = 0; i < diff; i++) {
-      comensalesNombres.value.push(`Comensal ${comensalesNombres.value.length + 1}`)
-    }
-  } else if (diff < 0) {
-    comensalesNombres.value.splice(numVal)
-    carrito.value.forEach(item => {
-      if (item.comensalIndex >= numVal) item.comensalIndex = 0
-    })
-  }
-  if (comensalActivoIndex.value >= numVal) {
-    comensalActivoIndex.value = numVal - 1
-  }
-})
-
-const getItemsForComensal = (cIdx) => carrito.value.filter(i => i.comensalIndex === cIdx)
-
-const tiempoPorComensal = (cIdx) => {
-  return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
-}
 
 const calcularTiempoSubOrdenComensal = (detalles) => {
   return detalles.reduce((total, d) => {
@@ -497,6 +652,7 @@ const tabs = [
   { key: 'LISTA',          label: 'Listas',          icon: '✅', color: '#10b981' },
   { key: 'ENTREGADA',      label: 'Entregadas',      icon: '🏁', color: '#8b5cf6' },
   { key: 'cobrar',         label: 'Cobrar',          icon: '💵', color: '#10b981' },
+  { key: 'tiempos',        label: 'Tiempos',         icon: '⏱️', color: '#8b5cf6' },
 ]
 
 // ── Computed: detectar si la mesa seleccionada ya tiene orden abierta ──────
@@ -532,56 +688,43 @@ const esCocina = (d) => {
 }
 
 // Tiempos estimados acumulados en preparación por estación para el mesero
-const tiempoCocinaActual = computed(() => {
+const contarEstacion = (fnTest) => {
   let total = 0
   ordenes.value.forEach(o => {
     if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
-    (o.detalles || []).forEach(d => {
+    ;(o.detalles || []).forEach(d => {
       if (d.cancelado) return
       const estado = d.estado_preparacion || d.estado
       if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
-        if (esCocina(d)) {
-          total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
-        }
+        if (fnTest(d)) total += Number(d.cantidad) || 1
       }
     })
   })
-  return Math.round(total)
-})
+  return total
+}
 
-const tiempoBarraActual = computed(() => {
+const sumarMinutosEstacion = (fnTest) => {
   let total = 0
   ordenes.value.forEach(o => {
     if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
-    (o.detalles || []).forEach(d => {
+    ;(o.detalles || []).forEach(d => {
       if (d.cancelado) return
       const estado = d.estado_preparacion || d.estado
       if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
-        if (esBebida(d)) {
-          total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
-        }
+        if (fnTest(d)) total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
       }
     })
   })
   return Math.round(total)
-})
+}
 
-const tiempoPostresActual = computed(() => {
-  let total = 0
-  ordenes.value.forEach(o => {
-    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return
-    (o.detalles || []).forEach(d => {
-      if (d.cancelado) return
-      const estado = d.estado_preparacion || d.estado
-      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
-        if (esPostre(d) && !esBebida(d)) {
-          total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
-        }
-      }
-    })
-  })
-  return Math.round(total)
-})
+const tiempoCocinaActual = computed(() => sumarMinutosEstacion(esCocina))
+const tiempoBarraActual = computed(() => sumarMinutosEstacion(esBebida))
+const tiempoPostresActual = computed(() => sumarMinutosEstacion((d) => esPostre(d) && !esBebida(d)))
+
+const countCocinaActual = computed(() => contarEstacion(esCocina))
+const countBarraActual = computed(() => contarEstacion(esBebida))
+const countPostresActual = computed(() => contarEstacion((d) => esPostre(d) && !esBebida(d)))
 // Formatea minutos: si < 60 muestra 'X min', si >= 60 muestra 'X hrs' o 'X:30 hrs'
 const formatTiempo = (min) => {
   if (!min || min <= 0) return '0 min'
@@ -643,7 +786,7 @@ const subOrdenes = computed(() => {
 })
 
 const subOrdenesFiltradas = computed(() => {
-  if (tabActivo.value === 'cobrar') return []
+  if (tabActivo.value === 'cobrar' || tabActivo.value === 'tiempos') return []
 
   if (tabActivo.value === 'ABIERTA') {
     return ordenes.value
@@ -683,12 +826,13 @@ const ordenesParaCobrar = computed(() =>
 )
 
 const ordenesFiltradas = computed(() => {
-  if (tabActivo.value === 'todas' || tabActivo.value === 'cobrar') return ordenes.value
+  if (tabActivo.value === 'todas' || tabActivo.value === 'cobrar' || tabActivo.value === 'tiempos') return ordenes.value
   return ordenes.value.filter(o => o.estado === tabActivo.value)
 })
 
 const contarOrdenes = (key) => {
   if (key === 'cobrar')   return ordenesParaCobrar.value.length
+  if (key === 'tiempos')  return 0
   if (key === 'todas')    return ordenes.value.length
   if (key === 'ABIERTA') {
     return ordenes.value.filter(o => 
@@ -720,10 +864,13 @@ const esCocinaProducto = (p) => {
   return !esBebidaProducto(p) && !esPostreProducto(p)
 }
 
-const productosFiltradosBase = computed(() => {
+const productosFiltrados = computed(() => {
+  if (subTabActiva.value === 'paquetes') {
+    const b = busqueda.value?.toLowerCase() || ''
+    return b ? paquetes.value.filter(p => p.nombre.toLowerCase().includes(b)) : paquetes.value
+  }
   const b = busqueda.value?.toLowerCase() || ''
   let list = productos.value
-  
   if (subTabActiva.value === 'alimentos') {
     list = list.filter(esCocinaProducto)
   } else if (subTabActiva.value === 'bebidas') {
@@ -731,12 +878,11 @@ const productosFiltradosBase = computed(() => {
   } else if (subTabActiva.value === 'postres') {
     list = list.filter(esPostreProducto)
   }
-  
   return b ? list.filter(p => p.nombre.toLowerCase().includes(b)) : list
 })
 
 const totalPaginasProductos = computed(() => {
-  return Math.ceil(productosFiltradosBase.value.length / itemsPorPagina)
+  return Math.ceil(productosFiltrados.value.length / itemsPorPagina)
 })
 const paquetesFiltrados = computed(() => {
   const b = busqueda.value?.toLowerCase() || ''
@@ -765,6 +911,7 @@ const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e)
 const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600' : ({ ABIERTA:'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800', ENTREGADA:'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800', CERRADA:'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-500', CANCELADA:'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' }[e] || 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400')
 const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒', CANCELADA:'🚫' }[e] || '📋')
 const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
+const estacionBadge = (e) => ({ COCINA:'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300', BARRA:'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300', POSTRES:'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300' }[e] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400')
 const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
 const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregada' }[e] || '')
 const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-400')
@@ -774,18 +921,25 @@ const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-
 const cargarOrdenes = async (silent = true) => {
   if (!silent) loading.value = true
   try {
-    const d = new Date()
-    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const base = esAdminOPropietario.value ? '/ordenes' : '/meseros/mis-ordenes'
     const states = ['ABIERTA','POR_PREPARAR','EN_PREPARACION','LISTA','ENTREGADA']
-    const urls   = states.map(s => `${base}?estado=${s}&per_page=100`)
-    urls.push(`${base}?fecha_desde=${today}&fecha_hasta=${today}&per_page=100`)
+    const bases = ['/meseros/mis-ordenes']
+    if (esMesero.value) bases.push('/ordenes')
+    if (esAdminOPropietario.value) bases.push('/ordenes')
+    const urls = []
+    bases.forEach(base => {
+      states.forEach(s => urls.push(`${base}?estado=${s}&per_page=100`))
+    })
     const results = await Promise.all(urls.map(url => apiClient.get(url)))
     const map = new Map()
     results.forEach(res => { 
       if (res.success || res.data) {
         const items = Array.isArray(res.data) ? res.data : (res.data?.data || [])
-        items.forEach(o => map.set(o.id, o))
+        items.forEach(o => {
+          const existing = map.get(o.id)
+          if (!existing || (o.detalles?.length || 0) > (existing.detalles?.length || 0)) {
+            map.set(o.id, o)
+          }
+        })
       }
     })
     ordenes.value = [...map.values()].sort((a, b) => b.id - a.id)
@@ -802,15 +956,22 @@ const onOrdenWS = async (evento) => {
   if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
     const idx = ordenes.value.findIndex(o => o.id === orden.id)
     if (idx !== -1) {
-      ordenes.value[idx] = { ...ordenes.value[idx], ...orden }
+      const merged = { ...ordenes.value[idx], ...orden }
+      if (orden.detalles) {
+        const map = new Map()
+        ;(ordenes.value[idx].detalles || []).forEach(d => map.set(d.id, d))
+        orden.detalles.forEach(d => map.set(d.id, d))
+        merged.detalles = [...map.values()]
+      }
+      ordenes.value[idx] = merged
     } else {
       ordenes.value.unshift(orden)
       showToast(`Nueva orden #${orden.id} creada`, 'info')
     }
     
-    // Si un producto se puso LISTO, avisar al mesero
-    const tieneListos = (orden.detalles || []).some(d => d.estado_preparacion === 'LISTO')
-    if (tieneListos && orden.estado !== 'ENTREGADA') {
+    const target = idx !== -1 ? ordenes.value[idx] : orden
+    const tieneListos = (target.detalles || []).some(d => d.estado_preparacion === 'LISTO')
+    if (tieneListos && target.estado !== 'ENTREGADA') {
       showToast(`¡Orden #${orden.folio || orden.id} tiene productos listos! 🍽️`, 'success', 6000)
     }
   } else if (accion === 'cerrada' || accion === 'eliminada') {
@@ -845,14 +1006,31 @@ const cargarCapacidadRestaurante = async () => {
   }
 }
 
+const normalizarProducto = (p) => {
+  if (!p) return p
+  return {
+    ...p,
+    precio_pequeno: p.precio_pequeno !== null && p.precio_pequeno !== undefined ? parseFloat(p.precio_pequeno) : (p.precio || 0),
+    precio_mediano: p.precio_mediano !== null && p.precio_mediano !== undefined ? parseFloat(p.precio_mediano) : null,
+    precio_grande: p.precio_grande !== null && p.precio_grande !== undefined ? parseFloat(p.precio_grande) : null,
+    stock_pequeno: p.stock_pequeno !== undefined ? parseFloat(p.stock_pequeno) : (p.stock ?? 0),
+    stock_mediano: p.stock_mediano !== undefined ? parseFloat(p.stock_mediano) : 0,
+    stock_grande: p.stock_grande !== undefined ? parseFloat(p.stock_grande) : 0,
+  }
+}
+
 const cargarProductos = async () => {
   loadingProductos.value = true
   try {
+    const rid = restauranteActivo.value
     const [pData, paqData] = await Promise.all([
-      apiClient.get('/productos?per_page=500'),
-      apiClient.get('/paquetes'),
+      apiClient.get(`/productos?per_page=500${rid ? `&restaurante_id=${rid}` : ''}`),
+      apiClient.get(`/paquetes${rid ? `?restaurante_id=${rid}` : ''}`),
     ])
-    if (pData.success || pData.data) productos.value = pData.data || pData
+    if (pData.success || pData.data) {
+      const raw = pData.data || pData
+      productos.value = Array.isArray(raw) ? raw.map(normalizarProducto) : raw
+    }
     if (paqData.success || paqData.data) paquetes.value  = paqData.data || paqData
   } catch {}
   finally { loadingProductos.value = false }
@@ -881,11 +1059,11 @@ const buildPayload = () => ({
   productos:  carrito.value.map(i => {
     const item = { 
       cantidad: i.cantidad, 
-      notas: i.notas, 
-      nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General' 
+      notas: i.notas
     }
     if (i.tipo === 'producto') item.producto_id = i.id
     if (i.tipo === 'paquete')  item.paquete_id  = i.id
+    if (i.tamano && i.tamano !== 'pequeno') item.tamano = i.tamano
     return item
   }),
 })
@@ -915,10 +1093,7 @@ const enviarOrden = async () => {
     if (data.success || data.data) {
       carrito.value             = []
       nuevaOrden.value.mesa     = null
-      numeroComensales.value    = 1
-      comensalesNombres.value   = ['Comensal 1']
-      comensalActivoIndex.value = 0
-      vistaActual.value         = 'ordenes'
+      vistaActual.value         = 'mapa'
       await cargarOrdenes()
       if (data.es_nueva === false) {
         showToast(`Productos agregados al ticket ${data.data?.folio || ''} 📋`, 'warning')
@@ -946,20 +1121,7 @@ const prepararEdicionOrden = (sub) => {
     nuevaOrden.value.mesa = null
   }
   
-  // Extraer comensales únicos de la orden existente
-  const nombresUnicos = [...new Set((sub.detalles || [])
-    .map(d => d.nom_comensal || d.comensal)
-    .filter(Boolean))]
-    
-  if (nombresUnicos.length > 0) {
-    comensalesNombres.value = [...nombresUnicos]
-    numeroComensales.value = nombresUnicos.length
-  } else {
-    comensalesNombres.value = ['Comensal 1']
-    numeroComensales.value = 1
-  }
-  
-  comensalActivoIndex.value = 0
+
   vistaActual.value = 'nueva'
 }
 
@@ -986,34 +1148,77 @@ const totalEnCarritoPorPaqueteId = (paqueteId) => {
 }
 
 const agregarAlCarrito = (item, tipo) => {
-  if (tipo === 'producto' && item.stock !== undefined && item.stock !== null) {
-    if (totalEnCarritoPorId(item.id) >= item.stock) {
-      showToast(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock} uds`, 'error')
-      return
-    }
-  }
-  if (tipo === 'paquete' && item.stock !== undefined && item.stock !== null) {
-    if (totalEnCarritoPorPaqueteId(item.id) >= item.stock) {
+  if (tipo === 'paquete') {
+    if (item.stock !== undefined && item.stock !== null && totalEnCarritoPorPaqueteId(item.id) >= item.stock) {
       showToast(`No hay suficiente stock para el paquete "${item.nombre}". Límite: ${item.stock} uds`, 'error')
       return
     }
+    agregarItemAlCarrito(item, null, Number(item.precio), 'paquete')
+    return
   }
 
-  const cIdx = comensalActivoIndex.value
-  const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.comensalIndex === cIdx && !i.notas)
+  // Si tiene tallas múltiples, mostrar modal
+  if ((item.tiene_tamanos == true || item.tiene_tamanos == '1') && ((item.precio_mediano > 0) || (item.precio_grande > 0))) {
+    productoTamanos.value = item
+    showTamanosModal.value = true
+    return
+  }
+
+  agregarItemAlCarrito(item, 'pequeno', item.precio_pequeno || item.precio, 'producto')
+}
+
+const agregarConTamano = (item, tamano, precio, tipo) => {
+  showTamanosModal.value = false
+  agregarItemAlCarrito(item, tamano, precio, tipo)
+}
+
+const abrirPrecioPersonalizado = (item) => {
+  showTamanosModal.value = false
+  productoTamanos.value = item
+  precioPersonalizadoValor.value = item.precio || 0
+  precioPersonalizadoCantidad.value = 1
+  showPrecioPersonalizado.value = true
+}
+
+const agregarConPrecioPersonalizado = () => {
+  if (!precioPersonalizadoValor.value || precioPersonalizadoValor.value <= 0) return
+  const item = productoTamanos.value
+  if (!item) return
+  showPrecioPersonalizado.value = false
+  const cantidad = precioPersonalizadoCantidad.value || 1
+  for (let i = 0; i < cantidad; i++) {
+    agregarItemAlCarrito(item, 'personalizado', precioPersonalizadoValor.value, 'producto')
+  }
+}
+
+const agregarItemAlCarrito = (item, tamano, precio, tipo) => {
+  if (tipo === 'producto') {
+    const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
+    const stockActual = item[stockKey] ?? item.stock
+    if (stockActual !== undefined && stockActual !== null) {
+      if (totalEnCarritoPorId(item.id) >= stockActual) {
+        showToast(`No hay suficiente stock para "${item.nombre}". Límite: ${stockActual} uds`, 'error')
+        return
+      }
+    }
+  }
+
+  const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.tamano === tamano && !i.notas)
   if (e) {
     e.cantidad++
   } else {
+    const sizeMap = { 'pequeno': '', 'mediano': ' (M)', 'grande': ' (L)', 'personalizado': ' (Personalizado)' }
+    const sufijo = tamano ? (sizeMap[tamano] || '') : ''
     carrito.value.push({ 
       cartId: Date.now() + Math.random(),
       id: item.id, 
-      nombre: item.nombre, 
-      precio: Number(item.precio), 
+      nombre: item.nombre + sufijo, 
+      precio: Number(precio), 
       cantidad: 1, 
       tipo, 
+      tamano: tamano || null,
       stock_maximo: item.stock,
-      notas: '', 
-      comensalIndex: cIdx,
+      notas: '',
       minutos_produccion: parseFloat(item.minutos_produccion || 0)
     })
   }
@@ -1022,7 +1227,8 @@ const incrementar = (cartId) => {
   const i = carrito.value.find(x => x.cartId === cartId)
   if (i) {
     if (i.tipo === 'producto' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
-      if (totalEnCarritoPorId(i.id) >= i.stock_maximo) {
+      const totalActual = totalEnCarritoPorId(i.id)
+      if (totalActual >= i.stock_maximo) {
         showToast(`No hay suficiente stock para "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
         return
       }
@@ -1061,17 +1267,6 @@ const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   } finally {
     cambiando.value = null
   }
-}
-
-// ── Agrupación por comensal ────────────────────────────────────────────────
-const agruparPorComensal = (detalles) => {
-  const grupos = {}
-  detalles.forEach(d => {
-    const comensal = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
-    if (!grupos[comensal]) grupos[comensal] = []
-    grupos[comensal].push(d)
-  })
-  return grupos
 }
 
 const eliminarProductoDeOrden = (detalleId, ordenId) => {
@@ -1208,9 +1403,69 @@ const entregarACliente = async (orden) => {
 // ── Helpers ────────────────────────────────────────────────────────────────
 const resolveImageUrl  = (path) => { if (!path) return null; if (path.startsWith('http')) return path; return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}` }
 const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
-const showToast        = (m, t = 'info', duration = 3500) => { const id = Date.now(); toasts.value.push({ id, message: m, type: t, duration }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), duration) }
-const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
 const formatHora       = (d) => { if (!d) return ''; return new Date(d).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+
+const kpiDetallesConTiempos = computed(() => {
+  const hoy = new Date().toLocaleDateString('en-CA')
+  const rows = []
+  ordenes.value.forEach(o => {
+    if (o.estado === 'CANCELADA') return
+    const fechaOrd = o.created_at?.substring(0, 10)
+    if (fechaOrd !== hoy) return
+    ;(o.detalles || []).forEach(d => {
+      if (d.cancelado) return
+      const recogido = d.recogido_en ? new Date(d.recogido_en) : null
+      const entregado = d.entregado_en ? new Date(d.entregado_en) : null
+      const listo = (d.estado_preparacion === 'LISTO' || d.estado_preparacion === 'ENTREGADO') && d.updated_at ? new Date(d.updated_at) : null
+      const creado = d.created_at ? new Date(d.created_at) : null
+
+      const tPrep = listo && creado ? Math.round((listo - creado) / 60000) : null
+      const tRec = recogido && listo ? Math.round((recogido - listo) / 60000) : null
+      const tEnt = entregado && recogido ? Math.round((entregado - recogido) / 60000) : null
+      const tTot = entregado && creado ? Math.round((entregado - creado) / 60000) : null
+
+      rows.push({
+        detalleId: d.id,
+        ordenId: o.id,
+        mesa: o.mesa || '—',
+        producto: d.producto_nombre || d.nombre || 'Producto',
+        tiempoPreparacion: tPrep,
+        tiempoRecogida: tRec,
+        tiempoEntrega: tEnt,
+        tiempoTotal: tTot,
+      })
+    })
+  })
+  return rows.sort((a, b) => (a.ordenId - b.ordenId))
+})
+
+const kpiTiempoRecogidaPromedio = computed(() => {
+  const vals = kpiDetallesConTiempos.value.map(r => r.tiempoRecogida).filter(v => v !== null)
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+})
+
+const kpiTiempoEntregaPromedio = computed(() => {
+  const vals = kpiDetallesConTiempos.value.map(r => r.tiempoEntrega).filter(v => v !== null)
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+})
+
+const kpiTiempoTotalPromedio = computed(() => {
+  const vals = kpiDetallesConTiempos.value.map(r => r.tiempoTotal).filter(v => v !== null)
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+})
+
+const kpiTotalOrdenesHoy = computed(() => {
+  const hoy = new Date().toLocaleDateString('en-CA')
+  return ordenes.value.filter(o => o.created_at?.substring(0, 10) === hoy).length
+})
+
+const kpiPendientesRecoger = computed(() => {
+  return kpiDetallesConTiempos.value.filter(d => d.tiempoPreparacion !== null && d.tiempoRecogida === null).length
+})
+
+const kpiPendientesEntregar = computed(() => {
+  return kpiDetallesConTiempos.value.filter(d => d.tiempoRecogida !== null && d.tiempoEntrega === null).length
+})
 
 const MINUTOS_INACTIVIDAD = 15
 const mesasRecordadas = ref(new Set())
@@ -1230,6 +1485,12 @@ const handleStorageEvent = (e) => {
   if (e.key === 'marquesina_variant') {
     marquesinaVariant.value = e.newValue || 'dark'
   }
+  if (e.key === 'restaurante_id_activo') {
+    restauranteActivo.value = e.newValue
+  }
+  if (e.key === 'restaurante_nombre_activo') {
+    restauranteNombre.value = e.newValue || ''
+  }
 }
 
 onMounted(async () => {
@@ -1243,15 +1504,19 @@ onMounted(async () => {
   }
 
   // Sincronizar restaurante activo para WS si no estaba en localStorage
-  if (!restauranteActivo.value) {
-    try {
-      const data = await apiClient.get('/me')
-      const ra = data.data?.restaurante_activo || data.restaurante_activo
-      if (ra) {
-        restauranteActivo.value = (typeof ra === 'object' && ra !== null && ra !== undefined) ? ra.id : ra
+  try {
+    const data = await apiClient.get('/me')
+    const ra = data.data?.restaurante_activo || data.restaurante_activo
+    if (ra) {
+      const id = typeof ra === 'object' ? ra.id : ra
+      const nombre = typeof ra === 'object' ? (ra.nombre || ra.nombre_corto || '') : ''
+      restauranteActivo.value = id
+      if (nombre) {
+        restauranteNombre.value = nombre
+        localStorage.setItem('restaurante_nombre_activo', nombre)
       }
-    } catch {}
-  }
+    }
+  } catch {}
 
   // Recordatorio cada 60s
   recordatorioTimer = setInterval(recordarMesasInactivas, 60000)
@@ -1271,10 +1536,6 @@ onUnmounted(() => {
   if (recordatorioTimer) clearInterval(recordatorioTimer)
   window.removeEventListener('storage', handleStorageEvent)
 })
-
-onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
-})
 </script>
 
 <style scoped>
@@ -1284,6 +1545,10 @@ onUnmounted(() => {
 @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 .animate-fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-bounce { animation: bounce 2s infinite; }
+@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.animate-pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }

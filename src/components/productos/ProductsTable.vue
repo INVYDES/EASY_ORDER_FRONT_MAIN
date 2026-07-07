@@ -70,20 +70,25 @@
               </span>
             </td>
 
-            <td class="px-4 py-3">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-1.5">
-                  <span
-                    class="px-2 py-0.5 rounded-md text-xs font-medium"
-                    :class="p.estado_stock?.clase || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500'"
-                  >
-                    {{ p.stock }} uds
-                  </span>
-                  <span v-if="p.bajo_stock" class="text-xs animate-bounce" title="¡Stock Crítico!">⚠️</span>
-                </div>
-                <p class="text-[10px] text-gray-400 dark:text-gray-500">Min: {{ p.stock_minimo || 0 }}</p>
-              </div>
-            </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1.5">
+              <span
+                class="px-2 py-0.5 rounded-md text-xs font-medium"
+                :class="p.estado_stock?.clase || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500'"
+              >
+                {{ p.stock }} uds
+              </span>
+              <span v-if="p.bajo_stock" class="text-xs animate-bounce" title="¡Stock Crítico!">⚠️</span>
+            </div>
+            <div v-if="p.stock_pequeno > 0 || p.stock_mediano > 0 || p.stock_grande > 0" class="flex items-center gap-1 mt-1 flex-wrap">
+              <span v-if="p.stock_pequeno > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">S: {{ p.stock_pequeno }}</span>
+              <span v-if="p.stock_mediano > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700">M: {{ p.stock_mediano }}</span>
+              <span v-if="p.stock_grande > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700">L: {{ p.stock_grande }}</span>
+            </div>
+            <p class="text-[10px] text-gray-400 dark:text-gray-500">Min: {{ p.stock_minimo || 0 }}</p>
+          </div>
+        </td>
 
             <td class="px-4 py-3">
               <span class="font-bold text-gray-900 dark:text-gray-100">${{ Number(p.precio || 0).toFixed(2) }}</span>

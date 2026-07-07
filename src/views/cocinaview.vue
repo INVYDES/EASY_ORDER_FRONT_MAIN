@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 p-4 sm:p-6">
+  <div class="min-h-screen bg-gray-950 p-4 sm:p-6" :style="{ zoom }">
 
     <SucursalBadge />
 
@@ -232,7 +232,9 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { useToast } from '@/composables/useToast'
 import { getHeaders } from '@/config/api'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
 
+const { zoom } = useDeviceZoom()
 const POLL_INTERVAL = 15000 // Aumentamos intervalo ya que tenemos WS
 const router        = useRouter()
 
@@ -278,14 +280,15 @@ const fechaHoy = computed(() =>
 
 const esBebida = (detalle) => {
   const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
+  if (cat) return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria')
   const nombre = (detalle.producto_nombre || detalle.producto?.nombre || '').toLowerCase()
-  return cat.includes('barra') || cat.includes('bebida') || cat.includes('refresco') || cat.includes('fria') || 
-         ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
+  return ['coca', 'pepsi', 'fanta', 'sprite', 'jugo', 'refresco', 'cerveza', 'agua'].some(k => nombre.includes(k))
 }
 
 const esPostre = (detalle) => {
   const cat = (detalle.producto?.categoria?.nombre || detalle.categoria || '').trim().toLowerCase()
-  return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
+  if (cat) return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
+  return false
 }
 
 const esCocina = (detalle) => {
@@ -299,7 +302,7 @@ const pendingOrders = computed(() => {
   return orders.value.filter(o => {
     if (!isCocinaOrder(o)) return false
     const detalles = getDetallesCocina(o)
-    return detalles.length > 0 && detalles.some(d => (d.estado_preparacion || d.estado) === 'PENDIENTE')
+    return detalles.length > 0 && detalles.some(d => ['PENDIENTE', 'ABIERTA'].includes(d.estado_preparacion || d.estado))
   })
 })
 
@@ -336,6 +339,8 @@ const loadOrders = async (silent = false) => {
       orders.value = lista
         .filter(o => isCocinaOrder(o))
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    } else {
+      console.warn('🍳 Cocina: respuesta sin datos', data)
     }
   } catch (e) { console.error('Error cocina:', e) }
   finally { 
@@ -368,7 +373,8 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
   // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina) y coincida con el filtro
   let detallesCocina = (orden.detalles ?? []).filter(esCocina)
   if (estadoFiltro) {
-    detallesCocina = detallesCocina.filter(d => (d.estado_preparacion || d.estado) === estadoFiltro)
+    const estadosValidos = estadoFiltro === 'PENDIENTE' ? ['PENDIENTE', 'ABIERTA'] : [estadoFiltro]
+    detallesCocina = detallesCocina.filter(d => estadosValidos.includes(d.estado_preparacion || d.estado))
   }
 
   modalIngredientes.value = {
@@ -384,7 +390,7 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
   try {
     const resultados = await Promise.all(
       detallesCocina.map(d =>
-        apiClient.get(`/ingredientes/producto/${d.producto_id}`)
+        apiClient.get(`/ingredientes/producto/${d.producto_id}${d.tamano ? `?tamano=${d.tamano}` : ''}`)
           .then(data => ({ detalle: d, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
           .catch(() => ({ detalle: d, ingredientes: [] }))
       )

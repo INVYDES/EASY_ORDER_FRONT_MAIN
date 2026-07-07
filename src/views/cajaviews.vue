@@ -25,9 +25,11 @@ import { apiClient } from '@/utils/apiClient'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { useToast } from '@/composables/useToast'
+import { useDeviceZoom } from '@/composables/useDeviceZoom'
 import { getHeaders } from '@/config/api'
 
 const router = useRouter()
+const { zoom } = useDeviceZoom()
 
 const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
 const user = JSON.parse(userRaw)
@@ -535,7 +537,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div class="caja-layout">
+  <div class="caja-layout" :style="{ zoom }">
     <SucursalBadge />
 
     <audio ref="audioNuevaOrden" preload="auto">

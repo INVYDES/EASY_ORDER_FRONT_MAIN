@@ -18,7 +18,7 @@
           </span>
         </p>
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-          {{ formatTimeShort(ticket.fecha_apertura) }}
+          {{ formatTime(ticket.created_at) }}
         </p>
       </div>
 
@@ -228,14 +228,6 @@ const formatMoney = (v) =>
     ? '0.00'
     : Number(v).toFixed(2)
 
-const formatTime = (ts) =>
-  !ts
-    ? ''
-    : new Date(ts).toLocaleTimeString('es-MX', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-
 const parseUTCDate = (dateStr) => {
   if (!dateStr) return null;
   if (dateStr instanceof Date) return dateStr;
@@ -268,7 +260,7 @@ const parseUTCDate = (dateStr) => {
   }
 }
 
-const formatTimeShort = (ts) => {
+const formatTime = (ts) => {
   if (!ts) return ''
   const d = parseUTCDate(ts)
   if (!d) return ''

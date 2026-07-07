@@ -29,7 +29,7 @@
             'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
             puedeCrearMasEmpleados 
               ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer shadow-indigo-100' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
           ]"
           :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nuevo empleado'"
         >
@@ -41,7 +41,7 @@
             'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
             puedeCrearMasEmpleados 
               ? 'bg-amber-500 text-white hover:bg-amber-600 cursor-pointer shadow-amber-100' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
           ]"
           :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nueva cuenta de menú'"
         >
@@ -53,7 +53,7 @@
             'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
             puedeCrearMasRestaurantes 
               ? 'bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer shadow-emerald-100' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
           ]"
           :title="!puedeCrearMasRestaurantes ? 'Has alcanzado el límite de restaurantes permitidos en tu plan de licencia.' : 'Registrar nueva sucursal'"
         >
@@ -145,7 +145,7 @@
                         <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:bg-gray-600"></div>
                       </label>
-                      <span :class="['text-[10px] font-bold uppercase w-12', emp.activo !== false ? 'text-emerald-600' : 'text-rose-500']">
+                      <span :class="['text-[10px] font-bold uppercase w-12', emp.activo !== false ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400']">
                         {{ emp.activo !== false ? 'Activo' : 'Inactivo' }}
                       </span>
                     </div>
@@ -316,7 +316,7 @@
                     {{ formatDateTime(ses.hora_entrada) }}
                   </td>
                   <td class="px-5 py-4">
-                    <span v-if="!ses.hora_salida" class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1.5 animate-pulse">
+                    <span v-if="!ses.hora_salida" class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400 inline-flex items-center gap-1.5 animate-pulse">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                       En línea / Activo
                     </span>
@@ -360,7 +360,7 @@
                   </td>
                   <td class="px-5 py-4">
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                      :class="rest.es_activo!==false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
+                      :class="rest.es_activo!==false ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
                       {{ rest.es_activo!==false ? 'Activo' : 'Inactivo' }}
                     </span>
                   </td>
@@ -430,6 +430,11 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Tabla Anuncios -->
+        <div v-if="activeTab === 'anuncios'" class="animate-fade-in">
+          <AnunciosView />
         </div>
 
         <!-- Modal Estación -->
@@ -519,6 +524,7 @@
           :empleado="empleadoEditando"
           :restaurantes="restaurantes"
           :es-cuenta-menu="esModoMenu"
+          :guardando="loading.guardando"
           @guardar="handleGuardarEmpleado"
           @cancelar="cerrarModalEmpleado"
         />
@@ -538,28 +544,28 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nombre *</label>
             <input v-model="restForm.nombre" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
+              class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Teléfono</label>
             <input v-model="restForm.telefono" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
+              class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Calle y número</label>
             <input v-model="restForm.calle" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
+              class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Ciudad</label>
               <input v-model="restForm.ciudad" type="text"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
+                class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Estado</label>
               <input v-model="restForm.estado" type="text"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700" />
+                class="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-900 dark:text-gray-200" />
             </div>
           </div>
           <div class="space-y-3 pt-2">
@@ -567,7 +573,7 @@
             <div class="flex items-center gap-4">
               <div class="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0 dark:bg-gray-800/50 dark:border-gray-700">
                 <img v-if="imgPreview || restForm.imagen_url" :src="imgPreview || getImageUrl(restForm.imagen_url)" class="w-full h-full object-cover" />
-                <span v-else class="text-gray-300 text-2xl">📸</span>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-2xl">📸</span>
               </div>
               <div class="flex-1">
                 <input type="file" @change="onFileChange" accept="image/*" class="hidden" ref="fileInput" />
@@ -610,7 +616,7 @@
       @click.self="cancelarEliminacion">
       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up dark:bg-gray-800">
         <div class="p-8 text-center">
-          <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce-subtle dark:text-red-400">
+          <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce-subtle">
             <i class="fa-solid fa-user-slash"></i>
           </div>
           <h3 class="text-xl font-bold text-gray-900 mb-2 dark:text-gray-100">¿Eliminar usuario?</h3>
@@ -637,11 +643,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, provide } from 'vue'
 import { useRouter } from 'vue-router'
 import SucursalBadge       from '../components/SucursalBadge.vue'
-import IngredientesView    from './ingredientesview.vue'
 import AnunciosView        from './anunciosview.vue'
+import { useToast } from '@/composables/useToast'
 import GastoView           from './GastoView.vue'
 import FinancieroView      from './FinancieroView.vue'
 import NominaView          from './NominaView.vue'
@@ -652,6 +658,8 @@ import { STORAGE_URL } from '@/config/api'
 
 const router = useRouter()
 
+provide('closeNomina', () => { mainTab.value = 'resumen' })
+
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const mainTab   = ref('resumen')
 const activeTab = ref('empleados')
@@ -661,7 +669,7 @@ const filtroSesiones = ref('hoy')
 const filtroEmpleadoId = ref('todos')
 const restaurantes = ref([])
 const currentUser  = ref(null)
-const toasts       = ref([])
+const { toasts, showToast, removeToast } = useToast()
 const formError    = ref('')
 const estaciones   = ref([])
 const estacionEditando = ref(null)
@@ -782,6 +790,7 @@ const crudTabs = computed(() => [
   { key:'sesiones',     label:'Entradas y Salidas', count: sesiones.value.length       },
   { key:'restaurantes', label:'Restaurantes',      count: restaurantes.value.length   },
   { key:'estaciones',   label:'Estaciones',        count: estaciones.value.length      },
+  { key:'anuncios',     label:'Anuncios',          count: 0                            },
 ])
 
 const personalNomina = computed(() => empleados.value.filter(e => {
@@ -835,13 +844,6 @@ const getRolId = (emp) => {
 }
 
 const getInitials = (name) => !name ? 'U' : name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2)
-
-const showToast = (message, type='info') => {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  setTimeout(() => removeToast(id), 4000)
-}
-const removeToast = (id) => { const i=toasts.value.findIndex(t=>t.id===id); if(i!==-1) toasts.value.splice(i,1) }
 
 // ── Cargar empleados desde /empleados (devuelve activo correctamente) ──────────
 const cargarEmpleados = async () => {
