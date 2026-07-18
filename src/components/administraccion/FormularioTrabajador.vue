@@ -8,11 +8,6 @@
       <p v-if="!modoEdicion" class="text-xs text-gray-400 dark:text-gray-500 mt-1">El usuario y correo se generarán automáticamente.</p>
     </div>
 
-    <!-- ✅ Permisos -->
-    <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
-      <PermissionSelector v-model="form.permisos" :role-id="form.rol_id" />
-    </div>
-
     <!-- ✅ Cadena de acceso -->
     <transition name="fade-up">
       <div v-if="cadenaAcceso" class="mb-5 p-5 bg-gradient-to-br from-indigo-50 to-indigo-100/80 dark:from-indigo-900/40 dark:to-indigo-800/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl shadow-inner">
@@ -120,7 +115,6 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
-import PermissionSelector from '@/components/administraccion/PermissionSelector.vue'
 
 const props = defineProps({
   empleado:     { type: Object, default: null },

@@ -22,14 +22,14 @@ export async function request<T = any>(
     if (options.params) {
         const queryParams = new URLSearchParams();
         Object.entries(options.params).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-                queryParams.append(key, String(value));
-            }
+            if (value === null || value === undefined || value === '' || value === false) return
+            queryParams.append(key, String(value));
         });
         const queryString = queryParams.toString();
         if (queryString) {
             url += (url.includes('?') ? '&' : '?') + queryString;
         }
+        delete options.params;
     }
 
     const defaultHeaders = getHeaders();
@@ -44,23 +44,8 @@ export async function request<T = any>(
         delete headers['Content-Type'];
     }
 
-    let finalUrl = url;
-    if (options.params) {
-        const urlParams = new URLSearchParams();
-        Object.entries(options.params).forEach(([key, value]) => {
-            if (value !== null && value !== undefined && value !== '') {
-                urlParams.append(key, String(value));
-            }
-        });
-        const qs = urlParams.toString();
-        if (qs) {
-            finalUrl = finalUrl.includes('?') ? `${finalUrl}&${qs}` : `${finalUrl}?${qs}`;
-        }
-        delete options.params;
-    }
-
     try {
-        const response = await fetch(finalUrl, {
+        const response = await fetch(url, {
             ...options,
             headers
         });
@@ -84,14 +69,14 @@ export async function request<T = any>(
         }
 
         if (!response.ok) {
-            const error = new Error(data.message || `Error ${response.status}`);
+            const error = new Error(data.error || data.message || `Error ${response.status}`);
             (error as any).response = { status: response.status, data };
             throw error;
         }
 
         return data;
     } catch (error: any) {
-        console.error(`API Request Error [${finalUrl}]:`, error);
+        console.error(`API Request Error [${url}]:`, error);
         if (error instanceof SyntaxError) {
             const err = new Error('Respuesta inválida del servidor');
             throw err;

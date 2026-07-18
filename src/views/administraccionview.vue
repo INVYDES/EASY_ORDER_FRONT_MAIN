@@ -382,110 +382,11 @@
           </div>
         </div>
 
-        <!-- Tabla Estaciones -->
-        <div v-if="activeTab === 'estaciones'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:bg-gray-800 dark:border-gray-700 animate-fade-in">
-          <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-            <p class="text-sm font-bold text-gray-700 dark:text-gray-300">Estaciones de trabajo</p>
-            <button @click="abrirModalEstacion()"
-              class="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-1 shadow-sm">
-              <span>+</span> Nueva
-            </button>
-          </div>
-          <div v-if="estaciones.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500 text-sm">
-            No hay estaciones registradas
-          </div>
-          <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-800/50">
-                <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Nombre</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Descripción</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Activo</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                <tr v-for="est in estaciones" :key="est.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td class="px-5 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">{{ est.nombre }}</td>
-                  <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">{{ est.descripcion || '—' }}</td>
-                  <td class="px-5 py-4">
-                    <span class="text-xs font-bold px-2 py-1 rounded-full"
-                      :class="est.activo !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'">
-                      {{ est.activo !== false ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-4 text-right">
-                    <div class="flex justify-end gap-2">
-                      <button @click="editarEstacion(est)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition dark:text-indigo-400 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30">
-                        ✏️ Editar
-                      </button>
-                      <button @click="showConfirmEliminarEstacion = est.id"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition dark:text-red-400 dark:bg-red-900/30">
-                        🗑️ Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         <!-- Tabla Anuncios -->
         <div v-if="activeTab === 'anuncios'" class="animate-fade-in">
           <AnunciosView />
         </div>
 
-        <!-- Modal Estación -->
-        <div v-if="showModalEstacion" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4" @click.self="cerrarModalEstacion">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div class="flex items-center justify-between mb-5">
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ estacionEditando ? 'Editar Estación' : 'Nueva Estación' }}</h3>
-              <button @click="cerrarModalEstacion" class="text-gray-400 hover:text-gray-600 text-xl dark:text-gray-500 dark:hover:text-gray-400">✕</button>
-            </div>
-            <div v-if="estFormError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl dark:bg-red-900/30">{{ estFormError }}</div>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nombre *</label>
-                <input v-model="estForm.nombre" type="text" placeholder="Ej. Cocina, Barra, Postres"
-                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Descripción</label>
-                <textarea v-model="estForm.descripcion" rows="2" placeholder="Descripción breve de la estación"
-                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"></textarea>
-              </div>
-              <div class="flex items-center justify-between pt-2">
-                <button @click="cerrarModalEstacion" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition">
-                  Cancelar
-                </button>
-                <button @click="guardarEstacion" :disabled="estGuardando"
-                  class="px-6 py-2 text-sm font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2 shadow-sm">
-                  <span v-if="estGuardando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  {{ estacionEditando ? 'Actualizar' : 'Crear' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Confirmación eliminar estación -->
-        <div v-if="showConfirmEliminarEstacion" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4" @click.self="showConfirmEliminarEstacion = null">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
-            <span class="text-4xl block mb-3">🗑️</span>
-            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">¿Eliminar estación?</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
-            <div class="flex gap-3 justify-center">
-              <button @click="showConfirmEliminarEstacion = null" class="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition">
-                Cancelar
-              </button>
-              <button @click="eliminarEstacion(showConfirmEliminarEstacion)" class="px-5 py-2 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition shadow-sm">
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
       </template>
     </template>
 
@@ -671,11 +572,7 @@ const restaurantes = ref([])
 const currentUser  = ref(null)
 const { toasts, showToast, removeToast } = useToast()
 const formError    = ref('')
-const estaciones   = ref([])
-const estacionEditando = ref(null)
-const showModalEstacion = ref(false)
-const estForm = ref({ nombre: '', descripcion: '' })
-const showConfirmEliminarEstacion = ref(null)
+
 
 const licenciaActiva = ref(null)
 const totalUsuariosSistema = ref(0)
@@ -789,7 +686,7 @@ const crudTabs = computed(() => [
   { key:'menu',         label:'Cuentas de Menú',   count: cuentasMenu.value.length    },
   { key:'sesiones',     label:'Entradas y Salidas', count: sesiones.value.length       },
   { key:'restaurantes', label:'Restaurantes',      count: restaurantes.value.length   },
-  { key:'estaciones',   label:'Estaciones',        count: estaciones.value.length      },
+
   { key:'anuncios',     label:'Anuncios',          count: 0                            },
 ])
 
@@ -911,9 +808,7 @@ const loadData = async () => {
     if (activeTab.value === 'sesiones') {
       await cargarSesiones()
     }
-    if (activeTab.value === 'estaciones') {
-      await cargarEstaciones()
-    }
+
 
   } catch(e) { console.error('Error loadData:', e) }
   finally { loading.general = false }
@@ -1359,83 +1254,8 @@ const eliminarRestaurante = async (id) => {
   
 }
 
-// ── Estaciones CRUD ────────────────────────────────────────────────────────
-const estFormError = ref('')
-const estGuardando = ref(false)
-
-const abrirModalEstacion = () => {
-  estacionEditando.value = null; estFormError.value = ''
-  estForm.value = { nombre: '', descripcion: '' }
-  showModalEstacion.value = true
-}
-
-const editarEstacion = (est) => {
-  estacionEditando.value = est; estFormError.value = ''
-  estForm.value = { nombre: est.nombre || '', descripcion: est.descripcion || '' }
-  showModalEstacion.value = true
-}
-
-const cerrarModalEstacion = () => {
-  showModalEstacion.value = false; estacionEditando.value = null
-  estFormError.value = ''
-}
-
-const guardarEstacion = async () => {
-  estFormError.value = ''
-  if (!estForm.value.nombre.trim()) { estFormError.value = 'El nombre es obligatorio'; return }
-  estGuardando.value = true
-  try {
-    const isEdit = !!estacionEditando.value
-    const payload = { nombre: estForm.value.nombre.trim(), descripcion: estForm.value.descripcion.trim() }
-    const r = isEdit
-      ? await apiClient.put(`/estaciones/${estacionEditando.value.id}`, payload)
-      : await apiClient.post('/estaciones', payload)
-    if (r.success) {
-      if (isEdit) {
-        const idx = estaciones.value.findIndex(x => x.id === estacionEditando.value.id)
-        if (idx !== -1) estaciones.value[idx] = r.data || { ...estacionEditando.value, ...payload }
-      } else {
-        estaciones.value.push(r.data || { id: Date.now(), ...payload, activo: true })
-      }
-      showToast(isEdit ? 'Estación actualizada' : 'Estación creada', 'success')
-      cerrarModalEstacion()
-    } else {
-      estFormError.value = r.message || 'Error al guardar'
-    }
-  } catch {
-    estFormError.value = 'Error de conexión'
-  } finally {
-    estGuardando.value = false
-  }
-}
-
-const eliminarEstacion = async (id) => {
-  try {
-    const r = await apiClient.delete(`/estaciones/${id}`)
-    if (r.success) {
-      estaciones.value = estaciones.value.filter(x => x.id !== id)
-      showToast('Estación eliminada', 'success')
-    } else {
-      showToast(r.message || 'Error al eliminar', 'error')
-    }
-  } catch {
-    showToast('Error de conexión', 'error')
-  } finally {
-    showConfirmEliminarEstacion.value = null
-  }
-}
-
-const cargarEstaciones = async () => {
-  try {
-    const r = await apiClient.get('/estaciones')
-    if (r.success) estaciones.value = r.data || []
-  } catch (e) {
-    console.error('Error cargando estaciones:', e)
-  }
-}
-
 watch(filtroSesiones, () => { cargarSesiones() })
-watch(activeTab, (val) => { if (val === 'sesiones') cargarSesiones(); if (val === 'estaciones') cargarEstaciones() })
+watch(activeTab, (val) => { if (val === 'sesiones') cargarSesiones() })
 watch(mainTab, (val) => { if (val === 'resumen') loadData() })
 onMounted(loadData)
 </script>

@@ -201,10 +201,8 @@
                   <div class="flex items-center justify-between mt-2">
                     <div>
                       <span class="font-bold text-indigo-600 dark:text-indigo-400">${{ Number(p.precio||0).toFixed(2) }}</span>
-                      <div v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && (p.precio_pequeno > 0 || p.precio_mediano > 0 || p.precio_grande > 0)" class="flex items-center gap-1 mt-1 flex-wrap">
-                        <span v-if="p.precio_pequeno > 0" class="text-[8px] font-bold px-1 py-0.5 rounded bg-emerald-100 text-emerald-700 leading-none">S ${{ Number(p.precio_pequeno).toFixed(2) }}</span>
-                        <span v-if="p.precio_mediano > 0" class="text-[8px] font-bold px-1 py-0.5 rounded bg-blue-100 text-blue-700 leading-none">M ${{ Number(p.precio_mediano).toFixed(2) }}</span>
-                        <span v-if="p.precio_grande > 0" class="text-[8px] font-bold px-1 py-0.5 rounded bg-purple-100 text-purple-700 leading-none">L ${{ Number(p.precio_grande).toFixed(2) }}</span>
+                      <div v-if="getTamanoData(p).length > 0" class="flex items-center gap-1 mt-1 flex-wrap">
+                        <span v-for="(t, i) in getTamanoData(p)" :key="i" class="text-[8px] font-bold px-1 py-0.5 rounded leading-none whitespace-nowrap" :class="t.color.circle">{{ t.letter }} ${{ t.precio.toFixed(2) }}</span>
                       </div>
                     </div>
                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition"
@@ -238,7 +236,7 @@
               <div class="flex-1 min-w-0">
                 <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
                   {{ item.nombre }}
-                  <span v-if="item.tamano && item.tamano !== 'pequeno' && item.tamano !== 'personalizado'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano === 'mediano' ? 'M' : 'L' }})</span>
+                  <span v-if="item.tamano && item.tamano !== 'pequeno' && item.tamano !== 'personalizado'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano_nombre?.[0]?.toUpperCase() || (item.tamano === 'mediano' ? 'M' : 'L') }})</span>
                 </p>
                 <div class="flex items-center gap-1.5 mt-1.5">
                   <button @click="decrementar(item.id, item.tamano)"
@@ -304,7 +302,7 @@
               <div class="flex-1">
                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
                   {{ item.nombre }}
-                  <span v-if="item.tamano && item.tamano !== 'pequeno' && item.tamano !== 'personalizado'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano === 'mediano' ? 'M' : 'L' }})</span>
+                  <span v-if="item.tamano && item.tamano !== 'pequeno' && item.tamano !== 'personalizado'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano_nombre?.[0]?.toUpperCase() || (item.tamano === 'mediano' ? 'M' : 'L') }})</span>
                 </p>
                 <p class="text-xs text-gray-400 dark:text-gray-500">${{ item.precio.toFixed(2) }} c/u</p>
               </div>
@@ -347,32 +345,15 @@
           <p class="text-sm text-slate-500 mt-1 font-medium">Selecciona el tamaño deseado</p>
         </div>
         <div class="space-y-3">
-          <button v-if="productoSeleccionado?.precio_pequeno > 0 || productoSeleccionado?.precio > 0"
-                  @click="agregarProductoConTamano(productoSeleccionado, 'pequeno', productoSeleccionado.precio_pequeno || productoSeleccionado.precio)"
-                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 group transition-all">
+          <button v-for="(t, i) in getTamanoData(productoSeleccionado)" :key="t.key"
+                  @click="agregarProductoConTamano(productoSeleccionado, t.key, t.precio)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 group transition-all"
+                  :class="t.color.hover">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-lg">S</div>
-              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-emerald-700">Pequeño</span>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-lg" :class="t.color.circle">{{ t.letter }}</div>
+              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest" :class="t.color.hoverText">{{ t.nombre }}</span>
             </div>
-            <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoSeleccionado?.precio_pequeno || productoSeleccionado?.precio).toFixed(2) }}</span>
-          </button>
-          <button v-if="productoSeleccionado?.precio_mediano > 0"
-                  @click="agregarProductoConTamano(productoSeleccionado, 'mediano', productoSeleccionado.precio_mediano)"
-                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 group transition-all">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">M</div>
-              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-blue-700">Mediano</span>
-            </div>
-            <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoSeleccionado?.precio_mediano).toFixed(2) }}</span>
-          </button>
-          <button v-if="productoSeleccionado?.precio_grande > 0"
-                  @click="agregarProductoConTamano(productoSeleccionado, 'grande', productoSeleccionado.precio_grande)"
-                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 group transition-all">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-lg">L</div>
-              <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-purple-700">Grande</span>
-            </div>
-            <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoSeleccionado?.precio_grande).toFixed(2) }}</span>
+            <span class="font-black text-slate-900 dark:text-white text-xl">${{ t.precio.toFixed(2) }}</span>
           </button>
         </div>
         <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
@@ -518,30 +499,35 @@ const idsConAnuncio = computed(() => new Set(
 const tieneAnuncio = (id) => idsConAnuncio.value.has(id)
 
 // ── NORMALIZAR producto desde cualquier endpoint ───────────
-const normalizar = (p) => ({
-  id:          p.id,
-  nombre:      p.nombre,
-  descripcion: p.descripcion || '',
-  precio:      parseFloat(p.precio || 0),
-  precio_pequeno: p.precio_pequeno !== null ? parseFloat(p.precio_pequeno) : null,
-  precio_mediano: p.precio_mediano !== null ? parseFloat(p.precio_mediano) : null,
-  precio_grande:  p.precio_grande !== null ? parseFloat(p.precio_grande) : null,
-  tiene_tamanos:  p.tiene_tamanos == true || p.tiene_tamanos == '1',
-  imagen_url:  p.imagen_url  || p.imagen || null,
-  stock:       p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0,
-  stock_pequeno: parseFloat(p.stock_pequeno ?? p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
-  stock_mediano: parseFloat(p.stock_mediano ?? 0),
-  stock_grande:  parseFloat(p.stock_grande ?? 0),
-  agotado:     (p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
-  bajo_stock:  p.bajo_stock ?? false,
-  categoria:   p.categoria ? {
-    id:     p.categoria.id,
-    nombre: p.categoria.nombre,
-    color:  p.categoria.color  || '#6366f1',
-    icono:  p.categoria.icono  || '📦',
-    orden:  p.categoria.orden  ?? 99,
-  } : null,
-})
+const normalizar = (p) => {
+  const tamanos = Array.isArray(p.tamanos_disponibles)
+    ? p.tamanos_disponibles.map(t => ({
+        key: t.key,
+        nombre: t.nombre,
+        precio: Number(t.precio ?? 0),
+        stock: Number(t.stock ?? 0),
+      }))
+    : []
+  return {
+    id:          p.id,
+    nombre:      p.nombre,
+    descripcion: p.descripcion || '',
+    precio:      parseFloat(p.precio || 0),
+    tiene_tamanos:  p.tiene_tamanos == true || p.tiene_tamanos == '1',
+    imagen_url:  p.imagen_url  || p.imagen || null,
+    stock:       p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0,
+    tamanos_disponibles: tamanos,
+    agotado:     (p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
+    bajo_stock:  p.bajo_stock ?? false,
+    categoria:   p.categoria ? {
+      id:     p.categoria.id,
+      nombre: p.categoria.nombre,
+      color:  p.categoria.color  || '#6366f1',
+      icono:  p.categoria.icono  || '📦',
+      orden:  p.categoria.orden  ?? 99,
+    } : null,
+  }
+}
 
 // ── API ────────────────────────────────────────────────────
 const cargarRestaurantes = async () => {
@@ -690,34 +676,84 @@ const volverARestaurantes = () => {
   ofertasProductos.value        = []
 }
 
+const sizeStyles = [
+  { circle: 'bg-emerald-100 text-emerald-600', hover: 'hover:border-emerald-500 hover:bg-emerald-50', hoverText: 'group-hover:text-emerald-700' },
+  { circle: 'bg-blue-100 text-blue-600', hover: 'hover:border-blue-500 hover:bg-blue-50', hoverText: 'group-hover:text-blue-700' },
+  { circle: 'bg-purple-100 text-purple-600', hover: 'hover:border-purple-500 hover:bg-purple-50', hoverText: 'group-hover:text-purple-700' },
+  { circle: 'bg-amber-100 text-amber-600', hover: 'hover:border-amber-500 hover:bg-amber-50', hoverText: 'group-hover:text-amber-700' },
+  { circle: 'bg-rose-100 text-rose-600', hover: 'hover:border-rose-500 hover:bg-rose-50', hoverText: 'group-hover:text-rose-700' },
+]
+
+const getTamanoData = (p) => {
+  const tams = Array.isArray(p?.tamanos_disponibles) ? p.tamanos_disponibles : []
+  if (tams.length > 0) {
+    return tams
+      .map((t, i) => ({
+        letter: (t.nombre || '?')[0].toUpperCase(),
+        nombre: t.nombre,
+        key: t.key,
+        precio: Number(t.precio ?? 0),
+        stock: Number(t.stock ?? 0),
+        color: sizeStyles[i % sizeStyles.length],
+        index: i,
+      }))
+      .filter(t => t.precio > 0)
+  }
+  if (Number(p?.precio ?? 0) > 0) {
+    return [{
+      letter: 'Ú',
+      nombre: 'Único',
+      key: 'unico',
+      precio: Number(p.precio),
+      stock: Number(p.stock ?? 0),
+      color: sizeStyles[0],
+      index: 0,
+    }]
+  }
+  return []
+}
+
+const getTamanoLetter = (tamanoKey, p) => {
+  const tams = Array.isArray(p?.tamanos_disponibles) ? p.tamanos_disponibles : []
+  const found = tams.find(t => t.key === tamanoKey)
+  return found?.nombre ? found.nombre[0].toUpperCase() : '?'
+}
+
 // ── CARRITO ────────────────────────────────────────────────
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" no está disponible`); return }
 
-  if (p.tiene_tamanos && ((p.precio_mediano > 0) || (p.precio_grande > 0))) {
+  const sizes = getTamanoData(p)
+  if (sizes.length > 1) {
     productoSeleccionado.value = p
     showTamanosModal.value = true
     return
   }
 
-  agregarProductoConTamano(p, 'pequeno', p.precio_pequeno || p.precio)
+  if (sizes.length === 1) {
+    agregarProductoConTamano(p, sizes[0].key, sizes[0].precio)
+  } else {
+    agregarProductoConTamano(p, 'pequeno', p.precio)
+  }
 }
 
 const agregarProductoConTamano = (p, tamano, precio) => {
   showTamanosModal.value = false
-  const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
-  const stockDisp = p[stockKey] ?? p.stock ?? 0
+  let tamanoNombre = ''
+  const tamanoInfo = getTamanoData(p).find(t => t.key === tamano)
+  if (tamanoInfo?.nombre) tamanoNombre = tamanoInfo.nombre
+  const sufijo = tamanoNombre ? ` (${tamanoNombre})` : ''
+  const nombreMostrar = sufijo ? `${p.nombre}${sufijo}` : p.nombre
+
+  const stockDisp = tamanoInfo?.stock ?? p.stock ?? 0
 
   if (stockDisp > 0) {
     const totalTamano = pedido.value.filter(i => i.id === p.id && i.tamano === tamano).reduce((s, i) => s + i.cantidad, 0)
     if (totalTamano >= stockDisp) {
-      mostrarError(`No hay suficiente stock de tamaño "${tamano}" para "${p.nombre}". Límite: ${stockDisp} uds`)
+      mostrarError(`No hay suficiente stock para "${p.nombre}" (${tamanoNombre || tamano}). Límite: ${stockDisp} uds`)
       return
     }
   }
-
-  const sizeMap = { 'pequeno': '', 'mediano': ' (M)', 'grande': ' (L)', 'personalizado': ' (Personalizado)' }
-  const nombreMostrar = tamano !== 'pequeno' ? `${p.nombre}${sizeMap[tamano] || ''}` : p.nombre
 
   const existe = pedido.value.find(i => i.id === p.id && i.tamano === tamano && !i.es_oferta)
   if (existe) {
@@ -731,6 +767,7 @@ const agregarProductoConTamano = (p, tamano, precio) => {
       cantidad: 1,
       stock_maximo: stockDisp,
       tamano: tamano,
+      tamano_nombre: tamanoNombre || tamano,
       es_oferta: false
     })
   }
@@ -823,7 +860,7 @@ const handleCheckout = async (checkoutData) => {
 
     const body = {
       restaurante_id:    restauranteSeleccionado.value.id,
-      productos:         pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null, tamano: i.tamano && i.tamano !== 'pequeno' ? i.tamano : null })),
+        productos:         pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null, tamano: i.tamano || null })),
       metodo_pago:       checkoutData.metodo_pago,
       tipo_orden:        mapTipoOrden[checkoutData.tipo_entrega] || 'pickup',
       direccion_entrega: direccionStr,

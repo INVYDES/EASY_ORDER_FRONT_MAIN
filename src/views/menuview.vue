@@ -219,11 +219,9 @@
                   <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
                     <div class="flex flex-col">
                        <span class="font-black text-slate-900 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
-                   <div v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && (p.precio_pequeno > 0 || p.precio_mediano > 0 || p.precio_grande > 0)" class="flex items-center gap-1 mt-1 text-xs font-medium text-slate-700">
-                        <span v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && p.precio_pequeno !== null && p.precio_pequeno > 0" class="price-badge">S ${{ Number(p.precio_pequeno).toFixed(2) }}</span>
-                        <span v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && p.precio_mediano !== null && p.precio_mediano > 0" class="price-badge medi">M ${{ Number(p.precio_mediano).toFixed(2) }}</span>
-                        <span v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && p.precio_grande !== null && p.precio_grande > 0" class="price-badge grande">L ${{ Number(p.precio_grande).toFixed(2) }}</span>
-                      </div>
+                    <div v-if="getTamanoData(p).length > 0" class="flex items-center gap-1 mt-1 flex-wrap">
+                         <span v-for="(t, i) in getTamanoData(p)" :key="i" class="text-[9px] font-bold px-1.5 py-0.5 rounded leading-none whitespace-nowrap" :class="t.color.circle">{{ t.letter }} ${{ t.precio.toFixed(2) }}</span>
+                       </div>
                      </div>
                     <div class="w-7 h-7 rounded-xl flex items-center justify-center text-base font-bold transition-all shadow-sm"
                       :class="!p.agotado ? 'bg-slate-900 text-white group-hover:scale-110' : 'bg-slate-100 text-slate-300'">
@@ -253,10 +251,6 @@
           </div>
           <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Restaurant Kiosk System</p>
           
-          <div class="flex items-center justify-between bg-white rounded-xl p-2 border border-slate-100 shadow-sm">
-            <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-            <input v-model="numeroComensales" type="number" min="1" max="50" @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
-          </div>
         </div>
         
         <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-white custom-scrollbar">
@@ -266,56 +260,31 @@
             <p class="text-sm text-slate-500 mt-2 font-medium">Toca los platos para agregarlos</p>
           </div>
           
-          <div v-else class="space-y-4">
-            <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
-              
-              <!-- Box Header -->
-              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
-                <div class="flex items-center gap-2">
-                   <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                   <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
-                   </div>
+          <div v-else class="space-y-3">
+            <div v-for="item in pedido" :key="item.cartId" 
+              class="p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:border-indigo-200 group transition-all">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 flex items-center justify-center shadow-sm border border-slate-100">
+                  <img v-if="item.imagen" :src="item.imagen" class="w-full h-full object-cover" />
+                  <span v-else class="text-lg">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
                 </div>
-                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
-                <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
+                <div class="flex-1 min-w-0 flex justify-between items-start">
+                  <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }}</p>
+                  <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
+                </div>
               </div>
-
-              <!-- Box Items -->
-              <div class="p-3 space-y-3 bg-white">
-                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
-                  Caja Vacía
+              <div class="mb-2">
+                <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
+                  <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
+                  <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
+                  <button @click="incrementar(item.cartId)"
+                    :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
+                    class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                 </div>
-                
-                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" 
-                  class="p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:border-indigo-200 group transition-all">
-                  <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 flex items-center justify-center shadow-sm border border-slate-100">
-                      <img v-if="item.imagen" :src="item.imagen" class="w-full h-full object-cover" />
-                      <span v-else class="text-lg">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0 flex justify-between items-start">
-                      <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }}</p>
-                      <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
-                    </div>
-                  </div>
-                  <div class="mb-2">
-                    <input v-model="item.notas" type="text" placeholder="Notas (Ej: Sin cebolla)" class="w-full px-2 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
-                      <button @click="decrementar(item.cartId)" class="w-6 h-6 rounded-md bg-slate-50 text-slate-400 text-xs font-black flex items-center justify-center hover:text-red-500 transition-colors">−</button>
-                      <span class="text-[10px] font-black w-4 text-center text-slate-700">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)"
-                        :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
-                        class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 text-xs font-black flex items-center justify-center hover:bg-indigo-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
-                    </div>
-                    <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
-                  </div>
-                </div>
+                <p class="text-xs font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
               </div>
             </div>
           </div>
@@ -366,73 +335,32 @@
           <button @click="showCarritoMobile = false" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors shadow-sm">✕</button>
         </div>
         
-        <!-- Selector de comensales estilo píldora -->
-        <div class="flex items-center justify-between bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 mb-5 shadow-sm">
-          <span class="text-[11px] font-black text-indigo-800 uppercase tracking-widest ml-2 flex items-center gap-2">
-            👥 Comensales:
-          </span>
-          <div class="flex items-center bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
-            <button @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">-</button>
-            <input v-model="numeroComensales" type="number" min="1" max="50" @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales" class="w-10 h-8 text-center text-sm font-black text-slate-800 outline-none bg-transparent" />
-            <button @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">+</button>
-          </div>
-        </div>
-
-        <!-- Lista de Comensales -->
-        <div class="flex-1 overflow-y-auto space-y-5 mb-4 pr-2 custom-scrollbar">
+        <!-- Lista de Items -->
+        <div class="flex-1 overflow-y-auto space-y-3 mb-4 pr-2 custom-scrollbar">
           <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center py-12 opacity-40">
             <span class="text-6xl mb-4">🍽️</span>
             <p class="text-slate-900 font-black uppercase tracking-widest text-sm">Orden Vacía</p>
           </div>
           
-          <div v-else class="space-y-5">
-            <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-[1.5rem] overflow-hidden transition-all duration-300 bg-white"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-lg shadow-indigo-100/50' : 'border-slate-100'">
-              
-              <!-- Header Comensal -->
-              <div class="p-3.5 flex justify-between items-center cursor-pointer transition-colors" 
-                   :class="comensalActivoIndex === cIdx ? 'bg-indigo-50/30' : 'bg-slate-50/50 hover:bg-slate-50'"
-                   @click="comensalActivoIndex = cIdx">
-                <div class="flex items-center gap-3">
-                   <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm border border-white transition-colors"
-                        :class="comensalActivoIndex === cIdx ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'">
-                     {{ comensalActivoIndex === cIdx ? '👤' : '👥' }}
-                   </div>
-                   <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-28 border-b-2 border-transparent focus:border-indigo-300 transition-colors" placeholder="Nombre..." />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
-                   </div>
-                </div>
-                <div v-if="comensalActivoIndex === cIdx" class="w-2.5 h-2.5 bg-indigo-500 rounded-full shadow-sm animate-pulse"></div>
+          <div v-else class="space-y-3">
+            <div v-for="item in pedido" :key="item.cartId" class="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm relative group transition-all">
+              <button @click="eliminarDelPedido(item.cartId)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-[10px] font-black border border-white shadow-sm hover:bg-red-500 hover:text-white transition-colors">✕</button>
+              <div class="flex flex-col mb-3">
+                <p class="text-xs font-black text-slate-800 uppercase tracking-tighter leading-tight pr-4">{{ item.nombre }}</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-1">${{ Number(item.precio).toFixed(2) }} c/u</p>
               </div>
-
-              <!-- Items Comensal -->
-              <div class="p-3 space-y-3 bg-white border-t border-slate-50">
-                <div v-if="getItemsForComensal(cIdx).length === 0" class="text-center py-4 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
-                  Agrega platillos
+              <div class="mb-3">
+                <input v-model="item.notas" type="text" placeholder="📝 Agregar notas (ej: sin cebolla)" class="w-full px-3 py-2 text-[10px] font-bold border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-400" />
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-50">
+                <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
+                  <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
+                  <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
+                  <button @click="incrementar(item.cartId)"
+                    :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
+                    class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                 </div>
-                
-                <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm relative group transition-all">
-                  <button @click="eliminarDelPedido(item.cartId)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-[10px] font-black border border-white shadow-sm hover:bg-red-500 hover:text-white transition-colors">✕</button>
-                  <div class="flex flex-col mb-3">
-                    <p class="text-xs font-black text-slate-800 uppercase tracking-tighter leading-tight pr-4">{{ item.nombre }}</p>
-                    <p class="text-[10px] font-bold text-slate-400 mt-1">${{ Number(item.precio).toFixed(2) }} c/u</p>
-                  </div>
-                  <div class="mb-3">
-                    <input v-model="item.notas" type="text" placeholder="📝 Agregar notas (ej: sin cebolla)" class="w-full px-3 py-2 text-[10px] font-bold border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-400" />
-                  </div>
-                  <div class="flex items-center justify-between pt-2 border-t border-slate-50">
-                    <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
-                      <button @click="decrementar(item.cartId)" class="w-8 h-8 rounded-lg bg-white text-slate-600 text-sm font-black flex items-center justify-center shadow-sm hover:text-red-500 transition-colors">−</button>
-                      <span class="text-[11px] font-black w-6 text-center text-slate-800">{{ item.cantidad }}</span>
-                      <button @click="incrementar(item.cartId)"
-                        :disabled="(!item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorId(item.id) >= item.stock_maximo) || (item.es_paquete && item.stock_maximo !== undefined && item.stock_maximo !== null && totalEnPedidoPorPaqueteId(item.paquete_id) >= item.stock_maximo)"
-                        class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">+</button>
-                    </div>
-                    <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
-                  </div>
-                </div>
+                <p class="text-sm font-black text-slate-900">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
               </div>
             </div>
           </div>
@@ -487,46 +415,19 @@
         </div>
 
         <div class="space-y-3">
-          <button v-if="productoSeleccionado?.precio_pequeno > 0 || productoSeleccionado?.precio > 0" 
-                  @click="agregarProductoConTamano(productoSeleccionado, 'pequeno', productoSeleccionado.precio_pequeno || productoSeleccionado.precio)"
-                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 group transition-all"
-                  :disabled="!tieneStockTamano(productoSeleccionado, 'pequeno')">
+          <button v-for="(t, i) in getTamanoData(productoSeleccionado)" :key="t.key"
+                  @click="agregarProductoConTamano(productoSeleccionado, t.key, t.precio)"
+                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 group transition-all"
+                  :class="[t.color.hover, t.stock <= 0 ? 'opacity-50 cursor-not-allowed' : '']"
+                  :disabled="t.stock <= 0">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-lg">S</div>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-lg" :class="t.color.circle">{{ t.letter }}</div>
               <div>
-                <span class="font-black text-slate-700 uppercase tracking-widest group-hover:text-emerald-700 block">Pequeño</span>
-                <span v-if="productoSeleccionado?.stock_pequeno !== undefined" class="text-[10px] font-medium text-slate-400">{{ productoSeleccionado.stock_pequeno }} disp.</span>
+                <span class="font-black text-slate-700 uppercase tracking-widest block" :class="t.color.hoverText">{{ t.nombre }}</span>
+                <span class="text-[10px] font-medium text-slate-400">{{ t.stock > 0 ? t.stock + ' disp.' : 'Agotado' }}</span>
               </div>
             </div>
-            <span class="font-black text-slate-900 text-xl">${{ Number(productoSeleccionado?.precio_pequeno || productoSeleccionado?.precio).toFixed(2) }}</span>
-          </button>
-          
-          <button v-if="productoSeleccionado?.precio_mediano > 0" 
-                  @click="agregarProductoConTamano(productoSeleccionado, 'mediano', productoSeleccionado.precio_mediano)"
-                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 group transition-all"
-                  :disabled="!tieneStockTamano(productoSeleccionado, 'mediano')">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">M</div>
-              <div>
-                <span class="font-black text-slate-700 uppercase tracking-widest group-hover:text-blue-700 block">Mediano</span>
-                <span v-if="productoSeleccionado?.stock_mediano !== undefined" class="text-[10px] font-medium text-slate-400">{{ productoSeleccionado.stock_mediano }} disp.</span>
-              </div>
-            </div>
-            <span class="font-black text-slate-900 text-xl">${{ Number(productoSeleccionado?.precio_mediano).toFixed(2) }}</span>
-          </button>
-
-          <button v-if="productoSeleccionado?.precio_grande > 0" 
-                  @click="agregarProductoConTamano(productoSeleccionado, 'grande', productoSeleccionado.precio_grande)"
-                  class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-purple-500 hover:bg-purple-50 group transition-all"
-                  :disabled="!tieneStockTamano(productoSeleccionado, 'grande')">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-lg">L</div>
-              <div>
-                <span class="font-black text-slate-700 uppercase tracking-widest group-hover:text-purple-700 block">Grande</span>
-                <span v-if="productoSeleccionado?.stock_grande !== undefined" class="text-[10px] font-medium text-slate-400">{{ productoSeleccionado.stock_grande }} disp.</span>
-              </div>
-            </div>
-            <span class="font-black text-slate-900 text-xl">${{ Number(productoSeleccionado?.precio_grande).toFixed(2) }}</span>
+            <span class="font-black text-slate-900 text-xl">${{ t.precio.toFixed(2) }}</span>
           </button>
         </div>
 
@@ -571,7 +472,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MarquesitaWidget from '../components/Marquesitawidget.vue'
 import MenuCheckoutModal from '../components/menu/MenuCheckoutModal.vue'
@@ -607,41 +508,6 @@ const sidebarAbierta          = ref(true)
 const marquesinaVariant       = ref(localStorage.getItem('marquesina_variant') || 'dark')
 let pollTimer = null
 const POLL_INTERVAL = 5000 // 5 segundos
-
-// --- ESTADO COMENSALES ---
-const numeroComensales    = ref(1)
-const comensalesNombres   = ref(['Comensal 1'])
-const comensalActivoIndex = ref(0)
-
-watch(numeroComensales, (newVal) => {
-  if (newVal === '' || newVal === null || newVal === undefined) {
-    return
-  }
-  const numVal = parseInt(newVal)
-  if (isNaN(numVal) || numVal < 1) {
-    return
-  }
-  const diff = numVal - comensalesNombres.value.length
-  if (diff > 0) {
-    for (let i = 0; i < diff; i++) {
-      comensalesNombres.value.push(`Comensal ${comensalesNombres.value.length + 1}`)
-    }
-  } else if (diff < 0) {
-    comensalesNombres.value.splice(numVal)
-    pedido.value.forEach(item => {
-      if (item.comensalIndex >= numVal) item.comensalIndex = 0
-    })
-  }
-  if (comensalActivoIndex.value >= numVal) {
-    comensalActivoIndex.value = numVal - 1
-  }
-})
-
-const getItemsForComensal = (cIdx) => pedido.value.filter(i => i.comensalIndex === cIdx)
-
-const tiempoPorComensal = (cIdx) => {
-  return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
-}
 
 const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
@@ -691,19 +557,22 @@ const totalItems  = computed(() => pedido.value.reduce((s,i) => s + i.cantidad, 
 const normalizar = (p) => {
   if (!p) return null;
   try {
+    const tamanos = Array.isArray(p.tamanos_disponibles)
+      ? p.tamanos_disponibles.map(t => ({
+          key: t.key,
+          nombre: t.nombre,
+          precio: Number(t.precio ?? 0),
+          stock: Number(t.stock ?? 0),
+        }))
+      : []
     return {
       id:          p.id,
       nombre:      p.nombre || 'Sin nombre',
       descripcion: p.descripcion || '',
       precio:      parseFloat(p.precio || 0),
-      precio_pequeno: p.precio_pequeno !== null ? parseFloat(p.precio_pequeno) : null,
-      precio_mediano: p.precio_mediano !== null ? parseFloat(p.precio_mediano) : null,
-      precio_grande:  p.precio_grande !== null ? parseFloat(p.precio_grande) : null,
       imagen_url:  p.imagen_url  || p.imagen || null,
       stock:       parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
-      stock_pequeno: parseFloat(p.stock_pequeno ?? p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
-      stock_mediano: parseFloat(p.stock_mediano ?? 0),
-      stock_grande:  parseFloat(p.stock_grande ?? 0),
+      tamanos_disponibles: tamanos,
       agotado:     parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
       bajo_stock:  p.bajo_stock ?? false,
       minutos_produccion: parseFloat(p.minutos_produccion || 0),
@@ -851,45 +720,92 @@ const totalEnPedidoPorTamano = (productId, tamano) => {
 }
 
 const tieneStockTamano = (p, tamano) => {
-  const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
-  const stock = p[stockKey] ?? p.stock ?? 0
+  const tamanoInfo = getTamanoData(p).find(t => t.key === tamano)
+  const stock = tamanoInfo?.stock ?? p.stock ?? 0
   if (stock <= 0) return false
   return totalEnPedidoPorTamano(p.id, tamano) < stock
+}
+
+const sizeStyles = [
+  { circle: 'bg-emerald-100 text-emerald-600', hover: 'hover:border-emerald-500 hover:bg-emerald-50', hoverText: 'group-hover:text-emerald-700' },
+  { circle: 'bg-blue-100 text-blue-600', hover: 'hover:border-blue-500 hover:bg-blue-50', hoverText: 'group-hover:text-blue-700' },
+  { circle: 'bg-purple-100 text-purple-600', hover: 'hover:border-purple-500 hover:bg-purple-50', hoverText: 'group-hover:text-purple-700' },
+  { circle: 'bg-amber-100 text-amber-600', hover: 'hover:border-amber-500 hover:bg-amber-50', hoverText: 'group-hover:text-amber-700' },
+  { circle: 'bg-rose-100 text-rose-600', hover: 'hover:border-rose-500 hover:bg-rose-50', hoverText: 'group-hover:text-rose-700' },
+]
+
+const getTamanoData = (p) => {
+  const tams = Array.isArray(p?.tamanos_disponibles) ? p.tamanos_disponibles : []
+  if (tams.length > 0) {
+    return tams
+      .map((t, i) => ({
+        letter: (t.nombre || '?')[0].toUpperCase(),
+        nombre: t.nombre,
+        key: t.key,
+        precio: Number(t.precio ?? 0),
+        stock: Number(t.stock ?? 0),
+        color: sizeStyles[i % sizeStyles.length],
+        index: i,
+      }))
+      .filter(t => t.precio > 0)
+  }
+  if (Number(p?.precio ?? 0) > 0) {
+    return [{
+      letter: 'Ú',
+      nombre: 'Único',
+      key: 'unico',
+      precio: Number(p.precio),
+      stock: Number(p.stock ?? 0),
+      color: sizeStyles[0],
+      index: 0,
+    }]
+  }
+  return []
+}
+
+const getTamanoLetter = (tamanoKey, p) => {
+  const tams = Array.isArray(p?.tamanos_disponibles) ? p.tamanos_disponibles : []
+  const found = tams.find(t => t.key === tamanoKey)
+  return found?.nombre ? found.nombre[0].toUpperCase() : '?'
 }
 
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
 
-  if (p.tiene_tamanos == true || p.tiene_tamanos == '1') {
+  const sizes = getTamanoData(p)
+  if (sizes.length > 1) {
     productoSeleccionado.value = p
     showTamanosModal.value = true
     return
   }
 
-  agregarProductoConTamano(p, 'pequeno', p.precio_pequeno || p.precio)
+  if (sizes.length === 1) {
+    agregarProductoConTamano(p, sizes[0].key, sizes[0].precio)
+  } else {
+    agregarProductoConTamano(p, 'pequeno', p.precio)
+  }
 }
 
 const agregarProductoConTamano = (p, tamano, precio) => {
   showTamanosModal.value = false
 
-  const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
-  const stockDisp = p[stockKey] ?? p.stock ?? 0
+  let tamanoNombre = ''
+  const tamanoInfo = getTamanoData(p).find(t => t.key === tamano)
+  if (tamanoInfo?.nombre) tamanoNombre = tamanoInfo.nombre
+  const stockDisp = tamanoInfo?.stock ?? p.stock ?? 0
   if (stockDisp > 0 && totalEnPedidoPorTamano(p.id, tamano) >= stockDisp) {
-    mostrarError(`No hay suficiente stock de tamaño "${tamano}" para "${p.nombre}". Límite: ${stockDisp} uds`)
+    mostrarError(`No hay suficiente stock para "${p.nombre}" (${tamanoNombre || tamano}). Límite: ${stockDisp} uds`)
     return
   }
 
-  const cIdx = comensalActivoIndex.value
-  const existe = pedido.value.find(i => i.id === p.id && i.tamano === tamano && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
+  const existe = pedido.value.find(i => i.id === p.id && i.tamano === tamano && !i.notas && !i.es_oferta && !i.es_paquete)
   if (existe) { 
     existe.cantidad++ 
   } else { 
     const sizeMap = { 'pequeno': 'Pequeño', 'mediano': 'Mediano', 'grande': 'Grande', 'personalizado': 'Personalizado' }
-    let nombreMostrar = p.nombre
-    if (tamano !== 'pequeno') {
-      nombreMostrar = `${p.nombre} (${sizeMap[tamano] || tamano})`
-    }
+    const sufijo = tamanoNombre ? ` (${tamanoNombre})` : (tamano !== 'pequeno' ? ` (${sizeMap[tamano] || tamano})` : '')
+    const nombreMostrar = tamano !== 'pequeno' ? `${p.nombre}${sufijo}` : p.nombre
     
     pedido.value.push({ 
       cartId: Date.now() + Math.random(),
@@ -901,8 +817,7 @@ const agregarProductoConTamano = (p, tamano, precio) => {
       stock_maximo: stockDisp,
       notas: '',
       tamano: tamano,
-      tamano: tamano,
-      comensalIndex: cIdx,
+      tamano_nombre: tamanoNombre || tamano,
       minutos_produccion: parseFloat(p.minutos_produccion || 0)
     }) 
   }
@@ -919,8 +834,7 @@ const agregarOfertaAlPedido = (oferta) => {
     }
   }
 
-  const cIdx = comensalActivoIndex.value
-  const existe = pedido.value.find(i => i.id === oferta.producto_id && i.comensalIndex === cIdx && !i.notas && i.es_oferta)
+  const existe = pedido.value.find(i => i.id === oferta.producto_id && !i.notas && i.es_oferta)
   if (existe) { 
     existe.cantidad++; 
     existe.precio = oferta.precio_oferta 
@@ -936,7 +850,6 @@ const agregarOfertaAlPedido = (oferta) => {
       oferta_id: oferta.id,
       stock_maximo: stockLimit,
       notas: '',
-      comensalIndex: cIdx,
       minutos_produccion: parseFloat(oferta.producto?.minutos_produccion || oferta.minutos_produccion || 0)
     })
   }
@@ -950,8 +863,7 @@ const agregarPaqueteAlPedido = (pkg) => {
     }
   }
 
-  const cIdx = comensalActivoIndex.value
-  const existe = pedido.value.find(i => i.paquete_id === pkg.id && i.comensalIndex === cIdx && !i.notas)
+  const existe = pedido.value.find(i => i.paquete_id === pkg.id && !i.notas)
   if (existe) { 
     existe.cantidad++ 
   } else {
@@ -966,7 +878,6 @@ const agregarPaqueteAlPedido = (pkg) => {
       es_paquete: true,
       stock_maximo: pkg.stock,
       notas: '',
-      comensalIndex: cIdx,
       minutos_produccion: parseFloat(pkg.minutos_produccion || 0)
     })
   }
@@ -1012,7 +923,6 @@ const agregarConPrecioPersonalizado = () => {
   showPrecioPersonalizado.value = false
   const cantidad = precioPersonalizadoCantidad.value || 1
   for (let i = 0; i < cantidad; i++) {
-    const cIdx = comensalActivoIndex.value
     pedido.value.push({
       cartId: Date.now() + Math.random(),
       id: p.id,
@@ -1023,7 +933,6 @@ const agregarConPrecioPersonalizado = () => {
       stock_maximo: 9999,
       notas: '',
       tamano: 'personalizado',
-      comensalIndex: cIdx,
       minutos_produccion: parseFloat(p.minutos_produccion || 0)
     })
   }
@@ -1038,8 +947,7 @@ const handleCheckout = async (checkoutData) => {
         paquete_id: i.es_paquete ? i.paquete_id : null,
         cantidad: i.cantidad,
         notas: i.notas,
-        tamano: i.tamano && i.tamano !== 'pequeno' ? i.tamano : null,
-        nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General'
+        tamano: i.tamano || null
       })),
       metodo_pago: 'efectivo', tipo_orden: 'local',
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
@@ -1050,9 +958,6 @@ const handleCheckout = async (checkoutData) => {
     if (data?.success) { 
       showCheckout.value = false; 
       pedido.value = []; 
-      numeroComensales.value = 1;
-      comensalesNombres.value = ['Comensal 1'];
-      comensalActivoIndex.value = 0;
       mostrarExito() 
       // Recargar productos de inmediato de forma silenciosa para actualizar stock
       if (restauranteSeleccionado.value?.id) {
@@ -1141,17 +1046,5 @@ onUnmounted(() => {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 8px 40px rgba(0,0,0,0.2);
   }
-  .price-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 0.25rem;
-    background: hsl(210, 70%, 55%);
-    color: white;
-    margin-right: 2px;
-  }
-  .price-badge.medi { background: hsl(340, 75%, 55%); }
-  .price-badge.grande { background: hsl(210, 70%, 40%); }
 }
 </style>

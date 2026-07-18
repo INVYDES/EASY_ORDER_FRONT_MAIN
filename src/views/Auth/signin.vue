@@ -180,20 +180,32 @@ const handleSubmit = async () => {
 
     } else {
       console.warn('⚠️ Condición if falló:', data)
-      errorMessage.value = data?.message || 'Error al iniciar sesión'
+      const respMsg = data?.message ?? data?.error ?? data?.detail ?? (data?.errors ? Object.values(data.errors).flat().join(', ') : null)
+      errorMessage.value = respMsg || 'Error al iniciar sesión'
     }
 
   } catch (err: any) {
     console.error('❌ Error tipo:', err.constructor?.name)
     console.error('❌ Error mensaje:', err.message)
     console.error('❌ Error stack:', err.stack)
-    
+
+    const resp = err.response?.data
     if (err.message === 'Too Many Requests') {
       errorMessage.value = 'Demasiados intentos. Por favor espera.'
-    } else if (err.response?.data?.errors) {
-      errorMessage.value = Object.values(err.response.data.errors).flat().join(', ')
+    } else if (resp) {
+      if (resp.error) {
+        errorMessage.value = resp.error
+      } else if (resp.detail) {
+        errorMessage.value = resp.detail
+      } else if (resp.message) {
+        errorMessage.value = resp.message
+      } else if (resp.errors) {
+        errorMessage.value = Object.values(resp.errors).flat().join(', ')
+      } else {
+        errorMessage.value = err.message
+      }
     } else {
-      errorMessage.value = err.response?.data?.message || err.message || 'Error al iniciar sesión'
+      errorMessage.value = err.message
     }
   } finally {
     loading.value = false

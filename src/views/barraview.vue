@@ -122,7 +122,7 @@
             <h3 class="text-white dark:text-white font-bold text-base">🍹 Confirmar ingredientes</h3>
             <p class="text-gray-400 dark:text-gray-300 text-xs mt-0.5">
               Orden #{{ modalIngredientes.orden?.id }} ·
-              {{ modalIngredientes.productosTotal }} bebida{{ modalIngredientes.productosTotal !== 1 ? 's' : '' }}
+              {{ modalIngredientes.productosTotal }} ingrediente{{ modalIngredientes.productosTotal !== 1 ? 's' : '' }}
             </p>
           </div>
           <button @click="cerrarModal" class="text-gray-500 dark:text-gray-400 hover:text-white dark:hover:text-white text-xl leading-none">✕</button>
@@ -135,47 +135,49 @@
             <span class="text-sm">Cargando ingredientes...</span>
           </div>
 
-          <div v-else-if="!modalIngredientes.items.length" class="text-center py-10 text-gray-600 dark:text-gray-400 text-sm">
+          <!-- Sin datos aún (solo si no hay items ni productos sin receta) -->
+          <div v-else-if="!modalIngredientes.items.length && !modalIngredientes.productosSinReceta?.length" class="text-center py-10 text-gray-600 dark:text-gray-400 text-sm">
             Las bebidas de esta orden no tienen ingredientes asignados.
             <p class="mt-2 text-xs">Puedes continuar igualmente.</p>
           </div>
 
-          <div v-else v-for="item in modalIngredientes.items" :key="item.producto_id"
-            class="bg-gray-800/60 dark:bg-gray-700/60 rounded-xl overflow-hidden border border-gray-700/50 dark:border-gray-600/50">
+          <!-- Aviso productos sin receta (se muestra además de los items) -->
+          <div v-if="modalIngredientes.productosSinReceta?.length" class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+            <span class="text-2xl block mb-2">⚠️</span>
+            <p class="text-sm font-bold text-amber-300">{{ modalIngredientes.productosSinReceta.length }} bebida{{ modalIngredientes.productosSinReceta.length !== 1 ? 's' : '' }} sin receta</p>
+            <p class="text-xs text-amber-400/70 mt-1">{{ modalIngredientes.productosSinReceta.join(', ') }}</p>
+          </div>
 
-            <div class="flex items-center gap-3 px-4 py-3 bg-gray-800 dark:bg-gray-700 border-b border-gray-700/50 dark:border-gray-600/50">
-              <span class="text-base">🍹</span>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-white dark:text-white truncate">{{ item.producto_nombre }}</p>
-                <p class="text-xs text-gray-400 dark:text-gray-300">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
-              </div>
-              <span v-if="item.ingredientes.some(i => i.sin_stock || i.insuficiente)"
-                class="text-xs font-bold px-2 py-0.5 rounded-full"
-                :class="item.ingredientes.some(i => i.sin_stock) ? 'bg-red-900 dark:bg-red-900 text-red-300 dark:text-red-300' : 'bg-amber-900 dark:bg-amber-900 text-amber-300 dark:text-amber-300'">
-                {{ item.ingredientes.some(i => i.sin_stock) ? '🚨 Sin stock' : '⚠️ Stock bajo' }}
-              </span>
-            </div>
-
+          <!-- Ingredientes (fusionados, un solo listado plano) -->
+          <div v-if="modalIngredientes.items.length" class="bg-gray-800/60 dark:bg-gray-700/60 rounded-xl overflow-hidden border border-gray-700/50 dark:border-gray-600/50">
             <div class="divide-y divide-gray-700/30 dark:divide-gray-700/30">
-              <div v-for="ing in item.ingredientes" :key="ing.id"
-                class="flex items-center gap-3 px-4 py-2.5">
-                <button 
+              <div v-for="ing in modalIngredientes.items" :key="ing.id"
+                class="flex items-center gap-3 px-4 py-3">
+
+                <!-- Toggle checkbox -->
+                <button
                   @click="modalIngredientes.nuevoEstado ? (ing.incluir = !ing.incluir) : null"
                   :class="['w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition',
                     ing.incluir ? 'bg-blue-500 dark:bg-blue-500 border-blue-500 dark:border-blue-500' : 'border-gray-600 dark:border-gray-500 bg-transparent',
                     !modalIngredientes.nuevoEstado ? 'cursor-default' : '']">
                   <span v-if="ing.incluir" class="text-white dark:text-white text-xs font-black">✓</span>
                 </button>
+
+                <!-- Nombre -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm text-gray-200 dark:text-gray-100" :class="!ing.incluir ? 'line-through opacity-40' : ''">
+                  <p class="text-sm font-medium text-gray-200 dark:text-gray-100" :class="!ing.incluir ? 'line-through opacity-40' : ''">
                     {{ ing.nombre }}
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    necesario: {{ ing.cantidad_receta_total }} {{ ing.unidad }}
-                  </p>
                 </div>
-                <div class="text-right shrink-0">
-                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+
+                <!-- Cantidad necesaria (a la derecha) -->
+                <div class="text-right shrink-0 min-w-[70px]">
+                  <span class="text-sm font-bold text-white dark:text-white">{{ ing.cantidad_receta_total }} {{ ing.unidad }}</span>
+                </div>
+
+                <!-- Stock disponible -->
+                <div class="text-right shrink-0 min-w-[90px]">
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
                     :class="ing.sin_stock    ? 'bg-red-900/60 dark:bg-red-900/60 text-red-400 dark:text-red-400' :
                             ing.insuficiente ? 'bg-amber-900/60 dark:bg-amber-900/60 text-amber-400 dark:text-amber-400' :
                                                'bg-gray-700 dark:bg-gray-600 text-gray-400 dark:text-gray-300'">
@@ -356,12 +358,29 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
 const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
-  // Solo los detalles que son bebidas (barra) y coinciden con el filtro
   let detallesBebida = (orden.detalles ?? []).filter(d => esBarra(d) && !d.cancelado)
   if (estadoFiltro) {
     const estadosValidos = estadoFiltro === 'PENDIENTE' ? ['PENDIENTE', 'ABIERTA'] : [estadoFiltro]
     detallesBebida = detallesBebida.filter(d => estadosValidos.includes(d.estado_preparacion || d.estado))
   }
+
+  // Agrupar por producto_id + tamano (cada talle tiene su columna en la BD)
+  const grupos = new Map()
+  for (const d of detallesBebida) {
+    const key   = `${d.producto_id}_${d.tamano || ''}`
+    const q     = Number(d.cantidad)
+    if (grupos.has(key)) {
+      grupos.get(key).cantidad += q
+    } else {
+      grupos.set(key, {
+        producto_id:     d.producto_id,
+        producto_nombre: d.producto_nombre ?? d.producto?.nombre ?? `Bebida #${d.producto_id}`,
+        tamano:          d.tamano || null,
+        cantidad:        q,
+      })
+    }
+  }
+  const productosAgrupados = [...grupos.values()]
 
   modalIngredientes.value = {
     visible:        true,
@@ -370,35 +389,58 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
     orden,
     nuevoEstado,
     items:          [],
-    productosTotal: detallesBebida.length,
+    productosTotal: 0,
+    productosSinReceta: [],
   }
 
   try {
     const resultados = await Promise.all(
-      detallesBebida.map(d =>
-        apiClient.get(`/ingredientes/producto/${d.producto_id}${d.tamano ? `?tamano=${d.tamano}` : ''}`)
-          .then(data => ({ detalle: d, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
-          .catch(() => ({ detalle: d, ingredientes: [] }))
+      productosAgrupados.map(p =>
+        apiClient.get(`/ingredientes/producto/${p.producto_id}?tamano=${p.tamano || 'pequeno'}`)
+          .then(data => ({ producto: p, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
+          .catch(() => ({ producto: p, ingredientes: [] }))
       )
     )
 
-    modalIngredientes.value.items = resultados
-      .filter(r => r.ingredientes.length > 0)
-      .map(({ detalle, ingredientes }) => ({
-        producto_id:     detalle.producto_id,
-        producto_nombre: detalle.producto_nombre ?? `Bebida #${detalle.producto_id}`,
-        cantidad:        detalle.cantidad,
-        ingredientes:    ingredientes.map(ing => {
-          const cantidadTotal = ing.cantidad_receta * detalle.cantidad
-          return {
-            ...ing,
-            cantidad_receta_total: Number(cantidadTotal.toFixed(3)),
-            sin_stock:    ing.stock_actual <= 0,
-            insuficiente: ing.stock_actual < cantidadTotal && ing.stock_actual > 0,
-            incluir:      true,
+    const sinReceta = resultados.filter(r => !r.ingredientes.length).map(r => r.producto.producto_nombre)
+    modalIngredientes.value.productosSinReceta = sinReceta
+
+    // Fusionar ingredientes por ID (unificar el mismo ingrediente de distintas bebidas)
+  const mergeMap = new Map()
+  for (const r of resultados) {
+    const pCantidad = Number(r.producto.cantidad)
+    for (const ing of r.ingredientes) {
+      const cantidadParaEsteProducto = Number(ing.cantidad_receta) * pCantidad
+        if (mergeMap.has(ing.id)) {
+          const e = mergeMap.get(ing.id)
+          e.cantidad_receta_total = Number((e.cantidad_receta_total + cantidadParaEsteProducto).toFixed(3))
+          if (!e.producto_ids.includes(r.producto.producto_id)) {
+            e.producto_ids.push(r.producto.producto_id)
           }
-        }),
-      }))
+        } else {
+          mergeMap.set(ing.id, {
+            id: ing.id,
+            nombre: ing.nombre,
+            unidad: ing.unidad,
+            stock_actual: ing.stock_actual,
+            cantidad_receta_total: Number(cantidadParaEsteProducto.toFixed(3)),
+            sin_stock: false,
+            insuficiente: false,
+            incluir: true,
+            producto_ids: [r.producto.producto_id],
+          })
+        }
+      }
+    }
+
+    const items = [...mergeMap.values()]
+    for (const item of items) {
+      item.sin_stock = item.stock_actual <= 0
+      item.insuficiente = item.stock_actual < item.cantidad_receta_total && item.stock_actual > 0
+    }
+
+    modalIngredientes.value.items = items
+    modalIngredientes.value.productosTotal = items.length
   } catch (e) {
     console.error('Error cargando ingredientes barra:', e)
   } finally {
@@ -415,15 +457,15 @@ const confirmarYCambiarEstado = async () => {
   modalIngredientes.value.guardando = true
   try {
     const excluidos = []
-    modalIngredientes.value.items.forEach(item => {
-      item.ingredientes.forEach(ing => {
-        if (!ing.incluir) {
+    modalIngredientes.value.items.forEach(ing => {
+      if (!ing.incluir) {
+        for (const pid of ing.producto_ids) {
           excluidos.push({
-            producto_id: item.producto_id,
+            producto_id: pid,
             ingrediente_id: ing.id
           })
         }
-      })
+      }
     })
 
     await cambiarEstado(modalIngredientes.value.orden.id, modalIngredientes.value.nuevoEstado, excluidos)

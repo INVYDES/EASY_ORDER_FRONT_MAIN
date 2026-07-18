@@ -103,9 +103,9 @@
 
           <!-- Botones de acción -->
           <div class="flex gap-3">
-            <button :disabled="esAdminOPropietario || Object.keys(itemsByComensal).length <= 1" @click="abrirDividirCuenta"
+            <button :disabled="esAdminOPropietario" @click="abrirDividirCuenta"
               class="flex-1 py-3 text-xs font-black text-slate-600 dark:text-gray-400 bg-slate-100 dark:bg-gray-700 rounded-2xl hover:bg-slate-200 dark:hover:bg-gray-600 transition flex items-center justify-center gap-2 disabled:opacity-50"
-              :title="Object.keys(itemsByComensal).length <= 1 ? 'No se puede dividir una cuenta con un solo comensal' : ''">
+              :title="''">
               ✂️ Dividir cuenta
             </button>
             <button @click="cobrarOrden" :disabled="cobrando || !canPay || esAdminOPropietario"
@@ -129,9 +129,29 @@
           <button @click="modalDividir = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-400 dark:text-gray-500">✕</button>
         </div>
 
-        <!-- Modo único: Por Comensales -->
-        <div class="px-6 pt-4 shrink-0">
-          <div class="flex bg-indigo-50 p-3 rounded-2xl border border-indigo-100 items-center gap-3">
+        <!-- Selector de modo -->
+        <div class="px-6 pt-4 shrink-0 space-y-2">
+          <div class="flex gap-2">
+            <button @click="modoDividir = 'equitativo'" :class="['flex-1 py-2 px-3 rounded-xl text-xs font-black transition border', modoDividir === 'equitativo' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-gray-700']">
+              ✂️ Partes iguales
+            </button>
+            <button @click="modoDividir = 'manual'" :class="['flex-1 py-2 px-3 rounded-xl text-xs font-black transition border', modoDividir === 'manual' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-slate-500 dark:text-gray-400 border-slate-200 dark:border-gray-700']">
+              👤 Seleccionar productos
+            </button>
+          </div>
+          <div v-if="modoDividir === 'equitativo'" class="flex bg-indigo-50 p-3 rounded-2xl border border-indigo-100 items-center gap-3">
+            <span class="text-xl">✂️</span>
+            <div class="flex-1">
+              <p class="text-xs font-black text-indigo-700">Dividir en partes iguales</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button @click="numComensales = Math.max(2, numComensales - 1)" class="w-8 h-8 rounded-lg bg-white border border-indigo-200 text-indigo-600 flex items-center justify-center font-black">−</button>
+                <span class="text-lg font-black text-indigo-800 w-10 text-center">{{ numComensales }}</span>
+                <button @click="numComensales++" class="w-8 h-8 rounded-lg bg-white border border-indigo-200 text-indigo-600 flex items-center justify-center font-black">+</button>
+                <span class="text-[10px] text-indigo-400 font-bold ml-2">comensales</span>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="modoDividir === 'por_comensal'" class="flex bg-indigo-50 p-3 rounded-2xl border border-indigo-100 items-center gap-3">
             <span class="text-xl">👤</span>
             <div>
               <p class="text-xs font-black text-indigo-700">División por Comensales</p>
@@ -141,9 +161,127 @@
         </div>
 
 
-        <!-- Modo Por Comensales -->
-        <div class="px-6 py-4 flex-1 overflow-y-auto">
+        <!-- Modo Manual: Seleccionar productos por comensal -->
+        <div v-if="modoDividir === 'manual'" class="px-6 py-4 flex-1 overflow-y-auto">
           <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Productos sin asignar</p>
+              <span class="text-[10px] font-bold text-indigo-500">{{ detallesSinAsignar.length }} pendiente{{ detallesSinAsignar.length !== 1 ? 's' : '' }}</span>
+            </div>
+            <div class="space-y-1.5 mb-3">
+              <div v-for="d in detallesSinAsignar" :key="d.id"
+                @click="seleccionarDetalle(d)"
+                :class="['flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition',
+                  detalleSeleccionado?.id === d.id ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-slate-50 dark:bg-gray-800/50 border-slate-100 dark:border-gray-700 text-slate-600 dark:text-gray-400 hover:border-indigo-200']">
+                <span class="truncate flex-1">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
+                <span class="shrink-0 ml-2">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+              </div>
+              <div v-if="!detallesSinAsignar.length" class="text-center py-6 text-slate-400 dark:text-gray-500 text-xs italic">
+                Todos los productos han sido asignados ✓
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100 dark:border-gray-700 pt-4 mb-3">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Comensales</p>
+              <button @click="agregarComensal" class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition">+ Agregar</button>
+            </div>
+            <div class="space-y-2">
+              <div v-for="(c, idx) in comensalesManual" :key="c.id" class="p-3 bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 rounded-2xl">
+                <div class="flex items-center justify-between mb-1.5">
+                  <p class="text-xs font-black text-slate-800 dark:text-gray-200">Comensal {{ idx + 1 }}</p>
+                  <div class="flex items-center gap-1">
+                    <button v-if="detalleSeleccionado" @click="asignarAManual(idx)" class="text-[10px] font-bold text-white bg-indigo-600 px-2 py-0.5 rounded-lg hover:bg-indigo-700 transition">+ Asignar</button>
+                    <button v-if="comensalesManual.length > 2 && idx === comensalesManual.length - 1" @click="quitarComensal" class="text-[10px] text-red-500 hover:text-red-700 px-1">✕</button>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div v-for="d in c.detalles" :key="d.id" class="flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400">
+                    <span class="truncate flex-1">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
+                    <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                      <span>${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                      <button @click="devolverDetalle(d, idx)" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                    </div>
+                  </div>
+                  <div v-if="!c.detalles.length" class="text-[10px] text-slate-400 dark:text-gray-500 italic text-center py-1">Sin productos asignados</div>
+                </div>
+                <div class="mt-1.5 text-right text-xs font-black text-indigo-600">${{ subtotalComensal(idx).toFixed(2) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vista previa Tickets con Pago Individual -->
+          <div v-if="ticketsAgrupados.length" class="mt-4 pt-4 border-t border-slate-100 dark:border-gray-700">
+             <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-2">Detalle de Pago por Ticket</p>
+             <div class="space-y-3">
+                <div v-for="t in ticketsAgrupados" :key="t.id" class="p-3 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-2xl">
+                 <div class="flex justify-between items-center mb-3">
+                   <div>
+                    <p class="text-xs font-black text-indigo-800 dark:text-indigo-400">Ticket {{ t.id }}</p>
+                    <p class="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 mt-0.5 leading-tight">{{ t.nombres.join(', ') }}</p>
+                   </div>
+                   <div class="text-right">
+                     <p class="text-[9px] text-indigo-400 font-bold mb-0.5 uppercase">Total + Propina</p>
+                     <span class="font-black text-indigo-700 text-lg">${{ (t.total + (getPagoTicket(t.id).propina || 0)).toFixed(2) }}</span>
+                   </div>
+                 </div>
+                 <div class="grid grid-cols-3 gap-1 mb-2">
+                    <button v-for="m in metodos" :key="m.key"
+                      @click="setPagoTicket(t.id, m.key)"
+                      :class="['py-1.5 rounded-xl border text-[10px] font-black transition flex items-center justify-center gap-1',
+                        getPagoTicket(t.id).metodo === m.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white dark:bg-gray-800 text-slate-400 dark:text-gray-500 border-slate-200 dark:border-gray-700']">
+                      <span>{{ m.icon }}</span> {{ m.label }}
+                    </button>
+                 </div>
+                 <div class="mt-2 space-y-2">
+                    <div>
+                      <p class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase ml-1 mb-1">Propina</p>
+                      <div class="flex items-center gap-2">
+                        <button v-for="pct in [0, 10, 15, 20]" :key="pct"
+                          @click="setPropinaTicket(t.id, pct, t.total)"
+                          :class="['px-2 py-1 rounded-lg text-[10px] font-black transition',
+                            getPagoTicket(t.id).propinaPct === pct && !getPagoTicket(t.id).propinaManual ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-gray-600']">
+                          {{ pct === 0 ? 'Sin' : pct + '%' }}
+                        </button>
+                        <div class="relative flex-1">
+                          <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 text-[10px] font-bold">$</span>
+                          <input type="number" v-model.number="getPagoTicket(t.id).propina" min="0"
+                            @focus="getPagoTicket(t.id).propinaPct = null; getPagoTicket(t.id).propinaManual = true"
+                            class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
+                      <div class="relative">
+                        <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 text-[10px] font-bold">$</span>
+                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" min="0"
+                          class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
+                        <input v-else v-model="getPagoTicket(t.id).referencia"
+                          placeholder="Folio..."
+                          class="w-full px-3 py-1.5 text-xs font-bold bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
+                      </div>
+                    </div>
+                 </div>
+                 <div v-if="getPagoTicket(t.id).metodo === 'efectivo' && getPagoTicket(t.id).recibido > 0">
+                    <div v-if="getPagoTicket(t.id).recibido >= (t.total + (getPagoTicket(t.id).propina || 0))" class="mt-2 flex justify-between items-center px-3 py-1.5 bg-emerald-50 rounded-xl border border-emerald-100">
+                      <span class="text-[10px] font-black text-emerald-700 uppercase">Cambio</span>
+                      <span class="text-xs font-black text-emerald-700">${{ ((getPagoTicket(t.id).recibido || 0) - (t.total + (getPagoTicket(t.id).propina || 0))).toFixed(2) }}</span>
+                    </div>
+                    <div v-else class="mt-2 flex justify-between items-center px-3 py-1.5 bg-red-50 rounded-xl border border-red-200">
+                      <span class="text-[10px] font-black text-red-700 uppercase">Monto Insuficiente</span>
+                      <span class="text-xs font-black text-red-700">Faltan ${{ ((t.total + (getPagoTicket(t.id).propina || 0)) - (getPagoTicket(t.id).recibido || 0)).toFixed(2) }}</span>
+                    </div>
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Modo Por Comensales / Equitativo -->
+        <div v-if="modoDividir === 'por_comensal' || modoDividir === 'equitativo'" class="px-6 py-4 flex-1 overflow-y-auto">
+          <div v-if="modoDividir === 'por_comensal'" class="mb-4">
             <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-2">Asignar comensales a tickets</p>
             <div class="space-y-3">
               <div v-for="c in comensalesAuto" :key="c.nombre" class="flex items-center justify-between p-3 bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 rounded-2xl hover:border-indigo-200 transition">
@@ -556,13 +694,22 @@ const filteredOrders = computed(() => {
   return props.orders.map(o => {
     if (props.type !== 'open') return o
     
-    // Only keep details that are ENTREGADO or cancelado
-    const deliveredDetalles = (o.detalles || []).filter(d => 
-      d.cancelado || d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'
-    )
+    // Keep all details of the order for charging (both delivered and pending/cooking items)
+    const deliveredDetalles = o.detalles || []
     
-    // Recalculate subtotal and total based on delivered items
-    const subtotal = deliveredDetalles.reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
+    // Recalculate subtotal and total based on non-cancelled items, using subtotal when available
+    // and falling back to price * quantity if subtotal is missing.
+    const subtotal = deliveredDetalles.reduce((sum, d) => {
+      if (d.cancelado) return sum
+      // Prefer the already‑computed subtotal field
+      let sub = parseFloat(d.subtotal)
+      if (!isNaN(sub) && sub > 0) return sum + sub
+      // Fallback: calculate from unit price and quantity
+      const precio = parseFloat(d.precio || d.subtotal)
+      const cantidad = Number(d.cantidad) || 1
+      if (!isNaN(precio)) return sum + precio * cantidad
+      return sum
+    }, 0)
     const total = subtotal + parseFloat(o.propina || 0)
     
     return {
@@ -1148,7 +1295,9 @@ const setPropinaTicket = (id, pct, total) => {
 }
 
 const canPayDividido = computed(() => {
-  if (modoDividir.value === 'por_comensal') {
+  if (modoDividir.value === 'manual') {
+    if (comensalesManual.value.length < 2) return false
+    if (detallesSinAsignar.value.length > 0) return false
     return ticketsAgrupados.value.every(t => {
       const p = getPagoTicket(t.id);
       if (p.metodo === 'efectivo') {
@@ -1158,10 +1307,47 @@ const canPayDividido = computed(() => {
       }
     });
   }
-  return true;
+  if (modoDividir.value === 'por_comensal' || modoDividir.value === 'equitativo') {
+    return ticketsAgrupados.value.length >= 2 && ticketsAgrupados.value.every(t => {
+      const p = getPagoTicket(t.id);
+      if (p.metodo === 'efectivo') {
+        return (p.recibido || 0) >= (t.total + (p.propina || 0));
+      } else {
+        return p.referencia && p.referencia.trim().length > 0;
+      }
+    });
+  }
+  return numComensales.value >= 2;
 })
 
 const ticketsAgrupados = computed(() => {
+  if (modoDividir.value === 'manual') {
+    return comensalesManual.value
+      .filter(c => c.detalles.length > 0)
+      .map((c, i) => ({
+        id: c.id,
+        total: c.detalles.reduce((s, d) => s + Number(d.subtotal || 0), 0),
+        nombres: [`Comensal ${i + 1}`],
+        detalles: c.detalles
+      }))
+  }
+
+  if (modoDividir.value === 'equitativo') {
+    const total = Number(ordenCobrar.value?.total || 0)
+    const monto = total / numComensales.value
+    const tickets = []
+    for (let i = 1; i <= numComensales.value; i++) {
+      const valor = i === numComensales.value ? total - (monto * (numComensales.value - 1)) : monto
+      tickets.push({
+        id: i,
+        total: valor,
+        nombres: [`Parte ${i}`],
+        detalles: []
+      })
+    }
+    return tickets
+  }
+
   const map = {}
   comensalesAuto.value.forEach(c => {
     if (!map[c.ticketId]) map[c.ticketId] = { id: c.ticketId, total: 0, nombres: [], detalles: [] }
@@ -1173,10 +1359,12 @@ const ticketsAgrupados = computed(() => {
 })
 
 const totalDivididoGeneral = computed(() => {
-  if (modoDividir.value !== 'por_comensal') return Number(ordenCobrar.value?.total || 0);
-  return ticketsAgrupados.value.reduce((sum, t) => {
-    return sum + t.total + (getPagoTicket(t.id).propina || 0);
-  }, 0);
+  if (modoDividir.value === 'por_comensal' || modoDividir.value === 'equitativo' || modoDividir.value === 'manual') {
+    return ticketsAgrupados.value.reduce((sum, t) => {
+      return sum + t.total + (getPagoTicket(t.id).propina || 0);
+    }, 0);
+  }
+  return Number(ordenCobrar.value?.total || 0);
 })
 
 // Modo manual
@@ -1201,6 +1389,8 @@ const montoPorComensal = (n) => {
   return monto
 }
 
+const numComensales = ref(2)
+
 // ── Acciones de Modal Dividir ──────────────────────────────────────────────
 const abrirDividirCuenta = () => {
   if (!ordenCobrar.value) return
@@ -1216,6 +1406,14 @@ const abrirDividirCuenta = () => {
   })
   
   const arr = Object.values(grupos)
+  if (arr.length <= 1) {
+    // Modo equitativo: pedir cuántos comensales dividir
+    modoDividir.value = 'equitativo'
+    numComensales.value = 2
+  } else {
+    modoDividir.value = 'por_comensal'
+  }
+
   comensalesAuto.value = arr.map((g, i) => ({
     nombre: g.nombre,
     detalles: g.detalles,
@@ -1223,7 +1421,6 @@ const abrirDividirCuenta = () => {
     ticketId: i + 1 
   }))
   
-  modoDividir.value       = arr.length > 1 ? 'por_comensal' : 'equitativo'
   metodoPagoDividir.value = 'efectivo'
   errorDividir.value      = ''
   pagosPorTicket.value    = {} // Reiniciar pagos
@@ -1265,78 +1462,90 @@ const cobrarDividido = async () => {
   if (!ordenCobrar.value) return
   errorDividir.value = ''
 
-  // Validar modo manual: todos los detalles deben estar asignados
-  if (modoDividir.value === 'manual') {
-    if (detallesSinAsignar.value.length > 0) {
-      errorDividir.value = `Faltan ${detallesSinAsignar.value.length} producto(s) por asignar a un comensal.`
-      return
-    }
-    const vacios = comensalesManual.value.filter(c => c.detalles.length === 0)
-    if (vacios.length > 0) {
-      errorDividir.value = `El comensal ${vacios[0].id} no tiene productos asignados.`
-      return
-    }
+  if (modoDividir.value === 'equitativo' && numComensales.value < 2) {
+    errorDividir.value = 'Debe haber al menos 2 comensales para dividir.'
+    return
   }
 
-  if (modoDividir.value === 'por_comensal' && ticketsAgrupados.value.length < 2) {
-    errorDividir.value = 'Para dividir por comensales, deben existir al menos 2 tickets. Si todo va en 1 solo ticket, usa el botón "Cobrar" normal de la pantalla principal.'
-    return
+  if (modoDividir.value === 'manual') {
+    if (comensalesManual.value.length < 2) {
+      errorDividir.value = 'Debe haber al menos 2 comensales.'
+      return
+    }
+    if (detallesSinAsignar.value.length > 0) {
+      errorDividir.value = 'Hay productos sin asignar. Asigna todos los productos antes de cobrar.'
+      return
+    }
   }
 
   cobrando.value = true
   try {
-    // Llamar al endpoint dividirCuenta del backend
-    const payload = modoDividir.value === 'equitativo'
-      ? { metodo: 'equitativo', comensales: numComensales.value }
-      : (modoDividir.value === 'por_comensal'
-          ? {
-              metodo: 'manual',
-              divisiones: ticketsAgrupados.value.map((t, i) => ({
-                comensal: String(t.nombres.join(', ') || (i + 1)),
-                detalles: t.detalles.map(d => d.id)
-              }))
-            }
-          : {
-              metodo: 'manual',
-              divisiones: comensalesManual.value.map((c, i) => ({
-                comensal: String(i + 1),
-                detalles: c.detalles.map(d => d.id),
-              })),
-            }
-        )
+    let payload
+    if (modoDividir.value === 'equitativo') {
+      payload = { metodo: 'equitativo', comensales: numComensales.value }
+    } else if (modoDividir.value === 'manual') {
+      payload = {
+        metodo: 'manual',
+        divisiones: ticketsAgrupados.value.map((t, i) => ({
+          comensal: `Comensal ${i + 1}`,
+          detalles: t.detalles.map(d => d.id)
+        }))
+      }
+    } else {
+      payload = {
+        metodo: 'manual',
+        divisiones: ticketsAgrupados.value.map((t, i) => ({
+          comensal: String(t.nombres.join(', ') || (i + 1)),
+          detalles: t.detalles.map(d => d.id)
+        }))
+      }
+    }
 
     const dataDividir = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/dividir`, payload)
-    if (!dataDividir?.success) {
+
+    const dividirSuccess = dataDividir?.success || !!dataDividir?.data
+    if (!dividirSuccess) {
       errorDividir.value = dataDividir?.message || 'Error al dividir cuenta'
       return
     }
 
-    // Cerrar la orden después de dividir
-    const detallePagos = ticketsAgrupados.value.map(t => {
-      const p = getPagoTicket(t.id)
-      return {
-        monto: t.total,
-        metodo: p.metodo,
-        propina: Math.max(0, parseFloat(p.propina) || 0),
-        referencia: p.referencia || '',
-        comensal: t.nombres.join(', '),
-        detalles: t.detalles.map(d => d.id)
-      }
-    })
+    const cuentas = dataDividir.cuentas || dataDividir.data?.cuentas || []
+
+    const detallePagos = modoDividir.value === 'por_comensal' || modoDividir.value === 'manual'
+      ? ticketsAgrupados.value.map(t => {
+          const p = getPagoTicket(t.id)
+          return {
+            monto: t.total,
+            metodo: p.metodo,
+            propina: Math.max(0, parseFloat(p.propina) || 0),
+            referencia: p.referencia || '',
+            comensal: t.nombres.join(', '),
+            detalles: t.detalles.map(d => d.id)
+          }
+        })
+      : [{
+          monto: ordenCobrar.value.total,
+          metodo: metodoPagoDividir.value,
+          propina: 0,
+          referencia: '',
+          comensal: 'Todos',
+          detalles: (ordenCobrar.value.detalles || []).filter(d => !d.cancelado).map(d => d.id)
+        }]
 
     const dataCerrar = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/cerrar`, {
       estado: 'CERRADA',
       pagos: detallePagos,
       total_final: ordenCobrar.value.total
     })
-    if (!dataCerrar?.success) {
+
+    const cerrarSuccess = dataCerrar?.success || !!dataCerrar?.data
+    if (!cerrarSuccess) {
       errorDividir.value = dataCerrar?.message || 'Error al cerrar la cuenta'
       return
     }
     
-    // Mandar imprimir los tickets múltiples de las sub-cuentas
     if (modoDividir.value === 'por_comensal') {
-      dataDividir.cuentas.forEach((c, idx) => {
+      cuentas.forEach((c, idx) => {
         const tInfo = ticketsAgrupados.value[idx]
         if (tInfo) {
            c.nombres_comensales = tInfo.nombres.join(', ')
@@ -1348,18 +1557,15 @@ const cobrarDividido = async () => {
            c.pago_cambio     = Math.max(0, (p.recibido || 0) - (tInfo.total + (p.propina || 0)))
         }
       })
-    } else if (modoDividir.value === 'equitativo') {
-       dataDividir.cuentas.forEach((c, idx) => {
+    } else {
+       cuentas.forEach((c, idx) => {
          c.nombres_comensales = `Parte ${idx + 1}`
-         // Para equitativo, usamos el pago general por ahora o permitimos individual?
-         // El UI actual solo muestra el selector general para equitativo, 
-         // pero vamos a asignar el método general a todos.
          c.pago_metodo = metodoPagoDividir.value
        })
     }
 
     if (!esMesero.value) {
-      imprimirTicketMultiple(dataDividir.cuentas, ordenCobrar.value.folio || ordenCobrar.value.id, dataCerrar.data.ordenes_ids || [])
+      imprimirTicketMultiple(cuentas, ordenCobrar.value.folio || ordenCobrar.value.id, dataCerrar.data?.ordenes_ids || [])
     }
 
     emit('order-paid', {
@@ -1368,7 +1574,7 @@ const cobrarDividido = async () => {
       total:       ordenCobrar.value.total,
       metodo_pago: metodoPagoDividir.value,
       propina:     0,
-      cuentas:     dataDividir.cuentas,
+      cuentas,
     })
     emit('refresh')
     modalDividir.value = false

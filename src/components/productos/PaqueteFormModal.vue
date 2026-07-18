@@ -128,36 +128,47 @@
               </div>
             </div>
 
-          <!-- Lista de productos seleccionados -->
-          <div class="space-y-2">
-            <div v-if="form.productos.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+          <!-- Lista de productos seleccionados (tabla) -->
+          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div v-if="form.productos.length === 0" class="text-center py-8">
               <p class="text-xs text-gray-400 dark:text-gray-500 font-medium italic">Selecciona al menos un producto arriba</p>
             </div>
-            <div 
-              v-for="(p, index) in form.productos" 
-              :key="p.id"
-              class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 overflow-hidden">
-                  <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
-                  <span v-else>🍽️</span>
+            <template v-else>
+              <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                <div class="col-span-4">Producto</div>
+                <div class="col-span-2 text-right">Insumos</div>
+                <div class="col-span-2 text-right">MO</div>
+                <div class="col-span-1 text-center">Cant</div>
+                <div class="col-span-2 text-right">Total</div>
+                <div class="col-span-1"></div>
+              </div>
+              <div v-for="(p, index) in productosConCosto" :key="p.id"
+                class="grid grid-cols-12 gap-2 items-center px-4 py-3 border-b border-gray-50 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                <div class="col-span-4 flex items-center gap-2 min-w-0">
+                  <div class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 overflow-hidden">
+                    <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
+                    <span v-else class="text-xs">🍽️</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{{ p.nombre }}</p>
+                    <p class="text-[9px] text-gray-400 dark:text-gray-500 truncate">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ p.nombre }}</p>
-                  <p class="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
+                <div class="col-span-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300">${{ p.costoUnitario.insumos.toFixed(2) }}</div>
+                <div class="col-span-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300">${{ p.costoUnitario.mo.toFixed(2) }}</div>
+                <div class="col-span-1 flex justify-center">
+                  <div class="flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <button @click="p.cantidad > 1 ? p.cantidad-- : null" class="w-6 h-6 rounded-lg text-gray-500 text-xs font-bold hover:text-indigo-600 transition">−</button>
+                    <span class="text-xs font-black w-5 text-center text-gray-700 dark:text-gray-300">{{ p.cantidad }}</span>
+                    <button @click="p.cantidad++" class="w-6 h-6 rounded-lg text-indigo-600 text-xs font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">+</button>
+                  </div>
+                </div>
+                <div class="col-span-2 text-right text-xs font-black text-gray-900 dark:text-gray-100">${{ (p.costoUnitario.total * p.cantidad).toFixed(2) }}</div>
+                <div class="col-span-1 text-right">
+                  <button @click="removeProduct(index)" class="text-gray-300 hover:text-red-500 transition text-xs">✕</button>
                 </div>
               </div>
-
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-1 border border-gray-100 dark:border-gray-700">
-                  <button @click="p.cantidad > 1 ? p.cantidad-- : null" class="w-7 h-7 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:text-indigo-400 transition flex items-center justify-center font-bold">−</button>
-                  <span class="text-sm font-black w-6 text-center text-gray-700 dark:text-gray-300">{{ p.cantidad }}</span>
-                  <button @click="p.cantidad++" class="w-7 h-7 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:bg-indigo-900/30 transition flex items-center justify-center font-bold">+</button>
-                </div>
-                <button @click="removeProduct(index)" class="text-gray-300 hover:text-red-500 transition">✕</button>
-              </div>
-            </div>
+            </template>
           </div>
         </div>
 
@@ -252,7 +263,8 @@ import { apiClient } from '@/utils/apiClient'
 const props = defineProps({
   paquete: { type: Object, default: null },
   availableProducts: { type: Array, default: () => [] },
-  initialProducts: { type: Array, default: () => [] }
+  initialProducts: { type: Array, default: () => [] },
+  totalSueldosBase: { type: Number, default: 0 }
 })
 
 const emit = defineEmits(['close', 'saved'])
@@ -272,7 +284,6 @@ const form = reactive({
 })
 
 onMounted(() => {
-  cargarNominaReal()
   if (props.paquete) {
     form.nombre = props.paquete.nombre
     form.descripcion = props.paquete.descripcion
@@ -292,43 +303,36 @@ onMounted(() => {
 })
 
 // ── Lógica Financiera ──────────────────────────────────────────────────────────
-const totalSueldosBaseReal = ref(0)
-const cargarNominaReal = async () => {
-  try {
-    const resp = await apiClient.get('/empleados')
-    const emps = resp.data || resp || []
-    if (Array.isArray(emps)) {
-      totalSueldosBaseReal.value = emps
-        .filter(e => !!e.activo || e.activo === 1)
-        .reduce((acc, e) => acc + Number(e.salario_base || 0), 0)
-    }
-  } catch (err) { console.error('Error nómina:', err) }
-}
-
 const minutosProduccionTotal = computed(() => {
   return form.productos.reduce((sum, p) => {
     return sum + (parseFloat(p.minutos_produccion || 0) * p.cantidad)
   }, 0)
 })
 
-const costoInsumosTotal = computed(() => {
-  return form.productos.reduce((sum, p) => {
-    const costoProd = (p.ingredientes || []).reduce((s, ing) => {
-      // 👈 Corregido: Buscar cantidad en ambos lugares posibles
-      const cantIng = parseFloat(ing.cantidad_necesaria || ing.pivot?.cantidad || 0)
-      return s + (parseFloat(ing.costo_unitario || 0) * cantIng)
-    }, 0)
-    return sum + (costoProd * p.cantidad)
+const costoProducto = (p) => {
+  const insumos = (p.ingredientes || []).reduce((s, ing) => {
+    const cantIng = parseFloat(ing.cantidad_necesaria || ing.pivot?.cantidad || 0)
+    return s + (parseFloat(ing.costo_unitario || 0) * cantIng)
   }, 0)
+  const minProd = parseFloat(p.minutos_produccion || 0)
+  const mo = props.totalSueldosBase ? (props.totalSueldosBase / 14400) * 1.36 * minProd : 0
+  return { insumos, mo, total: insumos + mo }
+}
+
+const productosConCosto = computed(() =>
+  form.productos.map(p => ({
+    ...p,
+    costoUnitario: costoProducto(p),
+  }))
+)
+
+const costoInsumosTotal = computed(() => {
+  return productosConCosto.value.reduce((sum, p) => sum + (p.costoUnitario.insumos * p.cantidad), 0)
 })
 
 const costoManoObraTotal = computed(() => {
-  if (!totalSueldosBaseReal.value) return 0
-  return form.productos.reduce((sum, p) => {
-    const minProd = parseFloat(p.minutos_produccion || 0)
-    const costoMO = (totalSueldosBaseReal.value / 14400) * 1.36 * minProd
-    return sum + (costoMO * p.cantidad)
-  }, 0)
+  if (!props.totalSueldosBase) return 0
+  return productosConCosto.value.reduce((sum, p) => sum + (p.costoUnitario.mo * p.cantidad), 0)
 })
 
 const costoIndirectosTotal = computed(() => {

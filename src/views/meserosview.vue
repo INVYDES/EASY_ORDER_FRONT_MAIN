@@ -227,33 +227,45 @@
                   </div>
                   <!-- Productos -->
                   <div class="space-y-2">
-                    <div v-for="d in (sub.detalles_estacion || [])" :key="d.id" class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0">
-                      <div class="flex items-center gap-2 min-w-0 flex-1">
-                        <span class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                    <div v-for="d in (sub.detalles_estacion || [])" :key="d.id" class="py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                          <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, sub.id, -1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">−</button>
+                          <span class="text-sm font-bold text-gray-800 dark:text-slate-200 text-center min-w-[16px]">{{ d.cantidad }}</span>
+                          <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, sub.id, 1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">+</button>
+                          <span class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">{{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                          <button @click="abrirEditorNotas(d, sub.id)" class="w-6 h-6 rounded-lg text-slate-300 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center justify-center text-xs transition-colors" title="Editar comentario">✏️</button>
+                          <button @click="eliminarProductoDeOrden(d.id, sub.id)" class="w-6 h-6 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs transition-colors" title="Cancelar producto">🗑️</button>
+                          <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 ml-1">${{ Number(d.subtotal || d.precio || 0).toFixed(2) }}</span>
+                        </div>
                       </div>
-                      <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 shrink-0 ml-2">${{ Number(d.subtotal || d.precio || 0).toFixed(2) }}</span>
+                      <p v-if="d.notas" class="text-[11px] text-gray-400 dark:text-slate-500 italic mt-0.5 ml-1 flex items-center gap-1">
+                        <span>📝</span> {{ d.notas }}
+                      </p>
                     </div>
                     <div v-if="!sub.detalles_estacion?.length" class="text-xs text-gray-400 dark:text-slate-500 italic text-center py-2">
                       Sin productos
                     </div>
                   </div>
                   <div v-if="sub.estado_estacion !== 'CERRADA' && sub.estado_estacion !== 'CANCELADA' && sub.estado_estacion !== 'PAGADA'" class="flex flex-wrap gap-2 pt-2">
-                    <button v-if="siguienteEstado(sub.estado_estacion)" @click="cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))" :disabled="cambiando === sub.uid"
-                      class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5"
-                      :class="btnEstado(sub.estado_estacion)">
-                      <span v-if="cambiando === sub.uid" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      <span v-else>{{ accionEstado(sub.estado_estacion) }}</span>
-                    </button>
-                    <button v-if="sub.estado_estacion === 'LISTA' && tieneListos(sub) && sub.detalles?.some(d => !d.recogido_en)" @click="recogerDeCocina(sub)" :disabled="cambiando === `recoger-${sub.id}`"
-                      class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
-                      <span v-if="cambiando === `recoger-${sub.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      <span v-else>🍳 Recoger</span>
-                    </button>
-                    <button v-if="sub.estado_estacion === 'ENTREGADA' && tieneRecogidosSinEntregar(sub)" @click="entregarACliente(sub)" :disabled="cambiando === `entregar-${sub.id}`"
-                      class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
-                      <span v-if="cambiando === `entregar-${sub.id}`" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      <span v-else>🤝 Entregar</span>
-                    </button>
+                    <div v-if="esAdminOPropietario" class="w-full px-3 py-2 text-xs font-bold rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500 text-center">
+                      🔒 BLOQUEADO — Solo lectura
+                    </div>
+                    <template v-else>
+                      <button v-if="siguienteEstado(sub.estado_estacion)" @click="cambiarEstadoSubOrden(sub, siguienteEstado(sub.estado_estacion))" :disabled="cambiando === sub.uid"
+                        class="flex-1 min-w-[120px] px-3 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5"
+                        :class="btnEstado(sub.estado_estacion)">
+                        <span v-if="cambiando === sub.uid" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span v-else>{{ accionEstado(sub.estado_estacion) }}</span>
+                      </button>
+                      <button v-if="['ABIERTA','POR_PREPARAR','EN_PREPARACION'].includes(sub.estado)" @click="abrirCancelarOrdenCompleta(sub.id)"
+                        class="px-3 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800">
+                        🚫 Cancelar
+                      </button>
+                    </template>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -311,10 +323,8 @@
             <div class="p-3">
               <p class="text-xs font-bold text-gray-800 dark:text-slate-200 truncate">{{ p.nombre }}</p>
               <p class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-1.5">${{ Number(p.precio).toFixed(2) }}</p>
-              <div v-if="(p.tiene_tamanos == true || p.tiene_tamanos == '1') && (p.precio_pequeno > 0 || p.precio_mediano > 0 || p.precio_grande > 0)" class="flex items-center gap-1 mt-1.5 flex-wrap">
-                <span v-if="p.precio_pequeno > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 leading-none">S ${{ Number(p.precio_pequeno).toFixed(2) }}</span>
-                <span v-if="p.precio_mediano > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 leading-none">M ${{ Number(p.precio_mediano).toFixed(2) }}</span>
-                <span v-if="p.precio_grande > 0" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 leading-none">L ${{ Number(p.precio_grande).toFixed(2) }}</span>
+              <div v-if="getTamanoData(p).length > 0" class="flex items-center gap-1 mt-1.5 flex-wrap">
+                <span v-for="(t, i) in getTamanoData(p)" :key="i" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none whitespace-nowrap" :class="t.color.circle">{{ t.letter }} ${{ t.precio.toFixed(2) }}</span>
               </div>
             </div>
             <div v-if="subTabActiva !== 'paquetes' && totalEnCarritoPorId(p.id)" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-lg shadow-indigo-300 animate-pop">
@@ -352,15 +362,15 @@
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">
                   {{ item.nombre }}
-                  <span v-if="item.tamano && item.tamano !== 'pequeno'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano === 'mediano' ? 'M' : 'L' }})</span>
+                  <span v-if="item.tamano && item.tamano !== 'pequeno'" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 ml-1">({{ item.tamano_nombre?.[0]?.toUpperCase() || (item.tamano === 'mediano' ? 'M' : 'L') }})</span>
                 </p>
                 <p class="text-xs text-gray-400 dark:text-slate-500">${{ Number(item.precio).toFixed(2) }} c/u</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-700 rounded-lg p-1 border border-slate-100 dark:border-slate-600">
-                  <button @click="decrementar(item.cartId)" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-gray-500 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">−</button>
+                  <button v-if="!esAdminOPropietario" @click="decrementar(item.cartId)" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-gray-500 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">−</button>
                   <span class="w-7 text-center text-sm font-black text-gray-800 dark:text-white">{{ item.cantidad }}</span>
-                  <button @click="incrementar(item.cartId)" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">+</button>
+                  <button v-if="!esAdminOPropietario" @click="incrementar(item.cartId)" class="w-7 h-7 rounded-md bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-sm font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors">+</button>
                 </div>
                 <span class="text-sm font-black text-indigo-600 dark:text-indigo-400 w-16 text-right">${{ Number(item.precio * item.cantidad).toFixed(2) }}</span>
                 <button @click="eliminarDelCarrito(item.cartId)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm transition-colors">✕</button>
@@ -416,32 +426,15 @@
             <p class="text-sm text-slate-500 mt-1 font-medium">Selecciona el tamaño deseado</p>
           </div>
           <div class="space-y-3">
-            <button v-if="productoTamanos?.precio_pequeno > 0 || productoTamanos?.precio > 0"
-                    @click="agregarConTamano(productoTamanos, 'pequeno', productoTamanos.precio_pequeno || productoTamanos.precio, 'producto')"
-                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 group transition-all">
+            <button v-for="(t, i) in getTamanoData(productoTamanos)" :key="t.key"
+                    @click="agregarConTamano(productoTamanos, t.key, t.precio, 'producto')"
+                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 group transition-all"
+                    :class="t.color.hover">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-lg">S</div>
-                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-emerald-700">Pequeño</span>
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-lg" :class="t.color.circle">{{ t.letter }}</div>
+                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest" :class="t.color.hoverText">{{ t.nombre }}</span>
               </div>
-              <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoTamanos?.precio_pequeno || productoTamanos?.precio).toFixed(2) }}</span>
-            </button>
-            <button v-if="productoTamanos?.precio_mediano > 0"
-                    @click="agregarConTamano(productoTamanos, 'mediano', productoTamanos.precio_mediano, 'producto')"
-                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 group transition-all">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">M</div>
-                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-blue-700">Mediano</span>
-              </div>
-              <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoTamanos?.precio_mediano).toFixed(2) }}</span>
-            </button>
-            <button v-if="productoTamanos?.precio_grande > 0"
-                    @click="agregarConTamano(productoTamanos, 'grande', productoTamanos.precio_grande, 'producto')"
-                    class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 group transition-all">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-lg">L</div>
-                <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-purple-700">Grande</span>
-              </div>
-              <span class="font-black text-slate-900 dark:text-white text-xl">${{ Number(productoTamanos?.precio_grande).toFixed(2) }}</span>
+              <span class="font-black text-slate-900 dark:text-white text-xl">${{ t.precio.toFixed(2) }}</span>
             </button>
           </div>
           <!-- Opción precio personalizado -->
@@ -497,11 +490,46 @@
             </div>
           </div>
 
+          <!-- Person bar en modo división — tap para seleccionar persona activa -->
+          <div v-if="modoDividirTicket" class="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
+            <div v-for="p in personasTicket" :key="p.id"
+              @click="personaActivaId = personaActivaId === p.id ? null : p.id"
+              class="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm border transition-all cursor-pointer select-none"
+              :class="personaActivaId === p.id ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-slate-800 scale-[1.04] shadow-md' : 'opacity-55 hover:opacity-100 hover:scale-105'"
+              :style="{ background: PERSONA_COLORS[(p.id - 1) % PERSONA_COLORS.length] + '20', color: PERSONA_COLORS[(p.id - 1) % PERSONA_COLORS.length], borderColor: PERSONA_COLORS[(p.id - 1) % PERSONA_COLORS.length] + '40' }">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0"
+                :style="{ background: PERSONA_COLORS[(p.id - 1) % PERSONA_COLORS.length] }">{{ p.id }}</span>
+              <span class="truncate max-w-[60px]">Pers {{ p.id }}</span>
+              <span class="opacity-60">${{ totalPersona(p.id).toFixed(2) }}</span>
+              <span v-if="personaActivaId === p.id" class="text-[9px] opacity-80 shrink-0">✓</span>
+            </div>
+            <button @click="agregarPersonaTicket" class="shrink-0 w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-sm font-bold transition-colors">+</button>
+            <button v-if="personaActivaId" @click="personaActivaId = null" class="shrink-0 text-[10px] text-slate-400 hover:text-slate-600 ml-1 font-bold">✕</button>
+            <button @click="modoDividirTicket = false" class="shrink-0 text-[10px] text-slate-400 hover:text-red-500 ml-1 font-bold">Salir</button>
+          </div>
+          <p v-if="modoDividirTicket && !personaActivaId" class="text-[10px] text-slate-400 dark:text-slate-500 italic mb-2 -mt-1.5">Toca una persona arriba para seleccionarla, luego toca los productos para asignarlos</p>
+
           <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
             <div v-for="d in ticketActivo.detalles" :key="d.id" class="text-sm py-2 border-b border-slate-100 dark:border-slate-600 last:border-0">
-              <div class="flex justify-between items-center">
-                <span class="font-semibold text-gray-700 dark:text-slate-300">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || 'Producto' }}</span>
-                <span class="font-bold text-gray-900 dark:text-white">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+              <div class="flex justify-between items-center gap-2">
+                <button v-if="modoDividirTicket" @click="asignarProducto(d.id)"
+                  class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-sm transition-all active:scale-110"
+                  :class="personaActivaId && obtenerPersonaDeProducto(d.id) === -1 ? 'ring-2 ring-yellow-300 ring-offset-1' : ''"
+                  :style="{ background: colorDePersona(d.id) }"
+                  :title="personaActivaId ? `Asignar a Persona ${personaActivaId}` : `Persona ${numeroDePersona(d.id)}`">
+                  {{ numeroDePersona(d.id) }}
+                </button>
+                <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                  <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, ticketActivo.id, -1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">−</button>
+                  <span class="font-semibold text-gray-700 dark:text-slate-300 min-w-[20px] text-center">{{ d.cantidad }}</span>
+                  <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, ticketActivo.id, 1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">+</button>
+                  <span class="font-semibold text-gray-700 dark:text-slate-300 truncate ml-1">{{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button @click="abrirEditorNotas(d, ticketActivo.id)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center justify-center text-xs transition-colors" title="Editar comentario">✏️</button>
+                  <button @click="eliminarProductoDeOrden(d.id, ticketActivo.id)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs transition-colors" title="Cancelar producto">🗑️</button>
+                  <span class="font-bold text-gray-900 dark:text-white ml-1">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                </div>
               </div>
               <p v-if="d.notas" class="text-[11px] text-gray-400 dark:text-slate-500 italic mt-0.5 ml-1 flex items-center gap-1">
                 <span>📝</span> {{ d.notas }}
@@ -512,19 +540,216 @@
             </div>
           </div>
 
-          <div class="flex justify-between items-center mt-5 pt-4 border-t border-slate-100 dark:border-slate-700">
-            <span class="font-bold text-gray-700 dark:text-slate-300">Total</span>
-            <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ Number(ticketActivo.total || 0).toFixed(2) }}</span>
-          </div>
+          <!-- Split mode: per‑person resumen + payment -->
+          <template v-if="modoDividirTicket">
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 space-y-3">
+              <div v-for="p in personasTicket" :key="p.id" class="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0"
+                      :style="{ background: PERSONA_COLORS[(p.id - 1) % PERSONA_COLORS.length] }">{{ p.id }}</span>
+                    <span class="text-xs font-bold text-gray-700 dark:text-slate-300">Persona {{ p.id }}</span>
+                  </div>
+                  <span class="text-sm font-black text-indigo-600 dark:text-indigo-400">${{ totalPersona(p.id).toFixed(2) }}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button v-for="m in metodosPago" :key="m.key"
+                    @click="p.metodo = m.key"
+                    :class="['flex-1 py-1.5 rounded-lg text-[10px] font-black transition border',
+                      p.metodo === m.key ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-slate-400 dark:text-gray-500 border-slate-200 dark:border-gray-700']">
+                    {{ m.icon }} {{ m.label }}
+                  </button>
+                </div>
+                <div class="mt-2">
+                  <div v-if="p.metodo === 'efectivo'" class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
+                    <input type="number" v-model.number="p.recibido" min="0" placeholder="Recibido"
+                      class="w-full pl-7 pr-3 py-1.5 text-xs font-black bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
+                    <div v-if="p.recibido > 0 && p.recibido >= totalPersona(p.id)" class="mt-1 flex justify-between px-2 text-[10px] font-bold">
+                      <span class="text-emerald-600">Cambio</span>
+                      <span class="text-emerald-600">${{ (p.recibido - totalPersona(p.id)).toFixed(2) }}</span>
+                    </div>
+                    <div v-else-if="p.recibido > 0" class="mt-1 text-[10px] font-bold text-red-500 px-2">
+                      Faltan ${{ (totalPersona(p.id) - p.recibido).toFixed(2) }}
+                    </div>
+                  </div>
+                  <input v-else v-model="p.referencia" placeholder="Referencia / Folio"
+                    class="w-full px-3 py-1.5 text-xs font-bold bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-gray-200" />
+                </div>
+              </div>
+            </div>
 
-          <button @click="showTicketModal = false; nuevaOrden.mesa = ticketActivo.mesa; carrito = []; vistaActual = 'productos'"
-            class="w-full mt-5 py-3.5 text-sm font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.98] flex items-center justify-center gap-2">
-            ➕ Agregar productos a esta mesa
-          </button>
+            <div v-if="errorDividirTicket" class="mt-3 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold text-red-700 dark:text-red-400">
+              {{ errorDividirTicket }}
+            </div>
+
+            <button @click="cobrarDivididoTicket" :disabled="cobrandoDividido || !puedeCobrarDividido"
+              class="w-full mt-4 py-3.5 text-sm font-black text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
+              <div v-if="cobrandoDividido" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              {{ cobrandoDividido ? 'Procesando...' : '💳 Cobrar dividido' }}
+            </button>
+
+            <div class="mt-3 flex justify-between items-center px-1">
+              <span class="text-xs font-bold text-slate-400">Total dividido</span>
+              <span class="text-base font-black text-indigo-600 dark:text-indigo-400">${{ totalDivididoTicket.toFixed(2) }}</span>
+            </div>
+          </template>
+
+          <!-- Modo normal (sin división) -->
+          <template v-else>
+            <div class="flex justify-between items-center mt-5 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <span class="font-bold text-gray-700 dark:text-slate-300">Total</span>
+              <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ Number(ticketActivo.total || 0).toFixed(2) }}</span>
+            </div>
+
+            <button @click="toggleDividirTicket"
+              class="w-full mt-4 py-2.5 text-xs font-bold rounded-xl border-2 border-dashed border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition flex items-center justify-center gap-2">
+              ✂️ Dividir cuenta
+            </button>
+
+            <button v-if="!esAdminOPropietario" @click="showTicketModal = false; nuevaOrden.mesa = ticketActivo.mesa; carrito = []; vistaActual = 'productos'"
+              class="w-full mt-3 py-3.5 text-sm font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 active:scale-[0.98] flex items-center justify-center gap-2">
+              ➕ Agregar productos a esta mesa
+            </button>
+            <button v-if="!esAdminOPropietario && ['ABIERTA','POR_PREPARAR','EN_PREPARACION'].includes(ticketActivo.estado)" @click="abrirCancelarOrdenCompleta(ticketActivo.id)"
+              class="w-full mt-2 py-3.5 text-sm font-bold bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-lg shadow-red-200 dark:shadow-red-900/50 active:scale-[0.98] flex items-center justify-center gap-2">
+              🚫 Cancelar orden
+            </button>
+          </template>
         </div>
       </div>
+  </div>
+
+<!-- Modal Editar Comentario -->
+<div v-if="editorNotas.visible" class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4" @click.self="editorNotas.visible = false">
+  <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl w-full max-w-sm p-6 animate-pop">
+    <div class="text-center mb-5">
+      <span class="text-5xl block mb-3">✏️</span>
+      <h3 class="font-bold text-gray-900 dark:text-white text-lg">Editar comentario</h3>
+      <p v-if="editorNotas.detalle" class="text-sm text-gray-400 dark:text-slate-500 mt-2">{{ editorNotas.detalle.cantidad }}× {{ editorNotas.detalle.producto_nombre || editorNotas.detalle.nombre || 'Producto' }}</p>
+    </div>
+    <textarea v-model="editorNotas.nota" rows="3" placeholder="Ej. sin cebolla, término medio, extra queso..."
+      class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-medium resize-none placeholder:text-slate-300 dark:placeholder:text-slate-500"></textarea>
+    <div class="flex gap-3 mt-5">
+      <button @click="editorNotas.visible = false" class="flex-1 py-3 text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">Cancelar</button>
+      <button @click="guardarNota" class="flex-1 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 transition shadow-lg">Guardar</button>
     </div>
   </div>
+</div>
+
+<!-- Modal Productos sin Receta -->
+<div v-if="sinRecetaModal.visible" class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4" @click.self="sinRecetaModal.visible = false">
+  <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl w-full max-w-sm p-6 animate-pop">
+    <div class="text-center mb-5">
+      <span class="text-5xl block mb-3">⚠️</span>
+      <h3 class="font-bold text-gray-900 dark:text-white text-lg">Productos sin receta</h3>
+      <p class="text-sm text-gray-400 dark:text-slate-500 mt-2">Los siguientes productos no tienen ingredientes asignados en su receta:</p>
+    </div>
+    <div class="bg-amber-50 dark:bg-amber-900/30 rounded-xl p-4 mb-5 space-y-2">
+      <p v-for="(nombre, i) in sinRecetaModal.productos" :key="i" class="text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+        <span>🍽️</span> {{ nombre }}
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <button @click="sinRecetaModal.visible = false" class="flex-1 py-3 text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">Cancelar</button>
+      <button @click="confirmarSinReceta" class="flex-1 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transition shadow-lg">Enviar de todas formas</button>
+    </div>
+  </div>
+</div>
+<!-- ══ MODAL: CANCELACIÓN CON MOTIVO ══ -->
+<div v-if="cancelacionModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4" @click.self="cancelacionModal.visible = false">
+  <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100 dark:border-gray-700">
+    <div class="px-6 py-5 bg-red-50 dark:bg-red-900/30 border-b border-red-100 dark:border-red-800 flex items-center gap-3">
+      <span class="text-2xl">⚠️</span>
+      <div>
+        <h3 class="font-black text-red-800 dark:text-red-400 text-sm uppercase tracking-tight">Motivo de cancelación</h3>
+        <p class="text-[10px] font-bold text-red-400 dark:text-red-300 uppercase tracking-widest">Este producto no se cobrará</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <div v-if="cancelacionModal.cantidadMaxima > 1" class="mb-4 bg-slate-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-slate-100 dark:border-gray-700 flex flex-col gap-2">
+        <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest ml-1 text-center">Cantidad a Cancelar</label>
+        <div class="flex items-center justify-center gap-4">
+          <button @click="cancelacionModal.cantidadCancelar > 1 ? cancelacionModal.cantidadCancelar-- : null"
+            class="w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700 font-black transition active:scale-95 text-sm">
+            −
+          </button>
+          <span class="text-lg font-black text-slate-800 dark:text-gray-200 w-12 text-center">{{ cancelacionModal.cantidadCancelar }}</span>
+          <button @click="cancelacionModal.cantidadCancelar < cancelacionModal.cantidadMaxima ? cancelacionModal.cantidadCancelar++ : null"
+            class="w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-black transition active:scale-95 text-sm">
+            +
+          </button>
+        </div>
+        <p class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest text-center mt-1">De un total de {{ cancelacionModal.cantidadMaxima }} unidades</p>
+      </div>
+
+      <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-3 ml-1">Selecciona o escribe el motivo</label>
+      <div class="grid grid-cols-1 gap-2 mb-4">
+        <button v-for="m in ['Platillo equivocado', 'Pelo/Objeto extraño', 'Mal sabor/Crudo', 'Tardanza excesiva', 'Cliente se arrepintió']" :key="m"
+          @click="cancelacionModal.motivo = m"
+          :class="['px-4 py-2.5 rounded-2xl text-xs font-bold transition text-left border', 
+            cancelacionModal.motivo === m ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-slate-50 dark:bg-gray-800/50 text-slate-600 dark:text-gray-400 border-slate-100 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-700']">
+          {{ m }}
+        </button>
+      </div>
+      <textarea v-model="cancelacionModal.motivo" rows="2" 
+        class="w-full px-4 py-3.5 border border-slate-100 dark:border-gray-700 rounded-2xl text-sm bg-slate-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-red-500/10 outline-none transition font-bold dark:text-gray-200"
+        placeholder="Escribe otro motivo detallado..."></textarea>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 dark:bg-gray-800/50 flex gap-3">
+      <button @click="cancelacionModal.visible = false" 
+        class="flex-1 py-3 text-xs font-black text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-400 transition uppercase tracking-widest">
+        Ignorar
+      </button>
+      <button @click="confirmarCancelacion" :disabled="!cancelacionModal.motivo || creando"
+        class="flex-1 py-3 text-xs font-black text-white bg-red-600 rounded-2xl hover:bg-red-700 transition shadow-lg shadow-red-100 uppercase tracking-widest disabled:opacity-50">
+        {{ creando ? '...' : 'Confirmar' }}
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ══ MODAL: CONFIRMAR CANCELAR ORDEN COMPLETA ══ -->
+<div v-if="cancelarOrdenModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4" @click.self="cancelarOrdenModal.visible = false">
+  <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up border border-slate-100 dark:border-gray-700" :class="{ 'animate-shake': animandoCancelacion }">
+    <div class="px-6 py-5 bg-red-50 dark:bg-red-900/30 border-b border-red-100 dark:border-red-800 flex items-center gap-3">
+      <span class="text-2xl">🚫</span>
+      <div>
+        <h3 class="font-black text-red-800 dark:text-red-400 text-sm uppercase tracking-tight">Cancelar orden completa</h3>
+        <p class="text-[10px] font-bold text-red-400 dark:text-red-300 uppercase tracking-widest">Esta acción no se puede deshacer</p>
+      </div>
+    </div>
+    <div class="p-6 text-center">
+      <p class="text-sm text-gray-600 dark:text-gray-300 font-medium">¿Estás seguro de cancelar toda la orden?</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Se cancelarán todos los productos y se restaurará el inventario.</p>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 dark:bg-gray-800/50 flex gap-3">
+      <button @click="cancelarOrdenModal.visible = false" 
+        class="flex-1 py-3 text-xs font-black text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-400 transition uppercase tracking-widest">
+        Volver
+      </button>
+      <button @click="confirmarCancelarOrdenCompleta" :disabled="creando"
+        class="flex-1 py-3 text-xs font-black text-white bg-red-600 rounded-2xl hover:bg-red-700 transition shadow-lg shadow-red-100 uppercase tracking-widest disabled:opacity-50">
+        {{ creando ? '...' : 'Sí, cancelar orden' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY: ANIMACIÓN DE CANCELACIÓN ══ -->
+<div v-if="animandoCancelacion" class="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-md animate-fade-in"></div>
+  <div class="relative flex flex-col items-center gap-4 animate-cancel-burst">
+    <div class="text-8xl animate-cancel-icon">🚫</div>
+    <div class="text-2xl font-black text-white tracking-widest uppercase animate-cancel-text">Orden cancelada</div>
+    <div class="flex gap-1.5">
+      <div class="w-2 h-2 bg-red-500 rounded-full animate-cancel-particle" style="animation-delay: 0s"></div>
+      <div class="w-2 h-2 bg-red-400 rounded-full animate-cancel-particle" style="animation-delay: 0.1s"></div>
+      <div class="w-2 h-2 bg-red-500 rounded-full animate-cancel-particle" style="animation-delay: 0.2s"></div>
+      <div class="w-2 h-2 bg-red-400 rounded-full animate-cancel-particle" style="animation-delay: 0.3s"></div>
+      <div class="w-2 h-2 bg-red-500 rounded-full animate-cancel-particle" style="animation-delay: 0.4s"></div>
+    </div>
+  </div>
+</div>
 </template><script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
@@ -604,6 +829,8 @@ const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 
 
 const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '', cantidadMaxima: 1, cantidadCancelar: 1 })
+const cancelarOrdenModal = ref({ visible: false, ordenId: null })
+const animandoCancelacion = ref(false)
 
 // ── NUEVO: estado para orden existente de la mesa ──────────────────────────
 const ordenExistente = ref(null)   // se muestra el modal de confirmación
@@ -1008,19 +1235,34 @@ const cargarCapacidadRestaurante = async () => {
 
 const normalizarProducto = (p) => {
   if (!p) return p
-  return {
-    ...p,
-    precio_pequeno: p.precio_pequeno !== null && p.precio_pequeno !== undefined ? parseFloat(p.precio_pequeno) : (p.precio || 0),
-    precio_mediano: p.precio_mediano !== null && p.precio_mediano !== undefined ? parseFloat(p.precio_mediano) : null,
-    precio_grande: p.precio_grande !== null && p.precio_grande !== undefined ? parseFloat(p.precio_grande) : null,
-    stock_pequeno: p.stock_pequeno !== undefined ? parseFloat(p.stock_pequeno) : (p.stock ?? 0),
-    stock_mediano: p.stock_mediano !== undefined ? parseFloat(p.stock_mediano) : 0,
-    stock_grande: p.stock_grande !== undefined ? parseFloat(p.stock_grande) : 0,
+  let tamanos = []
+  if (Array.isArray(p.tamanos_disponibles)) {
+    tamanos = p.tamanos_disponibles.map(t => ({
+      key: t.key,
+      nombre: t.nombre,
+      precio: Number(t.precio ?? 0),
+      stock: t.stock != null ? Number(t.stock) : undefined,
+    }))
+  } else if (p.tamanos_personalizados) {
+    try {
+      const raw = typeof p.tamanos_personalizados === 'string'
+        ? JSON.parse(p.tamanos_personalizados)
+        : p.tamanos_personalizados
+      if (Array.isArray(raw)) {
+        tamanos = raw.map(t => ({
+          key: t.key,
+          nombre: t.nombre || '',
+          precio: Number(t.precio ?? 0),
+          stock: t.stock != null ? Number(t.stock) : undefined,
+        }))
+      }
+    } catch {}
   }
+  return { ...p, tamanos_disponibles: tamanos }
 }
 
-const cargarProductos = async () => {
-  loadingProductos.value = true
+const cargarProductos = async (silent = false) => {
+  if (!silent) loadingProductos.value = true
   try {
     const rid = restauranteActivo.value
     const [pData, paqData] = await Promise.all([
@@ -1033,7 +1275,7 @@ const cargarProductos = async () => {
     }
     if (paqData.success || paqData.data) paquetes.value  = paqData.data || paqData
   } catch {}
-  finally { loadingProductos.value = false }
+  finally { if (!silent) loadingProductos.value = false }
 }
 
 const verificarCaja = async () => {
@@ -1063,10 +1305,44 @@ const buildPayload = () => ({
     }
     if (i.tipo === 'producto') item.producto_id = i.id
     if (i.tipo === 'paquete')  item.paquete_id  = i.id
-    if (i.tamano && i.tamano !== 'pequeno') item.tamano = i.tamano
+    if (i.tamano) item.tamano = i.tamano
     return item
   }),
 })
+
+const productosSinReceta = ref([])
+const sinRecetaModal = ref({ visible: false, productos: [] })
+
+const verificarRecetas = async () => {
+  const productosUnicos = new Map()
+  carrito.value.forEach(i => {
+    if (i.tipo === 'producto') {
+      const key = `${i.id}-${i.tamano || 'default'}`
+      if (!productosUnicos.has(key)) {
+        productosUnicos.set(key, { id: i.id, nombre: i.nombre, tamano: i.tamano })
+      }
+    }
+  })
+  if (!productosUnicos.size) return true
+
+  try {
+    const resultados = await Promise.all(
+      [...productosUnicos.values()].map(p =>
+        apiClient.get(`/ingredientes/producto/${p.id}${p.tamano ? `?tamano=${p.tamano}` : ''}`)
+          .then(data => ({ producto: p, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
+          .catch(() => ({ producto: p, ingredientes: [] }))
+      )
+    )
+    const sinReceta = resultados.filter(r => !r.ingredientes.length).map(r => r.producto.nombre)
+    if (sinReceta.length) {
+      sinRecetaModal.value = { visible: true, productos: sinReceta }
+      return false
+    }
+    return true
+  } catch {
+    return true
+  }
+}
 
 const crearOrden = async () => {
   if (!carrito.value.length || !nuevaOrden.value.mesa) return
@@ -1077,6 +1353,8 @@ const crearOrden = async () => {
     return
   }
 
+  if (!(await verificarRecetas())) return
+
   await enviarOrden()
 }
 
@@ -1084,6 +1362,11 @@ const crearOrden = async () => {
 const confirmarAgregarAOrden = async () => {
   ordenExistente.value = null
   await enviarOrden()
+}
+
+const confirmarSinReceta = () => {
+  sinRecetaModal.value.visible = false
+  enviarOrden()
 }
 
 const enviarOrden = async () => {
@@ -1135,9 +1418,177 @@ const loadOrdersForCashier = async () => {
   await cargarOrdenes()
 }
 
+// ── Split bill en ticket modal ────────────────────────────────────────────
+const PERSONA_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
+
+const metodosPago = [
+  { key: 'efectivo',     icon: '💵', label: 'Efectivo' },
+  { key: 'tarjeta',      icon: '💳', label: 'Tarjeta' },
+  { key: 'transferencia', icon: '🏦', label: 'Transf.' },
+]
+
+const modoDividirTicket = ref(false)
+const personaActivaId = ref(null)
+const personasTicket = ref([])
+const cobrandoDividido = ref(false)
+const errorDividirTicket = ref('')
+
+const toggleDividirTicket = () => {
+  modoDividirTicket.value = !modoDividirTicket.value
+  if (modoDividirTicket.value && ticketActivo.value?.detalles) {
+    const detalles = ticketActivo.value.detalles.filter(d => !d.cancelado)
+    personasTicket.value = [
+      { id: 1, detalleIds: [...detalles.map(d => d.id)], metodo: 'efectivo', recibido: 0, referencia: '' },
+      { id: 2, detalleIds: [], metodo: 'efectivo', recibido: 0, referencia: '' },
+    ]
+    personaActivaId.value = 1
+  }
+}
+
+const agregarPersonaTicket = () => {
+  const id = personasTicket.value.length + 1
+  personasTicket.value.push({ id, detalleIds: [], metodo: 'efectivo', recibido: 0, referencia: '' })
+  personaActivaId.value = id
+}
+
+const obtenerPersonaDeProducto = (detalleId) =>
+  personasTicket.value.findIndex(p => p.detalleIds.includes(detalleId))
+
+const colorDePersona = (detalleId) => {
+  const idx = obtenerPersonaDeProducto(detalleId)
+  return idx === -1 ? '#cbd5e1' : PERSONA_COLORS[idx % PERSONA_COLORS.length]
+}
+
+const numeroDePersona = (detalleId) => {
+  const idx = obtenerPersonaDeProducto(detalleId)
+  return idx === -1 ? '?' : idx + 1
+}
+
+const asignarProducto = (detalleId) => {
+  const targetId = personaActivaId.value || 1
+  const target = personasTicket.value.find(p => p.id === targetId)
+  if (!target) return
+  personasTicket.value.forEach(p => { p.detalleIds = p.detalleIds.filter(id => id !== detalleId) })
+  target.detalleIds.push(detalleId)
+  personasTicket.value = [...personasTicket.value]
+}
+
+const totalPersona = (personaId) => {
+  const p = personasTicket.value.find(x => x.id === personaId)
+  if (!p || !ticketActivo.value?.detalles) return 0
+  return p.detalleIds.reduce((sum, id) => {
+    const d = ticketActivo.value.detalles.find(x => x.id === id)
+    return sum + Number(d?.subtotal || 0)
+  }, 0)
+}
+
+const totalDivididoTicket = computed(() =>
+  personasTicket.value.reduce((s, p) => s + totalPersona(p.id), 0)
+)
+
+const totalTicketNoCancelado = computed(() =>
+  (ticketActivo.value?.detalles || [])
+    .filter(d => !d.cancelado)
+    .reduce((s, d) => s + Number(d.subtotal || 0), 0)
+)
+
+const puedeCobrarDividido = computed(() => {
+  if (personasTicket.value.length < 2) return false
+  const cubreTotal = Math.abs(totalDivididoTicket.value - totalTicketNoCancelado.value) < 0.01
+  if (!cubreTotal) return false
+  return personasTicket.value.every(p => {
+    if (!p.detalleIds.length) return true
+    if (p.metodo === 'efectivo') return (p.recibido || 0) >= totalPersona(p.id)
+    return (p.referencia || '').trim().length > 0
+  })
+})
+
+const cobrarDivididoTicket = async () => {
+  if (!ticketActivo.value) return
+  errorDividirTicket.value = ''
+  cobrandoDividido.value = true
+
+  if (!puedeCobrarDividido.value) {
+    errorDividirTicket.value = 'Todos los productos deben estar asignados a una persona antes de cobrar'
+    cobrandoDividido.value = false
+    return
+  }
+
+  try {
+    const ordenId = ticketActivo.value.id
+    const tickets = personasTicket.value
+      .filter(p => p.detalleIds.length > 0)
+      .map((p, i) => ({
+        comensal: `Persona ${i + 1}`,
+        detalles: p.detalleIds,
+      }))
+
+    const dataDividir = await apiClient.post(`/ordenes/${ordenId}/dividir`, {
+      metodo: 'manual',
+      divisiones: tickets,
+    })
+
+    if (!dataDividir?.success && !dataDividir?.data) {
+      errorDividirTicket.value = dataDividir?.message || 'Error al dividir'
+      return
+    }
+
+    const cuentas = dataDividir.cuentas || dataDividir.data?.cuentas || []
+    const detallePagos = personasTicket.value
+      .filter(p => p.detalleIds.length > 0)
+      .map((p, i) => ({
+        monto: totalPersona(p.id),
+        metodo: p.metodo,
+        propina: 0,
+        referencia: p.referencia || '',
+        comensal: `Persona ${i + 1}`,
+        detalles: p.detalleIds,
+      }))
+
+    const dataCerrar = await apiClient.post(`/ordenes/${ordenId}/cerrar`, {
+      estado: 'CERRADA',
+      pagos: detallePagos,
+      total_final: totalDivididoTicket.value,
+    })
+
+    if (!dataCerrar?.success && !dataCerrar?.data) {
+      errorDividirTicket.value = dataCerrar?.message || 'Error al cerrar'
+      return
+    }
+
+    cuentas.forEach((c, idx) => {
+      c.nombres_comensales = `Persona ${idx + 1}`
+      const p = personasTicket.value.filter(x => x.detalleIds.length > 0)[idx]
+      if (p) {
+        c.pago_metodo = p.metodo
+        c.pago_referencia = p.referencia
+        c.pago_recibido = p.recibido
+        c.pago_propina = 0
+        c.pago_cambio = Math.max(0, (p.recibido || 0) - totalPersona(p.id))
+      }
+    })
+
+    showToast('Cuenta dividida y cobrada ✅', 'success')
+    modoDividirTicket.value = false
+    showTicketModal.value = false
+    await cargarOrdenes()
+  } catch {
+    errorDividirTicket.value = 'Error de conexión'
+    showToast('Error al procesar división', 'error')
+  } finally {
+    cobrandoDividido.value = false
+  }
+}
+
 const totalEnCarritoPorId = (productId) => {
   return carrito.value
     .filter(i => i.id === productId && i.tipo === 'producto')
+    .reduce((sum, i) => sum + i.cantidad, 0)
+}
+
+const totalEnCarritoPorIdYTamano = (productId, tamano) => {
+  return carrito.value
+    .filter(i => i.id === productId && i.tipo === 'producto' && i.tamano === tamano)
     .reduce((sum, i) => sum + i.cantidad, 0)
 }
 
@@ -1149,7 +1600,7 @@ const totalEnCarritoPorPaqueteId = (paqueteId) => {
 
 const agregarAlCarrito = (item, tipo) => {
   if (tipo === 'paquete') {
-    if (item.stock !== undefined && item.stock !== null && totalEnCarritoPorPaqueteId(item.id) >= item.stock) {
+    if (item.stock !== undefined && item.stock !== null && item.stock > 0 && totalEnCarritoPorPaqueteId(item.id) >= item.stock) {
       showToast(`No hay suficiente stock para el paquete "${item.nombre}". Límite: ${item.stock} uds`, 'error')
       return
     }
@@ -1157,14 +1608,60 @@ const agregarAlCarrito = (item, tipo) => {
     return
   }
 
-  // Si tiene tallas múltiples, mostrar modal
-  if ((item.tiene_tamanos == true || item.tiene_tamanos == '1') && ((item.precio_mediano > 0) || (item.precio_grande > 0))) {
+  // Si tiene múltiples tamaños, mostrar modal
+  const sizes = getTamanoData(item)
+  if (sizes.length > 1) {
     productoTamanos.value = item
     showTamanosModal.value = true
     return
   }
 
-  agregarItemAlCarrito(item, 'pequeno', item.precio_pequeno || item.precio, 'producto')
+  const sizeKey = sizes.length === 1 ? sizes[0].key : null
+  const sizePrecio = sizes.length === 1 ? sizes[0].precio : item.precio
+  agregarItemAlCarrito(item, sizeKey || 'pequeno', sizePrecio, 'producto')
+}
+
+const sizeStyles = [
+  { circle: 'bg-emerald-100 text-emerald-600', hover: 'hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30', hoverText: 'group-hover:text-emerald-700' },
+  { circle: 'bg-blue-100 text-blue-600', hover: 'hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30', hoverText: 'group-hover:text-blue-700' },
+  { circle: 'bg-purple-100 text-purple-600', hover: 'hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30', hoverText: 'group-hover:text-purple-700' },
+  { circle: 'bg-amber-100 text-amber-600', hover: 'hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30', hoverText: 'group-hover:text-amber-700' },
+  { circle: 'bg-rose-100 text-rose-600', hover: 'hover:border-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30', hoverText: 'group-hover:text-rose-700' },
+]
+
+const getTamanoData = (p) => {
+  const tams = Array.isArray(p?.tamanos_disponibles) ? p.tamanos_disponibles : []
+  if (tams.length > 0) {
+    return tams
+      .map((t, i) => ({
+        letter: (t.nombre || '?')[0].toUpperCase(),
+        nombre: t.nombre,
+        key: t.key,
+        precio: Number(t.precio ?? 0),
+        stock: t.stock != null ? Number(t.stock) : undefined,
+        color: sizeStyles[i % sizeStyles.length],
+        index: i,
+      }))
+      .filter(t => t.precio > 0)
+  }
+  if (Number(p?.precio ?? 0) > 0) {
+    return [{
+      letter: 'Ú',
+      nombre: 'Único',
+      key: 'unico',
+      precio: Number(p.precio),
+      stock: p.stock != null ? Number(p.stock) : undefined,
+      color: sizeStyles[0],
+      index: 0,
+    }]
+  }
+  return []
+}
+
+const getTamanoLetter = (tamanoKey, p) => {
+  const tams = Array.isArray(p?.tamanos_disponibles) ? p.tamanos_disponibles : []
+  const found = tams.find(t => t.key === tamanoKey)
+  return found?.nombre ? found.nombre[0].toUpperCase() : '?'
 }
 
 const agregarConTamano = (item, tamano, precio, tipo) => {
@@ -1192,48 +1689,51 @@ const agregarConPrecioPersonalizado = () => {
 }
 
 const agregarItemAlCarrito = (item, tamano, precio, tipo) => {
+  let stockMaximo = undefined
+
   if (tipo === 'producto') {
-    const stockKey = tamano === 'mediano' ? 'stock_mediano' : tamano === 'grande' ? 'stock_grande' : 'stock_pequeno'
-    const stockActual = item[stockKey] ?? item.stock
-    if (stockActual !== undefined && stockActual !== null) {
-      if (totalEnCarritoPorId(item.id) >= stockActual) {
+    const tamanoInfo = getTamanoData(item).find(t => t.key === tamano)
+    const stockActual = tamanoInfo?.stock ?? item.stock
+    stockMaximo = stockActual
+    if (stockActual !== undefined && stockActual !== null && stockActual > 0) {
+      if (totalEnCarritoPorIdYTamano(item.id, tamano) >= stockActual) {
         showToast(`No hay suficiente stock para "${item.nombre}". Límite: ${stockActual} uds`, 'error')
         return
       }
     }
+  } else if (tipo === 'paquete') {
+    stockMaximo = item.stock
   }
 
-  const e = carrito.value.find(i => i.id === item.id && i.tipo === tipo && i.tamano === tamano && !i.notas)
-  if (e) {
-    e.cantidad++
-  } else {
-    const sizeMap = { 'pequeno': '', 'mediano': ' (M)', 'grande': ' (L)', 'personalizado': ' (Personalizado)' }
-    const sufijo = tamano ? (sizeMap[tamano] || '') : ''
-    carrito.value.push({ 
-      cartId: Date.now() + Math.random(),
-      id: item.id, 
-      nombre: item.nombre + sufijo, 
-      precio: Number(precio), 
-      cantidad: 1, 
-      tipo, 
-      tamano: tamano || null,
-      stock_maximo: item.stock,
-      notas: '',
-      minutos_produccion: parseFloat(item.minutos_produccion || 0)
-    })
-  }
+  let tamanoNombre = ''
+  const tamanoInfo = getTamanoData(item).find(t => t.key === tamano)
+  if (tamanoInfo?.nombre) tamanoNombre = tamanoInfo.nombre
+  const sufijo = tamanoNombre ? ` (${tamanoNombre})` : (tamano ? ` (${tamano})` : '')
+  carrito.value.push({ 
+    cartId: Date.now() + Math.random(),
+    id: item.id, 
+    nombre: item.nombre + sufijo, 
+    precio: Number(precio), 
+    cantidad: 1, 
+    tipo, 
+    tamano: tamano || null,
+    tamano_nombre: tamanoNombre || tamano || null,
+    stock_maximo: stockMaximo,
+    notas: '',
+    minutos_produccion: parseFloat(item.minutos_produccion || 0)
+  })
 }
 const incrementar = (cartId) => {
   const i = carrito.value.find(x => x.cartId === cartId)
   if (i) {
-    if (i.tipo === 'producto' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
-      const totalActual = totalEnCarritoPorId(i.id)
+    if (i.tipo === 'producto' && i.stock_maximo !== undefined && i.stock_maximo !== null && i.stock_maximo > 0) {
+      const totalActual = totalEnCarritoPorIdYTamano(i.id, i.tamano)
       if (totalActual >= i.stock_maximo) {
         showToast(`No hay suficiente stock para "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
         return
       }
     }
-    if (i.tipo === 'paquete' && i.stock_maximo !== undefined && i.stock_maximo !== null) {
+    if (i.tipo === 'paquete' && i.stock_maximo !== undefined && i.stock_maximo !== null && i.stock_maximo > 0) {
       if (totalEnCarritoPorPaqueteId(i.id) >= i.stock_maximo) {
         showToast(`No hay suficiente stock para el paquete "${i.nombre}". Límite: ${i.stock_maximo} uds`, 'error')
         return
@@ -1248,23 +1748,58 @@ const eliminarDelCarrito = (cartId) => { carrito.value = carrito.value.filter(x 
 // ── Acciones de órdenes ────────────────────────────────────────────────────
 const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   if (!nuevoEstado) return
+  // Indicar que esta sub‑orden está procesándose
   cambiando.value = sub.uid
   try {
-    const data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
-    if (data.success || data.data) { 
-      await cargarOrdenes()
-      showToast('Estado actualizado', 'success') 
-    } else {
-      // Si el error es por estado redundante, lo tratamos como éxito silencioso
-      if (data.message && data.message.includes('No se puede cambiar de')) {
-        await cargarOrdenes()
+    if (nuevoEstado === 'ENTREGADA') {
+      // Utilizar el endpoint de entrega que también marca los detalles como ENTREGADO
+      const ids = idsListos(sub)
+      if (!ids.length) {
+        showToast('No hay productos listos para entregar', 'warning')
+        cambiando.value = null
+        return
+      }
+      const ahora = new Date().toISOString()
+      const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, {
+        detalles: ids,
+        estado_preparacion: 'ENTREGADO',
+        recogido_en: ahora,
+        entregado_en: ahora,
+      })
+      if (data.success || data.data) {
+        // Reemplazar los objetos detalle afectados con nuevas referencias para que
+        // Vue detecte el cambio profundo y los computeds recalculen correctamente
+        ordenes.value = ordenes.value.map(o => {
+          if (o.id !== sub.id) return o
+          return {
+            ...o,
+            detalles: (o.detalles || []).map(d =>
+              ids.includes(d.id) ? { ...d, estado_preparacion: 'ENTREGADO' } : d
+            )
+          }
+        })
+        showToast('Pedido entregado al cliente ✨', 'success')
       } else {
-        showToast(data.message || 'Error al actualizar', 'error')
+        showToast(data.message || 'Error al entregar', 'error')
+      }
+    } else {
+      // Cambios de estado genéricos (ABIERTA → POR_PREPARAR, etc.)
+      const data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
+      if (data.success || data.data) {
+        await cargarOrdenes()
+        showToast('Estado actualizado', 'success')
+      } else {
+        if (data.message && data.message.includes('No se puede cambiar de')) {
+          await cargarOrdenes()
+        } else {
+          showToast(data.message || 'Error al actualizar', 'error')
+        }
       }
     }
   } catch (err) {
     showToast('Error de conexión', 'error')
   } finally {
+    // Resetear indicador de carga
     cambiando.value = null
   }
 }
@@ -1297,18 +1832,26 @@ const confirmarCancelacion = async () => {
   try {
     const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}&cantidad_cancelar=${cantidadCancelar || 1}`)
     if (data.success || data.data) {
-      showToast('Producto cancelado correctamente', 'success')
       cancelacionModal.value.visible = false
       // Actualizar localmente para feedback inmediato
       const ordenIdx = ordenes.value.findIndex(o => o.id === ordenId)
+      let eraUltimo = false
       if (ordenIdx !== -1) {
         const d = (ordenes.value[ordenIdx].detalles || []).find(x => x.id === detalleId)
         if (d) {
           d.cancelado = true
           d.motivo_cancelacion = motivo
         }
+        const restantes = (ordenes.value[ordenIdx].detalles || []).filter(x => !x.cancelado).length
+        eraUltimo = restantes <= 1
       }
       await cargarOrdenes()
+      const ordenSigue = ordenes.value.some(o => o.id === ordenId)
+      if (!ordenSigue) {
+        showToast('Orden cancelada por completo', 'warning')
+      } else {
+        showToast(eraUltimo ? 'Producto cancelado — era el último, orden cancelada' : 'Producto cancelado correctamente', 'success')
+      }
     } else {
       showToast(data.message || 'Error al eliminar', 'error')
     }
@@ -1316,6 +1859,36 @@ const confirmarCancelacion = async () => {
     showToast('Error de conexión', 'error')
   } finally {
     creando.value = false
+  }
+}
+
+const abrirCancelarOrdenCompleta = (ordenId) => {
+  cancelarOrdenModal.value = { visible: true, ordenId }
+}
+
+const confirmarCancelarOrdenCompleta = async () => {
+  const { ordenId } = cancelarOrdenModal.value
+
+  animandoCancelacion.value = true
+  cancelarOrdenModal.value.visible = false
+  await new Promise(r => setTimeout(r, 150))
+
+  creando.value = true
+  try {
+    const data = await apiClient.put(`/ordenes/${ordenId}`, { estado: 'CANCELADA' })
+    if (data.success || data.data) {
+      cancelarOrdenModal.value.visible = false
+      showTicketModal.value = false
+      showToast('Orden cancelada correctamente', 'warning')
+      await cargarOrdenes()
+    } else {
+      showToast(data.message || 'Error al cancelar orden', 'error')
+    }
+  } catch (e) {
+    showToast('Error de conexión', 'error')
+  } finally {
+    creando.value = false
+    setTimeout(() => { animandoCancelacion.value = false }, 600)
   }
 }
 
@@ -1360,42 +1933,39 @@ const actualizarCantidadItem = async (detalle, ordenId, delta) => {
   }
 }
 
-// ── Acciones tiempos recoger/entregar ─────────────────────────────────────
+// ── Acciones recoger+entregar (un solo paso) ──────────────────────────────
 
 const idsListos = (orden) => (orden.detalles || []).filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado).map(d => d.id)
-const idsRecogidosSinEntregar = (orden) => (orden.detalles || []).filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado && d.recogido_en && !d.entregado_en).map(d => d.id)
 
 const tieneListos = (orden) => idsListos(orden).length > 0
-const tieneRecogidosSinEntregar = (orden) => idsRecogidosSinEntregar(orden).length > 0
-
-const recogerDeCocina = async (orden) => {
-  const ids = idsListos(orden)
-  if (!ids.length) { showToast('No hay productos listos para recoger', 'warning'); return }
-  cambiando.value = `recoger-${orden.id}`
-  try {
-    const ahora = new Date().toISOString()
-    const data = await apiClient.put(`/ordenes/${orden.id}/station-status`, {
-      detalles: ids,
-      estado_preparacion: 'LISTO',
-      recogido_en: ahora,
-    })
-    if (data.success || data.data) { await cargarOrdenes(); showToast('Productos recogidos de cocina ✅', 'success') }
-  } catch { showToast('Error al recoger productos', 'error') }
-  finally { cambiando.value = null }
-}
 
 const entregarACliente = async (orden) => {
-  const ids = idsRecogidosSinEntregar(orden)
-  if (!ids.length) { showToast('No hay productos para entregar', 'warning'); return }
+  const ids = idsListos(orden)
+  if (!ids.length) { showToast('No hay productos listos para entregar', 'warning'); return }
   cambiando.value = `entregar-${orden.id}`
   try {
     const ahora = new Date().toISOString()
     const data = await apiClient.put(`/ordenes/${orden.id}/station-status`, {
       detalles: ids,
       estado_preparacion: 'ENTREGADO',
+      recogido_en: ahora,
       entregado_en: ahora,
     })
-    if (data.success || data.data) { await cargarOrdenes(); showToast('Pedido entregado al cliente ✨', 'success') }
+    if (data.success || data.data) {
+      // Reemplazar objetos detalle afectados con nuevas referencias para reactividad correcta
+      ordenes.value = ordenes.value.map(o => {
+        if (o.id !== orden.id) return o
+        return {
+          ...o,
+          detalles: (o.detalles || []).map(d =>
+            ids.includes(d.id) ? { ...d, estado_preparacion: 'ENTREGADO' } : d
+          )
+        }
+      })
+      showToast('Pedido entregado al cliente ✨', 'success')
+    } else {
+      showToast(data.message || 'Error al entregar', 'error')
+    }
   } catch { showToast('Error al entregar pedido', 'error') }
   finally { cambiando.value = null }
 }
@@ -1524,7 +2094,10 @@ onMounted(async () => {
   // Iniciar un único polling silencioso de seguridad
   const poll = async () => {
     if (cajaAbierta.value) {
-      await cargarOrdenes(true)
+      await Promise.all([
+        cargarOrdenes(true),
+        cargarProductos(true),
+      ])
     }
     pollTimer = setTimeout(poll, POLL_INTERVAL)
   }
@@ -1562,5 +2135,56 @@ onUnmounted(() => {
 }
 .animate-pop {
   animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.animate-slide-up { animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Animación llamativa al cancelar orden ── */
+@keyframes cancelBurst {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-10deg); }
+  40%  { opacity: 1; transform: scale(1.15) rotate(3deg); }
+  70%  { transform: scale(0.95) rotate(-1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.animate-cancel-burst {
+  animation: cancelBurst 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cancelIcon {
+  0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+  60%  { transform: scale(1.3) rotate(15deg); opacity: 1; }
+  80%  { transform: scale(0.9) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.animate-cancel-icon {
+  animation: cancelIcon 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.6));
+}
+
+@keyframes cancelText {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.8); letter-spacing: 10px; }
+  100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 4px; }
+}
+.animate-cancel-text {
+  animation: cancelText 0.4s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+@keyframes cancelParticle {
+  0%   { opacity: 0; transform: translateY(0) scale(0); }
+  50%  { opacity: 1; transform: translateY(-20px) scale(1.5); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0); }
+}
+.animate-cancel-particle {
+  animation: cancelParticle 0.8s ease-out forwards;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
 }
 </style>
