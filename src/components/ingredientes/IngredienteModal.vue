@@ -58,8 +58,11 @@
               <input v-model="form.stock_actual" type="number" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 focus:outline-none transition-all" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Stock Mínimo</label>
-              <input v-model="form.stock_minimo" type="number" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:bg-gray-800 focus:outline-none transition-all" />
+              <label class="block text-xs font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wider mb-1.5" title="Se calcula de forma automática en base a las recetas y al stock mínimo de los productos que lo usan">Stock Mínimo</label>
+              <div class="relative">
+                <input v-model="form.stock_minimo" type="number" readonly disabled class="w-full px-4 py-2.5 bg-slate-100 dark:bg-gray-800 text-slate-400 dark:text-gray-500 border border-slate-200 dark:border-gray-600 rounded-xl text-sm cursor-not-allowed font-medium" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-indigo-500" title="Autocalculado por recetas de productos">Calculado</span>
+              </div>
             </div>
           </div>
 

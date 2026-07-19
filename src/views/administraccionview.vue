@@ -11,18 +11,42 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Administración</h2>
         <p class="text-gray-500 text-sm mt-1 dark:text-gray-400">Panel de control del restaurante</p>
       </div>
-      <div class="flex gap-1.5 sm:gap-2">
-        <button @click="abrirModalEmpleado()"
-          class="flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white text-[10px] sm:text-sm font-medium rounded-lg sm:rounded-xl hover:bg-indigo-700 transition">
-          <span class="text-xs sm:text-base">👤</span> <span class="hidden sm:inline">Nuevo Empleado</span>
+      <div class="flex gap-2">
+        <button 
+          @click="puedeCrearMasEmpleados ? abrirModalEmpleado() : null"
+          :class="[
+            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
+            puedeCrearMasEmpleados 
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer shadow-indigo-100 dark:shadow-indigo-900/30' 
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
+          ]"
+          :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nuevo empleado'"
+        >
+          <span>👤</span> Nuevo Empleado
         </button>
-        <button @click="abrirModalCuentaMenu()"
-          class="flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 bg-amber-500 text-white text-[10px] sm:text-sm font-medium rounded-lg sm:rounded-xl hover:bg-amber-600 transition">
-          <span class="text-xs sm:text-base">🛒</span> <span class="hidden sm:inline">Nva. Cuenta</span>
+        <button 
+          @click="puedeCrearMasEmpleados ? abrirModalCuentaMenu() : null"
+          :class="[
+            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
+            puedeCrearMasEmpleados 
+              ? 'bg-amber-500 text-white hover:bg-amber-600 cursor-pointer shadow-amber-100 dark:shadow-amber-900/30' 
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
+          ]"
+          :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nueva cuenta de menú'"
+        >
+          <span>🛒</span> Nueva Cuenta de Menú
         </button>
-        <button @click="abrirModalRestaurante()"
-          class="flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 text-white text-[10px] sm:text-sm font-medium rounded-lg sm:rounded-xl hover:bg-emerald-700 transition">
-          <span class="text-xs sm:text-base">🏪</span> <span class="hidden sm:inline">Nvo. Restaurante</span>
+        <button 
+          @click="puedeCrearMasRestaurantes ? abrirModalRestaurante() : null"
+          :class="[
+            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
+            puedeCrearMasRestaurantes 
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer shadow-emerald-100 dark:shadow-emerald-900/30' 
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
+          ]"
+          :title="!puedeCrearMasRestaurantes ? 'Has alcanzado el límite de restaurantes permitidos en tu plan de licencia.' : 'Registrar nueva sucursal'"
+        >
+          <span>🏪</span> Nuevo Restaurante
         </button>
       </div>
     </div>
@@ -527,6 +551,65 @@ const restaurantes = ref([])
 const currentUser  = ref(null)
 const formError    = ref('')
 
+const licenciaActiva = ref(null)
+const totalUsuariosSistema = ref(0)
+
+const puedeCrearMasRestaurantes = computed(() => {
+  if (!licenciaActiva.value) return true
+  const max = licenciaActiva.value.max_restaurantes || 1
+  const actuales = restaurantes.value.length
+  return actuales < max
+})
+
+const puedeCrearMasEmpleados = computed(() => {
+  if (!licenciaActiva.value) return true
+  const max = licenciaActiva.value.max_usuarios || 5
+  const actuales = totalUsuariosSistema.value || empleados.value.length
+  return actuales < max
+})
+
+const cargarTotalUsuariosSistema = async () => {
+  try {
+    const propDashboard = await apiClient.get('/propietarios/dashboard').catch(() => null)
+    if (propDashboard?.success && propDashboard.data) {
+      totalUsuariosSistema.value = propDashboard.data.estadisticas?.total_usuarios ?? 0
+    }
+  } catch (err) {
+    console.error('Error fetching propietarios dashboard:', err)
+  }
+}
+
+const loadLicencia = async () => {
+  if (!currentUser.value) return
+  const roleRaw = currentUser.value.roles?.[0]
+  const rol = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre
+  if (!currentUser.value.propietario_id && rol !== 'PROPIETARIO' && rol !== 'ADMIN') {
+    licenciaActiva.value = null
+    return
+  }
+
+  try {
+    const propietarioId = currentUser.value.propietario_id || currentUser.value.id
+    const data = await apiClient.get(`/propietarios/${propietarioId}/licencias-activas`)
+
+    if (data?.success && data.data?.length > 0) {
+      const lic = data.data[0]
+      licenciaActiva.value = {
+        id:               lic.id,
+        nombre:           lic.licencia?.nombre   || lic.nombre,
+        tipo:             lic.licencia?.tipo      || lic.tipo,
+        max_restaurantes: lic.licencia?.max_restaurantes ?? lic.max_restaurantes ?? 1,
+        max_usuarios:     lic.licencia?.max_usuarios     ?? lic.max_usuarios ?? 5,
+      }
+    } else {
+      licenciaActiva.value = null
+    }
+  } catch (e) {
+    console.error('Error fetching license info in admin view:', e)
+    licenciaActiva.value = null
+  }
+}
+
 const esRolIgnorado = (emp) => {
   if (!emp) return true
   const rol = String(getRolNombre(emp)).toLowerCase()
@@ -660,6 +743,9 @@ const loadData = async () => {
 
     if (uData.success || uData.data) currentUser.value = uData.data || uData
     if (rData.success || rData.data) restaurantes.value = rData.data?.restaurantes || rData.data || []
+
+    await loadLicencia()
+    await cargarTotalUsuariosSistema()
 
     ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
 
@@ -964,6 +1050,7 @@ const handleGuardarEmpleado = async (payload) => {
         cerrarModalEmpleado()
       }
       await cargarEmpleados()
+      await cargarTotalUsuariosSistema()
     } else {
       const msg = r.message || Object.values(r.errors||{}).flat().join(' · ') || 'Error al guardar'
       formEmpleadoRef.value?.setError(msg)
@@ -1001,6 +1088,7 @@ const handleConfirmDelete = async () => {
       empleados.value = empleados.value.filter(e => e.id !== idToDelete.value)
       showToast('Empleado eliminado permanentemente', 'success')
       cancelarEliminacion()
+      await cargarTotalUsuariosSistema()
     } else {
       showToast(r.message || 'Error al eliminar', 'error')
     }

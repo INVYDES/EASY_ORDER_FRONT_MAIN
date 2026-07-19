@@ -131,12 +131,20 @@
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">🧄 Ingredientes</h1>
           <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Inventario y costos de ingredientes</p>
         </div>
-        <button
-          @click="abrirModalIngrediente()"
-          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition"
-        >
-          ＋ Nuevo ingrediente
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            @click="showListaCompras = true"
+            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition shadow-sm cursor-pointer"
+          >
+            📦 Lista de compras
+          </button>
+          <button
+            @click="abrirModalIngrediente()"
+            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer"
+          >
+            ＋ Nuevo ingrediente
+          </button>
+        </div>
       </div>
 
       <!-- KPIs -->
@@ -294,6 +302,13 @@
       @close="showAjusteStock = false"
       @saved="handleStockSaved"
     />
+    
+    <!-- Lista de Compras -->
+    <ListaComprasModal
+      v-if="showListaCompras"
+      :ingredientes="ingredientes"
+      @close="showListaCompras = false"
+    />
 
     <!-- Paquetes -->
     <PaqueteFormModal 
@@ -320,6 +335,7 @@ import ProductFormModal from '../components/productos/ProductFormModal.vue'
 import ProductImportModal from '../components/productos/ProductImportModal.vue'
 import CategoriaModal from '../components/productos/CategoriaModal.vue'
 import IngredienteModal from '../components/ingredientes/IngredienteModal.vue'
+import ListaComprasModal from '../components/ingredientes/ListaComprasModal.vue'
 import AjusteStockModal from '../components/productos/AjustesStockModal.vue'
 import PaquetesTable from '../components/productos/PaquetesTable.vue'
 import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
@@ -373,6 +389,7 @@ const showForm = ref(false)
 const showImport = ref(false)
 const showCategoriaModal = ref(false)
 const showIngredienteModal = ref(false)
+const showListaCompras = ref(false)
 const showAjusteStock = ref(false)
 const showPaqueteModal = ref(false)
 
@@ -632,12 +649,16 @@ const abrirAjusteStock = (ing) => {
 const handleIngredienteSaved = async () => { 
   showIngredienteModal.value = false
   await loadIngredientes()
+  await loadProducts(pagination.value.current_page)
+  await loadAllProductsForSelection()
   showToast('Ingrediente guardado correctamente', 'success') 
 }
 
 const handleStockSaved = async () => { 
   showAjusteStock.value = false
   await loadIngredientes()
+  await loadProducts(pagination.value.current_page)
+  await loadAllProductsForSelection()
   showToast('Stock actualizado correctamente', 'success') 
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-950 p-4 sm:p-6">
+  <div class="min-h-screen bg-gray-950 p-4 sm:p-6" style="zoom: 1.25;">
 
     <SucursalBadge />
 
@@ -119,13 +119,13 @@
         <!-- Header -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800 dark:border-gray-700">
           <div>
-            <h3 class="text-white font-bold text-base">🧑‍🍳 Confirmar ingredientes</h3>
-            <p class="text-gray-400 dark:text-gray-300 text-xs mt-0.5">
+            <h3 class="text-white dark:text-white font-bold text-xl">🧑‍🍳 Confirmar ingredientes</h3>
+            <p class="text-gray-400 dark:text-gray-300 text-sm mt-0.5">
               Orden #{{ modalIngredientes.orden?.id }} ·
               {{ modalIngredientes.productosTotal }} producto{{ modalIngredientes.productosTotal !== 1 ? 's' : '' }}
             </p>
           </div>
-          <button @click="cerrarModal" class="text-gray-500 dark:text-gray-400 hover:text-white text-xl leading-none">✕</button>
+          <button @click="cerrarModal" class="text-gray-500 dark:text-gray-400 hover:text-white dark:hover:text-white text-2xl leading-none">✕</button>
         </div>
 
         <!-- Cuerpo: lista de productos con sus ingredientes -->
@@ -134,13 +134,13 @@
           <!-- Loading ingredientes -->
           <div v-if="modalIngredientes.loading" class="flex items-center justify-center py-10 gap-2 text-gray-500 dark:text-gray-400">
             <LoadingSpinner />
-            <span class="text-sm">Cargando ingredientes...</span>
+            <span class="text-base">Cargando ingredientes...</span>
           </div>
 
           <!-- Sin datos aún -->
-          <div v-else-if="!modalIngredientes.items.length" class="text-center py-10 text-gray-600 dark:text-gray-500 text-sm">
+          <div v-else-if="!modalIngredientes.items.length" class="text-center py-10 text-gray-600 dark:text-gray-500 text-base">
             Los productos de esta orden no tienen ingredientes asignados.
-            <p class="mt-2 text-xs">Puedes continuar igualmente.</p>
+            <p class="mt-2 text-sm">Puedes continuar igualmente.</p>
           </div>
 
           <!-- Productos con ingredientes -->
@@ -149,54 +149,39 @@
 
             <!-- Producto header -->
             <div class="flex items-center gap-3 px-4 py-3 bg-gray-800 dark:bg-gray-900 border-b border-gray-700/50 dark:border-gray-600/50">
-              <span class="text-base">🍽️</span>
+              <span class="text-lg">🍽️</span>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-white truncate">{{ item.producto_nombre }}</p>
-                <p class="text-xs text-gray-400 dark:text-gray-300">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
+                <p class="text-base font-bold text-white dark:text-white truncate">{{ item.producto_nombre }}</p>
+                <p class="text-sm text-gray-400 dark:text-gray-300">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
               </div>
-              <!-- Badge si algún ingrediente tiene problema -->
-              <span v-if="item.ingredientes.some(i => i.sin_stock || i.insuficiente)"
-                class="text-xs font-bold px-2 py-0.5 rounded-full"
-                :class="item.ingredientes.some(i => i.sin_stock) ? 'bg-red-900 text-red-300' : 'bg-amber-900 text-amber-300'">
-                {{ item.ingredientes.some(i => i.sin_stock) ? '🚨 Sin stock' : '⚠️ Stock bajo' }}
-              </span>
+
             </div>
 
             <!-- Lista de ingredientes -->
             <div class="divide-y divide-gray-700/30 dark:divide-gray-600/30">
               <div v-for="ing in item.ingredientes" :key="ing.id"
-                class="flex items-center gap-3 px-4 py-2.5">
+                class="flex items-center gap-3 px-4 py-3">
 
                 <!-- Toggle checkbox -->
                 <button 
                   @click="modalIngredientes.nuevoEstado ? (ing.incluir = !ing.incluir) : null"
-                  :class="['w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition',
+                  :class="['w-7 h-7 rounded-md border-2 flex items-center justify-center shrink-0 transition',
                     ing.incluir ? 'bg-orange-500 border-orange-500' : 'border-gray-600 dark:border-gray-500 bg-transparent',
                     !modalIngredientes.nuevoEstado ? 'cursor-default' : '']">
-                  <span v-if="ing.incluir" class="text-white text-xs font-black">✓</span>
+                  <span v-if="ing.incluir" class="text-white text-sm font-black">✓</span>
                 </button>
 
                 <!-- Nombre + cantidad receta -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm text-gray-200 dark:text-gray-100" :class="!ing.incluir ? 'line-through opacity-40' : ''">
+                  <p class="text-base text-gray-200 dark:text-gray-100" :class="!ing.incluir ? 'line-through opacity-40' : ''">
                     {{ ing.nombre }}
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
                     necesario: {{ ing.cantidad_receta_total }} {{ ing.unidad }}
                   </p>
                 </div>
 
-                <!-- Stock disponible -->
-                <div class="text-right shrink-0">
-                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    :class="ing.sin_stock    ? 'bg-red-900/60 text-red-400' :
-                            ing.insuficiente ? 'bg-amber-900/60 text-amber-400' :
-                                               'bg-gray-700 dark:bg-gray-800 text-gray-400 dark:text-gray-300'">
-                    {{ ing.sin_stock ? 'Sin stock' :
-                       ing.insuficiente ? `Solo ${ing.stock_actual} ${ing.unidad}` :
-                       `${ing.stock_actual} ${ing.unidad}` }}
-                  </span>
-                </div>
+
               </div>
             </div>
           </div>
@@ -205,13 +190,13 @@
         <!-- Footer -->
         <div class="px-5 py-4 border-t border-gray-800 dark:border-gray-700 flex items-center gap-3">
           <button @click="cerrarModal"
-            class="flex-1 py-2.5 text-sm text-gray-400 dark:text-gray-300 bg-gray-800 dark:bg-gray-900 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-800 transition">
+            class="flex-1 py-3 text-base text-gray-400 dark:text-gray-300 bg-gray-800 dark:bg-gray-900 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-800 transition">
             {{ modalIngredientes.nuevoEstado ? 'Cancelar' : 'Cerrar' }}
           </button>
           <button v-if="modalIngredientes.nuevoEstado" 
             @click="confirmarYCambiarEstado"
             :disabled="modalIngredientes.guardando"
-            class="flex-1 py-2.5 text-sm font-bold text-white bg-orange-500 hover:bg-orange-400 rounded-xl transition disabled:opacity-50">
+            class="flex-1 py-3 text-base font-bold text-white bg-orange-500 hover:bg-orange-400 rounded-xl transition disabled:opacity-50">
             {{ modalIngredientes.guardando ? 'Iniciando...' : '🔥 Iniciar preparación' }}
           </button>
         </div>

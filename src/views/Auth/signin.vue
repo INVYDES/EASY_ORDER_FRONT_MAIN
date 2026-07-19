@@ -96,20 +96,12 @@
     </div>
 
     <!-- Panel derecho -->
-    <div class="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden font-outfit">
-      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] [background-size:32px_32px]"></div>
-      
-      <div class="relative z-10 text-center text-white px-16 max-w-lg">
-        <div class="inline-block px-4 py-1.5 bg-slate-800 rounded-full border border-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
-          Plataforma Gastronómica
-        </div>
-        <h2 class="text-5xl font-extrabold mb-6 leading-tight tracking-tight">
-          La gestión de tu restaurante, elevada.
-        </h2>
-        <p class="text-slate-400 leading-relaxed text-lg font-light">
-          Control de mesas, personal y cocina en una sola interfaz inteligente diseñada para crecer contigo.
-        </p>
-      </div>
+    <div class="hidden lg:flex w-1/2 bg-[#02050e] relative items-center justify-center overflow-hidden">
+      <img 
+        src="@/assets/imaguenes/fondo_login.jpg" 
+        class="absolute inset-0 w-full h-full object-contain" 
+        alt="Login Background"
+      />
     </div>
 
   </div>

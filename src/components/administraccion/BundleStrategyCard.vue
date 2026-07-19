@@ -3,7 +3,7 @@
     <div class="flex items-center gap-3 mb-5">
       <div class="w-11 h-11 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center text-2xl">📦</div>
       <div>
-        <h3 class="text-lg font-bold">Sugerencia de Paquete Estratégico</h3>
+        <h3 class="text-lg font-bold">Sugerencia de Paquete Estratégico (Ingeniería de Menú)</h3>
         <p class="text-indigo-100 text-xs">Cocina (mayor utilidad, fuera Top 10) · Bebida #1 ventas · Postre menor volumen con ROI+</p>
       </div>
     </div>

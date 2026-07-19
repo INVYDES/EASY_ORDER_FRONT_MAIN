@@ -326,7 +326,7 @@
 
           <div class="flex items-center justify-between">
             <span class="text-xs text-slate-400 dark:text-gray-500 font-bold">
-              {{ order.created_at_formateado || (order.created_at ? new Date(order.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—') }}
+              {{ order.created_at_formateado || formatLocalTimeOnly(order.created_at) }}
             </span>
             <div class="flex items-center gap-1">
               <span v-if="order.propina && Number(order.propina) > 0" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
@@ -352,9 +352,16 @@
                      esAdminOPropietario ? 'bg-slate-300 dark:bg-gray-600 text-slate-500 dark:text-gray-400 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
             {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
           </button>
-          <div v-else class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"
-            :class="(order.estado || '').toUpperCase() === 'CANCELADA' ? 'text-red-500 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800' : 'text-slate-400 dark:text-gray-500 bg-slate-50 dark:bg-gray-800/50'">
-            {{ (order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫 Cancelada completamente' : `✓ Pagada · ${order.metodo_pago || 'efectivo'}` }}
+          <div v-else class="space-y-2">
+            <div class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"
+              :class="(order.estado || '').toUpperCase() === 'CANCELADA' ? 'text-red-500 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800' : 'text-slate-400 dark:text-gray-500 bg-slate-50 dark:bg-gray-800/50 dark:border-gray-700'">
+              {{ (order.estado || '').toUpperCase() === 'CANCELADA' ? '🚫 Cancelada completamente' : `✓ Pagada · ${order.metodo_pago || 'efectivo'}` }}
+            </div>
+            <button v-if="(order.estado || '').toUpperCase() !== 'CANCELADA'"
+              @click="reimprimirTicket(order)"
+              class="w-full py-2.5 text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-2xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
+              🖨️ Reimprimir ticket
+            </button>
           </div>
         </div>
       </div>
@@ -494,6 +501,52 @@
 import { ref, computed, nextTick } from 'vue'
 import { API_URL, getHeaders } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  try {
+    let d;
+    if (typeof dateStr === 'string') {
+      if (dateStr.includes('T')) {
+        if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+          d = new Date(dateStr);
+        } else {
+          d = new Date(dateStr + 'Z');
+        }
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.trim().split(' ');
+        const fecha = parts[0];
+        const hora = parts[1] || '00:00:00';
+        const [dia, mes, anio] = fecha.split('/');
+        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
+      } else {
+        const cleanStr = dateStr.replace(' ', 'T');
+        d = new Date(cleanStr);
+      }
+    } else {
+      d = new Date(dateStr);
+    }
+    if (isNaN(d.getTime())) return null;
+    return d;
+  } catch (e) {
+    return null;
+  }
+}
+
+const formatLocalTimeOnly = (dateStr) => {
+  const d = parseUTCDate(dateStr)
+  if (!d) return '—'
+  return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+const formatLocalDateTime = (dateStr) => {
+  const d = parseUTCDate(dateStr)
+  if (!d) return '—'
+  return d.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })
+}
+
+
 
 const props = defineProps({
   orders: { type: Array, default: () => [] },
@@ -657,6 +710,7 @@ const syncIdentity = async () => {
           telefono: r.telefono || '',
           propietario_id: r.propietario_id || ''
         }
+        detectedRestId.value = rid
       }
     }
   } catch (err) {
@@ -691,6 +745,170 @@ const imprimirTicket = () => {
       </head>
       <body>
         ${el.innerHTML}
+      </body>
+    </html>
+  `)
+  win.document.close()
+  win.focus()
+  setTimeout(() => {
+    win.print()
+    win.close()
+  }, 500)
+}
+
+const generarTicketHTML = (order) => {
+  const rid = order.restaurante_id || order.id_restaurante || user.restaurante_activo || ''
+  const pId = datosSucursal.value.propietario_id || user.propietario_id || ''
+  const uIdent = `${pId}${rid}${order.id}`
+  
+  const items = order.detalles || []
+  const grouped = {}
+  items.forEach(item => {
+    const comensal = item.nom_comensal || item.comensal || item.nombre_comensal || 'Compartido'
+    if (!grouped[comensal]) grouped[comensal] = []
+    grouped[comensal].push({
+      cantidad: item.cantidad || 0,
+      nombre: item.producto_nombre || item.nombre || (typeof item.producto === 'string' ? item.producto : item.producto?.nombre) || 'Producto',
+      subtotal: item.subtotal || 0,
+      notas: item.notas || '',
+      cancelado: !!item.cancelado,
+      motivo_cancelacion: item.motivo_cancelacion || ''
+    })
+  })
+
+  const fechaText = formatLocalDateTime(order.updated_at || order.created_at || new Date())
+
+  let itemsHtml = ''
+  for (const [comensal, comensalItems] of Object.entries(grouped)) {
+    itemsHtml += `
+      <tr>
+        <td colspan="3" style="padding: 2mm 0 1mm 0; font-weight: bold; font-size: 11px; text-transform: uppercase; border-bottom: 1px dotted #ccc;">
+          ${comensal === 'Compartido' ? '--- General ---' : `--- Comensal: ${comensal} ---`}
+        </td>
+      </tr>
+    `
+    comensalItems.forEach(item => {
+      itemsHtml += `
+        <tr style="${item.cancelado ? 'color: #999; text-decoration: line-through;' : ''}">
+          <td style="padding: 1mm 0; vertical-align: top;">${item.cantidad}</td>
+          <td style="padding: 1mm 0; text-transform: uppercase;">
+            ${item.nombre}
+            ${item.cancelado ? `<span style="font-size: 8px; text-decoration: none !important; display: inline-block; background: #eee; padding: 0 1mm;">[CANCELADO]</span>` : ''}
+            ${item.notas && !item.cancelado ? `<div style="font-size: 9px; font-style: italic; color: #555;">* ${item.notas}</div>` : ''}
+            ${item.cancelado && item.motivo_cancelacion ? `<div style="font-size: 8px; font-style: italic; text-decoration: none !important;">Motivo: ${item.motivo_cancelacion}</div>` : ''}
+          </td>
+          <td style="text-align: right; padding: 1mm 0; vertical-align: top;">$${Number(item.subtotal).toFixed(2)}</td>
+        </tr>
+      `
+    })
+  }
+
+  const subtotal = Number(order.total || 0)
+  const propina = Number(order.propina || 0)
+  const total = subtotal
+
+  const refHtml = (order.referencia && order.referencia.trim()) 
+    ? `<p style="margin: 2px 0;"><strong>Referencia:</strong> ${order.referencia.toUpperCase()}</p>` 
+    : ''
+
+  const atendio = order.mesero && order.mesero !== 'N/A' ? order.mesero : (order.user?.name || order.usuario?.name || userName.value)
+
+  return `
+    <div style="width: 80mm; padding: 2mm; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff;">
+      <div style="text-align: center; margin-bottom: 4mm;">
+        <h2 style="margin: 0; font-size: 16px; font-weight: bold; text-transform: uppercase;">${nombreSucursal.value}</h2>
+        ${datosSucursal.value.direccion && datosSucursal.value.direccion.trim().length > 2 ? `<p style="margin: 2px 0; font-size: 10px; line-height: 1.2;">${datosSucursal.value.direccion}</p>` : ''}
+        ${datosSucursal.value.telefono ? `<p style="margin: 2px 0; font-size: 10px;">TEL: ${datosSucursal.value.telefono}</p>` : ''}
+        <div style="border-bottom: 1px dashed #000; margin-top: 3mm; margin-bottom: 3mm;"></div>
+        <p style="margin: 0; font-size: 12px; font-weight: bold;">Comprobante de Pago</p>
+        <p style="margin: 2px 0; font-size: 10px;">${fechaText}</p>
+      </div>
+      <div style="font-size: 11px; margin-bottom: 3mm;">
+        <div style="display: flex; justify-content: space-between;">
+          <span><strong>Mesa:</strong> ${order.mesa || 'N/A'}</span>
+          <span><strong>Folio:</strong> ${uIdent}</span>
+        </div>
+        <p style="margin: 2px 0;"><strong>Atendió:</strong> ${atendio}</p>
+        <p style="margin: 2px 0;"><strong>Pago:</strong> ${(order.metodo_pago || 'EFECTIVO').toUpperCase()}</p>
+        ${refHtml}
+      </div>
+      <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 4mm;">
+        <thead>
+          <tr style="border-top: 1px dashed #000; border-bottom: 1px dashed #000;">
+            <th style="text-align: left; padding: 1.5mm 0; width: 10%;">CANT</th>
+            <th style="text-align: left; padding: 1.5mm 0; width: 60%;">DESCRIPCION</th>
+            <th style="text-align: right; padding: 1.5mm 0; width: 30%;">IMPORTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+      </table>
+      <div style="font-size: 11px; text-align: right;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 1mm;">
+          <span style="width: 30%;">SUBTOTAL:</span>
+          <span style="width: 30%; font-weight: bold;">$${subtotal.toFixed(2)}</span>
+        </div>
+        <div style="display: flex; justify-content: flex-end; font-size: 14px; margin-top: 2mm; border-top: 1.5px solid #000; padding-top: 2mm;">
+          <span style="width: 30%; font-weight: bold;">TOTAL:</span>
+          <span style="width: 30%; font-weight: bold;">$${total.toFixed(2)}</span>
+        </div>
+        ${propina > 0 ? `
+        <div style="display: flex; justify-content: flex-end; margin-top: 2mm; color: #444;">
+          <span style="width: 30%;">PROPINA:</span>
+          <span style="width: 30%;">$${propina.toFixed(2)}</span>
+        </div>` : ''}
+      </div>
+      <div style="margin-top: 8mm; text-align: center; border-top: 1px dashed #000; padding-top: 4mm;">
+        <p style="margin: 4px 0; font-size: 9px; font-weight: bold;">ESTE NO ES UN COMPROBANTE FISCAL</p>
+        <p style="margin: 2px 0; font-size: 9px; font-weight: bold;">PROPINA NO INCLUIDA EN EL TOTAL</p>
+        <div style="margin-top: 5mm;">
+          <p style="margin: 0; font-size: 9px; color: #444;">Código de Rastreo:</p>
+          <p style="margin: 2px 0; font-size: 11px; font-weight: bold; letter-spacing: 1px;">* ${uIdent} *</p>
+        </div>
+        <p style="margin-top: 5mm; font-size: 11px; font-style: italic;">¡Gracias por su visita!</p>
+        <p style="margin-top: 2mm; font-size: 8px; color: #666;">*** EASY ORDER SYSTEM ***</p>
+      </div>
+    </div>
+  `
+}
+
+const reimprimirTicket = async (order) => {
+  const rid = order.restaurante_id || order.id_restaurante || user.restaurante_activo
+  if (rid && (!datosSucursal.value.propietario_id || detectedRestId.value !== rid)) {
+    try {
+      const dataR = await apiClient.get(`/restaurantes/${rid}`)
+      const r = dataR.data || dataR
+      if (r) {
+        nombreSucursal.value = (r.nombre || 'RESTAURANTE').toUpperCase()
+        const d = r.direccion || {}
+        const partes = [d.calle, d.ciudad, d.estado].filter(p => p && p.trim().length > 0)
+        datosSucursal.value = {
+          direccion: partes.join(', '),
+          telefono: r.telefono || '',
+          propietario_id: r.propietario_id || ''
+        }
+        detectedRestId.value = rid
+      }
+    } catch (err) {
+      console.error('Error syncing identity in reprint:', err)
+    }
+  }
+
+  const ticketHtml = generarTicketHTML(order)
+  const uIdent = `${datosSucursal.value.propietario_id || user.propietario_id || ''}${rid || ''}${order.id}`
+  const win = window.open('', '_blank', 'width=400,height=600')
+  win.document.write(`
+    <html>
+      <head>
+        <title>Ticket_${uIdent}</title>
+        <style>
+          @page { margin: 0; }
+          body { margin: 0; padding: 0; }
+        </style>
+      </head>
+      <body>
+        ${ticketHtml}
       </body>
     </html>
   `)
@@ -808,7 +1026,9 @@ const cobrarOrden = async () => {
   try {
     // Generar ticket antes de cerrar la orden
     await nextTick()
-    imprimirTicket()
+    if (!esMesero.value) {
+      imprimirTicket()
+    }
 
     // 1. Cerrar la orden con método de pago y propina
     let dataCerrar
@@ -968,7 +1188,7 @@ const detalleSeleccionado = ref(null)
 const detallesSinAsignar = computed(() => {
   if (!ordenCobrar.value?.detalles) return []
   const asignados = comensalesManual.value.flatMap(c => c.detalles.map(d => d.id))
-  return ordenCobrar.value.detalles.filter(d => !asignados.includes(d.id))
+  return ordenCobrar.value.detalles.filter(d => !d.cancelado && !asignados.includes(d.id))
 })
 
 const subtotalComensal = (idx) => {
@@ -987,8 +1207,8 @@ const montoPorComensal = (n) => {
 const abrirDividirCuenta = () => {
   if (!ordenCobrar.value) return
   
-  // Analizar comensales de los detalles para modo automático
-  const detalles = ordenCobrar.value.detalles || []
+  // Analizar comensales de los detalles para modo automático (excluyendo cancelados)
+  const detalles = (ordenCobrar.value.detalles || []).filter(d => !d.cancelado)
   const grupos = {}
   detalles.forEach(d => {
     const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
@@ -1140,7 +1360,9 @@ const cobrarDividido = async () => {
        })
     }
 
-    imprimirTicketMultiple(dataDividir.cuentas, ordenCobrar.value.folio || ordenCobrar.value.id, dataCerrar.data.ordenes_ids || [])
+    if (!esMesero.value) {
+      imprimirTicketMultiple(dataDividir.cuentas, ordenCobrar.value.folio || ordenCobrar.value.id, dataCerrar.data.ordenes_ids || [])
+    }
 
     emit('order-paid', {
       id:          ordenCobrar.value.id,
