@@ -158,6 +158,12 @@
           <span v-if="plan.tipo === 'EMPRESA'">Usuarios ilimitados</span>
           <span v-else>{{ plan.max_usuarios }} Usuarios</span>
         </li>
+        <li class="flex items-center gap-3 text-sm font-medium text-gray-700">
+          <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <span class="text-xs">⚡</span>
+          </div>
+          <span>Modo Servicio Rápido</span>
+        </li>
       </ul>
 
       <button
@@ -232,6 +238,13 @@
                   :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
                   <span v-if="plan.dias_prueba > 0" class="text-emerald-600 font-semibold">{{ plan.dias_prueba }} días</span>
                   <span v-else class="text-gray-400">—</span>
+                </td>
+              </tr>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-5 py-3 text-gray-600 font-medium">Servicio Rápido</td>
+                <td v-for="plan in planesFiltrados" :key="plan.id" class="px-5 py-3 text-center"
+                  :class="planSeleccionado?.id === plan.id ? 'bg-indigo-50' : ''">
+                  <span class="text-emerald-500 font-bold">✓</span>
                 </td>
               </tr>
               <tr class="hover:bg-gray-50 transition">
@@ -451,9 +464,10 @@ const planesFiltrados = computed(() => {
     seen.add(plan.nombre)
     return true
   }).sort((a, b) => {
-    // Orden: Prueba, Básico, Premium, Crecimiento, Pro, Enterprise
     const order = { 'PRUEBA': 0, 'MENSUAL': 1, 'ANUAL': 2, 'EMPRESA': 3 }
-    return (order[a.tipo] || 99) - (order[b.tipo] || 99)
+    const typeDiff = (order[a.tipo] || 99) - (order[b.tipo] || 99)
+    if (typeDiff !== 0) return typeDiff
+    return (parseFloat(a.precio || 0)) - (parseFloat(b.precio || 0))
   })
 })
 

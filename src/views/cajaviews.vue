@@ -63,6 +63,8 @@ const ultimaActualizacion = ref(null)
 
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 let pollTimer = null
+const restauranteObjeto = ref(null)
+const isServicioRapido  = computed(() => !!restauranteObjeto.value?.servicio_rapido)
 
 // ── Propinas (Oficiales de API) ──
 const propinasEfectivo = ref(0)
@@ -88,6 +90,9 @@ const loading = reactive({
 const openOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
+    if (isServicioRapido.value) {
+      return !['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)
+    }
     return s === 'ENTREGADA' || s === 'ENTREGADO' ||
       (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(s) && 
        (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
@@ -540,7 +545,15 @@ onMounted(async () => {
       const user = data.data || data
       const ra = user?.restaurante_activo
       if (ra) {
-        restauranteActivo.value = (typeof ra === 'object' && ra !== null) ? ra.id : ra
+        if (typeof ra === 'object' && ra !== null) {
+          restauranteActivo.value = ra.id
+          restauranteObjeto.value = ra
+        } else {
+          restauranteActivo.value = ra
+          apiClient.get(`/restaurantes/${ra}`).then(rData => {
+            if (rData?.data) restauranteObjeto.value = rData.data
+          }).catch(() => {})
+        }
       }
     }
   } catch { }
@@ -676,6 +689,7 @@ onUnmounted(() => {
               v-if="selectedTab === 'open'" 
               type="open" 
               :orders="openOrders" 
+              :servicio-rapido="isServicioRapido"
               @order-paid="handleOrderPaid" 
               @refresh="loadAllData" 
             />
@@ -683,6 +697,7 @@ onUnmounted(() => {
               v-else-if="selectedTab === 'closed'" 
               type="closed" 
               :orders="closedOrders" 
+              :servicio-rapido="isServicioRapido"
               @order-paid="handleOrderPaid" 
               @refresh="loadAllData" 
             />

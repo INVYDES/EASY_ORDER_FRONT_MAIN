@@ -53,8 +53,8 @@
                 <h4 class="text-slate-800 font-black text-xs truncate uppercase tracking-tighter">{{ oferta.nombre }}</h4>
                 <div class="flex items-center justify-between mt-2">
                   <div class="flex items-baseline gap-2">
-                    <span class="text-slate-400 text-[10px] line-through">${{ oferta.precio_original.toFixed(2) }}</span>
-                    <span class="text-amber-600 font-black text-base">${{ oferta.precio_oferta.toFixed(2) }}</span>
+                    <span class="text-slate-400 text-[10px] line-through">${{ Number(oferta.precio_original || 0).toFixed(2) }}</span>
+                    <span class="text-amber-600 font-black text-base">${{ Number(oferta.precio_oferta || 0).toFixed(2) }}</span>
                   </div>
                   <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
                     <span class="text-sm font-bold">+</span>
@@ -213,11 +213,18 @@
                   <div>
                     <p class="font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2 transition-all"
                        :class="sidebarAbierta ? 'text-xs' : 'text-xl'">{{ p.nombre }}</p>
-                    <p v-if="p.bajo_stock && !p.agotado" class="font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded mt-1.5 inline-block uppercase transition-all"
-                       :class="sidebarAbierta ? 'text-[8px]' : 'text-sm'">Últimas {{ p.stock }}</p>
+                    <div class="flex items-center justify-between mt-1 flex-wrap gap-1">
+                      <p v-if="p.bajo_stock && !p.agotado" class="font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase transition-all"
+                         :class="sidebarAbierta ? 'text-[8px]' : 'text-sm'">Últimas {{ p.stock }}</p>
+                      <div v-if="p.tamanos && p.tamanos.length > 0" class="flex gap-1 ml-auto">
+                        <span v-for="t in p.tamanos" :key="t.id" class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase shadow-xs">
+                          {{ (t.nombre || '').charAt(0) }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                    <span class="font-black text-slate-900 text-sm">${{ Number(p.precio||0).toFixed(2) }}</span>
+                    <span class="font-black text-slate-900 text-sm">{{ getPrecioRango(p) }}</span>
                     <div class="w-7 h-7 rounded-xl flex items-center justify-center text-base font-bold transition-all shadow-sm"
                       :class="!p.agotado ? 'bg-slate-900 text-white group-hover:scale-110' : 'bg-slate-100 text-slate-300'">
                       {{ !p.agotado ? '+' : '✕' }}
@@ -245,11 +252,6 @@
             <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{{ totalItems }} items</span>
           </div>
           <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Restaurant Kiosk System</p>
-          
-          <div class="flex items-center justify-between bg-white rounded-xl p-2 border border-slate-100 shadow-sm">
-            <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-            <input v-model="numeroComensales" type="number" min="1" max="50" @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
-          </div>
         </div>
         
         <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-white custom-scrollbar">
@@ -261,20 +263,20 @@
           
           <div v-else class="space-y-4">
             <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                 class="overflow-hidden transition-all duration-300"
+                 :class="comensalesNombres.length > 1 ? (comensalActivoIndex === cIdx ? 'border-2 border-indigo-500 shadow-md shadow-indigo-100 rounded-2xl' : 'border-2 border-slate-100 rounded-2xl') : ''">
               
               <!-- Box Header -->
-              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
-                <div class="flex items-center gap-2">
-                   <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
-                   <div class="flex flex-col">
-                     <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
-                     <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
-                   </div>
-                </div>
-                <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
-                <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
+              <div v-if="comensalesNombres.length > 1" class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                 <div class="flex items-center gap-2">
+                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
+                    <div class="flex flex-col">
+                      <input v-model="comensalesNombres[cIdx]" @click.stop class="bg-transparent font-black text-sm text-slate-800 outline-none w-32 border-b border-transparent focus:border-indigo-300 transition-colors" />
+                      <span v-if="tiempoPorComensal(cIdx) >= 0 && getItemsForComensal(cIdx).length > 0" class="text-[10px] font-bold text-slate-500 mt-0.5">⏱️ Tiempo est: {{ tiempoPorComensal(cIdx) }} min</span>
+                    </div>
+                 </div>
+                 <span v-if="comensalActivoIndex === cIdx" class="text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-lg uppercase tracking-widest shadow-sm">Activo</span>
+                 <span v-else class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivo</span>
               </div>
 
               <!-- Box Items -->
@@ -291,7 +293,7 @@
                       <span v-else class="text-lg">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
                     </div>
                     <div class="flex-1 min-w-0 flex justify-between items-start">
-                      <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }}</p>
+                      <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none mt-1">{{ item.nombre }} {{ item.tamano_nombre ? '(' + item.tamano_nombre + ')' : '' }}</p>
                       <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
                     </div>
                   </div>
@@ -359,18 +361,6 @@
           <button @click="showCarritoMobile = false" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors shadow-sm">✕</button>
         </div>
         
-        <!-- Selector de comensales estilo píldora -->
-        <div class="flex items-center justify-between bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 mb-5 shadow-sm">
-          <span class="text-[11px] font-black text-indigo-800 uppercase tracking-widest ml-2 flex items-center gap-2">
-            👥 Comensales:
-          </span>
-          <div class="flex items-center bg-white rounded-xl shadow-sm border border-indigo-100 overflow-hidden">
-            <button @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">-</button>
-            <input v-model="numeroComensales" type="number" min="1" max="50" @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales" class="w-10 h-8 text-center text-sm font-black text-slate-800 outline-none bg-transparent" />
-            <button @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" class="w-8 h-8 flex items-center justify-center text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">+</button>
-          </div>
-        </div>
-
         <!-- Lista de Comensales -->
         <div class="flex-1 overflow-y-auto space-y-5 mb-4 pr-2 custom-scrollbar">
           <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center py-12 opacity-40">
@@ -380,11 +370,11 @@
           
           <div v-else class="space-y-5">
             <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-[1.5rem] overflow-hidden transition-all duration-300 bg-white"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-lg shadow-indigo-100/50' : 'border-slate-100'">
+                 class="rounded-[1.5rem] overflow-hidden transition-all duration-300 bg-white"
+                 :class="comensalesNombres.length > 1 ? (comensalActivoIndex === cIdx ? 'border-2 border-indigo-500 shadow-lg shadow-indigo-100/50' : 'border-2 border-slate-100') : ''">
               
               <!-- Header Comensal -->
-              <div class="p-3.5 flex justify-between items-center cursor-pointer transition-colors" 
+              <div v-if="comensalesNombres.length > 1" class="p-3.5 flex justify-between items-center cursor-pointer transition-colors" 
                    :class="comensalActivoIndex === cIdx ? 'bg-indigo-50/30' : 'bg-slate-50/50 hover:bg-slate-50'"
                    @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-3">
@@ -471,11 +461,6 @@
           <button @click="showCarritoMobile = false" class="text-slate-400 text-xl hover:text-slate-600">✕</button>
         </div>
         
-        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-2 border border-slate-100 shadow-sm mb-4">
-          <span class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2">Comensales:</span>
-          <input v-model="numeroComensales" type="number" min="1" max="50" @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales" class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition font-bold text-center" />
-        </div>
-
         <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
           <div v-if="pedido.length === 0" class="text-center py-10 opacity-50">
             <span class="text-5xl mb-4 block">🍽️</span>
@@ -484,10 +469,10 @@
           
           <div v-else class="space-y-4">
             <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                 class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
-                 :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                 class="overflow-hidden transition-all duration-300"
+                 :class="comensalesNombres.length > 1 ? (comensalActivoIndex === cIdx ? 'border-2 border-indigo-500 shadow-md shadow-indigo-100 rounded-2xl' : 'border-2 border-slate-100 rounded-2xl') : ''">
               
-              <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+              <div v-if="comensalesNombres.length > 1" class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                 <div class="flex items-center gap-2">
                    <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
                    <div class="flex flex-col">
@@ -505,7 +490,7 @@
                 
                 <div v-for="item in getItemsForComensal(cIdx)" :key="item.cartId" class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
                   <div class="flex items-center justify-between mb-2">
-                    <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none flex-1">{{ item.nombre }}</p>
+                    <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter truncate leading-none flex-1">{{ item.nombre }} {{ item.tamano_nombre ? '(' + item.tamano_nombre + ')' : '' }}</p>
                     <button @click="eliminarDelPedido(item.cartId)" class="text-slate-300 hover:text-red-500 transition-all ml-2">✕</button>
                   </div>
                   <div class="mb-2">
@@ -554,6 +539,51 @@
       @confirmar="handleCheckout"
     />
 
+    <!-- Modal Tamaño del Producto (Kiosko) -->
+    <div v-if="showTamanoModalKiosko && productoTamanoSeleccionarKiosko" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="text-base font-black text-slate-800 uppercase tracking-wide">{{ productoTamanoSeleccionarKiosko?.nombre }}</h3>
+            <p class="text-xs font-semibold text-slate-400 mt-0.5">Selecciona el tamaño deseado</p>
+          </div>
+          <button @click="showTamanoModalKiosko = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold">✕</button>
+        </div>
+
+        <div class="space-y-2.5 my-5">
+          <button v-for="tam in (productoTamanoSeleccionarKiosko?.tamanos || [])" :key="tam.id"
+            @click="tam.stock !== undefined && tam.stock !== null && Number(tam.stock) <= 0 ? null : tamanoSeleccionadoModalKiosko = tam"
+            :disabled="tam.stock !== undefined && tam.stock !== null && Number(tam.stock) <= 0"
+            type="button"
+            class="flex items-center justify-between w-full p-4 rounded-2xl border-2 transition-all cursor-pointer text-left disabled:opacity-40 disabled:cursor-not-allowed"
+            :class="tamanoSeleccionadoModalKiosko?.id === tam.id ? 'border-blue-600 bg-blue-50/30 text-blue-700 shadow-sm' : 'border-slate-100 bg-slate-50/50 text-slate-700 hover:border-slate-200'">
+            <div class="flex items-center">
+              <span class="w-9 h-9 rounded-full bg-blue-100/80 text-blue-700 font-black flex items-center justify-center text-sm uppercase mr-3">
+                {{ (tam.nombre || '').charAt(0).toUpperCase() }}
+              </span>
+              <div class="flex flex-col">
+                <span class="font-black text-sm uppercase tracking-wide">{{ tam.nombre }}</span>
+                <span v-if="tam.stock !== undefined && tam.stock !== null && Number(tam.stock) <= 0" class="text-[10px] text-red-500 font-black uppercase tracking-widest">Agotado</span>
+              </div>
+            </div>
+            <span class="font-black text-base text-slate-900">${{ Number(tam.precio || 0).toFixed(2) }}</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+          <button @click="showTamanoModalKiosko = false" type="button"
+            class="flex-1 py-3.5 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-2xl transition">
+            Cancelar
+          </button>
+          <button @click="confirmarAgregarTamanoAlPedidoKiosko" type="button"
+            :disabled="!tamanoSeleccionadoModalKiosko || (tamanoSeleccionadoModalKiosko.stock !== undefined && tamanoSeleccionadoModalKiosko.stock !== null && Number(tamanoSeleccionadoModalKiosko.stock) <= 0)"
+            class="flex-1 py-3.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg shadow-blue-200 transition disabled:opacity-50">
+            Agregar ${{ tamanoSeleccionadoModalKiosko ? Number(tamanoSeleccionadoModalKiosko.precio || 0).toFixed(2) : '0.00' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -589,7 +619,7 @@ const POLL_INTERVAL = 5000 // 5 segundos
 
 // --- ESTADO COMENSALES ---
 const numeroComensales    = ref(1)
-const comensalesNombres   = ref(['Comensal 1'])
+const comensalesNombres   = ref(['General'])
 const comensalActivoIndex = ref(0)
 
 watch(numeroComensales, (newVal) => {
@@ -664,22 +694,45 @@ const categoriasFiltradas = computed(() => {
   return categoriaActiva.value === null ? categorias.value : categorias.value.filter(c => c.id === categoriaActiva.value)
 })
 
-const totalPedido = computed(() => pedido.value.reduce((s,i) => s + i.precio * i.cantidad, 0))
-const totalItems  = computed(() => pedido.value.reduce((s,i) => s + i.cantidad, 0))
+const totalPedido = computed(() => pedido.value.reduce((s, i) => s + (Number(i.precio) || 0) * (Number(i.cantidad) || 1), 0))
+const totalItems  = computed(() => pedido.value.reduce((s, i) => s + (Number(i.cantidad) || 1), 0))
+
+const getPrecioRango = (p) => {
+  if (p.tamanos && p.tamanos.length > 0) {
+    const precios = p.tamanos.map(t => Number(t.precio) || 0).filter(pr => pr > 0)
+    if (precios.length > 0) {
+      const min = Math.min(...precios)
+      const max = Math.max(...precios)
+      if (min === max) {
+        return `$${min.toFixed(2)}`
+      }
+      return `$${min.toFixed(2)} - $${max.toFixed(2)}`
+    }
+  }
+  return `$${Number(p.precio || 0).toFixed(2)}`
+}
 
 const normalizar = (p) => {
   if (!p) return null;
   try {
+    const tamanosList = Array.isArray(p.tamanos) ? p.tamanos : [];
+    const tieneTamanos = tamanosList.length > 0;
+    const rawStock = parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0);
+    const estaAgotado = tieneTamanos 
+      ? tamanosList.every(t => (t.stock !== undefined && t.stock !== null && t.stock > 0) ? parseFloat(t.stock) <= 0 : false)
+      : rawStock <= 0;
+
     return {
       id:          p.id,
       nombre:      p.nombre || 'Sin nombre',
       descripcion: p.descripcion || '',
       precio:      parseFloat(p.precio || 0),
       imagen_url:  p.imagen_url  || p.imagen || null,
-      stock:       parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0),
-      agotado:     parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0) <= 0,
+      stock:       rawStock,
+      agotado:     estaAgotado,
       bajo_stock:  p.bajo_stock ?? false,
       minutos_produccion: parseFloat(p.minutos_produccion || 0),
+      tamanos:     tamanosList,
       categoria:   p.categoria ? {
         id:     p.categoria.id,
         nombre: p.categoria.nombre.toUpperCase() === 'COCINA' ? 'Alimentos' : (p.categoria.nombre.toUpperCase() === 'BARRA' ? 'Bebidas' : p.categoria.nombre),
@@ -700,44 +753,29 @@ const cargarRestauranteActivo = async () => {
     if (data?.success) {
       const userData = data.data || data;
       
-      // 1. Intentar obtener el objeto restaurante completo (ya viene en /me)
       if (userData.restaurante) {
-        console.log('✅ [KIOSKO] Info del restaurante cargada desde /me:', userData.restaurante.nombre)
         restauranteSeleccionado.value = userData.restaurante
         localStorage.setItem('restaurante_id_activo', userData.restaurante.id)
         return userData.restaurante.id
       }
-
-      // 2. Fallback al ID de restaurante_activo
       const ra = userData.restaurante_activo;
       if (ra) { 
         const id = typeof ra === 'object' ? ra.id : ra;
-        console.log('✅ [KIOSKO] Usando ID de restaurante_activo:', id);
         restauranteSeleccionado.value = typeof ra === 'object' ? ra : { id: ra, nombre: 'Restaurante' };
         localStorage.setItem('restaurante_id_activo', id);
         return id;
       }
-
-      // 3. Fallback: Ver si hay una lista de restaurantes
       const listaRest = userData.restaurantes || userData.data?.restaurantes;
       if (Array.isArray(listaRest) && listaRest.length > 0) {
         const id = listaRest[0].id;
-        console.warn('⚠️ [KIOSKO] Usando primer restaurante de la lista del usuario:', id);
         restauranteSeleccionado.value = listaRest[0];
         localStorage.setItem('restaurante_id_activo', id);
         return id;
       }
     }
-
-    // 4. Fallback final: LocalStorage
     const savedId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
-    if (savedId) {
-      console.warn('⚠️ [KIOSKO] Usando fallback de localStorage:', savedId)
-      return savedId
-    }
-    return null
+    return savedId
   } catch (err) { 
-    console.error('❌ Error cargando /me:', err)
     return localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
   }
 }
@@ -749,15 +787,16 @@ const cargarProductos = async (restauranteId, silent = true) => {
   try {
     console.log('📡 [KIOSKO] Pidiendo productos disponibles...');
     const dispData = await apiClient.get(`/productos/disponibles?restaurante_id=${restauranteId}`)
-    console.log('📦 [KIOSKO] Respuesta disponibles:', dispData);
-    
-    if (dispData?.success && Array.isArray(dispData.data) && dispData.data.length > 0) {
-      productos.value = dispData.data.map(normalizar).filter(p => p !== null); 
-      console.log('✅ [KIOSKO] Productos con stock cargados:', productos.value.length);
-      return
+    console.log('📦 [KIOSKO] Respuesta productos disponibles:', dispData);
+
+    if (dispData?.success) {
+      let lista = dispData.data; 
+      if (!Array.isArray(lista)) lista = lista?.data ?? []
+      productos.value = lista.map(normalizar).filter(p => p !== null);
+      console.log('✅ [KIOSKO] Productos cargados correctamente:', productos.value.length);
+      return;
     }
-    
-    console.warn('⚠️ [KIOSKO] No hay productos con stock, intentando catálogo general...');
+
     const todosData = await apiClient.get(`/productos?restaurante_id=${restauranteId}&per_page=100`)
     console.log('📦 [KIOSKO] Respuesta catálogo general:', todosData);
     
@@ -765,9 +804,6 @@ const cargarProductos = async (restauranteId, silent = true) => {
       let lista = todosData.data; 
       if (!Array.isArray(lista)) lista = lista?.data ?? []
       productos.value = lista.map(normalizar).filter(p => p !== null);
-      console.log('✅ [KIOSKO] Catálogo general cargado:', productos.value.length);
-    } else {
-      console.error('❌ [KIOSKO] Falló carga de catálogo general:', todosData?.message);
     }
   } catch (err) {
     console.error('❌ [KIOSKO] Error en cargarProductos:', err);
@@ -817,9 +853,76 @@ const totalEnPedidoPorPaqueteId = (paqueteId) => {
     .reduce((sum, i) => sum + i.cantidad, 0)
 }
 
+// ── Tamaños modal state (Kiosko) ──
+const showTamanoModalKiosko = ref(false)
+const productoTamanoSeleccionarKiosko = ref(null)
+const tamanoSeleccionadoModalKiosko = ref(null)
+
+const abrirModalTamanosKiosko = (producto) => {
+  productoTamanoSeleccionarKiosko.value = producto
+  if (producto.tamanos && producto.tamanos.length > 0) {
+    const disponible = producto.tamanos.find(t => t.stock === undefined || t.stock === null || Number(t.stock) > 0)
+    tamanoSeleccionadoModalKiosko.value = disponible || null
+  } else {
+    tamanoSeleccionadoModalKiosko.value = null
+  }
+  showTamanoModalKiosko.value = true
+}
+
+const confirmarAgregarTamanoAlPedidoKiosko = () => {
+  if (!productoTamanoSeleccionarKiosko.value || !tamanoSeleccionadoModalKiosko.value) return
+  const prod = productoTamanoSeleccionarKiosko.value
+  const tam = tamanoSeleccionadoModalKiosko.value
+  const cIdx = comensalActivoIndex.value
+
+  if (tam.stock !== undefined && tam.stock !== null) {
+    const stockTam = Number(tam.stock)
+    if (stockTam <= 0) {
+      mostrarError(`El tamaño "${tam.nombre}" para "${prod.nombre}" está agotado`)
+      return
+    }
+    const yaEnPedido = pedido.value
+      .filter(i => i.id === prod.id && i.tamano_id === tam.id)
+      .reduce((sum, i) => sum + i.cantidad, 0)
+    if (yaEnPedido >= stockTam) {
+      mostrarError(`No hay suficiente stock para "${prod.nombre} (${tam.nombre})". Límite: ${stockTam} uds`)
+      return
+    }
+  }
+
+  const existe = pedido.value.find(i => i.id === prod.id && i.tamano_id === tam.id && i.comensalIndex === cIdx && !i.notas && !i.es_oferta && !i.es_paquete)
+  if (existe) { 
+    existe.cantidad++ 
+  } else { 
+    pedido.value.push({ 
+      cartId: Date.now() + Math.random(),
+      id: prod.id, 
+      nombre: prod.nombre,
+      tamano_id: tam.id,
+      tamano_nombre: tam.nombre,
+      precio: parseFloat(tam.precio || 0), 
+      imagen: prod.imagen_url ? getImageUrl(prod.imagen_url) : null, 
+      cantidad: 1, 
+      stock_maximo: tam.stock,
+      notas: '',
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(prod.minutos_produccion || 0)
+    }) 
+  }
+
+  showTamanoModalKiosko.value = false
+  productoTamanoSeleccionarKiosko.value = null
+  tamanoSeleccionadoModalKiosko.value = null
+}
+
 // --- Carrito ---
 const agregarAlPedido = (p) => {
   if (p.agotado) { mostrarError(`"${p.nombre}" agotado`); return }
+
+  if (p.tamanos && p.tamanos.length > 0) {
+    abrirModalTamanosKiosko(p)
+    return
+  }
 
   if (p.stock !== undefined && p.stock !== null) {
     if (totalEnPedidoPorId(p.id) >= p.stock) {
@@ -943,6 +1046,8 @@ const handleCheckout = async (checkoutData) => {
       restaurante_id: restauranteSeleccionado.value.id,
       productos: pedido.value.map(i => ({ 
         producto_id: i.es_paquete ? null : (i.es_oferta ? i.id : i.id), 
+        tamano_id: i.tamano_id || null,
+        tamano_nombre: i.tamano_nombre || null,
         paquete_id: i.es_paquete ? i.paquete_id : null,
         cantidad: i.cantidad,
         notas: i.notas,
@@ -957,7 +1062,7 @@ const handleCheckout = async (checkoutData) => {
       showCheckout.value = false; 
       pedido.value = []; 
       numeroComensales.value = 1;
-      comensalesNombres.value = ['Comensal 1'];
+      comensalesNombres.value = ['General'];
       comensalActivoIndex.value = 0;
       mostrarExito() 
       // Recargar productos de inmediato de forma silenciosa para actualizar stock

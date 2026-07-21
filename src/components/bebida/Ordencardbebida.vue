@@ -107,7 +107,12 @@ const esBarra = (detalle) => {
 
 const getNombreProducto = (detalle) => {
   const prodRaw = detalle.producto
-  return detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
+  const baseName = detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
+  const tamName = detalle.tamano_nombre || (typeof prodRaw === 'object' ? prodRaw?.tamano_nombre : '')
+  if (tamName && !baseName.toLowerCase().includes(tamName.toLowerCase())) {
+    return `${baseName} (${tamName})`
+  }
+  return baseName
 }
 
 const bebidasFiltradas = computed(() => {

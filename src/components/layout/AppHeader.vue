@@ -21,7 +21,7 @@
 
     <div class="flex items-center gap-3 md:gap-6">
       
-      <div class="relative" v-if="restaurantes.length > 0">
+      <div class="relative" v-if="restaurantes.length > 0 && !isSuperAdmin">
         <button
           @click="showRestMenu = !showRestMenu; showUserMenu = false"
           class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100 hover:bg-gray-100 transition group"
@@ -119,6 +119,14 @@ const userName = computed(() => user.value?.name || user.value?.usuario || 'Usua
 const userInitials = computed(() => {
   if (!userName.value) return 'U'
   return userName.value.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+})
+
+const isSuperAdmin = computed(() => {
+  if (!user.value?.roles) return false
+  return user.value.roles.some(r => {
+    const name = (typeof r === 'string' ? r : (r.nombre || r.name || '')).toUpperCase()
+    return name.includes('SUPER_ADMIN') || name.includes('SUPER')
+  })
 })
 
 // Cargar Datos Iniciales (Usuario + Restaurantes)

@@ -127,8 +127,57 @@
                 class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm resize-none"></textarea>
             </div>
 
-            <!-- Precio y Stock -->
-            <div class="grid grid-cols-2 gap-4">
+            <!-- ══ TAMAÑOS DEL PRODUCTO ══ -->
+            <div class="p-4 bg-indigo-50/40 border border-indigo-100 rounded-2xl space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-xs font-black text-gray-800 uppercase tracking-wider">Tamaños del Producto</h4>
+                  <p class="text-[10px] text-gray-400">Define los tamaños disponibles</p>
+                </div>
+                <button type="button" @click="agregarTamano"
+                  class="px-3 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl text-xs font-bold hover:bg-indigo-600 hover:text-white transition">
+                  + Agregar Tamaño
+                </button>
+              </div>
+
+              <!-- Lista de tamaños definidos -->
+              <div v-if="tamanos.length > 0" class="space-y-2">
+                <div v-for="(tam, idx) in tamanos" :key="idx"
+                  class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
+                  <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-bold">{{ idx + 1 }}</span>
+                  <input v-model="tam.nombre" type="text" placeholder="Ej. Mediano, Grande"
+                    class="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold text-gray-800 focus:bg-white focus:outline-none" />
+                  <button type="button" @click="quitarTamano(idx)" class="text-red-400 hover:text-red-600 p-1 text-xs font-bold">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PRECIOS POR TAMAÑO (Si existen tamaños) -->
+            <div v-if="tamanos.length > 0" class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Precios por Tamaño</label>
+                <span class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{{ tamanos.length }} Tamaños</span>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div v-for="(tam, idx) in tamanos" :key="'precio-'+idx"
+                  class="p-3 bg-white border-2 border-emerald-400 rounded-2xl shadow-sm space-y-2">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black uppercase">
+                      {{ getInicialTamano(tam.nombre) }}
+                    </span>
+                    <span class="text-xs font-black text-gray-700 uppercase truncate">{{ tam.nombre || 'Tamaño ' + (idx + 1) }} *</span>
+                  </div>
+                  <div class="relative">
+                    <span class="absolute left-3 top-2 text-gray-400 font-bold text-xs">$</span>
+                    <input v-model.number="tam.precio" type="number" step="0.01" min="0" placeholder="0"
+                      class="w-full pl-7 pr-3 py-1.5 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-400 focus:bg-white text-xs font-black" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PRECIO Y STOCK ESTÁNDAR (Si NO existen tamaños) -->
+            <div v-else class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Precio de Venta *</label>
                 <div class="relative">
@@ -144,10 +193,28 @@
                 <div class="relative">
                   <input v-model.number="form.stock" type="number" readonly placeholder="0"
                     class="w-full px-4 py-3 border-none bg-gray-100 text-gray-500 rounded-xl focus:outline-none text-sm cursor-not-allowed font-black" />
-                  <span v-if="receta.length" class="absolute right-3 top-3 text-indigo-500 text-[10px]" title="Calculado por receta">Sincronizado</span>
+                  <span v-if="recetaActive.length" class="absolute right-3 top-3 text-indigo-500 text-[10px]" title="Calculado por receta">Sincronizado</span>
                 </div>
-                <p v-if="receta.length" class="text-[10px] text-indigo-500 mt-1 font-medium">Calculado por receta</p>
+                <p v-if="recetaActive.length" class="text-[10px] text-indigo-500 mt-1 font-medium">Calculado por receta</p>
               </div>
+            </div>
+
+            <!-- STOCK POR TAMAÑO (Si existen tamaños) -->
+            <div v-if="tamanos.length > 0" class="space-y-2">
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Stock por Tamaño</label>
+              <div class="grid grid-cols-2 gap-3">
+                <div v-for="(tam, idx) in tamanos" :key="'stock-'+idx" class="space-y-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-black uppercase">
+                      {{ getInicialTamano(tam.nombre) }}
+                    </span>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase">Stock</span>
+                  </div>
+                  <input v-model.number="tam.stock" type="number" min="0" placeholder="0"
+                    class="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-black text-gray-700 focus:bg-white focus:outline-none" />
+                </div>
+              </div>
+              <p class="text-[10px] text-gray-400 italic">Stock general del producto (calculado de la suma: {{ totalStockTamanos }})</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -177,6 +244,20 @@
               <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">2</span>
               <h3 class="font-bold text-gray-800">Receta e Insumos</h3>
               <span v-if="!product && !productoCreado" class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 ml-auto">⚠️ Crea el producto primero</span>
+            </div>
+
+            <!-- Pestañas de Selección de Tamaño para Receta -->
+            <div v-if="tamanos.length > 0" class="flex items-center gap-2 overflow-x-auto pb-1">
+              <button v-for="(tam, idx) in tamanos" :key="'tab-'+idx" type="button"
+                @click="activeTamanoIdx = idx"
+                class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition border"
+                :class="activeTamanoIdx === idx ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black uppercase"
+                  :class="activeTamanoIdx === idx ? 'bg-white text-emerald-700' : 'bg-emerald-100 text-emerald-700'">
+                  {{ getInicialTamano(tam.nombre) }}
+                </span>
+                <span>{{ tam.nombre || 'Tamaño ' + (idx + 1) }}</span>
+              </button>
             </div>
 
             <!-- Loading Receta -->
@@ -266,16 +347,18 @@
               <!-- ── INGREDIENTES ASIGNADOS ── -->
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                  <p class="text-xs font-black text-gray-500 uppercase tracking-widest">Ingredientes en Receta</p>
-                  <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ receta.length }} items</span>
+                  <p class="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    Ingredientes en Receta {{ tamanos.length > 0 ? '(' + (tamanos[activeTamanoIdx]?.nombre || 'Tamaño') + ')' : '' }}
+                  </p>
+                  <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ recetaActive.length }} items</span>
                 </div>
 
-                <div v-if="!receta.length" class="py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl">
-                  <p class="text-sm text-gray-400 italic">No hay ingredientes asignados</p>
+                <div v-if="!recetaActive.length" class="py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+                  <p class="text-sm text-gray-400 italic">No hay ingredientes asignados a este tamaño</p>
                 </div>
 
                 <div v-else class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  <div v-for="(item, idx) in receta" :key="item.id"
+                  <div v-for="(item, idx) in recetaActive" :key="item.id"
                     class="group flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 hover:border-indigo-300 transition-all">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-bold text-gray-800 truncate">{{ item.nombre }}</p>
@@ -368,7 +451,7 @@
 
       <!-- Botones de Acción Final -->
       <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-4">
-        <button @click="productoCreado ? (emit('saved'), emit('close')) : emit('close')" type="button"
+        <button @click="productoCreado ? ($emit('saved'), $emit('close')) : $emit('close')" type="button"
           class="flex-1 py-4 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition">
           {{ productoCreado ? 'Cerrar' : 'Cerrar sin guardar' }}
         </button>
@@ -430,6 +513,42 @@ const ingredientesBusqueda = ref<any[]>([])
 const todosIngredientes    = ref<any[]>([])
 const showDropdown         = ref(false)
 
+// ── Estado Tamaños ─────────────────────────────────────────────────────────────
+const tamanos = ref<any[]>([])
+const activeTamanoIdx = ref(0)
+
+const getInicialTamano = (nombre: string) => {
+  if (!nombre || !nombre.trim()) return 'T'
+  return nombre.trim().charAt(0).toLowerCase()
+}
+
+const agregarTamano = () => {
+  tamanos.value.push({
+    id: null,
+    nombre: '',
+    precio: 0,
+    stock: 0,
+    ingredientes: []
+  })
+}
+
+const quitarTamano = (idx: number) => {
+  tamanos.value.splice(idx, 1)
+  if (activeTamanoIdx.value >= tamanos.value.length) {
+    activeTamanoIdx.value = Math.max(0, tamanos.value.length - 1)
+  }
+}
+
+const totalStockTamanos = computed(() => {
+  return tamanos.value.reduce((acc, t) => acc + (Number(t.stock) || 0), 0)
+})
+
+watch(totalStockTamanos, (val) => {
+  if (tamanos.value.length > 0) {
+    form.stock = val
+  }
+})
+
 // ── Cargar Receta automáticamente al montar o cambiar producto ────────────────
 const initReceta = async () => {
   if (props.product?.id) {
@@ -450,9 +569,39 @@ const minutosTurno      = ref(480) // 8 horas por defecto
 const diasMes           = ref(30)  // Estándar mensual
 const factorCargaSocial = ref(1.36) // Carga social por defecto
 
+const recetaActive = computed<any[]>({
+  get: () => {
+    if (tamanos.value.length > 0) {
+      if (activeTamanoIdx.value >= tamanos.value.length) {
+        activeTamanoIdx.value = 0
+      }
+      const activeTam = tamanos.value[activeTamanoIdx.value]
+      if (activeTam) {
+        if (!activeTam.ingredientes) activeTam.ingredientes = []
+        return activeTam.ingredientes
+      }
+    }
+    return receta.value
+  },
+  set: (val) => {
+    if (tamanos.value.length > 0 && tamanos.value[activeTamanoIdx.value]) {
+      tamanos.value[activeTamanoIdx.value].ingredientes = val
+    } else {
+      receta.value = val
+    }
+  }
+})
+
+const precioActivo = computed(() => {
+  if (tamanos.value.length > 0 && tamanos.value[activeTamanoIdx.value]) {
+    return Number(tamanos.value[activeTamanoIdx.value].precio) || 0
+  }
+  return Number(form.precio) || 0
+})
+
 // ── Computed: Costos y precio sugerido ───────────────────────────────────────
 const costoTotalReceta = computed(() =>
-  receta.value.reduce((s, i) => s + (Number(i.cantidad_receta) * Number(i.costo_unitario || 0)), 0)
+  recetaActive.value.reduce((s, i) => s + (Number(i.cantidad_receta) * Number(i.costo_unitario || 0)), 0)
 )
 
 /**
@@ -478,12 +627,17 @@ const costoUtilidad = computed(() => {
 })
 
 const precioSugerido = computed(() => {
-  if (!receta.value.length && !minutosProduccion.value) return 0
+  if (!recetaActive.value.length && !minutosProduccion.value) return 0
   return costoBase.value + costoIndirectos.value + costoUtilidad.value
 })
 
 const aplicarPrecioSugerido = () => {
-  form.precio = Math.ceil(precioSugerido.value * 100) / 100
+  const ps = Math.ceil(precioSugerido.value * 100) / 100
+  if (tamanos.value.length > 0 && tamanos.value[activeTamanoIdx.value]) {
+    tamanos.value[activeTamanoIdx.value].precio = ps
+  } else {
+    form.precio = ps
+  }
 }
 
 const margenSugerido = computed(() => {
@@ -498,8 +652,8 @@ const margenSugeridoPct = computed(() => {
 
 // Porciones posibles con el stock actual de ingredientes
 const porcionesDisponibles = computed<number | null>(() => {
-  if (!receta.value.length) return null
-  const valores = receta.value.map(i => {
+  if (!recetaActive.value.length) return null
+  const valores = recetaActive.value.map(i => {
     const cant  = Number(i.cantidad_receta)
     const stock = Number(i.stock_actual ?? 0)
     if (cant <= 0) return Infinity
@@ -511,8 +665,12 @@ const porcionesDisponibles = computed<number | null>(() => {
 
 // ── Link de Stock Automático (Ahora en el orden correcto) ────────────────────
 watch(porcionesDisponibles, (newVal) => {
-  if (newVal !== null && receta.value.length > 0) {
-    form.stock = newVal
+  if (newVal !== null && recetaActive.value.length > 0) {
+    if (tamanos.value.length > 0 && tamanos.value[activeTamanoIdx.value]) {
+      tamanos.value[activeTamanoIdx.value].stock = newVal
+    } else {
+      form.stock = newVal
+    }
   }
 })
 
@@ -522,18 +680,18 @@ watch(costoTotalReceta, (newVal) => {
 })
 
 const margenEstimado = computed(() => {
-  const precio = Number(form.precio) || 0
+  const precio = precioActivo.value
   const costos = costoTotalReceta.value + costoManoObra.value + costoIndirectos.value
   return precio - costos
 })
 
 const margenPct = computed(() => {
-  const precio = Number(form.precio) || 0
+  const precio = precioActivo.value
   return precio > 0 ? Math.round((margenEstimado.value / precio) * 100) : 0
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const yaEnReceta = (id: number) => receta.value.some(r => r.id === id)
+const yaEnReceta = (id: number) => recetaActive.value.some(r => r.id === id)
 
 // ── Cargar ingredientes del catálogo (una sola vez) ───────────────────────────
 const loadTodosIngredientes = async () => {
@@ -590,9 +748,27 @@ const cargarReceta = async () => {
     if ((data.success || arrayData) && Array.isArray(arrayData)) {
       receta.value = arrayData.map((i: any) => ({
         ...i,
-        // El backend devuelve cantidad_receta (v2) o cantidad (pivot v1)
-        // Tomamos el primero que exista y no sea 0
         cantidad_receta: parseFloat(i.cantidad_receta ?? i.cantidad ?? 0),
+      }))
+    }
+
+    // Cargar ingredientes por cada tamaño existente
+    if (tamanos.value.length > 0) {
+      await Promise.all(tamanos.value.map(async (tam) => {
+        if (tam.id) {
+          try {
+            const resTam = await apiClient.get(`/ingredientes/producto/${props.product.id}?tamano_id=${tam.id}`)
+            const arrTam = resTam.data || resTam
+            if ((resTam.success || arrTam) && Array.isArray(arrTam)) {
+              tam.ingredientes = arrTam.map((i: any) => ({
+                ...i,
+                cantidad_receta: parseFloat(i.cantidad_receta ?? i.cantidad ?? 0)
+              }))
+            }
+          } catch (errTam) {
+            console.error('Error cargando ingredientes de tamaño:', tam.id, errTam)
+          }
+        }
       }))
     }
   } catch (e) {
@@ -617,7 +793,8 @@ const buscarIngredientes = () => {
 
 const seleccionarIngrediente = (ing: any) => {
   if (!yaEnReceta(ing.id)) {
-    receta.value.push({ ...ing, cantidad_receta: 1 })
+    const list = [...recetaActive.value, { ...ing, cantidad_receta: 1 }]
+    recetaActive.value = list
     recetaModificada.value = true
   }
   busquedaIngrediente.value  = ''
@@ -626,7 +803,9 @@ const seleccionarIngrediente = (ing: any) => {
 }
 
 const quitarDeReceta = (idx: number) => {
-  receta.value.splice(idx, 1)
+  const list = [...recetaActive.value]
+  list.splice(idx, 1)
+  recetaActive.value = list
   recetaModificada.value = true
 }
 
@@ -637,12 +816,31 @@ const guardarReceta = async () => {
   guardandoReceta.value = true
 
   try {
-    const payload = {
-      ingredientes: receta.value.map(i => ({
+    const activeTam = tamanos.value.length > 0 ? tamanos.value[activeTamanoIdx.value] : null
+    const payload: any = {
+      ingredientes: recetaActive.value.map(i => ({
         id:       i.id,
         cantidad: Number(i.cantidad_receta),
       })),
     }
+    if (activeTam && activeTam.id) {
+      payload.tamano_id = activeTam.id
+    }
+
+    if (tamanos.value.length > 0) {
+      payload.tamanos = tamanos.value.map(t => ({
+        id: t.id,
+        nombre: t.nombre,
+        precio: t.precio,
+        stock: t.stock,
+        stock_minimo: t.stock_minimo,
+        ingredientes: (t.ingredientes || []).map((i: any) => ({
+          id: i.id,
+          cantidad: Number(i.cantidad_receta || 0)
+        }))
+      }))
+    }
+
     const data = await apiClient.post(`/ingredientes/producto/${pid}/sync`, payload)
 
     if (data.success || data.data) {
@@ -707,6 +905,23 @@ const resetForm = () => {
   errors.precio        = ''
   errors.categoria_id  = ''
   errorMessage.value   = ''
+
+  if (p?.tamanos && Array.isArray(p.tamanos)) {
+    tamanos.value = p.tamanos.map((t: any) => ({
+      id: t.id,
+      nombre: t.nombre,
+      precio: parseFloat(t.precio || 0),
+      stock: parseFloat(t.stock || 0),
+      stock_minimo: parseFloat(t.stock_minimo || 5),
+      ingredientes: (t.ingredientes || []).map((i: any) => ({
+        ...i,
+        cantidad_receta: parseFloat(i.cantidad_necesaria ?? i.cantidad ?? 0)
+      }))
+    }))
+  } else {
+    tamanos.value = []
+  }
+
   // Reset receta — se cargará al abrir el tab
   receta.value          = []
   recetaModificada.value = false
@@ -721,7 +936,16 @@ watch(() => props.product, resetForm, { immediate: true })
 // ── Validación ────────────────────────────────────────────────────────────────
 const validate = () => {
   errors.nombre       = form.nombre.trim()   ? '' : 'El nombre es obligatorio'
-  errors.precio       = form.precio > 0      ? '' : 'El precio debe ser mayor a 0'
+  if (tamanos.value.length === 0) {
+    errors.precio     = form.precio > 0      ? '' : 'El precio debe ser mayor a 0'
+  } else {
+    errors.precio     = ''
+    const tamSinNombre = tamanos.value.some(t => !t.nombre || !t.nombre.trim())
+    if (tamSinNombre) {
+      errorMessage.value = 'Todos los tamaños deben tener un nombre'
+      return false
+    }
+  }
   errors.categoria_id = form.categoria_id    ? '' : 'Selecciona una categoría'
   return !errors.nombre && !errors.precio && !errors.categoria_id
 }
@@ -734,6 +958,17 @@ const crearProducto = async () => {
 
   try {
     let data: any;
+    const tamanosPayload = tamanos.value.map(t => ({
+      id: t.id,
+      nombre: t.nombre,
+      precio: t.precio,
+      stock: t.stock,
+      stock_minimo: t.stock_minimo,
+      ingredientes: (t.ingredientes || []).map((i: any) => ({
+        id: i.id,
+        cantidad: Number(i.cantidad_receta || 0)
+      }))
+    }))
 
     if (newImageFile.value) {
       const fd = new FormData()
@@ -747,6 +982,9 @@ const crearProducto = async () => {
       fd.append('activo',             form.activo ? '1' : '0')
       fd.append('minutos_produccion', String(form.minutos_produccion))
       fd.append('imagen',             newImageFile.value)
+      if (tamanosPayload.length > 0) {
+        fd.append('tamanos', JSON.stringify(tamanosPayload))
+      }
 
       data = await apiClient.post('/productos', fd)
     } else {
@@ -760,6 +998,7 @@ const crearProducto = async () => {
         categoria_id:    form.categoria_id,
         activo:             form.activo,
         minutos_produccion: form.minutos_produccion,
+        tamanos:         tamanosPayload
       })
     }
 
@@ -795,6 +1034,18 @@ const save = async () => {
     const endpoint = pid ? `/productos/${pid}` : `/productos`
     let data: any;
 
+    const tamanosPayload = tamanos.value.map(t => ({
+      id: t.id,
+      nombre: t.nombre,
+      precio: t.precio,
+      stock: t.stock,
+      stock_minimo: t.stock_minimo,
+      ingredientes: (t.ingredientes || []).map((i: any) => ({
+        id: i.id,
+        cantidad: Number(i.cantidad_receta || 0)
+      }))
+    }))
+
     if (newImageFile.value) {
       const fd = new FormData()
       fd.append('nombre',       form.nombre)
@@ -807,6 +1058,9 @@ const save = async () => {
       fd.append('activo',             form.activo ? '1' : '0')
       fd.append('minutos_produccion', String(form.minutos_produccion))
       fd.append('imagen',             newImageFile.value)
+      if (tamanosPayload.length > 0) {
+        fd.append('tamanos', JSON.stringify(tamanosPayload))
+      }
       if (pid) fd.append('_method', 'PUT')
 
       data = await apiClient.post(endpoint, fd)
@@ -823,6 +1077,7 @@ const save = async () => {
         activo:             form.activo,
         eliminar_imagen:    form.eliminar_imagen,
         minutos_produccion: form.minutos_produccion,
+        tamanos:         tamanosPayload
       })
     }
 

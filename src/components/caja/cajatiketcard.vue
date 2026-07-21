@@ -23,7 +23,16 @@
       </div>
 
       <div class="text-right">
-        <p class="font-bold text-gray-900 text-base">
+        <p class="font-bold text-gray-900 text-base flex items-center justify-end gap-1.5">
+          <span v-if="ticket.estado === 'CERRADA' && ticket.metodo_pago" 
+            class="text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase leading-none"
+            :class="{
+              'bg-emerald-50 text-emerald-700 border-emerald-200': ticket.metodo_pago === 'efectivo',
+              'bg-indigo-50 text-indigo-700 border-indigo-200': ticket.metodo_pago === 'tarjeta',
+              'bg-purple-50 text-purple-700 border-purple-200': ticket.metodo_pago === 'transferencia'
+            }">
+            {{ ticket.metodo_pago === 'efectivo' ? '💵' : ticket.metodo_pago === 'tarjeta' ? '💳' : '📲' }}
+          </span>
           ${{ formatMoney(ticket.total) }}
         </p>
         <span
@@ -66,6 +75,8 @@
         </span>
       </div>
     </div>
+
+
 
     <!-- PROPINA -->
     <div

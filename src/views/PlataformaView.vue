@@ -121,9 +121,18 @@
               </td>
               <td class="px-6 py-4">
                 <div v-if="prop.licencia_actual" class="flex flex-col">
-                  <span class="text-indigo-600 font-bold">{{ prop.licencia_actual.nombre }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span :class="prop.licencia_actual.estado === 'ACTIVA' ? 'text-indigo-600 font-bold' : 'text-red-500 font-bold'">
+                      {{ prop.licencia_actual.nombre }}
+                    </span>
+                    <span v-if="prop.licencia_actual.estado !== 'ACTIVA'" class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[9px] font-black uppercase">
+                      {{ prop.licencia_actual.estado }}
+                    </span>
+                  </div>
                   <span class="text-[10px] text-gray-400 italic">Inicio: {{ formatDate(prop.licencia_actual.inicio) }}</span>
-                  <span class="text-[10px] text-gray-400 italic">Expira: {{ formatDate(prop.licencia_actual.expira) }}</span>
+                  <span class="text-[10px] text-gray-400 italic" :class="prop.licencia_actual.estado !== 'ACTIVA' ? 'text-red-400 font-semibold' : ''">
+                    Expira: {{ formatDate(prop.licencia_actual.expira) }}
+                  </span>
                 </div>
                 <span v-else class="text-red-400 text-xs font-medium">Sin licencia activa</span>
               </td>

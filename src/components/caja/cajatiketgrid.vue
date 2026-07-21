@@ -103,10 +103,10 @@
 
           <!-- Botones de acción -->
           <div class="flex gap-3">
-            <button :disabled="esAdminOPropietario || Object.keys(itemsByComensal).length <= 1" @click="abrirDividirCuenta"
-              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2 disabled:opacity-50"
-              :title="Object.keys(itemsByComensal).length <= 1 ? 'No se puede dividir una cuenta con un solo comensal' : ''">
-              ✂️ Dividir cuenta
+            <button :disabled="esAdminOPropietario || desglosando || (ordenCobrar.detalles || []).filter(d => !d.cancelado).length === 0" @click="abrirDividirCuenta"
+              class="flex-1 py-3 text-xs font-black text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition flex items-center justify-center gap-2 disabled:opacity-50">
+              <div v-if="desglosando" class="w-4 h-4 border-2 border-slate-400/30 border-t-slate-600 rounded-full animate-spin"></div>
+              {{ desglosando ? 'Procesando...' : '✂️ Dividir cuenta' }}
             </button>
             <button @click="cobrarOrden" :disabled="cobrando || !canPay || esAdminOPropietario"
               class="flex-1 py-3 text-xs font-black text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
@@ -129,114 +129,154 @@
           <button @click="modalDividir = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
         </div>
 
-        <!-- Modo único: Por Comensales -->
-        <div class="px-6 pt-4 shrink-0">
-          <div class="flex bg-indigo-50 p-3 rounded-2xl border border-indigo-100 items-center gap-3">
-            <span class="text-xl">👤</span>
+        <!-- Selector de Modo de División y Comensales -->
+        <div class="px-6 pt-4 pb-2 shrink-0 space-y-3">
+          <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl">
             <div>
-              <p class="text-xs font-black text-indigo-700">División por Comensales</p>
-              <p class="text-[10px] text-indigo-400 font-bold">Asigna cada comensal a un ticket individual</p>
+              <p class="text-xs font-black text-slate-800">Número de Personas</p>
+              <p class="text-[9px] text-slate-400 font-bold">¿En cuántas partes deseas dividir?</p>
+            </div>
+            <div class="flex items-center gap-2 bg-white rounded-xl border border-slate-200 p-1">
+              <button type="button" @click="numComensales = Math.max(2, numComensales - 1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg font-black transition">−</button>
+              <span class="text-sm font-black w-8 text-center text-slate-800">{{ numComensales }}</span>
+              <button type="button" @click="numComensales = Math.min(10, numComensales + 1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg font-black transition">+</button>
             </div>
           </div>
         </div>
 
-
-        <!-- Modo Por Comensales -->
+        <!-- Cuerpo de división -->
         <div class="px-6 py-4 flex-1 overflow-y-auto">
-          <div class="mb-4">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Asignar comensales a tickets</p>
-            <div class="space-y-3">
-              <div v-for="c in comensalesAuto" :key="c.nombre" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:border-indigo-200 transition">
-                <div class="flex-1">
-                  <p class="text-sm font-black text-slate-800">{{ c.nombre }}</p>
-                  <p class="text-[10px] font-bold text-slate-400">
-                    {{ c.detalles.map(d => `${Number(d.cantidad)}x ${d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'}`).join(', ') }}
-                    - ${{ c.subtotal.toFixed(2) }}
-                  </p>
+          
+          <!-- Panel de Asignación Manual -->
+          <div class="mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- Pool de Productos por Asignar -->
+              <div class="space-y-2">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Productos por asignar</p>
+                <div v-if="detallesSinAsignar.length === 0" class="text-center py-6 text-slate-300 text-xs font-black uppercase tracking-widest border border-dashed rounded-xl bg-white">
+                  ¡Todos asignados! 🎉
                 </div>
-                <div>
-                  <select v-model="c.ticketId" class="pl-3 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-black bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none text-indigo-700 shadow-sm">
-                    <option v-for="n in comensalesAuto.length" :key="n" :value="n">Agrupar en Ticket {{ n }}</option>
-                  </select>
+                <div v-else class="space-y-1.5 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+                  <button v-for="d in detallesSinAsignar" :key="d.id"
+                    type="button"
+                    @click="seleccionarDetalle(d)"
+                    :class="['w-full p-2.5 rounded-xl border text-xs font-bold transition text-left flex justify-between items-center',
+                      detalleSeleccionado?.id === d.id ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-md ring-2 ring-indigo-500/10 font-black' : 'bg-white border-slate-100 text-slate-700 hover:border-indigo-200']">
+                    <span class="truncate pr-2">{{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
+                    <span class="shrink-0">${{ Number(d.subtotal).toFixed(2) }}</span>
+                  </button>
                 </div>
               </div>
+
+              <!-- Cajas de comensales -->
+              <div class="space-y-3">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Asignar a Comensales</p>
+                <div class="space-y-3 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+                  <div v-for="(c, idx) in comensalesManual" :key="c.id" class="p-3 bg-white border border-slate-100 rounded-xl space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-xs font-black text-indigo-700">Comensal {{ c.id }}</span>
+                      <span class="text-xs font-black text-slate-800">${{ subtotalComensal(idx).toFixed(2) }}</span>
+                    </div>
+                    
+                    <!-- Botón para asignar seleccionado aquí -->
+                    <button type="button"
+                      v-if="detalleSeleccionado"
+                      @click="asignarAManual(idx)"
+                      class="w-full py-1.5 bg-indigo-600 text-white text-[10px] font-black rounded-lg hover:bg-indigo-700 transition uppercase tracking-widest shadow-sm">
+                      📥 Asignar aquí
+                    </button>
+                    
+                    <!-- Lista de productos asignados -->
+                    <div v-if="c.detalles.length > 0" class="space-y-1">
+                      <div v-for="d in c.detalles" :key="d.id" class="flex justify-between items-center text-[10px] text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                        <span class="truncate pr-2">{{ d.cantidad }}x {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                          <span>${{ Number(d.subtotal).toFixed(2) }}</span>
+                          <button type="button" @click="devolverDetalle(d, idx)" class="text-red-500 font-bold hover:scale-110 active:scale-95 transition-transform text-xs">✕</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
           
           <!-- Vista previa Tickets con Pago Individual -->
-          <div class="mt-4 pt-4 border-t border-slate-100">
+          <div v-if="modoDividir === 'manual' || modoDividir === 'por_comensal'" class="mt-4 pt-4 border-t border-slate-100">
              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Detalle de Pago por Ticket</p>
              <div class="space-y-3">
-               <div v-for="t in ticketsAgrupados" :key="t.id" class="p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                 <div class="flex justify-between items-center mb-3">
-                   <div>
-                     <p class="text-xs font-black text-indigo-800">Ticket {{ t.id }}</p>
-                     <p class="text-[9px] font-bold text-indigo-500 mt-0.5 leading-tight">{{ t.nombres.join(', ') }}</p>
-                   </div>
-                   <div class="text-right">
-                     <p class="text-[9px] text-indigo-400 font-bold mb-0.5 uppercase">Total + Propina</p>
-                     <span class="font-black text-indigo-700 text-lg">${{ (t.total + (getPagoTicket(t.id).propina || 0)).toFixed(2) }}</span>
-                   </div>
-                 </div>
-
-                 <!-- Selector de Pago para este Ticket -->
-                 <div class="grid grid-cols-3 gap-1 mb-2">
-                    <button v-for="m in metodos" :key="m.key" 
-                      @click="setPagoTicket(t.id, m.key)"
-                      :class="['py-1.5 rounded-xl border text-[10px] font-black transition flex items-center justify-center gap-1',
-                        getPagoTicket(t.id).metodo === m.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-400 border-slate-200']">
-                      <span>{{ m.icon }}</span> {{ m.label }}
-                    </button>
-                 </div>
-
-                 <!-- Campos adicionales según método -->
-                 <div class="mt-2 space-y-2">
+                <div v-for="t in ticketsAgrupadosVista" :key="t.id" class="p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                  <div class="flex justify-between items-center mb-3">
                     <div>
-                      <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">Propina</p>
-                      <div class="flex items-center gap-2">
-                        <button v-for="pct in [0, 10, 15, 20]" :key="pct"
-                          @click="setPropinaTicket(t.id, pct, t.total)"
-                          :class="['px-2 py-1 rounded-lg text-[10px] font-black transition',
-                            getPagoTicket(t.id).propinaPct === pct && !getPagoTicket(t.id).propinaManual ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200']">
-                          {{ pct === 0 ? 'Sin' : pct + '%' }}
-                        </button>
-                        <div class="relative flex-1">
-                          <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                          <input type="number" v-model.number="getPagoTicket(t.id).propina" min="0"
-                            @focus="getPagoTicket(t.id).propinaPct = null; getPagoTicket(t.id).propinaManual = true"
-                            class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20" />
-                        </div>
-                      </div>
+                      <p class="text-xs font-black text-indigo-800">Ticket {{ t.id }}</p>
+                      <p class="text-[9px] font-bold text-indigo-500 mt-0.5 leading-tight">{{ t.nombres.join(', ') }}</p>
                     </div>
-                    <div>
-                      <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
-                      <div class="relative">
-                        <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
-                        <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" min="0"
-                          class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
-                        <input v-else v-model="getPagoTicket(t.id).referencia" 
-                          placeholder="Folio..."
-                          class="w-full px-3 py-1.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
-                      </div>
+                    <div class="text-right">
+                      <p class="text-[9px] text-indigo-400 font-bold mb-0.5 uppercase">Total + Propina</p>
+                      <span class="font-black text-indigo-700 text-lg">${{ (t.total + (getPagoTicket(t.id).propina || 0)).toFixed(2) }}</span>
                     </div>
-                 </div>
+                  </div>
 
-                 <!-- Cálculo de Cambio o Monto Insuficiente (solo efectivo) -->
-                 <div v-if="getPagoTicket(t.id).metodo === 'efectivo' && getPagoTicket(t.id).recibido > 0">
-                    <div v-if="getPagoTicket(t.id).recibido >= (t.total + (getPagoTicket(t.id).propina || 0))" class="mt-2 flex justify-between items-center px-3 py-1.5 bg-emerald-50 rounded-xl border border-emerald-100">
-                      <span class="text-[10px] font-black text-emerald-700 uppercase">Cambio</span>
-                      <span class="text-xs font-black text-emerald-700">${{ ((getPagoTicket(t.id).recibido || 0) - (t.total + (getPagoTicket(t.id).propina || 0))).toFixed(2) }}</span>
-                    </div>
-                    <div v-else class="mt-2 flex justify-between items-center px-3 py-1.5 bg-red-50 rounded-xl border border-red-200">
-                      <span class="text-[10px] font-black text-red-700 uppercase">Monto Insuficiente</span>
-                      <span class="text-xs font-black text-red-700">Faltan ${{ ((t.total + (getPagoTicket(t.id).propina || 0)) - (getPagoTicket(t.id).recibido || 0)).toFixed(2) }}</span>
-                    </div>
-                 </div>
-               </div>
+                  <!-- Selector de Pago para este Ticket -->
+                  <div class="grid grid-cols-3 gap-1 mb-2">
+                     <button v-for="m in metodos" :key="m.key" 
+                       @click="setPagoTicket(t.id, m.key)"
+                       :class="['py-1.5 rounded-xl border text-[10px] font-black transition flex items-center justify-center gap-1',
+                         getPagoTicket(t.id).metodo === m.key ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-400 border-slate-200']">
+                       <span>{{ m.icon }}</span> {{ m.label }}
+                     </button>
+                  </div>
+
+                  <!-- Campos adicionales según método -->
+                  <div class="mt-2 space-y-2">
+                     <div>
+                       <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">Propina</p>
+                       <div class="flex items-center gap-2">
+                         <button v-for="pct in [0, 10, 15, 20]" :key="pct"
+                           @click="setPropinaTicket(t.id, pct, t.total)"
+                           :class="['px-2 py-1 rounded-lg text-[10px] font-black transition',
+                             getPagoTicket(t.id).propinaPct === pct && !getPagoTicket(t.id).propinaManual ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200']">
+                           {{ pct === 0 ? 'Sin' : pct + '%' }}
+                         </button>
+                         <div class="relative flex-1">
+                           <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
+                           <input type="number" v-model.number="getPagoTicket(t.id).propina" min="0"
+                             @focus="getPagoTicket(t.id).propinaPct = null; getPagoTicket(t.id).propinaManual = true"
+                             class="w-full pl-5 pr-2 py-1 text-[10px] font-black bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                         </div>
+                       </div>
+                     </div>
+                     <div>
+                       <p class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1">{{ getPagoTicket(t.id).metodo === 'efectivo' ? 'Recibido' : 'Referencia' }}</p>
+                       <div class="relative">
+                         <span v-if="getPagoTicket(t.id).metodo === 'efectivo'" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">$</span>
+                         <input v-if="getPagoTicket(t.id).metodo === 'efectivo'" type="number" v-model.number="getPagoTicket(t.id).recibido" min="0"
+                           class="w-full pl-6 pr-3 py-1.5 text-xs font-black bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                         <input v-else v-model="getPagoTicket(t.id).referencia" 
+                           placeholder="Folio..."
+                           class="w-full px-3 py-1.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                       </div>
+                     </div>
+                  </div>
+
+                  <!-- Cálculo de Cambio o Monto Insuficiente (solo efectivo) -->
+                  <div v-if="getPagoTicket(t.id).metodo === 'efectivo' && getPagoTicket(t.id).recibido > 0">
+                     <div v-if="getPagoTicket(t.id).recibido >= (t.total + (getPagoTicket(t.id).propina || 0))" class="mt-2 flex justify-between items-center px-3 py-1.5 bg-emerald-50 rounded-xl border border-emerald-100">
+                       <span class="text-[10px] font-black text-emerald-700 uppercase">Cambio</span>
+                       <span class="text-xs font-black text-emerald-700">${{ ((getPagoTicket(t.id).recibido || 0) - (t.total + (getPagoTicket(t.id).propina || 0))).toFixed(2) }}</span>
+                     </div>
+                     <div v-else class="mt-2 flex justify-between items-center px-3 py-1.5 bg-red-50 rounded-xl border border-red-200">
+                       <span class="text-[10px] font-black text-red-700 uppercase">Monto Insuficiente</span>
+                       <span class="text-xs font-black text-red-700">Faltan ${{ ((t.total + (getPagoTicket(t.id).propina || 0)) - (getPagoTicket(t.id).recibido || 0)).toFixed(2) }}</span>
+                     </div>
+                  </div>
+                </div>
              </div>
           </div>
         </div>
-
 
         <div class="px-6 py-4 border-t border-slate-100 shrink-0">
           <div class="flex items-center justify-between mb-3 text-sm font-black text-slate-800">
@@ -292,10 +332,13 @@
         <div class="px-5 py-4 space-y-3">
           <div class="space-y-3">
             <div v-for="(detalles, nomComensal) in agruparDetallesPorComensal(order.detalles)" :key="nomComensal"
-              class="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 space-y-2">
+              :class="['p-3 rounded-2xl border space-y-2', 
+                       Object.keys(agruparDetallesPorComensal(order.detalles)).length <= 1 
+                         ? 'border-transparent bg-transparent !p-0 shadow-none' 
+                         : 'bg-slate-50/50 border-slate-100']">
               
-              <!-- Encabezado del Comensal -->
-              <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
+              <!-- Encabezado del Comensal (Oculto si hay una sola comanda completa) -->
+              <div v-if="Object.keys(agruparDetallesPorComensal(order.detalles)).length > 1" class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
                 <span class="text-[10px]">👤</span>
                 <span class="text-[10px] font-black text-indigo-600 uppercase tracking-wider">{{ nomComensal }}</span>
               </div>
@@ -343,15 +386,53 @@
         <div class="px-5 pb-5">
           <div class="flex items-center justify-between mb-3">
             <span class="text-xs text-slate-500 font-black">Total</span>
-            <span class="text-xl font-black text-slate-800">${{ Number(order.total || 0).toFixed(2) }}</span>
+            <div class="flex items-center gap-2">
+              <span v-if="order.metodo_pago" 
+                class="text-[10px] font-bold px-2.5 py-1 rounded-xl shadow-sm border uppercase flex items-center gap-1 transition-all"
+                :class="{
+                  'bg-emerald-50 text-emerald-700 border-emerald-200': order.metodo_pago === 'efectivo',
+                  'bg-indigo-50 text-indigo-700 border-indigo-200': order.metodo_pago === 'tarjeta',
+                  'bg-purple-50 text-purple-700 border-purple-200': order.metodo_pago === 'transferencia'
+                }">
+                <span>{{ order.metodo_pago === 'efectivo' ? '💵' : order.metodo_pago === 'tarjeta' ? '💳' : '📲' }}</span>
+                {{ order.metodo_pago }}
+              </span>
+              <span class="text-xl font-black text-slate-800">${{ Number(order.total || 0).toFixed(2) }}</span>
+            </div>
           </div>
-          <button v-if="type === 'open'"
-            :disabled="esAdminOPropietario"
-            @click="abrirCobrar(order)"
-            :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
-                     esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
-            {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
-          </button>
+          <div v-if="type === 'open'" class="space-y-2">
+            <!-- Acciones de Servicio Rápido si la orden no se ha entregado aún -->
+            <div v-if="servicioRapido && ['EN_PREPARACION', 'POR_PREPARAR', 'ABIERTA'].includes((order.estado || '').toUpperCase())" class="space-y-2">
+              <div class="flex gap-2">
+                <button v-if="!esMesero" @click="imprimirComanda(order)" type="button"
+                  class="flex-1 py-2.5 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm">
+                  🖨️ Imprimir Comanda
+                </button>
+                <button @click="marcarEntregada(order)" type="button" :disabled="marcandoEntregadaId === order.id"
+                  class="flex-1 py-2.5 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm disabled:opacity-50">
+                  {{ marcandoEntregadaId === order.id ? 'Cambiando...' : '✅ Entregada' }}
+                </button>
+              </div>
+              <button disabled type="button"
+                class="w-full py-2.5 text-[11px] font-black rounded-2xl bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none uppercase tracking-wider">
+                ⏳ Esperando Entrega para Cobrar
+              </button>
+            </div>
+            <!-- Botón Cobrar habitual cuando ya está ENTREGADA o modo normal -->
+            <div v-else class="space-y-2">
+              <button v-if="servicioRapido && !esMesero" @click="imprimirComanda(order)" type="button"
+                class="w-full py-2 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm mb-1">
+                🖨️ Re-imprimir Comanda Cocina
+              </button>
+              <button
+                :disabled="esAdminOPropietario"
+                @click="abrirCobrar(order)"
+                :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
+                         esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
+                {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
+              </button>
+            </div>
+          </div>
           <div v-else class="space-y-2">
             <div class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"
               :class="(order.estado || '').toUpperCase() === 'CANCELADA' ? 'text-red-500 bg-red-50 border border-red-100' : 'text-slate-400 bg-slate-50'">
@@ -549,14 +630,26 @@ const formatLocalDateTime = (dateStr) => {
 
 
 const props = defineProps({
-  orders: { type: Array, default: () => [] },
-  type:   { type: String, default: 'open' }, // 'open' | 'closed'
+  orders:         { type: Array, default: () => [] },
+  type:           { type: String, default: 'open' }, // 'open' | 'closed'
+  servicioRapido: { type: Boolean, default: false },
 })
 const emit = defineEmits(['order-paid', 'refresh'])
 
 const filteredOrders = computed(() => {
   return props.orders.map(o => {
     if (props.type !== 'open') return o
+    
+    // En servicio rápido, o si la orden ya está ENTREGADA/ABIERTA/EN_PREPARACION, no filtramos detalles
+    if (props.servicioRapido || (o.estado || '').toUpperCase() === 'EN_PREPARACION') {
+      const subtotal = (o.detalles || []).reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
+      const total = subtotal + parseFloat(o.propina || 0)
+      return {
+        ...o,
+        detalles: o.detalles || [],
+        total: total > 0 ? total : parseFloat(o.total || 0)
+      }
+    }
     
     // Only keep details that are ENTREGADO or cancelado
     const deliveredDetalles = (o.detalles || []).filter(d => 
@@ -592,6 +685,7 @@ const metodoPago     = ref('efectivo')
 const propinaPct     = ref(0)
 const propinaManual  = ref('')
 const cobrando       = ref(false)
+const desglosando     = ref(false)
 const montoRecibido  = ref(0)
 const folio          = ref('')
 const errorCobro     = ref('')
@@ -873,6 +967,117 @@ const generarTicketHTML = (order) => {
   `
 }
 
+const marcandoEntregadaId = ref(null)
+
+const marcarEntregada = async (order) => {
+  marcandoEntregadaId.value = order.id
+  try {
+    const res = await apiClient.put(`/ordenes/${order.id}`, { estado: 'ENTREGADA' })
+    if (res.success || res.data) {
+      order.estado = 'ENTREGADA'
+      emit('refresh')
+    }
+  } catch (err) {
+    console.error('Error al cambiar estado a entregada:', err)
+  } finally {
+    marcandoEntregadaId.value = null
+  }
+}
+
+const imprimirComanda = (order) => {
+  const win = window.open('', '_blank', 'width=400,height=600')
+  const dateStr = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })
+  const folio = order.folio || `ORD-${order.id}`
+  const mesa = order.mesa ? `MESA: ${order.mesa}` : (order.tipo_orden ? order.tipo_orden.toUpperCase() : 'SERVICIO RÁPIDO')
+
+  let itemsHtml = ''
+  ;(order.detalles || []).forEach(d => {
+    if (d.cancelado) return
+    const nombre = d.producto_nombre || d.producto?.nombre || 'Producto'
+    const tamano = (d.tamano_nombre && !nombre.includes(`(${d.tamano_nombre})`)) ? ` (${d.tamano_nombre})` : ''
+    const notas = d.notas ? `<br/><small style="font-size:11px; font-weight:bold; color:#333;">* NOTAS: ${d.notas}</small>` : ''
+    const comensal = (d.nom_comensal || d.comensal) ? `<br/><small style="font-size:10px; color:#555;">[${d.nom_comensal || d.comensal}]</small>` : ''
+    itemsHtml += `
+      <tr style="border-bottom: 1px dashed #ccc;">
+        <td style="padding:6px 0; vertical-align:top; font-weight:bold; font-size:14px; width:22%;">${d.cantidad}x</td>
+        <td style="padding:6px 0; font-size:13px; font-weight:bold; text-transform:uppercase; width:78%;">${nombre}${tamano}${comensal}${notas}</td>
+      </tr>
+    `
+  })
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Comanda_${folio}</title>
+        <style>
+          @media print {
+            @page {
+              size: 80mm auto;
+              margin: 0mm;
+            }
+            html, body {
+              width: 80mm !important;
+              margin: 0 !important;
+              padding: 4mm 6mm !important;
+            }
+          }
+          html, body {
+            width: 80mm;
+            margin: 0 auto;
+            padding: 4mm 6mm;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+            background: #fff;
+            box-sizing: border-box;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+          }
+          td, th {
+            word-break: break-word;
+            overflow-wrap: break-word;
+          }
+        </style>
+      </head>
+      <body>
+        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:10px;">
+          <h2 style="margin:0; font-size:16px; font-weight:bold; text-transform:uppercase;">*** COMANDA COCINA ***</h2>
+          <h3 style="margin:4px 0 0 0; font-size:15px; font-weight:bold;">${mesa}</h3>
+          <p style="margin:3px 0; font-size:11px;">${folio} | ${dateStr}</p>
+        </div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+          <thead>
+            <tr style="border-bottom: 1px solid #000;">
+              <th style="text-align:left; font-size:12px; padding-bottom:4px; width:22%;">CANT</th>
+              <th style="text-align:left; font-size:12px; padding-bottom:4px; width:78%;">DESCRIPCIÓN</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        ${order.notas ? `<div style="border-top:1px dashed #000; padding-top:6px; font-size:11px; margin-bottom:8px;"><strong>NOTAS GENERALE:</strong> ${order.notas}</div>` : ''}
+        <div style="border-top:2px solid #000; padding-top:6px; text-align:center; font-size:11px; font-weight:bold;">
+          ⚡ SERVICIO RÁPIDO ⚡
+        </div>
+      </body>
+    </html>
+  `)
+  win.document.close()
+  win.focus()
+  setTimeout(() => {
+    win.print()
+    win.close()
+  }, 400)
+}
+
 const reimprimirTicket = async (order) => {
   const rid = order.restaurante_id || order.id_restaurante || user.restaurante_activo
   if (rid && (!datosSucursal.value.propietario_id || detectedRestId.value !== rid)) {
@@ -1127,16 +1332,67 @@ const confirmarCancelacion = async () => {
 }
 
 // ── Estado Dividir ─────────────────────────────────────────────────────────
+import { watch } from 'vue'
+
 const modalDividir      = ref(false)
-const modoDividir       = ref('por_comensal')  // 'por_comensal' | 'equitativo' | 'manual'
+const modoDividir       = ref('manual')  // 'manual' | 'equitativo' | 'por_comensal'
 const metodoPagoDividir = ref('efectivo')
 const errorDividir      = ref('')
 const comensalesAuto    = ref([]) // Para agrupar por nombres preasignados
 const pagosPorTicket    = ref({}) // { ticketId: { metodo, recibido, referencia } }
+const numComensales      = ref(2)
+
+// Modo manual
+const comensalesManual    = ref([
+  { id: 1, detalles: [] },
+  { id: 2, detalles: [] }
+])
+const detalleSeleccionado = ref(null)
+
+// Watchers para actualizar comensalesManual dinámicamente
+watch(numComensales, (newVal) => {
+  if (modoDividir.value === 'manual') {
+    const numVal = parseInt(newVal)
+    if (isNaN(numVal) || numVal < 2) return
+    const currentLen = comensalesManual.value.length
+    if (numVal > currentLen) {
+      for (let i = currentLen; i < numVal; i++) {
+        comensalesManual.value.push({ id: i + 1, detalles: [] })
+      }
+    } else if (numVal < currentLen) {
+      // Devolver los productos de los comensales removidos al pool sin asignar
+      comensalesManual.value.splice(numVal)
+    }
+  }
+})
+
+watch(modoDividir, (newVal) => {
+  if (newVal === 'manual') {
+    numComensales.value = Math.max(2, numComensales.value)
+    comensalesManual.value = Array.from({ length: numComensales.value }, (_, i) => ({
+      id: i + 1,
+      detalles: []
+    }))
+  } else if (newVal === 'equitativo') {
+    pagosPorTicket.value = {}
+    ticketsAgrupadosVista.value.forEach(t => {
+      setPagoTicket(t.id, metodoPagoDividir.value)
+    })
+  }
+})
+
+watch(metodoPagoDividir, (newVal) => {
+  if (modoDividir.value === 'equitativo') {
+    ticketsAgrupadosVista.value.forEach(t => {
+      const p = getPagoTicket(t.id)
+      p.metodo = newVal
+    })
+  }
+})
 
 const getPagoTicket = (id) => {
   if (!pagosPorTicket.value[id]) {
-    pagosPorTicket.value[id] = { metodo: 'efectivo', recibido: 0, referencia: '', propina: 0, propinaPct: 0, propinaManual: false }
+    pagosPorTicket.value[id] = { metodo: metodoPagoDividir.value || 'efectivo', recibido: 0, referencia: '', propina: 0, propinaPct: 0, propinaManual: false }
   }
   return pagosPorTicket.value[id]
 }
@@ -1154,20 +1410,6 @@ const setPropinaTicket = (id, pct, total) => {
   else p.propina = (total * pct) / 100
 }
 
-const canPayDividido = computed(() => {
-  if (modoDividir.value === 'por_comensal') {
-    return ticketsAgrupados.value.every(t => {
-      const p = getPagoTicket(t.id);
-      if (p.metodo === 'efectivo') {
-        return (p.recibido || 0) >= (t.total + (p.propina || 0));
-      } else {
-        return p.referencia && p.referencia.trim().length > 0;
-      }
-    });
-  }
-  return true;
-})
-
 const ticketsAgrupados = computed(() => {
   const map = {}
   comensalesAuto.value.forEach(c => {
@@ -1179,16 +1421,53 @@ const ticketsAgrupados = computed(() => {
   return Object.values(map).filter(t => t.total > 0).sort((a,b) => a.id - b.id)
 })
 
+const ticketsAgrupadosVista = computed(() => {
+  if (modoDividir.value === 'manual') {
+    return comensalesManual.value.map(c => ({
+      id: c.id,
+      total: c.detalles.reduce((sum, d) => sum + parseFloat(d.subtotal || 0), 0),
+      nombres: [`Comensal ${c.id}`],
+      detalles: c.detalles
+    }))
+  } else if (modoDividir.value === 'equitativo') {
+    const totalGeneral = Number(ordenCobrar.value?.total || 0)
+    const num = numComensales.value
+    const baseTotal = Math.round((totalGeneral / num) * 100) / 100
+    const list = []
+    for (let i = 1; i <= num; i++) {
+      const itemTotal = i === num ? (totalGeneral - baseTotal * (num - 1)) : baseTotal
+      list.push({
+        id: i,
+        total: itemTotal,
+        nombres: [`Parte ${i}`],
+        detalles: []
+      })
+    }
+    return list
+  }
+  return ticketsAgrupados.value
+})
+
+const canPayDividido = computed(() => {
+  if (modoDividir.value === 'por_comensal' || modoDividir.value === 'manual') {
+    return ticketsAgrupadosVista.value.every(t => {
+      const p = getPagoTicket(t.id);
+      if (p.metodo === 'efectivo') {
+        return (p.recibido || 0) >= (t.total + (p.propina || 0));
+      } else {
+        return p.referencia && p.referencia.trim().length > 0;
+      }
+    });
+  }
+  return true;
+})
+
 const totalDivididoGeneral = computed(() => {
-  if (modoDividir.value !== 'por_comensal') return Number(ordenCobrar.value?.total || 0);
-  return ticketsAgrupados.value.reduce((sum, t) => {
+  if (modoDividir.value === 'equitativo') return Number(ordenCobrar.value?.total || 0);
+  return ticketsAgrupadosVista.value.reduce((sum, t) => {
     return sum + t.total + (getPagoTicket(t.id).propina || 0);
   }, 0);
 })
-
-// Modo manual
-const comensalesManual    = ref([])
-const detalleSeleccionado = ref(null)
 
 const detallesSinAsignar = computed(() => {
   if (!ordenCobrar.value?.detalles) return []
@@ -1209,28 +1488,32 @@ const montoPorComensal = (n) => {
 }
 
 // ── Acciones de Modal Dividir ──────────────────────────────────────────────
-const abrirDividirCuenta = () => {
+const abrirDividirCuenta = async () => {
   if (!ordenCobrar.value) return
+  desglosando.value = true
+  errorCobro.value = ''
   
-  // Analizar comensales de los detalles para modo automático (excluyendo cancelados)
-  const detalles = (ordenCobrar.value.detalles || []).filter(d => !d.cancelado)
-  const grupos = {}
-  detalles.forEach(d => {
-    const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
-    if (!grupos[nom]) grupos[nom] = { nombre: nom, detalles: [], subtotal: 0 }
-    grupos[nom].detalles.push(d)
-    grupos[nom].subtotal += parseFloat(d.subtotal || 0)
-  })
-  
-  const arr = Object.values(grupos)
-  comensalesAuto.value = arr.map((g, i) => ({
-    nombre: g.nombre,
-    detalles: g.detalles,
-    subtotal: g.subtotal,
-    ticketId: i + 1 
-  }))
-  
-  modoDividir.value       = arr.length > 1 ? 'por_comensal' : 'equitativo'
+  try {
+    const res = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/split-details`)
+    if (res.success && res.data) {
+      ordenCobrar.value = res.data
+      emit('refresh')
+    } else {
+      errorCobro.value = res.message || 'Error al desglosar productos de la orden'
+      desglosando.value = false
+      return
+    }
+  } catch (err) {
+    console.error('Error al desglosar productos:', err)
+    errorCobro.value = 'Error al desglosar productos de la orden en el servidor'
+    desglosando.value = false
+    return
+  } finally {
+    desglosando.value = false
+  }
+
+  modoDividir.value       = 'manual'
+  numComensales.value     = 2
   metodoPagoDividir.value = 'efectivo'
   errorDividir.value      = ''
   pagosPorTicket.value    = {} // Reiniciar pagos
@@ -1244,13 +1527,13 @@ const abrirDividirCuenta = () => {
 const agregarComensal = () => {
   const id = (comensalesManual.value[comensalesManual.value.length - 1]?.id || 0) + 1
   comensalesManual.value.push({ id, detalles: [] })
+  numComensales.value = comensalesManual.value.length
 }
 
 const quitarComensal = () => {
   if (comensalesManual.value.length <= 2) return
-  // Devolver detalles del último comensal al pool sin asignar
-  const ultimo = comensalesManual.value.pop()
-  // Los detalles vuelven a estar disponibles automáticamente por computed
+  comensalesManual.value.pop()
+  numComensales.value = comensalesManual.value.length
 }
 
 const seleccionarDetalle = (d) => {
@@ -1259,13 +1542,19 @@ const seleccionarDetalle = (d) => {
 
 const asignarAManual = (idxComensal) => {
   if (!detalleSeleccionado.value) return
-  comensalesManual.value[idxComensal].detalles.push(detalleSeleccionado.value)
+  // Evitar duplicados
+  if (!comensalesManual.value[idxComensal].detalles.some(x => x.id === detalleSeleccionado.value.id)) {
+    comensalesManual.value[idxComensal].detalles.push(detalleSeleccionado.value)
+  }
   detalleSeleccionado.value = null
 }
 
 const devolverDetalle = (d, idxComensal) => {
   comensalesManual.value[idxComensal].detalles =
     comensalesManual.value[idxComensal].detalles.filter(x => x.id !== d.id)
+  if (detalleSeleccionado.value?.id === d.id) {
+    detalleSeleccionado.value = null
+  }
 }
 
 const cobrarDividido = async () => {
@@ -1319,7 +1608,7 @@ const cobrarDividido = async () => {
     }
 
     // Cerrar la orden después de dividir
-    const detallePagos = ticketsAgrupados.value.map(t => {
+    const detallePagos = ticketsAgrupadosVista.value.map(t => {
       const p = getPagoTicket(t.id)
       return {
         monto: t.total,
@@ -1342,28 +1631,18 @@ const cobrarDividido = async () => {
     }
     
     // Mandar imprimir los tickets múltiples de las sub-cuentas
-    if (modoDividir.value === 'por_comensal') {
-      dataDividir.cuentas.forEach((c, idx) => {
-        const tInfo = ticketsAgrupados.value[idx]
-        if (tInfo) {
-           c.nombres_comensales = tInfo.nombres.join(', ')
-           const p = getPagoTicket(tInfo.id)
-           c.pago_metodo     = p.metodo
-           c.pago_referencia = p.referencia
-           c.pago_recibido   = p.recibido
-           c.pago_propina    = p.propina || 0
-           c.pago_cambio     = Math.max(0, (p.recibido || 0) - (tInfo.total + (p.propina || 0)))
-        }
-      })
-    } else if (modoDividir.value === 'equitativo') {
-       dataDividir.cuentas.forEach((c, idx) => {
-         c.nombres_comensales = `Parte ${idx + 1}`
-         // Para equitativo, usamos el pago general por ahora o permitimos individual?
-         // El UI actual solo muestra el selector general para equitativo, 
-         // pero vamos a asignar el método general a todos.
-         c.pago_metodo = metodoPagoDividir.value
-       })
-    }
+    dataDividir.cuentas.forEach((c, idx) => {
+      const tInfo = ticketsAgrupadosVista.value[idx]
+      if (tInfo) {
+         c.nombres_comensales = tInfo.nombres.join(', ')
+         const p = getPagoTicket(tInfo.id)
+         c.pago_metodo     = p.metodo
+         c.pago_referencia = p.referencia
+         c.pago_recibido   = p.recibido
+         c.pago_propina    = p.propina || 0
+         c.pago_cambio     = Math.max(0, (p.recibido || 0) - (tInfo.total + (p.propina || 0)))
+      }
+    })
 
     if (!esMesero.value) {
       imprimirTicketMultiple(dataDividir.cuentas, ordenCobrar.value.folio || ordenCobrar.value.id, dataCerrar.data.ordenes_ids || [])

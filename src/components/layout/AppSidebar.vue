@@ -123,7 +123,7 @@
       </div>
 
       <!-- SECCIÓN: ESTACIONES -->
-      <div v-if="!isSuperAdmin">
+      <div v-if="!isSuperAdmin && !isServicioRapido">
         <div v-show="!isCollapsed || isMobile" class="px-3 pb-2">
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
         </div>
@@ -218,6 +218,7 @@ const userRoleLabel = computed(() => {
 })
 
 const activeRestImage = computed(() => {
+  if (isSuperAdmin.value) return null
   const rest = props.restaurantes.find(r => r && r.id === props.restauranteActivo)
   if (!rest || !rest.imagen) return null
   
@@ -228,6 +229,18 @@ const activeRestImage = computed(() => {
 
 const activeRestName = computed(() => {
   return props.restaurantes.find(r => r && r.id === props.restauranteActivo)?.nombre || 'Seleccionar...'
+})
+
+const isServicioRapido = computed(() => {
+  if (isSuperAdmin.value) return false
+  const rest = props.restaurantes.find(r => r && r.id === props.restauranteActivo)
+  if (rest && rest.servicio_rapido !== undefined) {
+    return !!rest.servicio_rapido
+  }
+  if (props.user?.restaurante_activo && typeof props.user.restaurante_activo === 'object') {
+    return !!props.user.restaurante_activo.servicio_rapido
+  }
+  return false
 })
 
 // Verificar si es administrador o propietario

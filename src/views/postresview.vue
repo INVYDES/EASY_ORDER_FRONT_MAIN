@@ -371,7 +371,7 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
   try {
     const resultados = await Promise.all(
       detallesPostres.map(d =>
-        apiClient.get(`/ingredientes/producto/${d.producto_id}`)
+        apiClient.get(`/ingredientes/producto/${d.producto_id}${d.tamano_id ? '?tamano_id=' + d.tamano_id : ''}`)
           .then(data => ({ detalle: d, ingredientes: (data.success || data.data) ? (data.data || data) : [] }))
           .catch(() => ({ detalle: d, ingredientes: [] }))
       )
@@ -381,7 +381,7 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
       .filter(r => r.ingredientes.length > 0)
       .map(({ detalle, ingredientes }) => ({
         producto_id:     detalle.producto_id,
-        producto_nombre: detalle.producto_nombre ?? `Producto #${detalle.producto_id}`,
+        producto_nombre: detalle.producto_nombre ?? (detalle.tamano_nombre ? `${detalle.producto?.nombre || 'Postre'} (${detalle.tamano_nombre})` : (detalle.producto?.nombre ?? `Producto #${detalle.producto_id}`)),
         cantidad:        detalle.cantidad,
         ingredientes:    ingredientes.map(ing => {
           const cantidadTotal = ing.cantidad_receta * detalle.cantidad

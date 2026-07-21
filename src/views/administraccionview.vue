@@ -489,7 +489,16 @@
               </div>
             </div>
           </div>
-          <div v-if="restauranteEditando" class="flex items-center gap-2 pt-2">
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1 mt-2">
+            <div class="flex items-center gap-2">
+              <input v-model="restForm.servicio_rapido" type="checkbox" id="servicio-rapido-check" class="accent-amber-600 w-4 h-4 cursor-pointer" />
+              <label for="servicio-rapido-check" class="text-xs font-black text-amber-900 cursor-pointer uppercase tracking-wide">⚡ Modo Servicio Rápido (Comida Rápida)</label>
+            </div>
+            <p class="text-[10px] text-amber-700 font-medium pl-6 leading-tight">
+              Elimina la vista de estaciones de producción y centraliza la impresión de comandas y el flujo directo de entrega en la Caja.
+            </p>
+          </div>
+          <div v-if="restauranteEditando" class="flex items-center gap-2 pt-1">
             <input v-model="restForm.activo" type="checkbox" id="activo-check" class="accent-indigo-600 w-4 h-4" />
             <label for="activo-check" class="text-sm text-gray-700 cursor-pointer">Restaurante activo</label>
           </div>
@@ -657,7 +666,7 @@ const ordenesCerradasHoy = ref([])
 const loading = reactive({ general: true, empleados: false, restaurantes: false, guardando: false, sucursales: false })
 
 const empForm  = reactive({ nombre:'', apellidos:'', email:'', usuario:'', password:'', password_confirmation:'', rol:'', restaurante_id: null })
-const restForm = reactive({ nombre:'', telefono:'', calle:'', ciudad:'', estado:'', activo:true, imagen: null, imagen_url: null, eliminar_imagen: false })
+const restForm = reactive({ nombre:'', telefono:'', calle:'', ciudad:'', estado:'', servicio_rapido: false, activo:true, imagen: null, imagen_url: null, eliminar_imagen: false })
 const imgPreview = ref(null)
 const fileInput  = ref(null)
 const sucursalesDueno = ref([])
@@ -1151,7 +1160,7 @@ const toggleEstadoEmpleado = async (emp) => {
 // ── Modales restaurante ────────────────────────────────────────────────────────
 const abrirModalRestaurante = () => {
   restauranteEditando.value = null; formError.value = ''
-  Object.assign(restForm, { nombre:'', telefono:'', calle:'', ciudad:'', estado:'', activo:true, imagen: null, imagen_url: null, eliminar_imagen: false })
+  Object.assign(restForm, { nombre:'', telefono:'', calle:'', ciudad:'', estado:'', servicio_rapido: false, activo:true, imagen: null, imagen_url: null, eliminar_imagen: false })
   imgPreview.value = null
   showModalRestaurante.value = true
 }
@@ -1160,7 +1169,7 @@ const editarRestaurante = (rest) => {
   restauranteEditando.value = rest; formError.value = ''
   Object.assign(restForm, {
     nombre: rest.nombre||'', telefono: rest.telefono||'', calle: rest.calle||'',
-    ciudad: rest.ciudad||'', estado: rest.estado||'', activo: rest.es_activo!==false,
+    ciudad: rest.ciudad||'', estado: rest.estado||'', servicio_rapido: !!rest.servicio_rapido, activo: rest.es_activo!==false,
     imagen: null, imagen_url: rest.imagen_url, eliminar_imagen: false
   })
   imgPreview.value = null
@@ -1193,12 +1202,13 @@ const guardarRestaurante = async () => {
   try {
     const isEdit   = !!restauranteEditando.value
     const formData = new FormData()
-    formData.append('nombre',   restForm.nombre)
-    formData.append('telefono', restForm.telefono || '')
-    formData.append('calle',    restForm.calle    || '')
-    formData.append('ciudad',   restForm.ciudad   || '')
-    formData.append('estado',   restForm.estado   || '')
-    formData.append('activo',   restForm.activo ? '1' : '0')
+    formData.append('nombre',          restForm.nombre)
+    formData.append('telefono',        restForm.telefono || '')
+    formData.append('calle',           restForm.calle    || '')
+    formData.append('ciudad',          restForm.ciudad   || '')
+    formData.append('estado',          restForm.estado   || '')
+    formData.append('servicio_rapido', restForm.servicio_rapido ? '1' : '0')
+    formData.append('activo',          restForm.activo ? '1' : '0')
     if (isEdit) formData.append('_method', 'PUT')
     if (restForm.imagen)          formData.append('imagen',           restForm.imagen)
     if (restForm.eliminar_imagen) formData.append('eliminar_imagen',  '1')

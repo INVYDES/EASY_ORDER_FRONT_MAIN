@@ -83,7 +83,7 @@
               <input 
                 v-model="searchProd"
                 type="text"
-                placeholder="🔍 Buscar producto para añadir..."
+                placeholder="🔍 Buscar producto o tamaño para añadir..."
                 @focus="isFocused = true"
                 @blur="setTimeout(() => isFocused = false, 250)"
                 class="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition text-sm"
@@ -102,11 +102,11 @@
               <!-- Resultados búsqueda / Lista desplegable -->
               <div v-if="isFocused && filteredProducts.length > 0" class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-64 overflow-y-auto animate-fade-in border-t-4 border-t-indigo-500">
                 <div class="p-2 border-b border-gray-50 bg-gray-50/50">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Selecciona un producto</p>
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Selecciona un producto o tamaño</p>
                 </div>
                 <button 
                   v-for="p in filteredProducts" 
-                  :key="p.id"
+                  :key="p.itemKey"
                   @click="addProduct(p)"
                   class="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-center justify-between group transition-colors border-b border-gray-50 last:border-0"
                 >
@@ -116,12 +116,15 @@
                       <span v-else class="text-lg">🍽️</span>
                     </div>
                     <div>
-                      <p class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</p>
+                      <p class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">
+                        {{ p.nombre }}
+                        <span v-if="p.tamano_nombre" class="text-xs font-black text-indigo-600 ml-1 uppercase">({{ p.tamano_nombre }})</span>
+                      </p>
                       <p class="text-[10px] text-gray-400 font-medium">{{ p.categoria?.nombre || 'Producto' }}</p>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="text-xs font-black text-gray-400 group-hover:text-indigo-500 transition-colors">${{ p.precio }}</span>
+                    <span class="text-xs font-black text-gray-400 group-hover:text-indigo-500 transition-colors">${{ Number(p.precio || 0).toFixed(2) }}</span>
                     <span class="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">+</span>
                   </div>
                 </button>
@@ -135,7 +138,7 @@
             </div>
             <div 
               v-for="(p, index) in form.productos" 
-              :key="p.id"
+              :key="p.itemKey || (p.id + '-' + (p.tamano_id || 'base'))"
               class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors"
             >
               <div class="flex items-center gap-3">
@@ -144,8 +147,11 @@
                   <span v-else>🍽️</span>
                 </div>
                 <div>
-                  <p class="text-sm font-bold text-gray-800">{{ p.nombre }}</p>
-                  <p class="text-[10px] text-gray-400 font-medium">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
+                  <p class="text-sm font-bold text-gray-800">
+                    {{ p.nombre }}
+                    <span v-if="p.tamano_nombre" class="text-xs font-black text-indigo-600 ml-1 uppercase">({{ p.tamano_nombre }})</span>
+                  </p>
+                  <p class="text-[10px] text-gray-400 font-medium">${{ Number(p.precio || 0).toFixed(2) }} • {{ p.categoria?.nombre || 'Sin categoría' }}</p>
                 </div>
               </div>
 
@@ -277,15 +283,25 @@ onMounted(() => {
     form.nombre = props.paquete.nombre
     form.descripcion = props.paquete.descripcion
     form.precio = props.paquete.precio
-    form.productos = props.paquete.productos.map(p => ({
-      ...p,
-      cantidad: p.pivot?.cantidad || 1
-    }))
+    form.productos = (props.paquete.productos || []).map(p => {
+      const tamId   = p.pivot?.tamano_id || p.tamano_id || null
+      const tamObj  = tamId && p.tamanos ? p.tamanos.find(t => t.id === tamId) : null
+      const tamName = p.tamano_nombre || tamObj?.nombre || null
+      return {
+        ...p,
+        tamano_id: tamId,
+        tamano_nombre: tamName,
+        precio: tamObj ? parseFloat(tamObj.precio) : parseFloat(p.precio || 0),
+        itemKey: `${p.id}-${tamId || 'base'}`,
+        cantidad: p.pivot?.cantidad || 1
+      }
+    })
     previewUrl.value = props.paquete.imagen_url
   } else if (props.initialProducts && props.initialProducts.length > 0) {
     // Si venimos desde una sugerencia estratégica
     form.productos = props.initialProducts.map(p => ({
       ...p,
+      itemKey: `${p.id}-${p.tamano_id || 'base'}`,
       cantidad: 1
     }))
   }
@@ -314,7 +330,6 @@ const minutosProduccionTotal = computed(() => {
 const costoInsumosTotal = computed(() => {
   return form.productos.reduce((sum, p) => {
     const costoProd = (p.ingredientes || []).reduce((s, ing) => {
-      // 👈 Corregido: Buscar cantidad en ambos lugares posibles
       const cantIng = parseFloat(ing.cantidad_necesaria || ing.pivot?.cantidad || 0)
       return s + (parseFloat(ing.costo_unitario || 0) * cantIng)
     }, 0)
@@ -360,13 +375,47 @@ const aplicarPrecioSugerido = () => {
 
 const filteredProducts = computed(() => {
   const s = searchProd.value.toLowerCase()
-  const available = props.availableProducts.filter(p => !form.productos.find(fp => fp.id === p.id))
-  
-  if (!s) return available.slice(0, 20) // Mostrar primeros 20 por defecto
-  
-  return available.filter(p => 
-    p.nombre.toLowerCase().includes(s)
-  ).slice(0, 20)
+  const options = []
+
+  props.availableProducts.forEach(p => {
+    if (p.tamanos && p.tamanos.length > 0) {
+      p.tamanos.forEach(tam => {
+        const itemKey = `${p.id}-${tam.id}`
+        const yaExiste = form.productos.some(fp => fp.id === p.id && fp.tamano_id === tam.id)
+        if (!yaExiste) {
+          options.push({
+            ...p,
+            itemKey,
+            tamano_id: tam.id,
+            tamano_nombre: tam.nombre,
+            precio: parseFloat(tam.precio || 0),
+            stock: parseFloat(tam.stock || 0),
+            ingredientes: tam.ingredientes && tam.ingredientes.length ? tam.ingredientes : p.ingredientes
+          })
+        }
+      })
+    } else {
+      const itemKey = `${p.id}-base`
+      const yaExiste = form.productos.some(fp => fp.id === p.id && !fp.tamano_id)
+      if (!yaExiste) {
+        options.push({
+          ...p,
+          itemKey,
+          tamano_id: null,
+          tamano_nombre: null,
+          precio: parseFloat(p.precio || 0),
+          stock: parseFloat(p.stock || 0)
+        })
+      }
+    }
+  })
+
+  if (!s) return options.slice(0, 25)
+
+  return options.filter(item => {
+    const fullSearch = item.tamano_nombre ? `${item.nombre} ${item.tamano_nombre}` : item.nombre
+    return fullSearch.toLowerCase().includes(s)
+  }).slice(0, 25)
 })
 
 const handleFile = (e) => {
@@ -379,7 +428,7 @@ const handleFile = (e) => {
 const addProduct = (p) => {
   form.productos.push({ ...p, cantidad: 1 })
   searchProd.value = ''
-  isFocused.value = false // 👈 Cerrar el buscador tras añadir
+  isFocused.value = false
 }
 
 const removeProduct = (idx) => {
@@ -405,6 +454,9 @@ const save = async () => {
   form.productos.forEach((p, i) => {
     formData.append(`productos[${i}][id]`, p.id)
     formData.append(`productos[${i}][cantidad]`, p.cantidad)
+    if (p.tamano_id) {
+      formData.append(`productos[${i}][tamano_id]`, p.tamano_id)
+    }
   })
 
   // Para Laravel spoofing de PUT

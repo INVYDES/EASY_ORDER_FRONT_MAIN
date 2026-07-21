@@ -193,7 +193,7 @@ const handleSubmit = async () => {
     } else if (err.response?.data?.errors) {
       errorMessage.value = Object.values(err.response.data.errors).flat().join(', ')
     } else {
-      errorMessage.value = err.response?.data?.message || err.message || 'Error al iniciar sesión'
+      errorMessage.value = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al iniciar sesión'
     }
   } finally {
     loading.value = false

@@ -72,7 +72,7 @@
 
             <td class="px-4 py-3">
               <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-1.5">
+                <div v-if="!p.tamanos || p.tamanos.length === 0" class="flex items-center gap-1.5">
                   <span
                     class="px-2 py-0.5 rounded-md text-xs font-medium"
                     :class="p.estado_stock?.clase || 'bg-gray-100 text-gray-600'"
@@ -81,29 +81,48 @@
                   </span>
                   <span v-if="p.bajo_stock" class="text-xs animate-bounce" title="¡Stock Crítico!">⚠️</span>
                 </div>
-                <p class="text-[10px] text-gray-400">Min: {{ p.stock_minimo || 0 }}</p>
+                <div v-if="p.tamanos && p.tamanos.length > 0" class="flex flex-wrap gap-1 mt-0.5">
+                  <span v-for="tam in p.tamanos" :key="'st-'+tam.id" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-100">
+                    {{ (tam.nombre || '').charAt(0).toUpperCase() }}:{{ tam.stock }}
+                  </span>
+                </div>
+                <p v-else class="text-[10px] text-gray-400">Min: {{ p.stock_minimo || 0 }}</p>
               </div>
             </td>
 
             <td class="px-4 py-3">
-              <span class="font-bold text-gray-900">${{ Number(p.precio || 0).toFixed(2) }}</span>
+              <div class="flex flex-col">
+                <span class="font-bold text-gray-900">{{ getPrecioDisplay(p) }}</span>
+                <div v-if="p.tamanos && p.tamanos.length > 0" class="flex flex-wrap gap-1 mt-0.5">
+                  <span v-for="tam in p.tamanos" :key="'pr-'+tam.id" class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-100">
+                    {{ (tam.nombre || '').charAt(0).toUpperCase() }}:${{ Number(tam.precio || 0).toFixed(2) }}
+                  </span>
+                </div>
+              </div>
             </td>
 
             <td class="px-4 py-3 text-gray-600">
               <div class="flex flex-col">
-                <span>${{ calcularCostoTotal(p).toFixed(2) }}</span>
-                <span class="text-[10px] text-gray-400">Insumos: {{ p.ingredientes?.length || 0 }}</span>
+                <span>{{ getCostoDisplay(p) }}</span>
+                <div v-if="p.tamanos && p.tamanos.length > 0" class="flex flex-wrap gap-1 mt-0.5">
+                  <span v-for="tam in p.tamanos" :key="'co-'+tam.id" class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-100">
+                    {{ (tam.nombre || '').charAt(0).toUpperCase() }}:${{ Number(tam.costo_total ?? tam.costo ?? 0).toFixed(2) }}
+                  </span>
+                </div>
+                <span v-else class="text-[10px] text-gray-400">Insumos: {{ p.ingredientes?.length || 0 }}</span>
               </div>
             </td>
 
             <td class="px-4 py-3">
               <div class="flex flex-col">
-                <span class="text-xs font-bold" :class="getMargenColor(calcularMargen(p))">
-                  {{ calcularMargen(p).toFixed(1) }}%
+                <span class="text-xs font-bold" :class="getMargenColorDisplay(p)">
+                  {{ getMargenDisplay(p) }}
                 </span>
-                <span class="text-[10px] text-gray-400 italic">
-                  + ${{ calcularGanancia(p).toFixed(2) }}
-                </span>
+                <div v-if="p.tamanos && p.tamanos.length > 0" class="flex flex-wrap gap-1 mt-0.5">
+                  <span v-for="tam in p.tamanos" :key="'mg-'+tam.id" class="px-1.5 py-0.5 rounded font-bold text-[10px] border" :class="getMargenColor(tam.margen_porcentaje ?? tam.margen_pct ?? 0)">
+                    {{ (tam.nombre || '').charAt(0).toUpperCase() }}:{{ Number(tam.margen_porcentaje ?? tam.margen_pct ?? 0).toFixed(1) }}%
+                  </span>
+                </div>
               </div>
             </td>
 
@@ -263,6 +282,45 @@ const calcularMargen = (product) => {
   
   if (costo === 0 || precio === 0) return 0
   return ((precio - costo) / precio) * 100
+}
+
+const getPrecioDisplay = (p) => {
+  if (p.tamanos && p.tamanos.length > 0) {
+    const precios = p.tamanos.map(t => Number(t.precio || 0))
+    const min = Math.min(...precios)
+    const max = Math.max(...precios)
+    return min === max ? `$${min.toFixed(2)}` : `$${min.toFixed(2)} - $${max.toFixed(2)}`
+  }
+  return `$${Number(p.precio || 0).toFixed(2)}`
+}
+
+const getCostoDisplay = (p) => {
+  if (p.tamanos && p.tamanos.length > 0) {
+    const costos = p.tamanos.map(t => Number(t.costo_total ?? t.costo ?? 0))
+    const min = Math.min(...costos)
+    const max = Math.max(...costos)
+    return min === max ? `$${min.toFixed(2)}` : `$${min.toFixed(2)} - $${max.toFixed(2)}`
+  }
+  return `$${calcularCostoTotal(p).toFixed(2)}`
+}
+
+const getMargenDisplay = (p) => {
+  if (p.tamanos && p.tamanos.length > 0) {
+    const margenes = p.tamanos.map(t => Number(t.margen_porcentaje ?? t.margen_pct ?? 0))
+    const min = Math.min(...margenes)
+    const max = Math.max(...margenes)
+    return min === max ? `${min.toFixed(1)}%` : `${min.toFixed(1)}% - ${max.toFixed(1)}%`
+  }
+  return `${calcularMargen(p).toFixed(1)}%`
+}
+
+const getMargenColorDisplay = (p) => {
+  if (p.tamanos && p.tamanos.length > 0) {
+    const margenes = p.tamanos.map(t => Number(t.margen_porcentaje ?? t.margen_pct ?? 0))
+    const min = Math.min(...margenes)
+    return getMargenColor(min)
+  }
+  return getMargenColor(calcularMargen(p))
 }
 
 const calcularGanancia = (product) => {

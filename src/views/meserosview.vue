@@ -131,12 +131,12 @@
           </div>
           <button
             :disabled="esAdminOPropietario"
-            @click="vistaActual = 'nueva'"
+            @click="abrirMapaMesas"
             :class="['flex items-center gap-2 px-5 py-3.5 text-sm font-bold rounded-2xl transition shadow-lg active:scale-95',
                      esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100']"
           >
-            <span class="text-lg leading-none">{{ esAdminOPropietario ? '🚫' : '＋' }}</span>
-            {{ esAdminOPropietario ? 'Nueva Orden Bloqueada' : 'Nueva Orden' }}
+            <span class="text-lg leading-none">🗺️</span>
+            Ver Mapa de Mesas
           </button>
         </div>
       </div>
@@ -144,7 +144,7 @@
       <!-- ══ VISTA LISTADO ══ -->
       <div v-if="vistaActual === 'ordenes'">
         <div class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
-          <button v-for="tab in tabs" :key="tab.key" @click="tabActivo = tab.key"
+          <button v-for="tab in tabsVisibles" :key="tab.key" @click="tabActivo = tab.key"
             :class="['flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all border shrink-0',
               tabActivo === tab.key ? 'text-white border-transparent shadow-md scale-105' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 shadow-sm']"
             :style="tabActivo === tab.key ? { backgroundColor: tab.color } : {}">
@@ -162,6 +162,7 @@
             <CajaTicketGrid
               type="open"
               :orders="ordenesParaCobrar"
+              :servicio-rapido="isServicioRapido"
               @order-paid="handleOrderPaid"
               @refresh="cargarOrdenes"
             />
@@ -240,7 +241,7 @@
                           <div class="min-w-0 flex-1">
                             <p class="text-[11px] font-black leading-tight uppercase truncate"
                                :class="detalle.cancelado ? 'text-red-400 line-through' : 'text-slate-700'">
-                              {{ detalle.cantidad }}× {{ detalle.producto_nombre || detalle.nombre || (typeof detalle.producto === 'string' ? detalle.producto : detalle.producto?.nombre) || 'Producto' }}
+                              {{ detalle.cantidad }}× {{ getNombreDetalleConTamano(detalle) }}
                             </p>
                             <!-- Leyenda de cancelado -->
                             <p v-if="detalle.cancelado" class="text-[9px] font-black uppercase tracking-widest text-red-600 mt-0.5">
@@ -302,11 +303,66 @@
         </div>
       </div>
 
+      <!-- ══ VISTA MAPA DE MESAS ══ -->
+      <div v-else-if="vistaActual === 'mesas'" class="animate-fade-in space-y-6">
+        <div class="flex items-center justify-between gap-3 mb-6 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <div>
+            <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+              <span>🗺️</span> Mesas del restaurante
+            </h2>
+            <p class="text-xs text-slate-400 font-bold mt-1">Selecciona una mesa para tomar un pedido o ver su orden activa</p>
+          </div>
+          <button @click="vistaActual = 'ordenes'" 
+            class="px-5 py-3 text-xs font-black text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-2xl transition flex items-center gap-2 active:scale-95 shadow-sm">
+            📋 Ver órdenes
+          </button>
+        </div>
+
+        <!-- Indicadores de estado de Mesa -->
+        <div class="flex justify-end gap-4 text-xs font-black text-slate-600 px-4">
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-emerald-100 border border-emerald-300"></span>
+            <span>Libre / Disponible</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-amber-100 border border-amber-300"></span>
+            <span>Ocupada / Orden Abierta</span>
+          </div>
+        </div>
+
+        <!-- Contenedor del mapa de mesas -->
+        <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 sm:p-8">
+          <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-6">Mapa de Mesas</h3>
+          
+          <div v-if="mesasFiltradas.length === 0" class="text-center py-12 text-slate-400 font-bold italic text-sm">
+            No tienes mesas asignadas actualmente.
+          </div>
+          <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+            <button v-for="m in mesasFiltradas" :key="m"
+              type="button"
+              @click="seleccionarMesaDesdeMapa(m)"
+              class="aspect-square rounded-3xl border-2 p-4 transition-all duration-200 active:scale-95 flex flex-col justify-between items-center group relative overflow-hidden"
+              :class="mesaConOrden(m) 
+                ? 'bg-amber-50/50 border-amber-300 hover:border-amber-400 text-amber-900 shadow-md shadow-amber-50' 
+                : 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400 text-emerald-900 shadow-md shadow-emerald-50'">
+              
+              <div class="text-xs font-black text-slate-400 uppercase tracking-wider">Mesa</div>
+              <div class="text-3xl font-black">{{ m }}</div>
+              
+              <div class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                :class="mesaConOrden(m) ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'">
+                {{ mesaConOrden(m) ? 'Ocupada' : 'Disponible' }}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ VISTA NUEVA ORDEN ══ -->
       <div v-else-if="vistaActual === 'nueva'" class="animate-fade-in">
         <div class="flex items-center justify-between gap-3 mb-6">
           <div class="flex items-center gap-3">
-            <button @click="vistaActual = 'ordenes'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
+            <button @click="vistaActual = 'mesas'" class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center transition hover:bg-slate-50 text-slate-600 font-bold">←</button>
             <h2 class="text-xl font-black text-slate-800">Nueva Orden</h2>
           </div>
           <!-- Botón fijo para ver el pedido actual en tablets y móviles -->
@@ -324,34 +380,7 @@
           <!-- Formulario y Catálogo -->
           <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Comensales</label>
-                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl p-1 h-[52px] w-full">
-                    <button 
-                      type="button"
-                      @click="numeroComensales = Math.max(1, (parseInt(numeroComensales) || 1) - 1)" 
-                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
-                    >
-                      −
-                    </button>
-                    <input 
-                      v-model="numeroComensales" 
-                      type="number" 
-                      min="1" 
-                      max="50" 
-                      @blur="numeroComensales = (!numeroComensales || numeroComensales < 1) ? 1 : numeroComensales"
-                      class="flex-1 text-center text-sm font-black text-slate-800 outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                    />
-                    <button 
-                      type="button"
-                      @click="numeroComensales = (parseInt(numeroComensales) || 0) + 1" 
-                      class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all font-black text-base shadow-sm active:scale-95 border border-slate-100/50"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+              <div v-if="!nuevaOrden.mesa" class="grid grid-cols-1 gap-6">
                 <div>
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
                     Número de Mesa
@@ -387,6 +416,20 @@
                     </p>
                   </div>
                 </div>
+              </div>
+              <div v-else class="flex flex-col sm:flex-row items-center gap-4 justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg">🍽️</div>
+                  <div>
+                    <h3 class="font-black text-slate-800 text-sm">Mesa Seleccionada: #{{ nuevaOrden.mesa }}</h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">
+                      {{ mesaTieneOrdenAbierta ? '⚠️ Tiene orden abierta - se agregará al ticket existente' : '✅ Mesa Libre - nueva orden' }}
+                    </p>
+                  </div>
+                </div>
+                <button type="button" @click="nuevaOrden.mesa = null; vistaActual = 'mesas'" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-black rounded-xl transition active:scale-95 shadow-sm">
+                  🔄 Cambiar Mesa
+                </button>
               </div>
             </div>
 
@@ -511,10 +554,17 @@
                       <div class="p-3 flex-1 flex flex-col justify-between">
                         <div>
                           <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ p.nombre }}</p>
-                          <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{{ p.categoria?.nombre || 'General' }}</p>
+                          <div class="flex items-center justify-between mt-1">
+                            <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">{{ p.categoria?.nombre || 'General' }}</p>
+                            <div v-if="p.tamanos && p.tamanos.length > 0" class="flex gap-1">
+                              <span v-for="t in p.tamanos" :key="t.id" class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase">
+                                {{ (t.nombre || '').charAt(0) }}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-50">
-                          <span class="font-black text-sm text-slate-900">${{ Number(p.precio).toFixed(2) }}</span>
+                          <span class="font-black text-sm text-slate-900">{{ getPrecioRango(p) }}</span>
                           <div class="w-7 h-7 rounded-xl flex items-center justify-center text-sm font-bold transition shadow-sm bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
                             +
                           </div>
@@ -591,11 +641,11 @@
                 <div class="animate-fade-in">
                   <div class="space-y-4 mb-8 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
                     <div v-for="(nombre, cIdx) in comensalesNombres" :key="cIdx" 
-                         class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
-                         :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                         class="overflow-hidden transition-all duration-300"
+                         :class="comensalesNombres.length > 1 ? (comensalActivoIndex === cIdx ? 'border-2 border-indigo-500 shadow-md shadow-indigo-100 rounded-3xl' : 'border-2 border-slate-100 rounded-3xl') : ''">
                       
                       <!-- Box Header -->
-                      <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                      <div v-if="comensalesNombres.length > 1" class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                         <div class="flex items-center gap-2">
                            <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
                            <div class="flex flex-col">
@@ -616,7 +666,7 @@
                           <div class="flex justify-between items-start gap-3 mb-2">
                             <div class="flex items-center gap-2 min-w-0">
                               <span class="text-lg bg-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">{{ item.tipo === 'paquete' ? '🎁' : '🍽️' }}</span>
-                              <p class="text-[11px] font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }}</p>
+                              <p class="text-[11px] font-black text-slate-800 truncate leading-tight uppercase">{{ item.nombre }} {{ item.tamano_nombre ? '(' + item.tamano_nombre + ')' : '' }}</p>
                             </div>
                             <button @click="eliminarDelCarrito(item.cartId)" class="text-slate-300 hover:text-red-500 transition-colors">✕</button>
                           </div>
@@ -695,11 +745,11 @@
               <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
                 <div class="space-y-4 mb-8">
                   <div v-for="(nombre, cIdx) in comensalesNombres" :key="'flo-'+cIdx" 
-                       class="border-2 rounded-3xl overflow-hidden transition-all duration-300"
-                       :class="comensalActivoIndex === cIdx ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-100'">
+                       class="overflow-hidden transition-all duration-300"
+                       :class="comensalesNombres.length > 1 ? (comensalActivoIndex === cIdx ? 'border-2 border-indigo-500 shadow-md shadow-indigo-100 rounded-3xl' : 'border-2 border-slate-100 rounded-3xl') : ''">
                     
                     <!-- Box Header -->
-                    <div class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
+                    <div v-if="comensalesNombres.length > 1" class="bg-slate-50 p-3 flex justify-between items-center cursor-pointer" @click="comensalActivoIndex = cIdx">
                       <div class="flex items-center gap-2">
                          <span class="text-lg">{{ comensalActivoIndex === cIdx ? '👤' : '👥' }}</span>
                          <div class="flex flex-col">
@@ -857,6 +907,51 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Tamaño del Producto -->
+    <div v-if="showTamanoModal && productoTamanoSeleccionar" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="text-base font-black text-slate-800 uppercase tracking-wide">{{ productoTamanoSeleccionar.nombre }}</h3>
+            <p class="text-xs font-semibold text-slate-400 mt-0.5">Selecciona el tamaño deseado</p>
+          </div>
+          <button @click="showTamanoModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold">✕</button>
+        </div>
+
+        <div class="space-y-2.5 my-5">
+          <button v-for="tam in (productoTamanoSeleccionar?.tamanos || [])" :key="tam.id"
+            @click="tam.stock !== undefined && tam.stock !== null && Number(tam.stock) <= 0 ? null : tamanoSeleccionadoModal = tam"
+            :disabled="tam.stock !== undefined && tam.stock !== null && Number(tam.stock) <= 0"
+            type="button"
+            class="flex items-center justify-between w-full p-4 rounded-2xl border-2 transition-all cursor-pointer text-left disabled:opacity-40 disabled:cursor-not-allowed"
+            :class="tamanoSeleccionadoModal?.id === tam.id ? 'border-blue-600 bg-blue-50/30 text-blue-700 shadow-sm' : 'border-slate-100 bg-slate-50/50 text-slate-700 hover:border-slate-200'">
+            <div class="flex items-center">
+              <span class="w-9 h-9 rounded-full bg-blue-100/80 text-blue-700 font-black flex items-center justify-center text-sm uppercase mr-3">
+                {{ (tam.nombre || '').charAt(0).toUpperCase() }}
+              </span>
+              <div class="flex flex-col">
+                <span class="font-black text-sm uppercase tracking-wide">{{ tam.nombre }}</span>
+                <span v-if="tam.stock !== undefined && tam.stock !== null && Number(tam.stock) <= 0" class="text-[10px] text-red-500 font-black uppercase tracking-widest">Agotado</span>
+              </div>
+            </div>
+            <span class="font-black text-base text-slate-900">${{ Number(tam.precio || 0).toFixed(2) }}</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+          <button @click="showTamanoModal = false" type="button"
+            class="flex-1 py-3.5 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-2xl transition">
+            Cancelar
+          </button>
+          <button @click="confirmarAgregarTamanoAlCarrito" type="button"
+            :disabled="!tamanoSeleccionadoModal || (tamanoSeleccionadoModal.stock !== undefined && tamanoSeleccionadoModal.stock !== null && Number(tamanoSeleccionadoModal.stock) <= 0)"
+            class="flex-1 py-3.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg shadow-blue-200 transition disabled:opacity-50">
+            Agregar ${{ tamanoSeleccionadoModal ? Number(tamanoSeleccionadoModal.precio || 0).toFixed(2) : '0.00' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -894,6 +989,16 @@ const ultimaActualizacion = ref(null)
 
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 
+const getNombreDetalleConTamano = (d) => {
+  if (!d) return 'Producto'
+  const baseName = d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'
+  const tamName = d.tamano_nombre || (typeof d.producto === 'object' ? d.producto?.tamano_nombre : '')
+  if (tamName && !baseName.toLowerCase().includes(tamName.toLowerCase())) {
+    return `${baseName} (${tamName})`
+  }
+  return baseName
+}
+
 
 const cancelacionModal = ref({ visible: false, detalleId: null, ordenId: null, motivo: '', cantidadMaxima: 1, cantidadCancelar: 1 })
 
@@ -902,7 +1007,7 @@ const ordenExistente = ref(null)   // se muestra el modal de confirmación
 
 // ── ESTADO DE COMENSALES ───────────────────────────────────────────────────
 const numeroComensales    = ref(1)
-const comensalesNombres   = ref(['Comensal 1'])
+const comensalesNombres   = ref(['General'])
 const comensalActivoIndex = ref(0)
 const showCarritoFlotante = ref(false)
 
@@ -963,11 +1068,45 @@ const esAdminOPropietario = computed(() => {
   })
 })
 
+const mesasFiltradas = computed(() => {
+  if (esMesero.value && mesasAsignadas.value.length > 0) {
+    return mesasAsignadas.value
+  }
+  const count = totalMesasRestaurante.value || 0
+  return Array.from({ length: count }, (_, i) => i + 1)
+})
+
+const abrirMapaMesas = () => {
+  nuevaOrden.value = { clienteId: null, mesa: null }
+  carrito.value = []
+  vistaActual.value = 'mesas'
+}
+
+const seleccionarMesaDesdeMapa = (m) => {
+  nuevaOrden.value.mesa = m
+  carrito.value = []
+  vistaActual.value = 'nueva'
+}
+
 const BEBIDA_KEYWORDS = ['coca','pepsi','fanta','sprite','jugo','refresco','bebida','cerveza','agua','trago','coctel','limonada','naranjada']
 
 
 let pollTimer = null
 let pollingEnProgreso = false
+
+const restauranteObjeto = ref(null)
+const isServicioRapido = computed(() => {
+  if (restauranteObjeto.value?.servicio_rapido !== undefined) {
+    return !!restauranteObjeto.value.servicio_rapido
+  }
+  try {
+    const u = JSON.parse(localStorage.getItem('user') || '{}')
+    if (u?.restaurante_activo && typeof u.restaurante_activo === 'object') {
+      return !!u.restaurante_activo.servicio_rapido
+    }
+  } catch {}
+  return false
+})
 
 const tabs = [
   { key: 'todas',          label: 'Todas',          icon: '📋', color: '#6366f1' },
@@ -978,6 +1117,13 @@ const tabs = [
   { key: 'ENTREGADA',      label: 'Entregadas',      icon: '🏁', color: '#8b5cf6' },
   { key: 'cobrar',         label: 'Cobrar',          icon: '💵', color: '#10b981' },
 ]
+
+const tabsVisibles = computed(() => {
+  if (isServicioRapido.value) {
+    return tabs.filter(t => !['POR_PREPARAR', 'LISTA'].includes(t.key))
+  }
+  return tabs
+})
 
 // ── Computed: detectar si la mesa seleccionada ya tiene orden abierta ──────
 const ordenAbiertaMesa = computed(() => {
@@ -1245,9 +1391,26 @@ const borderColor = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e)
 const badgeEstado = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? 'bg-slate-100 text-slate-500 border-slate-200' : ({ ABIERTA:'bg-yellow-100 text-yellow-700 border-yellow-200', ENTREGADA:'bg-purple-100 text-purple-700 border-purple-200', CERRADA:'bg-slate-200 text-slate-500 border-slate-300', CANCELADA:'bg-red-100 text-red-700 border-red-200' }[e] || 'bg-slate-100 text-slate-500')
 const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e) ? '🕒' : ({ ABIERTA:'📝', ENTREGADA:'🏁', CERRADA:'🔒', CANCELADA:'🚫' }[e] || '📋')
 const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
-const siguienteEstado = (e) => ({ ABIERTA:'POR_PREPARAR', LISTA:'ENTREGADA' }[e] || null)
-const accionEstado    = (e) => ({ ABIERTA:'▶ Enviar Pedido', LISTA:'🤝 Entregada' }[e] || '')
-const btnEstado       = (e) => ({ ABIERTA:'bg-amber-500 hover:bg-amber-600 text-white', LISTA:'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400')
+const siguienteEstado = (e) => {
+  if (isServicioRapido.value) {
+    return { ABIERTA: 'EN_PREPARACION', EN_PREPARACION: 'ENTREGADA', LISTA: 'ENTREGADA' }[e] || null
+  }
+  return { ABIERTA: 'POR_PREPARAR', LISTA: 'ENTREGADA' }[e] || null
+}
+
+const accionEstado = (e) => {
+  if (isServicioRapido.value) {
+    return { ABIERTA: '🔥 Enviar a Preparación', EN_PREPARACION: '✅ Marcar Entregada', LISTA: '🤝 Entregada' }[e] || ''
+  }
+  return { ABIERTA: '▶ Enviar Pedido', LISTA: '🤝 Entregada' }[e] || ''
+}
+
+const btnEstado = (e) => {
+  if (isServicioRapido.value) {
+    return { ABIERTA: 'bg-orange-500 hover:bg-orange-600 text-white', EN_PREPARACION: 'bg-indigo-600 hover:bg-indigo-700 text-white', LISTA: 'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400'
+  }
+  return { ABIERTA: 'bg-amber-500 hover:bg-amber-600 text-white', LISTA: 'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400'
+}
 
 // ── API ────────────────────────────────────────────────────────────────────
 
@@ -1364,7 +1527,13 @@ const buildPayload = () => ({
       notas: i.notas, 
       nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General' 
     }
-    if (i.tipo === 'producto') item.producto_id = i.id
+    if (i.tipo === 'producto') {
+      item.producto_id = i.id
+      if (i.tamano_id) {
+        item.tamano_id = i.tamano_id
+        item.tamano_nombre = i.tamano_nombre
+      }
+    }
     if (i.tipo === 'paquete')  item.paquete_id  = i.id
     return item
   }),
@@ -1396,7 +1565,7 @@ const enviarOrden = async () => {
       carrito.value             = []
       nuevaOrden.value.mesa     = null
       numeroComensales.value    = 1
-      comensalesNombres.value   = ['Comensal 1']
+      comensalesNombres.value   = ['General']
       comensalActivoIndex.value = 0
       vistaActual.value         = 'ordenes'
       await cargarOrdenes()
@@ -1426,18 +1595,9 @@ const prepararEdicionOrden = (sub) => {
     nuevaOrden.value.mesa = null
   }
   
-  // Extraer comensales únicos de la orden existente
-  const nombresUnicos = [...new Set((sub.detalles || [])
-    .map(d => d.nom_comensal || d.comensal)
-    .filter(Boolean))]
-    
-  if (nombresUnicos.length > 0) {
-    comensalesNombres.value = [...nombresUnicos]
-    numeroComensales.value = nombresUnicos.length
-  } else {
-    comensalesNombres.value = ['Comensal 1']
-    numeroComensales.value = 1
-  }
+  // Forzamos un solo comensal General para evitar fragmentación de tickets
+  comensalesNombres.value = ['General']
+  numeroComensales.value = 1
   
   comensalActivoIndex.value = 0
   vistaActual.value = 'nueva'
@@ -1461,7 +1621,75 @@ const totalEnCarritoPorPaqueteId = (paqueteId) => {
     .reduce((sum, i) => sum + i.cantidad, 0)
 }
 
+// ── Tamaños modal state ──
+const showTamanoModal = ref(false)
+const productoTamanoSeleccionar = ref(null)
+const tamanoSeleccionadoModal = ref(null)
+
+const abrirModalTamanos = (producto) => {
+  productoTamanoSeleccionar.value = producto
+  if (producto.tamanos && producto.tamanos.length > 0) {
+    const disponible = producto.tamanos.find(t => t.stock === undefined || t.stock === null || Number(t.stock) > 0)
+    tamanoSeleccionadoModal.value = disponible || null
+  } else {
+    tamanoSeleccionadoModal.value = null
+  }
+  showTamanoModal.value = true
+}
+
+const confirmarAgregarTamanoAlCarrito = () => {
+  if (!productoTamanoSeleccionar.value || !tamanoSeleccionadoModal.value) return
+  const prod = productoTamanoSeleccionar.value
+  const tam = tamanoSeleccionadoModal.value
+
+  const cIdx = comensalActivoIndex.value
+
+  if (tam.stock !== undefined && tam.stock !== null) {
+    const stockTam = Number(tam.stock)
+    if (stockTam <= 0) {
+      showToast(`El tamaño "${tam.nombre}" para "${prod.nombre}" está agotado`, 'error')
+      return
+    }
+    const yaEnCarrito = carrito.value
+      .filter(i => i.id === prod.id && i.tamano_id === tam.id)
+      .reduce((sum, i) => sum + i.cantidad, 0)
+    if (yaEnCarrito >= stockTam) {
+      showToast(`No hay suficiente stock para "${prod.nombre} (${tam.nombre})". Límite: ${stockTam} uds`, 'error')
+      return
+    }
+  }
+
+  const e = carrito.value.find(i => i.id === prod.id && i.tamano_id === tam.id && i.comensalIndex === cIdx && !i.notas)
+  if (e) {
+    e.cantidad++
+  } else {
+    carrito.value.push({ 
+      cartId: Date.now() + Math.random(),
+      id: prod.id, 
+      nombre: prod.nombre,
+      tamano_id: tam.id,
+      tamano_nombre: tam.nombre,
+      precio: Number(tam.precio || 0), 
+      cantidad: 1, 
+      tipo: 'producto', 
+      stock_maximo: tam.stock,
+      notas: '', 
+      comensalIndex: cIdx,
+      minutos_produccion: parseFloat(prod.minutos_produccion || 0)
+    })
+  }
+
+  showTamanoModal.value = false
+  productoTamanoSeleccionar.value = null
+  tamanoSeleccionadoModal.value = null
+}
+
 const agregarAlCarrito = (item, tipo) => {
+  if (tipo === 'producto' && item.tamanos && item.tamanos.length > 0) {
+    abrirModalTamanos(item)
+    return
+  }
+
   if (tipo === 'producto' && item.stock !== undefined && item.stock !== null) {
     if (totalEnCarritoPorId(item.id) >= item.stock) {
       showToast(`No hay suficiente stock para "${item.nombre}". Límite: ${item.stock} uds`, 'error')
@@ -1658,6 +1886,20 @@ const entregarProductosSubOrden = async (sub) => {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const resolveImageUrl  = (path) => { if (!path) return null; if (path.startsWith('http')) return path; return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}` }
+const getPrecioRango = (p) => {
+  if (p.tamanos && p.tamanos.length > 0) {
+    const precios = p.tamanos.map(t => Number(t.precio) || 0).filter(pr => pr > 0)
+    if (precios.length > 0) {
+      const min = Math.min(...precios)
+      const max = Math.max(...precios)
+      if (min === max) {
+        return `$${min.toFixed(2)}`
+      }
+      return `$${min.toFixed(2)} - $${max.toFixed(2)}`
+    }
+  }
+  return `$${Number(p.precio || 0).toFixed(2)}`
+}
 const getNombreMostrable = (o) => o.cliente?.nombre || o.cliente?.name || o.usuario?.name || o.user?.name || 'Comensal'
 const showToast        = (m, t = 'info') => { const id = Date.now(); toasts.value.push({ id, message: m, type: t }); setTimeout(() => toasts.value = toasts.value.filter(x => x.id !== id), 3500) }
 const removeToast      = (id) => { toasts.value = toasts.value.filter(t => t.id !== id) }
@@ -1679,15 +1921,22 @@ onMounted(async () => {
   }
 
   // Sincronizar restaurante activo para WS si no estaba en localStorage
-  if (!restauranteActivo.value) {
-    try {
-      const data = await apiClient.get('/me')
-      const ra = data.data?.restaurante_activo || data.restaurante_activo
-      if (ra) {
-        restauranteActivo.value = (typeof ra === 'object' && ra !== null && ra !== undefined) ? ra.id : ra
+  try {
+    const data = await apiClient.get('/me')
+    const user = data.data || data
+    const ra = user?.restaurante_activo
+    if (ra) {
+      if (typeof ra === 'object' && ra !== null) {
+        restauranteActivo.value = ra.id
+        restauranteObjeto.value = ra
+      } else {
+        restauranteActivo.value = ra
+        apiClient.get(`/restaurantes/${ra}`).then(rData => {
+          if (rData?.data) restauranteObjeto.value = rData.data
+        }).catch(() => {})
       }
-    } catch {}
-  }
+    }
+  } catch {}
 
   // Iniciar un único polling silencioso de seguridad
   const poll = async () => {
