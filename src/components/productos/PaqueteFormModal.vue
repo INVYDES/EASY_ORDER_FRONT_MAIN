@@ -133,18 +133,18 @@
             <div v-if="form.productos.length === 0" class="text-center py-8">
               <p class="text-xs text-gray-400 dark:text-gray-500 font-medium italic">Selecciona al menos un producto arriba</p>
             </div>
-            <template v-else>
+          <template v-else>
               <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                <div class="col-span-4">Producto</div>
-                <div class="col-span-2 text-right">Insumos</div>
-                <div class="col-span-2 text-right">MO</div>
-                <div class="col-span-1 text-center">Cant</div>
-                <div class="col-span-2 text-right">Total</div>
+                <div class="col-span-3">Producto</div>
+                <div class="col-span-2 text-center">Tamaño</div>
+                <div class="col-span-2 text-right">Precio c/u</div>
+                <div class="col-span-2 text-center">Cant</div>
+                <div class="col-span-2 text-right">Subtotal</div>
                 <div class="col-span-1"></div>
               </div>
               <div v-for="(p, index) in productosConCosto" :key="p.id"
                 class="grid grid-cols-12 gap-2 items-center px-4 py-3 border-b border-gray-50 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                <div class="col-span-4 flex items-center gap-2 min-w-0">
+                <div class="col-span-3 flex items-center gap-2 min-w-0">
                   <div class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 overflow-hidden">
                     <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
                     <span v-else class="text-xs">🍽️</span>
@@ -154,21 +154,34 @@
                     <p class="text-[9px] text-gray-400 dark:text-gray-500 truncate">{{ p.categoria?.nombre || 'Sin categoría' }}</p>
                   </div>
                 </div>
-                <div class="col-span-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300">${{ p.costoUnitario.insumos.toFixed(2) }}</div>
-                <div class="col-span-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300">${{ p.costoUnitario.mo.toFixed(2) }}</div>
-                <div class="col-span-1 flex justify-center">
+                <div class="col-span-2 text-center">
+                  <select v-if="Array.isArray(p.tamanos_disponibles) && p.tamanos_disponibles.length > 1"
+                    :value="p.tamano_key"
+                    @change="changeProductSize(p, $event.target.value)"
+                    class="text-[10px] px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 outline-none font-medium">
+                    <option v-for="t in p.tamanos_disponibles" :key="t.key" :value="t.key">{{ t.nombre }}</option>
+                  </select>
+                  <span v-else class="text-[10px] text-gray-400 font-medium">{{ p.tamano_nombre || 'Único' }}</span>
+                </div>
+                <div class="col-span-2 text-right">
+                  <span class="text-xs font-medium text-gray-700 dark:text-gray-300">${{ p.precioUnitario.toFixed(2) }}</span>
+                  <p class="text-[9px] text-gray-400">c/u</p>
+                </div>
+                <div class="col-span-2 flex justify-center">
                   <div class="flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
                     <button @click="p.cantidad > 1 ? p.cantidad-- : null" class="w-6 h-6 rounded-lg text-gray-500 text-xs font-bold hover:text-indigo-600 transition">−</button>
                     <span class="text-xs font-black w-5 text-center text-gray-700 dark:text-gray-300">{{ p.cantidad }}</span>
                     <button @click="p.cantidad++" class="w-6 h-6 rounded-lg text-indigo-600 text-xs font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">+</button>
                   </div>
                 </div>
-                <div class="col-span-2 text-right text-xs font-black text-gray-900 dark:text-gray-100">${{ (p.costoUnitario.total * p.cantidad).toFixed(2) }}</div>
+                <div class="col-span-2 text-right text-xs font-black text-gray-900 dark:text-gray-100">${{ (p.precioUnitario * p.cantidad).toFixed(2) }}</div>
                 <div class="col-span-1 text-right">
                   <button @click="removeProduct(index)" class="text-gray-300 hover:text-red-500 transition text-xs">✕</button>
                 </div>
               </div>
             </template>
+
+
           </div>
         </div>
 
@@ -184,37 +197,50 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Costos -->
+            <!-- Suma de Precios Individuales -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-indigo-50">
               <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">Costo Producción</span>
-                <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ costoTotal.toFixed(2) }}</span>
+                <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">Suma Precios Individuales</span>
+                <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">${{ sumaPrecios.toFixed(2) }}</span>
               </div>
-              <div class="space-y-2">
-                <div class="flex justify-between text-[11px]">
-                  <span class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Insumos (Suma):</span>
-                  <span class="text-gray-900 dark:text-gray-100 font-bold">${{ costoInsumosTotal.toFixed(2) }}</span>
+              <div v-if="productosConCosto.length > 0" class="space-y-1.5 text-[11px] border-t border-indigo-100 pt-2">
+                <div v-for="p in productosConCosto" :key="'precio-'+p.id"
+                  class="flex justify-between text-gray-500">
+                  <span>{{ p.nombre }}<span v-if="p.tamano_nombre" class="text-gray-400"> ({{ p.tamano_nombre }})</span> <span class="text-gray-300">×{{ p.cantidad }}</span></span>
+                  <span class="font-medium text-gray-700">${{ (p.precioUnitario * p.cantidad).toFixed(2) }}</span>
                 </div>
-                <div class="flex justify-between text-[11px]">
-                  <span class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Mano de Obra (MO):</span>
-                  <span class="text-gray-900 dark:text-gray-100 font-bold">${{ costoManoObraTotal.toFixed(2) }}</span>
-                </div>
-                <div class="flex justify-between text-[11px] pt-1 border-t border-gray-50">
-                  <span class="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">Gastos Indirectos (5%):</span>
-                  <span class="text-gray-900 dark:text-gray-100 font-bold">${{ costoIndirectosTotal.toFixed(2) }}</span>
-                </div>
+              </div>
+              <!-- Ahorro del paquete -->
+              <div v-if="parseFloat(form.precio || 0) > 0 && sumaPrecios > 0" class="mt-3 pt-2 border-t border-dashed border-indigo-100 flex justify-between items-center">
+                <span class="text-[10px] font-bold uppercase" :class="ahorroPaquete >= 0 ? 'text-emerald-500' : 'text-red-500'">{{ ahorroPaquete >= 0 ? '🎉 Ahorro cliente' : '⚠️ Sobreprecio' }}</span>
+                <span class="text-sm font-black" :class="ahorroPaquete >= 0 ? 'text-emerald-600' : 'text-red-600'">${{ Math.abs(ahorroPaquete).toFixed(2) }} ({{ ahorroPaquetePct }}%)</span>
               </div>
             </div>
 
-            <!-- Margen -->
-            <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Margen Real</span>
-                <span class="text-xl font-black text-emerald-700">${{ margenReal.toFixed(2) }}</span>
+            <!-- Costo Producción -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-indigo-50">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">Costo Producción Total</span>
+                <span class="text-xl font-black text-orange-600 dark:text-orange-400">${{ costoTotal.toFixed(2) }}</span>
               </div>
-              <p class="text-3xl font-black text-emerald-600">{{ margenRealPct }}%</p>
-              <p class="text-[10px] text-emerald-500 font-bold uppercase mt-1 tracking-tighter">Utilidad sobre precio final</p>
+              <div v-if="productosConCosto.length > 0" class="space-y-1.5 text-[11px] border-t border-indigo-100 pt-2">
+                <div v-for="p in productosConCosto" :key="'costo-'+p.id"
+                  class="flex justify-between text-gray-500">
+                  <span>{{ p.nombre }}<span v-if="p.tamano_nombre" class="text-gray-400"> ({{ p.tamano_nombre }})</span> <span class="text-gray-300">×{{ p.cantidad }}</span></span>
+                  <span class="font-medium text-gray-700">${{ (p.costoUnitario * p.cantidad).toFixed(2) }}</span>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Margen -->
+          <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Margen Real (Precio Paquete − Costo Prod.)</span>
+              <span class="text-xl font-black text-emerald-700">${{ margenReal.toFixed(2) }}</span>
+            </div>
+            <p class="text-3xl font-black text-emerald-600">{{ margenRealPct }}%</p>
+            <p class="text-[10px] text-emerald-500 font-bold uppercase mt-1 tracking-tighter">Utilidad sobre precio del paquete</p>
           </div>
 
           <!-- Sugerencia -->
@@ -222,7 +248,7 @@
             <div class="absolute right-0 top-0 bottom-0 w-24 bg-indigo-50 dark:bg-indigo-900/300/5 -skew-x-12 translate-x-12"></div>
             <div class="flex items-center justify-between relative z-10">
               <div>
-                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Precio Sugerido (30% util.)</p>
+                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Precio Sugerido (30% util. sobre costo)</p>
                 <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400">${{ precioSugerido.toFixed(2) }}</p>
               </div>
               <button 
@@ -283,22 +309,75 @@ const form = reactive({
   imagenFile: null
 })
 
+/**
+ * Extrae precio y costo de un tamaño.
+ * - precio: viene siempre en tamanos_disponibles[].precio
+ * - costo:  viene en tamanos_disponibles[].costo (si el backend lo incluye)
+ *           o se busca en tamanos_personalizados[] como fallback.
+ */
+const extraerPrecioCosto = (p, tamanoKey) => {
+  const tamanos = Array.isArray(p.tamanos_disponibles) ? p.tamanos_disponibles : []
+  const tam = tamanoKey ? tamanos.find(t => t.key === tamanoKey) : tamanos[0]
+
+  // Precio de venta del tamaño (siempre disponible)
+  const precio = Number(tam?.precio ?? p.precio ?? 0)
+
+  // Costo de producción: intentar desde tamanos_disponibles, luego tamanos_personalizados
+  let costo = Number(tam?.costo ?? 0)
+  if (!costo && p.tamanos_personalizados) {
+    try {
+      const raw = typeof p.tamanos_personalizados === 'string'
+        ? JSON.parse(p.tamanos_personalizados)
+        : p.tamanos_personalizados
+      if (Array.isArray(raw)) {
+        const match = tamanoKey
+          ? raw.find(t => t.key === tamanoKey)
+          : raw[0]
+        costo = Number(match?.costo ?? 0)
+      }
+    } catch { /* ignore parse errors */ }
+  }
+  // Último fallback: campo costo en el producto
+  if (!costo) costo = Number(p.costo ?? 0)
+
+  return { precio, costo }
+}
+
 onMounted(() => {
   if (props.paquete) {
     form.nombre = props.paquete.nombre
     form.descripcion = props.paquete.descripcion
     form.precio = props.paquete.precio
-    form.productos = props.paquete.productos.map(p => ({
-      ...p,
-      cantidad: p.pivot?.cantidad || 1
-    }))
+    form.productos = props.paquete.productos.map(p => {
+      const tamanos = Array.isArray(p.tamanos_disponibles) ? p.tamanos_disponibles : []
+      const tamanoInicial = tamanos.find(t => t.key === p.tamano_key) || tamanos[0] || null
+      const tamKey = p.tamano_key || tamanoInicial?.key || null
+      const { precio, costo } = extraerPrecioCosto(p, tamKey)
+      return {
+        ...p,
+        cantidad: p.pivot?.cantidad || 1,
+        tamano_key: tamKey,
+        tamano_nombre: p.tamano_nombre || tamanoInicial?.nombre || 'Único',
+        precio_tamano: precio,
+        costo_tamano: costo,
+      }
+    })
     previewUrl.value = props.paquete.imagen_url
   } else if (props.initialProducts && props.initialProducts.length > 0) {
-    // Si venimos desde una sugerencia estratégica
-    form.productos = props.initialProducts.map(p => ({
-      ...p,
-      cantidad: 1
-    }))
+    form.productos = props.initialProducts.map(p => {
+      const tamanos = Array.isArray(p.tamanos_disponibles) ? p.tamanos_disponibles : []
+      const tamano = tamanos.length > 0 ? tamanos[0] : null
+      const tamKey = tamano?.key ?? null
+      const { precio, costo } = extraerPrecioCosto(p, tamKey)
+      return {
+        ...p,
+        cantidad: 1,
+        tamano_key: tamKey,
+        tamano_nombre: tamano?.nombre ?? 'Único',
+        precio_tamano: precio,
+        costo_tamano: costo,
+      }
+    })
   }
 })
 
@@ -309,45 +388,47 @@ const minutosProduccionTotal = computed(() => {
   }, 0)
 })
 
-const costoProducto = (p) => {
-  const insumos = (p.ingredientes || []).reduce((s, ing) => {
-    const cantIng = parseFloat(ing.cantidad_necesaria || ing.pivot?.cantidad || 0)
-    return s + (parseFloat(ing.costo_unitario || 0) * cantIng)
-  }, 0)
-  const minProd = parseFloat(p.minutos_produccion || 0)
-  const mo = props.totalSueldosBase ? (props.totalSueldosBase / 14400) * 1.36 * minProd : 0
-  return { insumos, mo, total: insumos + mo }
-}
+/**
+ * Cada producto en el paquete tiene:
+ *   - precio_tamano: precio de venta unitario del tamaño elegido
+ *   - costo_tamano:  costo de producción unitario (insumos + MO + indirectos)
+ *
+ * productosConCosto expone ambos valores calculados para el template.
+ */
+const precioProducto = (p) => Number(p.precio_tamano ?? p.precio ?? 0)
+const costoProducto  = (p) => Number(p.costo_tamano  ?? p.costo  ?? 0)
 
 const productosConCosto = computed(() =>
   form.productos.map(p => ({
     ...p,
-    costoUnitario: costoProducto(p),
+    precioUnitario: precioProducto(p),
+    costoUnitario:  costoProducto(p),
   }))
 )
 
-const costoInsumosTotal = computed(() => {
-  return productosConCosto.value.reduce((sum, p) => sum + (p.costoUnitario.insumos * p.cantidad), 0)
+// Suma de los precios individuales de cada producto (lo que costarían por separado)
+const sumaPrecios = computed(() =>
+  productosConCosto.value.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0)
+)
+
+// Costo total de producción del paquete
+const costoTotal = computed(() =>
+  productosConCosto.value.reduce((sum, p) => sum + (p.costoUnitario * p.cantidad), 0)
+)
+
+// Ahorro que obtiene el cliente comprando el paquete vs. individualmente
+const ahorroPaquete = computed(() => {
+  const precioPaquete = parseFloat(form.precio || 0)
+  return sumaPrecios.value - precioPaquete
+})
+const ahorroPaquetePct = computed(() => {
+  return sumaPrecios.value > 0 ? Math.round((ahorroPaquete.value / sumaPrecios.value) * 100) : 0
 })
 
-const costoManoObraTotal = computed(() => {
-  if (!props.totalSueldosBase) return 0
-  return productosConCosto.value.reduce((sum, p) => sum + (p.costoUnitario.mo * p.cantidad), 0)
-})
+// Precio sugerido con 30% de utilidad sobre el costo total de producción
+const precioSugerido = computed(() => costoTotal.value > 0 ? costoTotal.value * 1.30 : sumaPrecios.value * 0.90)
 
-const costoIndirectosTotal = computed(() => {
-  return (costoInsumosTotal.value + costoManoObraTotal.value) * 0.05
-})
-
-const costoTotal = computed(() => {
-  return costoInsumosTotal.value + costoManoObraTotal.value + costoIndirectosTotal.value
-})
-
-const precioSugerido = computed(() => {
-  const subtotal = costoTotal.value
-  return subtotal + (subtotal * 0.30)
-})
-
+// Margen real = precio del paquete − costo de producción
 const margenReal = computed(() => {
   const precio = parseFloat(form.precio || 0)
   return precio - costoTotal.value
@@ -381,9 +462,32 @@ const handleFile = (e) => {
 }
 
 const addProduct = (p) => {
-  form.productos.push({ ...p, cantidad: 1 })
+  const tamanos = Array.isArray(p.tamanos_disponibles) ? p.tamanos_disponibles : []
+  const tamano = tamanos.length > 0 ? tamanos[0] : null
+  const tamKey = tamano?.key ?? null
+  const { precio, costo } = extraerPrecioCosto(p, tamKey)
+  form.productos.push({
+    ...p,
+    cantidad: 1,
+    tamano_key: tamKey,
+    tamano_nombre: tamano?.nombre ?? 'Único',
+    precio_tamano: precio,
+    costo_tamano: costo,
+  })
   searchProd.value = ''
   isFocused.value = false // 👈 Cerrar el buscador tras añadir
+}
+
+const changeProductSize = (p, tamanoKey) => {
+  const tamanos = Array.isArray(p.tamanos_disponibles) ? p.tamanos_disponibles : []
+  const tamano = tamanos.find(t => t.key === tamanoKey)
+  if (tamano) {
+    const { precio, costo } = extraerPrecioCosto(p, tamanoKey)
+    p.tamano_key = tamano.key
+    p.tamano_nombre = tamano.nombre
+    p.precio_tamano = precio
+    p.costo_tamano = costo
+  }
 }
 
 const removeProduct = (idx) => {

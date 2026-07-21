@@ -860,7 +860,13 @@ const handleCheckout = async (checkoutData) => {
 
     const body = {
       restaurante_id:    restauranteSeleccionado.value.id,
-        productos:         pedido.value.map(i => ({ producto_id: i.id, cantidad: i.cantidad, notas: null, tamano: i.tamano || null })),
+        productos:         pedido.value.map(i => {
+          const prod = productos.value.find(p => p.id === i.id)
+          const tams = Array.isArray(prod?.tamanos_disponibles) ? prod.tamanos_disponibles : []
+          const idx = tams.findIndex(t => t.key === i.tamano)
+          const tamanoSlot = idx >= 0 && idx < 3 ? ['pequeno', 'mediano', 'grande'][idx] : (i.tamano || null)
+          return { producto_id: i.id, cantidad: i.cantidad, notas: null, tamano: tamanoSlot }
+        }),
       metodo_pago:       checkoutData.metodo_pago,
       tipo_orden:        mapTipoOrden[checkoutData.tipo_entrega] || 'pickup',
       direccion_entrega: direccionStr,

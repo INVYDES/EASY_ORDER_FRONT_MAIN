@@ -167,7 +167,7 @@ const parseUTCDate = (dateStr) => {
         d = new Date(`${anio}-${mes}-${dia}T${hora}`);
       } else {
         const cleanStr = dateStr.replace(' ', 'T');
-        d = new Date(cleanStr);
+        d = new Date(cleanStr + 'Z');
       }
     } else {
       d = new Date(dateStr);
@@ -322,13 +322,12 @@ const loadOrders = async () => {
     const today = new Date().toLocaleDateString('en-CA')
     let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
-    
+
     if (cajaAbierta.value && cajaOpenedAt.value) {
-      closedOrdersQuery = `/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
-      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
-    } else if (!cajaAbierta.value) {
-      closedOrdersQuery = null;
-      cancelledOrdersQuery = null;
+      const openDateObj = parseUTCDate(cajaOpenedAt.value) || new Date()
+      const openDateStr = openDateObj.toLocaleDateString('en-CA')
+      closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${openDateStr}&fecha_hasta=${today}&per_page=100`
+      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${openDateStr}&fecha_hasta=${today}&per_page=100`
     }
 
     const fetches = [
@@ -336,15 +335,10 @@ const loadOrders = async () => {
       apiClient.get(`/ordenes?estado=POR_PREPARAR&per_page=100`),
       apiClient.get(`/ordenes?estado=EN_PREPARACION&per_page=100`),
       apiClient.get(`/ordenes?estado=LISTA&per_page=100`),
-      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`)
+      apiClient.get(`/ordenes?estado=ENTREGADA&per_page=100`),
+      apiClient.get(closedOrdersQuery),
+      apiClient.get(cancelledOrdersQuery),
     ];
-    
-    if (closedOrdersQuery) {
-      fetches.push(apiClient.get(closedOrdersQuery));
-    }
-    if (cancelledOrdersQuery) {
-      fetches.push(apiClient.get(cancelledOrdersQuery));
-    }
 
     const jsonResults = await Promise.all(fetches)
     const map = new Map()

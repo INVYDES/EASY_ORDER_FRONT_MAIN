@@ -360,7 +360,7 @@ const normalizedItems = computed(() => {
   const items = props.ticket.detalles || props.ticket.items || []
   return items.map(item => {
     const cantidad = item.cantidad ?? item.quantity ?? 0
-    const precio = item.precio_unitario ?? item.price ?? 0
+    const precio = item.precio ?? item.precio_unitario ?? item.price ?? 0
     return {
       id: item.id,
       cantidad,

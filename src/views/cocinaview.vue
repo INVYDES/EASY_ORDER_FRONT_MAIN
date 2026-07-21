@@ -288,7 +288,7 @@ const esCocina = (detalle) => {
 }
 
 const isCocinaOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
-const getDetallesCocina = (o) => (o.detalles || []).filter(esCocina)
+const getDetallesCocina = (o) => (o.detalles || []).filter(d => esCocina(d) && !d.cancelado)
 
 const pendingOrders = computed(() => {
   return orders.value.filter(o => {
@@ -371,7 +371,7 @@ const { conectado: wsConectado } = useRestauranteChannel(restauranteActivo, {
 // ── Modal ingredientes ─────────────────────────────────────────────────────────
 const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => {
   // Filtrar para que el modal de COCINA solo muestre comida (Categoría Cocina) y coincida con el filtro
-  let detallesCocina = (orden.detalles ?? []).filter(esCocina)
+  let detallesCocina = (orden.detalles ?? []).filter(d => esCocina(d) && !d.cancelado)
   if (estadoFiltro) {
     const estadosValidos = estadoFiltro === 'PENDIENTE' ? ['PENDIENTE', 'ABIERTA'] : [estadoFiltro]
     detallesCocina = detallesCocina.filter(d => estadosValidos.includes(d.estado_preparacion || d.estado))

@@ -431,43 +431,8 @@
           </button>
         </div>
 
-        <!-- Opción precio personalizado -->
-        <div class="mt-4 pt-4 border-t border-slate-100">
-          <button @click="abrirPrecioPersonalizado(productoSeleccionado)" class="w-full py-3 text-sm font-bold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">
-            ✏️ Precio personalizado
-          </button>
-        </div>
       </div>
     </div>
-
-    <!-- Modal Precio Personalizado -->
-    <div v-if="showPrecioPersonalizado" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
-         @click.self="showPrecioPersonalizado = false">
-      <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
-        <button @click="showPrecioPersonalizado = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 font-bold">✕</button>
-        <div class="mb-6">
-          <h3 class="font-black text-slate-900 text-2xl tracking-tight leading-tight pr-8">{{ productoSeleccionado?.nombre }}</h3>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Define un precio y cantidad personalizados</p>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Precio unitario</label>
-            <input v-model.number="precioPersonalizadoValor" type="number" step="0.01" min="0" placeholder="0.00"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-bold" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cantidad</label>
-            <input v-model.number="precioPersonalizadoCantidad" type="number" min="1" placeholder="1"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm font-bold" />
-          </div>
-          <button @click="agregarConPrecioPersonalizado" :disabled="!precioPersonalizadoValor || precioPersonalizadoValor <= 0"
-            class="w-full py-4 bg-indigo-600 text-white text-sm font-black rounded-2xl hover:bg-indigo-700 shadow-lg transition disabled:opacity-50">
-            {{ !precioPersonalizadoValor || precioPersonalizadoValor <= 0 ? 'Ingresa un precio' : `Agregar $${Number(precioPersonalizadoValor).toFixed(2)} × ${precioPersonalizadoCantidad || 1}` }}
-          </button>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
@@ -498,9 +463,6 @@ const debugMsg                = ref('')
 const showCheckout            = ref(false)
 const showTamanosModal        = ref(false)
 const productoSeleccionado    = ref(null)
-const showPrecioPersonalizado = ref(false)
-const precioPersonalizadoValor = ref(0)
-const precioPersonalizadoCantidad = ref(1)
 const checkoutRef             = ref(null)
 const ofertasProductos        = ref([])
 const paquetes                = ref([])
@@ -908,34 +870,16 @@ const decrementar = (cartId) => {
 const eliminarDelPedido = (cartId) => { pedido.value = pedido.value.filter(i => i.cartId !== cartId) }
 const vaciarPedido = () => { if (confirm('¿Vaciar todo el pedido?')) pedido.value = [] }
 
-const abrirPrecioPersonalizado = (p) => {
-  showTamanosModal.value = false
-  productoSeleccionado.value = p
-  precioPersonalizadoValor.value = p.precio || 0
-  precioPersonalizadoCantidad.value = 1
-  showPrecioPersonalizado.value = true
-}
 
-const agregarConPrecioPersonalizado = () => {
-  if (!precioPersonalizadoValor.value || precioPersonalizadoValor.value <= 0) return
-  const p = productoSeleccionado.value
-  if (!p) return
-  showPrecioPersonalizado.value = false
-  const cantidad = precioPersonalizadoCantidad.value || 1
-  for (let i = 0; i < cantidad; i++) {
-    pedido.value.push({
-      cartId: Date.now() + Math.random(),
-      id: p.id,
-      nombre: `${p.nombre} (Personalizado)`,
-      precio: parseFloat(precioPersonalizadoValor.value),
-      imagen: p.imagen_url ? getImageUrl(p.imagen_url) : null,
-      cantidad: 1,
-      stock_maximo: 9999,
-      notas: '',
-      tamano: 'personalizado',
-      minutos_produccion: parseFloat(p.minutos_produccion || 0)
-    })
-  }
+const SLOT_NAMES = ['pequeno', 'mediano', 'grande']
+
+const tamanoKeyToSlot = (productId, tamanoKey) => {
+  if (!tamanoKey) return null
+  const prod = productos.value.find(p => p.id === productId)
+  if (!prod) return tamanoKey
+  const tams = Array.isArray(prod.tamanos_disponibles) ? prod.tamanos_disponibles : []
+  const idx = tams.findIndex(t => t.key === tamanoKey)
+  return idx >= 0 && idx < SLOT_NAMES.length ? SLOT_NAMES[idx] : tamanoKey
 }
 
 const handleCheckout = async (checkoutData) => {
@@ -947,7 +891,7 @@ const handleCheckout = async (checkoutData) => {
         paquete_id: i.es_paquete ? i.paquete_id : null,
         cantidad: i.cantidad,
         notas: i.notas,
-        tamano: i.tamano || null
+        tamano: tamanoKeyToSlot(i.id, i.tamano)
       })),
       metodo_pago: 'efectivo', tipo_orden: 'local',
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,

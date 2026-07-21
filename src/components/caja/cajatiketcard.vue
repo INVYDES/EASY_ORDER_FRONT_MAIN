@@ -197,7 +197,7 @@ const normalizeItem = (item) => {
     item.cantidad ?? item.quantity ?? 0
 
   const precio =
-    item.precio_unitario ?? item.price ?? 0
+    item.precio ?? item.precio_unitario ?? item.price ?? 0
 
   return {
     id: item.id,

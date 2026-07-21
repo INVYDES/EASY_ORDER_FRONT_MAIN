@@ -541,7 +541,15 @@ const normalizeRecipeItems = (raw: any) => {
     .filter(Boolean)
     .map((item: any) => {
       const ingredientId = item.ingrediente_id ?? item.ingredient_id ?? item.id ?? item.ingrediente?.id ?? item.ingredient?.id ?? null
-      const cantidad = normalizeNumber(item.cantidad_receta ?? item.cantidad_necesaria ?? item.cantidad ?? item.pivot?.cantidad ?? item.pivot?.cantidad_receta ?? 0)
+      // Lee la cantidad desde todos los posibles campos, priorizando pivot
+      const cantidad = normalizeNumber(
+        item.pivot?.cantidad_receta ??
+        item.pivot?.cantidad ??
+        item.cantidad_receta ??
+        item.cantidad_necesaria ??
+        item.cantidad ??
+        0
+      )
 
       return {
         ...item,
@@ -552,7 +560,8 @@ const normalizeRecipeItems = (raw: any) => {
         costo_unitario: normalizeNumber(item.costo_unitario ?? item.ingrediente?.costo_unitario ?? item.ingredient?.costo_unitario ?? item.costo ?? 0),
         stock_actual: normalizeNumber(item.stock_actual ?? item.ingrediente?.stock_actual ?? item.ingredient?.stock_actual ?? 0),
         cantidad_receta: cantidad,
-        tamano: item.tamano || item.pivot?.tamano || 't0',
+        // Guardamos el tamano RAW del backend para mapear después
+        tamano: item.tamano || item.pivot?.tamano || '',
       }
     })
     .filter((item: any) => item.ingrediente_id !== null && item.ingrediente_id !== undefined)
@@ -566,15 +575,18 @@ const confirmState = reactive({
 
 const SLOT_NAMES = ['pequeno', 'mediano', 'grande']
 
-const tamanos = ref<{ key: string; nombre: string; precio: number; stock: number }[]>([])
+const tamanos = ref<{ key: string; nombre: string; precio: number; stock: number; slot?: string }[]>([])
 
 const agregarTamano = () => {
   if (tamanos.value.length >= 3) return
+  const usedSlots = tamanos.value.map(t => t.slot)
+  const nextSlot = SLOT_NAMES.find(s => !usedSlots.includes(s)) || 'pequeno'
   tamanos.value.push({
     key: `t${Date.now()}`,
     nombre: `Tamaño ${tamanos.value.length + 1}`,
     precio: 0,
     stock: 0,
+    slot: nextSlot,
   })
   tamanosModificados.value = true
 }
@@ -611,7 +623,7 @@ const confirmEliminarTamano = () => {
 }
 
 const recetaFiltrada = computed(() =>
-  receta.value.filter(i => (i.tamano || tamanos.value[0]?.key || 't0') === tamanoRecetaActivo.value)
+  receta.value.filter(i => i.tamano && i.tamano === tamanoRecetaActivo.value)
 )
 
 const SIZE_COLORS = [
@@ -634,12 +646,35 @@ const tamanosDisponibles = computed(() =>
 
 const mapTamanoToBackend = (key: string): string => {
   const idx = tamanos.value.findIndex(t => t.key === key)
-  return SLOT_NAMES[idx] || 'pequeno'
+  if (idx === -1) return 'pequeno'
+  const t = tamanos.value[idx]
+  return t.slot || SLOT_NAMES[idx] || 'pequeno'
 }
 
-const mapTamanoFromBackend = (tamano: string): string => {
-  const idx = SLOT_NAMES.indexOf(tamano)
-  return tamanos.value[idx]?.key || tamanos.value[0]?.key || 't0'
+const mapTamanoFromBackend = (tamano: string, currentTamanos: typeof tamanos.value): string => {
+  if (!tamano || !currentTamanos.length) return currentTamanos[0]?.key || 't0'
+  const tamanoLower = tamano.toLowerCase().trim()
+
+  // 1. Coincidencia por slot (identidad fija)
+  const bySlot = currentTamanos.find(t => t.slot === tamanoLower)
+  if (bySlot) return bySlot.key
+
+  // 2. Coincidencia exacta por key
+  const byKey = currentTamanos.find(t => t.key.toLowerCase() === tamanoLower)
+  if (byKey) return byKey.key
+
+  // 3. Coincidencia por nombre del tamaño (compatibilidad)
+  const byNombre = currentTamanos.find(t => t.nombre?.toLowerCase() === tamanoLower)
+  if (byNombre) return byNombre.key
+
+  // 4. Fallback por índice en SLOT_NAMES para datos legacy sin slot
+  const idx = SLOT_NAMES.indexOf(tamanoLower)
+  if (idx >= 0 && idx < currentTamanos.length) {
+    return currentTamanos[idx].key
+  }
+
+  console.warn(`[ProductFormModal] No se pudo mapear el tamaño "${tamano}" — el ingrediente se omite en vez de asignarse a un tamaño incorrecto`)
+  return ''
 }
 
 // ── Estado Precio Sugerido ────────────────────────────────────────────────────
@@ -690,6 +725,14 @@ const aplicarPrecioSugerido = () => {
   })
 }
 
+const calcularCostoPorTamano = (slotKey: string) => {
+  const recetaDelTamano = receta.value.filter(i => i.tamano === slotKey)
+  const insumos = recetaDelTamano.reduce((s, i) => s + (Number(i.cantidad_receta) * Number(i.costo_unitario || 0)), 0)
+  const mo = costoManoObra.value
+  const base = insumos + mo
+  return base + base * 0.05
+}
+
 const margenSugerido = computed(() => {
   const ps = precioSugerido.value
   return ps - costoTotalReceta.value - costoManoObra.value - costoIndirectos.value
@@ -722,9 +765,9 @@ watch(porcionesDisponibles, (newVal) => {
   }
 })
 
-// ── Sincronizar campo COSTO con la receta ────────────────────────────────────
-watch(costoTotalReceta, (newVal) => {
-  form.costo = newVal
+// ── Sincronizar campo COSTO con el costo de produccion completo ──────────────
+watch([costoTotalReceta, costoManoObra, costoIndirectos], () => {
+  form.costo = costoTotalReceta.value + costoManoObra.value + costoIndirectos.value
 })
 
 const precioActivo = computed(() => {
@@ -744,7 +787,7 @@ const margenPct = computed(() => {
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const yaEnReceta = (id: number) => receta.value.some(r => (r.ingrediente_id ?? r.id) === id && (r.tamano || tamanos.value[0]?.key || 't0') === tamanoRecetaActivo.value)
+const yaEnReceta = (id: number) => receta.value.some(r => (r.ingrediente_id ?? r.id) === id && r.tamano === tamanoRecetaActivo.value)
 
 // ── Cargar ingredientes del catálogo (una sola vez) ───────────────────────────
 const loadTodosIngredientes = async () => {
@@ -796,11 +839,18 @@ const cargarReceta = async () => {
     const data = await apiClient.get(`/ingredientes/producto/${props.product.id}?per_page=500`)
     const normalized = normalizeRecipeItems(data?.data ?? data ?? [])
 
+    // Tomamos una snapshot de los tamaños ACTUALES para el mapeo (evita race conditions)
+    const snapshotTamanos = [...tamanos.value]
+
     receta.value = normalized.map((i: any) => ({
       ...i,
       cantidad_receta: normalizeNumber(i.cantidad_receta),
-      tamano: mapTamanoFromBackend(i.tamano),
+      tamano: mapTamanoFromBackend(i.tamano, snapshotTamanos),
     }))
+
+    // Debug: verificar que los ingredientes se mapearon correctamente
+    console.log('[cargarReceta] Tamaños disponibles:', snapshotTamanos.map(t => `${t.key}=${t.nombre}`))
+    console.log('[cargarReceta] Receta cargada:', receta.value.map(r => `${r.nombre} → tamano:${r.tamano} cantidad:${r.cantidad_receta}`))
   } catch (e) {
     console.error('Error cargando receta:', e)
   } finally {
@@ -832,7 +882,7 @@ const seleccionarIngrediente = (ing: any) => {
 }
 
 const quitarDeRecetaPorFiltro = (ingId: number) => {
-  const idx = receta.value.findIndex((i: any) => i.id === ingId && (i.tamano || tamanos.value[0]?.key || 't0') === tamanoRecetaActivo.value)
+  const idx = receta.value.findIndex((i: any) => i.id === ingId && i.tamano === tamanoRecetaActivo.value)
   if (idx !== -1) {
     receta.value.splice(idx, 1)
     recetaModificada.value = true
@@ -944,6 +994,7 @@ const resetForm = () => {
       nombre: t.nombre || `Tamaño ${i + 1}`,
       precio: Number(t.precio ?? 0),
       stock: Number(t.stock ?? 0),
+      slot: t.slot || SLOT_NAMES[i] || 'pequeno',
     }))
   } else if (p?.tiene_tamanos) {
     const disponibles = Array.isArray(p.tamanos_disponibles) ? p.tamanos_disponibles : []
@@ -953,25 +1004,27 @@ const resetForm = () => {
         nombre: t.nombre || `Tamaño ${i + 1}`,
         precio: Number(t.precio ?? 0),
         stock: Number(t.stock ?? 0),
+        slot: t.slot || SLOT_NAMES[i] || 'pequeno',
       }))
     } else {
       const sizeDefs = [
-        { key: 't0', nombre: 'Pequeño', precioField: 'precio', stockField: 'stock_pequeno' },
-        { key: 't1', nombre: 'Mediano', precioField: 'precio_mediano', stockField: 'stock_mediano' },
-        { key: 't2', nombre: 'Grande',  precioField: 'precio_grande',  stockField: 'stock_grande' },
+        { key: 't0', nombre: 'Pequeño', precioField: 'precio',         stockField: 'stock_pequeno',  slot: 'pequeno' },
+        { key: 't1', nombre: 'Mediano', precioField: 'precio_mediano', stockField: 'stock_mediano',   slot: 'mediano' },
+        { key: 't2', nombre: 'Grande',  precioField: 'precio_grande',  stockField: 'stock_grande',    slot: 'grande'  },
       ]
       tamanos.value = sizeDefs
         .filter((s, i) => i === 0 || Number(p[s.precioField] ?? 0) > 0)
-        .map((s, i) => ({
+        .map((s) => ({
           key: s.key,
           nombre: s.nombre,
-          precio: Number(p[s.precioField] ?? (i === 0 ? p?.precio : 0) ?? 0),
-          stock: Number(p[s.stockField] ?? (i === 0 ? p?.stock : 0) ?? 0),
+          precio: Number(p[s.precioField] ?? (s.slot === 'pequeno' ? p?.precio : 0) ?? 0),
+          stock: Number(p[s.stockField] ?? (s.slot === 'pequeno' ? p?.stock : 0) ?? 0),
+          slot: s.slot,
         }))
     }
   } else {
     tamanos.value = [
-      { key: 't0', nombre: 'Único', precio: Number(p?.precio ?? 0), stock: Number(p?.stock ?? 0) },
+      { key: 't0', nombre: 'Único', precio: Number(p?.precio ?? 0), stock: Number(p?.stock ?? 0), slot: 'pequeno' },
     ]
   }
   tamanoRecetaActivo.value = tamanos.value[0]?.key || 't0'
@@ -1007,13 +1060,14 @@ const crearProducto = async () => {
       const t = tamanos.value
       const precioBase = normalizeNumber(t[0]?.precio ?? 0)
       const stockBase = normalizeNumber(t[0]?.stock ?? 0)
+      const costoProduccionTotal = calcularCostoPorTamano(t[0]?.key || '')
       return {
       nombre:          form.nombre,
       descripcion:     form.descripcion,
       precio:          precioBase,
       precio_mediano:  t[1] ? t[1].precio : 0,
       precio_grande:   t[2] ? t[2].precio : 0,
-      costo:           form.costo,
+      costo:           costoProduccionTotal,
       stock:           stockBase,
       stock_pequeno:   stockBase,
       stock_mediano:   t[1] ? t[1].stock : 0,
@@ -1024,7 +1078,8 @@ const crearProducto = async () => {
       activo:             form.activo ? '1' : '0',
       minutos_produccion: form.minutos_produccion,
       tamanos_personalizados: JSON.stringify(t.map(tam => ({
-        key: tam.key, nombre: tam.nombre, precio: tam.precio, stock: tam.stock,
+        key: tam.key, nombre: tam.nombre, precio: tam.precio, stock: tam.stock, slot: tam.slot,
+        costo: calcularCostoPorTamano(tam.key),
       }))),
       }
     }
@@ -1083,13 +1138,14 @@ const save = async () => {
       const t = tamanos.value
       const precioBase = normalizeNumber(t[0]?.precio ?? 0)
       const stockBase = normalizeNumber(t[0]?.stock ?? 0)
+      const costoProduccionTotal = calcularCostoPorTamano(t[0]?.key || '')
       return {
       nombre:          form.nombre,
       descripcion:     form.descripcion,
       precio:          precioBase,
       precio_mediano:  t[1] ? t[1].precio : 0,
       precio_grande:   t[2] ? t[2].precio : 0,
-      costo:           form.costo,
+      costo:           costoProduccionTotal,
       stock:           stockBase,
       stock_pequeno:   stockBase,
       stock_mediano:   t[1] ? t[1].stock : 0,
@@ -1101,7 +1157,8 @@ const save = async () => {
       eliminar_imagen:    form.eliminar_imagen ? '1' : '0',
       minutos_produccion: form.minutos_produccion,
       tamanos_personalizados: JSON.stringify(t.map(tam => ({
-        key: tam.key, nombre: tam.nombre, precio: tam.precio, stock: tam.stock,
+        key: tam.key, nombre: tam.nombre, precio: tam.precio, stock: tam.stock, slot: tam.slot,
+        costo: calcularCostoPorTamano(tam.key),
       }))),
       }
     }

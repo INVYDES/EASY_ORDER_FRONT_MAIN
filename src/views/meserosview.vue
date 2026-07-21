@@ -227,18 +227,21 @@
                   </div>
                   <!-- Productos -->
                   <div class="space-y-2">
-                    <div v-for="d in (sub.detalles_estacion || [])" :key="d.id" class="py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                    <div v-for="d in (sub.detalles_estacion || [])" :key="d.id"
+                      class="py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0"
+                      :class="d.cancelado ? 'opacity-50' : ''">
                       <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-1.5 min-w-0 flex-1">
-                          <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, sub.id, -1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">−</button>
-                          <span class="text-sm font-bold text-gray-800 dark:text-slate-200 text-center min-w-[16px]">{{ d.cantidad }}</span>
-                          <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, sub.id, 1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">+</button>
-                          <span class="text-sm font-bold text-gray-800 dark:text-slate-200 truncate">{{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                          <button v-if="!esAdminOPropietario && !d.cancelado" @click="actualizarCantidadItem(d, sub.id, -1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">−</button>
+                          <span class="text-sm font-bold text-center min-w-[16px]" :class="d.cancelado ? 'text-red-400 dark:text-red-500' : 'text-gray-800 dark:text-slate-200'">{{ d.cantidad }}</span>
+                          <button v-if="!esAdminOPropietario && !d.cancelado" @click="actualizarCantidadItem(d, sub.id, 1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">+</button>
+                          <span class="text-sm font-bold truncate" :class="d.cancelado ? 'line-through text-red-400 dark:text-red-500' : 'text-gray-800 dark:text-slate-200'">{{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                          <span v-if="d.cancelado" class="text-[9px] font-black text-red-500 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded-full shrink-0">CANCELADO</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                          <button @click="abrirEditorNotas(d, sub.id)" class="w-6 h-6 rounded-lg text-slate-300 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center justify-center text-xs transition-colors" title="Editar comentario">✏️</button>
-                          <button @click="eliminarProductoDeOrden(d.id, sub.id)" class="w-6 h-6 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs transition-colors" title="Cancelar producto">🗑️</button>
-                          <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 ml-1">${{ Number(d.subtotal || d.precio || 0).toFixed(2) }}</span>
+                          <button v-if="!d.cancelado" @click="abrirEditorNotas(d, sub.id)" class="w-6 h-6 rounded-lg text-slate-300 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center justify-center text-xs transition-colors" title="Agregar/editar nota">✏️</button>
+                          <button v-if="!d.cancelado" @click="eliminarProductoDeOrden(d.id, sub.id)" class="w-6 h-6 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs transition-colors" title="Cancelar producto">🗑️</button>
+                          <span class="text-xs font-semibold ml-1" :class="d.cancelado ? 'line-through text-red-400' : 'text-gray-500 dark:text-slate-400'">${{ Number(d.subtotal || d.precio || 0).toFixed(2) }}</span>
                         </div>
                       </div>
                       <p v-if="d.notas" class="text-[11px] text-gray-400 dark:text-slate-500 italic mt-0.5 ml-1 flex items-center gap-1">
@@ -376,10 +379,11 @@
                 <button @click="eliminarDelCarrito(item.cartId)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-sm transition-colors">✕</button>
               </div>
             </div>
+            <!-- Nota del producto: visible y destacada antes de enviar -->
             <div class="mt-2 ml-1 flex items-center gap-2">
-              <span class="text-slate-300 dark:text-slate-600 text-xs">📝</span>
-              <input v-model="item.notas" placeholder="Comentario (ej. sin cebolla, término medio...)"
-                class="flex-1 text-xs px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-indigo-200/50 dark:focus:ring-indigo-500/50 focus:border-indigo-300 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 text-gray-800 dark:text-slate-200" />
+              <span class="text-amber-400 text-xs shrink-0">📝</span>
+              <input v-model="item.notas" placeholder="Nota: sin cebolla, término medio, extra queso..."
+                class="flex-1 text-xs px-3 py-1.5 rounded-lg bg-amber-50/60 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-amber-200/60 dark:focus:ring-amber-500/30 focus:border-amber-300 outline-none transition-all placeholder:text-amber-300 dark:placeholder:text-amber-600/60 text-gray-700 dark:text-slate-200 font-medium" />
             </div>
           </div>
           <div v-if="carrito.length === 0" class="text-center py-10 text-gray-400 dark:text-slate-500 text-sm">
@@ -437,40 +441,6 @@
               <span class="font-black text-slate-900 dark:text-white text-xl">${{ t.precio.toFixed(2) }}</span>
             </button>
           </div>
-          <!-- Opción precio personalizado -->
-          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-            <button @click="abrirPrecioPersonalizado(productoTamanos)" class="w-full py-3 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition flex items-center justify-center gap-2">
-              ✏️ Precio personalizado
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Precio Personalizado (Mesero) -->
-      <div v-if="showPrecioPersonalizado" class="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in"
-           @click.self="showPrecioPersonalizado = false">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-slide-up relative">
-          <button @click="showPrecioPersonalizado = false" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 font-bold">✕</button>
-          <div class="mb-6">
-            <h3 class="font-black text-slate-900 dark:text-white text-2xl tracking-tight leading-tight pr-8">{{ productoTamanos?.nombre }}</h3>
-            <p class="text-sm text-slate-500 mt-1 font-medium">Define un precio y cantidad personalizados</p>
-          </div>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Precio unitario</label>
-              <input v-model.number="precioPersonalizadoValor" type="number" step="0.01" min="0" placeholder="0.00"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-bold" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Cantidad</label>
-              <input v-model.number="precioPersonalizadoCantidad" type="number" min="1" placeholder="1"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition text-sm font-bold" />
-            </div>
-            <button @click="agregarConPrecioPersonalizado" :disabled="!precioPersonalizadoValor || precioPersonalizadoValor <= 0"
-              class="w-full py-4 bg-indigo-600 text-white text-sm font-black rounded-2xl hover:bg-indigo-700 shadow-lg transition disabled:opacity-50">
-              {{ !precioPersonalizadoValor || precioPersonalizadoValor <= 0 ? 'Ingresa un precio' : `Agregar $${Number(precioPersonalizadoValor).toFixed(2)} × ${precioPersonalizadoCantidad || 1}` }}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -510,9 +480,11 @@
           <p v-if="modoDividirTicket && !personaActivaId" class="text-[10px] text-slate-400 dark:text-slate-500 italic mb-2 -mt-1.5">Toca una persona arriba para seleccionarla, luego toca los productos para asignarlos</p>
 
           <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 space-y-2">
-            <div v-for="d in ticketActivo.detalles" :key="d.id" class="text-sm py-2 border-b border-slate-100 dark:border-slate-600 last:border-0">
+            <div v-for="d in ticketActivo.detalles" :key="d.id"
+              class="text-sm py-2 border-b border-slate-100 dark:border-slate-600 last:border-0"
+              :class="d.cancelado ? 'opacity-60' : ''">
               <div class="flex justify-between items-center gap-2">
-                <button v-if="modoDividirTicket" @click="asignarProducto(d.id)"
+                <button v-if="modoDividirTicket && !d.cancelado" @click="asignarProducto(d.id)"
                   class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-sm transition-all active:scale-110"
                   :class="personaActivaId && obtenerPersonaDeProducto(d.id) === -1 ? 'ring-2 ring-yellow-300 ring-offset-1' : ''"
                   :style="{ background: colorDePersona(d.id) }"
@@ -520,15 +492,16 @@
                   {{ numeroDePersona(d.id) }}
                 </button>
                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
-                  <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, ticketActivo.id, -1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">−</button>
-                  <span class="font-semibold text-gray-700 dark:text-slate-300 min-w-[20px] text-center">{{ d.cantidad }}</span>
-                  <button v-if="!esAdminOPropietario" @click="actualizarCantidadItem(d, ticketActivo.id, 1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">+</button>
-                  <span class="font-semibold text-gray-700 dark:text-slate-300 truncate ml-1">{{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                  <button v-if="!esAdminOPropietario && !d.cancelado" @click="actualizarCantidadItem(d, ticketActivo.id, -1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">−</button>
+                  <span class="font-semibold min-w-[20px] text-center" :class="d.cancelado ? 'text-red-400 dark:text-red-500' : 'text-gray-700 dark:text-slate-300'">{{ d.cantidad }}</span>
+                  <button v-if="!esAdminOPropietario && !d.cancelado" @click="actualizarCantidadItem(d, ticketActivo.id, 1)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-600 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center justify-center text-xs font-bold shadow-sm border border-slate-100 dark:border-slate-500 transition-colors shrink-0">+</button>
+                  <span class="font-semibold truncate ml-1" :class="d.cancelado ? 'line-through text-red-400 dark:text-red-500' : 'text-gray-700 dark:text-slate-300'">{{ d.producto_nombre || d.nombre || 'Producto' }}</span>
+                  <span v-if="d.cancelado" class="text-[9px] font-black text-red-500 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded-full shrink-0">CANCELADO</span>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                  <button @click="abrirEditorNotas(d, ticketActivo.id)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center justify-center text-xs transition-colors" title="Editar comentario">✏️</button>
-                  <button @click="eliminarProductoDeOrden(d.id, ticketActivo.id)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs transition-colors" title="Cancelar producto">🗑️</button>
-                  <span class="font-bold text-gray-900 dark:text-white ml-1">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
+                  <button v-if="!d.cancelado" @click="abrirEditorNotas(d, ticketActivo.id)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 flex items-center justify-center text-xs transition-colors" title="Agregar/editar nota">✏️</button>
+                  <button v-if="!d.cancelado" @click="eliminarProductoDeOrden(d.id, ticketActivo.id)" class="w-7 h-7 rounded-lg text-slate-300 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-xs transition-colors" title="Cancelar producto">🗑️</button>
+                  <span class="font-bold ml-1" :class="d.cancelado ? 'line-through text-red-400' : 'text-gray-900 dark:text-white'">${{ Number(d.subtotal || 0).toFixed(2) }}</span>
                 </div>
               </div>
               <p v-if="d.notas" class="text-[11px] text-gray-400 dark:text-slate-500 italic mt-0.5 ml-1 flex items-center gap-1">
@@ -773,9 +746,7 @@ const carrito      = ref([])
 const busqueda     = ref('')
 const showTamanosModal = ref(false)
 const productoTamanos  = ref(null)
-const showPrecioPersonalizado = ref(false)
-const precioPersonalizadoValor = ref(0)
-const precioPersonalizadoCantidad = ref(1)
+
 const marquesinaVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 
 const loading         = ref(true)
@@ -1045,11 +1016,13 @@ const subOrdenesFiltradas = computed(() => {
 })
 
 const ordenesParaCobrar = computed(() =>
-  ordenes.value.filter(o => 
-    o.estado === 'ENTREGADA' ||
-    (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado) && 
-      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
-  )
+  ordenes.value.filter(o => {
+    if (o.estado === 'ENTREGADA') return true
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado)) return false
+    const detallesSinCancelar = (o.detalles || []).filter(d => !d.cancelado)
+    if (!detallesSinCancelar.length) return false
+    return detallesSinCancelar.every(d => d.estado_preparacion === 'ENTREGADO')
+  })
 )
 
 const ordenesFiltradas = computed(() => {
@@ -1294,6 +1267,17 @@ const cargarClientes = async () => {
   } catch {}
 }
 
+const SLOT_NAMES = ['pequeno', 'mediano', 'grande']
+
+const tamanoKeyToSlot = (productId, tamanoKey) => {
+  if (!tamanoKey) return null
+  const prod = productos.value.find(p => p.id === productId)
+  if (!prod) return tamanoKey
+  const tams = Array.isArray(prod.tamanos_disponibles) ? prod.tamanos_disponibles : []
+  const idx = tams.findIndex(t => t.key === tamanoKey)
+  return idx >= 0 && idx < SLOT_NAMES.length ? SLOT_NAMES[idx] : tamanoKey
+}
+
 // ── Crear / Agregar orden ──────────────────────────────────────────────────
 const buildPayload = () => ({
   cliente_id: nuevaOrden.value.clienteId,
@@ -1305,7 +1289,7 @@ const buildPayload = () => ({
     }
     if (i.tipo === 'producto') item.producto_id = i.id
     if (i.tipo === 'paquete')  item.paquete_id  = i.id
-    if (i.tamano) item.tamano = i.tamano
+    if (i.tamano) item.tamano = tamanoKeyToSlot(i.id, i.tamano)
     return item
   }),
 })
@@ -1669,25 +1653,6 @@ const agregarConTamano = (item, tamano, precio, tipo) => {
   agregarItemAlCarrito(item, tamano, precio, tipo)
 }
 
-const abrirPrecioPersonalizado = (item) => {
-  showTamanosModal.value = false
-  productoTamanos.value = item
-  precioPersonalizadoValor.value = item.precio || 0
-  precioPersonalizadoCantidad.value = 1
-  showPrecioPersonalizado.value = true
-}
-
-const agregarConPrecioPersonalizado = () => {
-  if (!precioPersonalizadoValor.value || precioPersonalizadoValor.value <= 0) return
-  const item = productoTamanos.value
-  if (!item) return
-  showPrecioPersonalizado.value = false
-  const cantidad = precioPersonalizadoCantidad.value || 1
-  for (let i = 0; i < cantidad; i++) {
-    agregarItemAlCarrito(item, 'personalizado', precioPersonalizadoValor.value, 'producto')
-  }
-}
-
 const agregarItemAlCarrito = (item, tamano, precio, tipo) => {
   let stockMaximo = undefined
 
@@ -1833,24 +1798,47 @@ const confirmarCancelacion = async () => {
     const data = await apiClient.delete(`/ordenes/${ordenId}/detalles/${detalleId}?motivo=${encodeURIComponent(motivo)}&cantidad_cancelar=${cantidadCancelar || 1}`)
     if (data.success || data.data) {
       cancelacionModal.value.visible = false
-      // Actualizar localmente para feedback inmediato
+
+      // ── Actualización local INMEDIATA para feedback instantáneo ──────────
       const ordenIdx = ordenes.value.findIndex(o => o.id === ordenId)
       let eraUltimo = false
       if (ordenIdx !== -1) {
-        const d = (ordenes.value[ordenIdx].detalles || []).find(x => x.id === detalleId)
+        // Marcar el detalle como cancelado localmente
+        const detalles = ordenes.value[ordenIdx].detalles || []
+        const d = detalles.find(x => x.id === detalleId)
         if (d) {
           d.cancelado = true
           d.motivo_cancelacion = motivo
         }
-        const restantes = (ordenes.value[ordenIdx].detalles || []).filter(x => !x.cancelado).length
-        eraUltimo = restantes <= 1
+        // Forzar reactividad creando una nueva referencia al array de órdenes
+        ordenes.value = ordenes.value.map((o, idx) => idx === ordenIdx
+          ? { ...o, detalles: [...detalles] }
+          : o
+        )
+        const restantes = detalles.filter(x => !x.cancelado).length
+        eraUltimo = restantes === 0
       }
+
+      // Recargar desde el servidor
       await cargarOrdenes()
+
+      // ── Re-sincronizar ticketActivo si el modal está abierto ─────────────
+      if (showTicketModal.value && ticketActivo.value) {
+        const updated = ordenes.value.find(o => o.id === ticketActivo.value.id)
+        if (updated) {
+          ticketActivo.value = updated
+        } else {
+          // La orden fue cancelada por completo — cerrar el modal
+          showTicketModal.value = false
+          ticketActivo.value = null
+        }
+      }
+
       const ordenSigue = ordenes.value.some(o => o.id === ordenId)
       if (!ordenSigue) {
-        showToast('Orden cancelada por completo', 'warning')
+        showToast('Orden cancelada por completo 🚫', 'warning')
       } else {
-        showToast(eraUltimo ? 'Producto cancelado — era el último, orden cancelada' : 'Producto cancelado correctamente', 'success')
+        showToast(eraUltimo ? 'Último producto cancelado, orden cerrada' : 'Producto cancelado correctamente ✅', 'success')
       }
     } else {
       showToast(data.message || 'Error al eliminar', 'error')
@@ -1873,19 +1861,26 @@ const confirmarCancelarOrdenCompleta = async () => {
   cancelarOrdenModal.value.visible = false
   await new Promise(r => setTimeout(r, 150))
 
+  // ── Remoción local INMEDIATA — evita que la orden aparezca en "todas" ──
+  ordenes.value = ordenes.value.filter(o => o.id !== ordenId)
+  showTicketModal.value = false
+  ticketActivo.value = null
+
   creando.value = true
   try {
     const data = await apiClient.put(`/ordenes/${ordenId}`, { estado: 'CANCELADA' })
     if (data.success || data.data) {
-      cancelarOrdenModal.value.visible = false
-      showTicketModal.value = false
-      showToast('Orden cancelada correctamente', 'warning')
+      showToast('Orden cancelada correctamente 🚫', 'warning')
+      // Recargar para asegurarse de que el estado sea consistente
       await cargarOrdenes()
     } else {
+      // Si falló el API, recargar para restaurar el estado correcto
       showToast(data.message || 'Error al cancelar orden', 'error')
+      await cargarOrdenes()
     }
   } catch (e) {
     showToast('Error de conexión', 'error')
+    await cargarOrdenes()
   } finally {
     creando.value = false
     setTimeout(() => { animandoCancelacion.value = false }, 600)
@@ -1908,9 +1903,15 @@ const guardarNota = async () => {
   try {
     const data = await apiClient.put(`/ordenes/${ordenId}/detalles/${detalle.id}`, { cantidad: detalle.cantidad, notas: nota })
     if (data.success || data.data) {
-      showToast('Nota actualizada', 'success')
+      showToast('Nota actualizada ✏️', 'success')
       editorNotas.value.visible = false
       await cargarOrdenes()
+
+      // ── Re-sincronizar ticketActivo si el modal de ticket está abierto ──
+      if (showTicketModal.value && ticketActivo.value) {
+        const updated = ordenes.value.find(o => o.id === ticketActivo.value.id)
+        if (updated) ticketActivo.value = updated
+      }
     }
   } catch (e) {
     showToast('Error al guardar nota', 'error')
