@@ -342,7 +342,7 @@ const fetchPendingCounts = async () => {
       pendingCounts.value.cocina = resData.data.cocina || 0
       pendingCounts.value.barra = resData.data.barra || 0
       pendingCounts.value.postres = resData.data.postres || 0
-      console.log('✅ Conteos cargados:', pendingCounts.value)
+
     }
   } catch (error) {
     console.error('❌ Error cargando conteos:', error)

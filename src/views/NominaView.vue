@@ -365,7 +365,7 @@ import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 const goBack = () => {
-  window.location.href = '/cws/eorder/panel/Gestion'
+  window.location.href = '/panel/Gestion'
 }
 
 // --- Charts ---

@@ -134,11 +134,7 @@ const handleSubmit = async () => {
       password: password.value
     })
 
-    console.log('✅ data completa:', JSON.stringify(data))
-    console.log('✅ data.data:', data?.data)
-    console.log('✅ token:', data?.data?.token)
-    console.log('✅ user:', data?.data?.user)
-    console.log('✅ Condición if:', !!(data?.data && data?.data?.token && data?.data?.user))
+
 
     if (data?.data && data?.data?.token && data?.data?.user) {
       const storage = keepLoggedIn.value ? localStorage : sessionStorage
@@ -148,11 +144,7 @@ const handleSubmit = async () => {
       storage.setItem('restaurante_activo', String(data.data.user.restaurante_activo ?? ''))
       storage.setItem('restaurante_id',     String(data.data.user.restaurante_activo ?? ''))
 
-      console.log('✅ Storage guardado:', {
-        token: data.data.token,
-        user:  data.data.user,
-        restaurante_activo: data.data.user.restaurante_activo
-      })
+
 
       const user = data.data.user
 
@@ -160,7 +152,7 @@ const handleSubmit = async () => {
         ? (typeof user.roles[0] === 'string' ? user.roles[0] : user.roles[0]?.nombre)
         : user.rol) || ''
 
-      console.log('✅ rol detectado:', rol)
+
 
       const routesMap: Record<string, string> = {
         PROPIETARIO: '/panel/Gestion',
@@ -174,7 +166,7 @@ const handleSubmit = async () => {
       }
 
       const destination = routesMap[rol.toUpperCase()] ?? '/panel/Gestion'
-      console.log('✅ Redirigiendo a:', destination)
+
 
       await router.push(destination)
 

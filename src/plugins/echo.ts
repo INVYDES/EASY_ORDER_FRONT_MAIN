@@ -53,7 +53,7 @@ window.Echo = new Echo({
 
 if ('pusher' in window.Echo.connector) {
   window.Echo.connector.pusher.connection.bind('connected', () => {
-    console.log('✅ WebSocket connected to Reverb')
+
   })
 
   window.Echo.connector.pusher.connection.bind('error', (err: unknown) => {

@@ -793,7 +793,7 @@ const cargarProductos = async (restauranteId, silent = true) => {
       let lista = dispData.data; 
       if (!Array.isArray(lista)) lista = lista?.data ?? []
       productos.value = lista.map(normalizar).filter(p => p !== null);
-      console.log('✅ [KIOSKO] Productos cargados correctamente:', productos.value.length);
+
       return;
     }
 
@@ -1094,7 +1094,7 @@ onMounted(async () => {
     console.error('🔥 [KIOSKO] Error crítico en inicialización:', err)
   } finally {
     loading.value.productos = false
-    console.log('✅ [KIOSKO] Carga finalizada.');
+
   }
 
   // Polling silencioso y limpio cada 5 segundos para mantener el stock al día en el Kiosco

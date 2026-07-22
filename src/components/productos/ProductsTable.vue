@@ -239,7 +239,7 @@ const loadDatosCalculo = async () => {
         const emps = empRes.data || empRes || []
         nominaMensual.value = emps.reduce((s, e) => s + parseFloat(e.salario_base || 0), 0)
     }
-    console.log('✅ Datos de cálculo cargados (Ingredientes y Nómina)')
+
   } catch (err) {
     console.error('Error cargando datos de cálculo:', err)
   }

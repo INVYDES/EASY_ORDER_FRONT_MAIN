@@ -303,7 +303,7 @@ const cargarLicencias = async (): Promise<void> => {
         popular: lic.id === 1 || lic.id === 2
       }))
       
-      console.log('✅ Licencias cargadas:', licencias.value)
+
     } else {
       // Fallback con datos por defecto
       console.warn('⚠️ Usando licencias por defecto')

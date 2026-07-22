@@ -45,7 +45,7 @@ export function useRestauranteChannel(
       channelRef
         .subscribed(() => {
           conectado.value = true
-          console.log(`✅ WS conectado: restaurante.${id}`)
+
         })
         .error((e: unknown) => {
           conectado.value = false
