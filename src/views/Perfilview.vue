@@ -202,6 +202,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
@@ -267,7 +268,7 @@ const removeToast = (id) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 
@@ -340,10 +341,9 @@ const handleGuardar = async () => {
       showToast('Perfil actualizado correctamente', 'success')
       user.value = { ...user.value, ...form }
       // Actualizar storage
-      const key     = localStorage.getItem('user') ? 'localStorage' : 'sessionStorage'
-      const stored  = JSON.parse((key === 'localStorage' ? localStorage : sessionStorage).getItem('user') || '{}')
+      const stored  = JSON.parse(sessionGet('user') || '{}')
       const updated = { ...stored, name: form.name, email: form.email, username: form.username }
-      ;(key === 'localStorage' ? localStorage : sessionStorage).setItem('user', JSON.stringify(updated))
+      sessionSet('user', JSON.stringify(updated))
     } else {
       const msg = data.errors
         ? Object.values(data.errors).flat().join(' · ')

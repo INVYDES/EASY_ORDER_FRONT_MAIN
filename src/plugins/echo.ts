@@ -1,3 +1,4 @@
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 // src/plugins/echo.ts
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
@@ -15,7 +16,7 @@ import { API_BASE_URL } from '@/config/api'
 
 // ✅ Token se lee dinámicamente en cada auth request, no al importar
 const getToken = (): string =>
-  localStorage.getItem('token') ?? sessionStorage.getItem('token') ?? ''
+  sessionGet('token') ?? ''
 
 window.Echo = new Echo({
   broadcaster:       'reverb',

@@ -215,34 +215,29 @@ Licencia
 ------------------------------------------------
 */
 
+const isLicenseActive = computed(() => {
+  if (props.user?.licencia_activa === false) return false
+  return props.maxRestaurants > 0
+})
+
 const licenseText = computed(() => {
-
+  if (props.user?.licencia_activa === false) return 'Inactiva'
   if (props.maxRestaurants >= 5) return 'Empresarial'
-
   if (props.maxRestaurants >= 3) return 'Profesional'
-
   if (props.maxRestaurants >= 1) return 'Básico'
-
-  return 'Sin licencia'
-
+  return 'Inactiva'
 })
 
 
 const licenseClass = computed(() => ({
-
-  'text-green-600': licenseText.value !== 'Sin licencia',
-
-  'text-gray-500': licenseText.value === 'Sin licencia'
-
+  'text-green-600 font-semibold': isLicenseActive.value,
+  'text-red-500 font-bold': !isLicenseActive.value
 }))
 
 
 const licenseDotClass = computed(() => ({
-
-  'bg-green-500': licenseText.value !== 'Sin licencia',
-
-  'bg-gray-400': licenseText.value === 'Sin licencia'
-
+  'bg-green-500': isLicenseActive.value,
+  'bg-red-500 animate-pulse': !isLicenseActive.value
 }))
 
 </script>

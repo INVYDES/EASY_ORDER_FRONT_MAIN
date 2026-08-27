@@ -69,7 +69,9 @@
            <select v-model="form.restaurante_id" required
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
             <option :value="null">Elegir sucursal</option>
-            <option v-for="r in restaurantes" :key="r.id" :value="r.id">{{ r.nombre }}</option>
+            <option v-for="r in restaurantes" :key="r.id" :value="r.id">
+              {{ r.nombre }}{{ r.es_activo || r.id === restauranteActivoId ? ' (Activo)' : '' }}
+            </option>
           </select>
         </div>
       </div>
@@ -107,8 +109,9 @@
 import { ref, watch, computed } from 'vue'
 
 const props = defineProps({
-  empleado:     { type: Object, default: null },
-  restaurantes: { type: Array,  default: () => [] }
+  empleado:            { type: Object, default: null },
+  restaurantes:        { type: Array,  default: () => [] },
+  restauranteActivoId: { type: Number, default: null }
 })
 const emit = defineEmits(['guardar', 'cancelar'])
 
@@ -125,7 +128,7 @@ const getInitialForm = () => ({
   password:              '',
   password_confirmation: '',
   rol_id:                '',
-  restaurante_id:        null,
+  restaurante_id:        props.restauranteActivoId,
   es_activo:             true
 })
 

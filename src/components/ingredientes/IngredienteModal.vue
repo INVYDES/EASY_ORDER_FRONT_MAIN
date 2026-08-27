@@ -86,6 +86,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, watch } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -131,7 +132,7 @@ watch(() => props.ingrediente, (nuevoIngrediente) => {
 }, { immediate: true })
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 
     'Content-Type': 'application/json', 
     'Authorization': `Bearer ${token}` 

@@ -28,12 +28,13 @@
       <p class="text-gray-500 text-sm mt-1">Administra tu suscripción y accede a todos los planes disponibles</p>
     </div>
 
-    <!-- ── LICENCIA ACTIVA ── -->
+    <!-- ── LICENCIA ACTIVA / INACTIVA ── -->
     <div v-if="loading.activa" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm">
-      Cargando licencia activa...
+      Cargando licencia...
     </div>
 
-    <div v-else-if="licenciaActiva" class="bg-gradient-to-r from-[#1e1b6e] to-[#2d2a9e] rounded-2xl p-6 text-white shadow-lg">
+    <!-- Licencia Activa -->
+    <div v-else-if="licenciaActiva && isLicenciaRealmenteActiva" class="bg-gradient-to-r from-[#1e1b6e] to-[#2d2a9e] rounded-2xl p-6 text-white shadow-lg">
       <div class="flex items-start justify-between flex-wrap gap-4">
         <div>
           <p class="text-indigo-200 text-xs font-semibold uppercase tracking-widest mb-1">Licencia activa</p>
@@ -80,11 +81,49 @@
       </div>
     </div>
 
-    <div v-else class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-4">
+    <!-- Licencia Inactiva / Expirada -->
+    <div v-else-if="licenciaActiva && !isLicenciaRealmenteActiva" class="bg-gradient-to-r from-red-900 to-rose-900 rounded-2xl p-6 text-white shadow-lg border border-red-700/40">
+      <div class="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-red-500 text-white uppercase tracking-wider shadow-sm">
+              Licencia Inactiva
+            </span>
+          </div>
+          <h3 class="text-2xl font-bold mt-1">{{ licenciaActiva.licencia?.nombre || licenciaActiva.nombre || 'Plan Suspendido' }}</h3>
+          <p class="text-red-100 text-sm mt-1">Tu licencia actual se encuentra inactiva o ha expirado. Por favor adquiere un plan a continuación para reactivar el servicio.</p>
+        </div>
+        <span class="bg-red-500/40 text-red-100 border border-red-400/40 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+          {{ licenciaActiva.estado || 'INACTIVA' }}
+        </span>
+      </div>
+
+      <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white/10 rounded-xl p-3">
+          <p class="text-red-200 text-xs">Restaurantes permitidos</p>
+          <p class="text-xl font-bold mt-0.5">{{ licenciaActiva.licencia?.max_restaurantes ?? 1 }}</p>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3">
+          <p class="text-red-200 text-xs">Usuarios permitidos</p>
+          <p class="text-xl font-bold mt-0.5">{{ licenciaActiva.licencia?.max_usuarios ?? 5 }}</p>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3">
+          <p class="text-red-200 text-xs">Fecha Expiración</p>
+          <p class="text-sm font-semibold mt-0.5">{{ formatDate(licenciaActiva.fecha_expiracion) }}</p>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3">
+          <p class="text-red-200 text-xs">Estado Actual</p>
+          <p class="text-sm font-bold text-red-300 mt-0.5 uppercase">{{ licenciaActiva.estado || 'INACTIVA' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sin Licencia -->
+    <div v-else class="bg-red-50 border border-red-200 rounded-2xl p-5 flex items-center gap-4">
       <span class="text-3xl">⚠️</span>
       <div>
-        <p class="font-semibold text-amber-800">Sin licencia activa</p>
-        <p class="text-amber-600 text-sm mt-0.5">Selecciona un plan para comenzar a usar Easy Order</p>
+        <p class="font-bold text-red-800 text-base">Licencia Inactiva / Sin Licencia Registrada</p>
+        <p class="text-red-600 text-sm mt-0.5">No tienes una licencia activa. Por favor selecciona y adquiere un plan para poder utilizar todas las funciones del sistema.</p>
       </div>
     </div>
 
@@ -300,6 +339,9 @@
         <div v-if="planSeleccionado.dias_prueba > 0" class="mt-3 text-sm text-emerald-600 bg-emerald-50 rounded-lg p-2 text-center">
           🎁 {{ planSeleccionado.dias_prueba }} días de prueba gratis incluidos
         </div>
+        <div v-if="esCambioDePlan" class="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
+          🔁 Ya tienes una licencia activa ({{ licenciaActiva?.licencia?.nombre || licenciaActiva?.nombre || '—' }}). Al completar el pago, tu licencia actual se reemplazará por este nuevo plan.
+        </div>
       </div>
 
       <!-- Opciones de pago -->
@@ -416,6 +458,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
@@ -449,12 +492,25 @@ const loading = reactive({
 })
 
 // ── Computed ──────────────────────────────────────────────────────────────────
+const isLicenciaRealmenteActiva = computed(() => {
+  if (!licenciaActiva.value) return false
+  const est = String(licenciaActiva.value.estado || '').toUpperCase()
+  const dias = licenciaActiva.value.dias_restantes ?? 0
+  return (est === 'ACTIVA' || est === '') && dias > 0
+})
+
 const porcentajeRestante = computed(() => {
   if (!licenciaActiva.value?.dias_restantes) return 0
   const total = licenciaActiva.value.licencia?.tipo === 'ANUAL' ? 365 : 
                 licenciaActiva.value.licencia?.tipo === 'PRUEBA' ? 30 : 30
   return Math.min(100, Math.max(0, Math.round((licenciaActiva.value.dias_restantes / total) * 100)))
 })
+
+const esCambioDePlan = computed(() =>
+  !!licenciaActiva.value?.licencia &&
+  !!planSeleccionado.value &&
+  planSeleccionado.value.id !== licenciaActiva.value.licencia.id
+)
 
 const planesFiltrados = computed(() => {
   // Filtrar duplicados y ordenar
@@ -473,7 +529,7 @@ const planesFiltrados = computed(() => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -490,20 +546,26 @@ const formatDate = (d) => {
 }
 
 const getEstadoLabel = (lic) => {
-  if (lic.estado?.toLowerCase() === 'cancelada') return 'Cancelada'
+  if (!lic) return 'Inactiva'
+  const st = String(lic.estado || '').toLowerCase()
+  if (st === 'cancelada') return 'Cancelada'
+  if (st === 'inactiva') return 'Inactiva'
   const hoyDate = new Date()
-  const exp = new Date(lic.fecha_expiracion)
-  if (exp < hoyDate) return 'Vencida'
-  return 'Activa'
+  if (lic.fecha_expiracion) {
+    const exp = new Date(lic.fecha_expiracion)
+    if (exp < hoyDate) return 'Vencida'
+  }
+  return st === 'activa' ? 'Activa' : (st ? st.toUpperCase() : 'Inactiva')
 }
 
 const getEstadoClass = (lic) => {
   const label = getEstadoLabel(lic)
   return {
-    'Activa':    'bg-emerald-100 text-emerald-700',
-    'Vencida':   'bg-gray-100 text-gray-500',
-    'Cancelada': 'bg-red-100 text-red-500',
-  }[label] || 'bg-gray-100 text-gray-500'
+    'Activa':    'bg-emerald-100 text-emerald-700 font-bold',
+    'Inactiva':  'bg-red-100 text-red-700 font-bold',
+    'Vencida':   'bg-amber-100 text-amber-700 font-bold',
+    'Cancelada': 'bg-gray-100 text-gray-600 font-bold',
+  }[label] || 'bg-red-100 text-red-700 font-bold'
 }
 
 const obtenerDescripcionPlan = (plan) => {

@@ -147,6 +147,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
+import { sessionSet } from '@/utils/session'
 
 const router = useRouter()
 
@@ -199,9 +200,8 @@ const handleSubmit = async () => {
 
     if (!data.success) throw new Error(data.message || 'No pudimos crear tu cuenta')
 
-    const storage = localStorage
-    storage.setItem('token', data.token || data.data?.token)
-    storage.setItem('user',  JSON.stringify(data.user || data.data))
+    sessionSet('token', data.token || data.data?.token, true)
+    sessionSet('user',  JSON.stringify(data.user || data.data), true)
 
     successMessage.value = '¡Bienvenido! Explorando restaurantes...'
     setTimeout(() => router.push('/panel/cliente'), 1200)

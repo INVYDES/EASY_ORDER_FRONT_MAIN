@@ -344,6 +344,7 @@
   </div>
 </template>
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import MarquesitaWidget       from '../components/MarquesitaWidget.vue'
 import ClienteCheckoutModal from '../components/cliente/Clientecheckoutmodal.vue'
@@ -377,7 +378,7 @@ let pollTimer = null
 const POLL_INTERVAL = 5000 // 5 segundos
 
 // Datos del usuario
-const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
+const userRaw    = sessionGet('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
 const roleRaw    = userActual?.roles?.[0]
 const rolActual  = typeof roleRaw === 'string' ? roleRaw : (roleRaw?.nombre ?? '')
@@ -386,7 +387,7 @@ const clienteId  = esCliente ? (userActual?.cliente_id ?? null) : null
 
 // ── HELPERS ────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 const getImageUrl = (path) => {
@@ -508,7 +509,7 @@ const cargarAnuncios = async (restauranteId = null) => {
 
 // ── PERSISTENCIA ───────────────────────────────────────────
 const cargarRestauranteDesdeLocalStorage = async () => {
-  const id = localStorage.getItem('cliente_restaurante_id')
+  const id = sessionGet('cliente_restaurante_id')
   if (!id) return null
 
   const rest = restaurantes.value.find(r => r.id.toString() === id)
@@ -522,7 +523,7 @@ const cargarRestauranteDesdeLocalStorage = async () => {
     ])
     return rest
   }
-  localStorage.removeItem('cliente_restaurante_id')
+  sessionRemove('cliente_restaurante_id')
   return null
 }
 
@@ -570,7 +571,7 @@ const seleccionarRestaurante = async (rest) => {
   }
   restauranteSeleccionado.value = rest
   // Guardar en localStorage para persistir entre recargas
-  localStorage.setItem('cliente_restaurante_id', rest.id.toString())
+  sessionSet('cliente_restaurante_id', rest.id.toString())
   categoriaActiva.value = null
   pedido.value = []
   notaGeneral.value = ''
@@ -586,7 +587,7 @@ const seleccionarRestaurante = async (rest) => {
 const volverARestaurantes = () => {
   vista.value                   = 'restaurantes'
   restauranteSeleccionado.value = null
-  localStorage.removeItem('cliente_restaurante_id')
+  sessionRemove('cliente_restaurante_id')
   productos.value               = []
   pedido.value                  = []
   notaGeneral.value             = ''

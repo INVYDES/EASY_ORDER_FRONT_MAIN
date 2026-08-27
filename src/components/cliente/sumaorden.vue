@@ -228,6 +228,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -254,7 +255,7 @@ const creando          = ref(false)
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',

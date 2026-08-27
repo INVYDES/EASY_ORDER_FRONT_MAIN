@@ -956,6 +956,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -983,7 +984,7 @@ const toasts          = ref([])
 const cajaAbierta     = ref(false)
 const nuevaOrden      = ref({ clienteId: null, mesa: null })
 const mesasAsignadas  = ref([])
-const restauranteActivo = ref(localStorage.getItem('restaurante_id_activo'))
+const restauranteActivo = ref(sessionGet('restaurante_id_activo'))
 const totalMesasRestaurante = ref(0)
 const ultimaActualizacion = ref(null)
 
@@ -1047,7 +1048,7 @@ const calcularTiempoSubOrdenComensal = (detalles) => {
   }, 0)
 }
 
-const userRaw    = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const userRaw    = sessionGet('user') ?? '{}'
 const userActual = JSON.parse(userRaw)
 const esMesero   = computed(() => {
   const roles = userActual.roles || []
@@ -1100,7 +1101,7 @@ const isServicioRapido = computed(() => {
     return !!restauranteObjeto.value.servicio_rapido
   }
   try {
-    const u = JSON.parse(localStorage.getItem('user') || '{}')
+    const u = JSON.parse(sessionGet('user') || '{}')
     if (u?.restaurante_activo && typeof u.restaurante_activo === 'object') {
       return !!u.restaurante_activo.servicio_rapido
     }

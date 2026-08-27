@@ -62,6 +62,9 @@
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
     <div v-if="activeTab === 'paquetes'" class="space-y-4">
+      <div class="flex justify-end">
+        <BotonDudas @click="abrirAyuda('paquetes')" />
+      </div>
       <div class="flex items-center gap-4">
         <!-- Buscador de paquetes -->
         <div class="relative flex-1 max-w-md">
@@ -104,6 +107,9 @@
 
     <!-- ══ PRODUCTOS ═════════════════════════════════════════ -->
     <div v-if="activeTab === 'productos'">
+      <div class="flex justify-end mb-4">
+        <BotonDudas @click="abrirAyuda('productos')" />
+      </div>
       <!-- Buscador de productos -->
       <div class="mb-4">
         <div class="relative max-w-md">
@@ -142,6 +148,9 @@
 
     <!-- ── INGREDIENTES ───────────────────────────────────── -->
     <div v-else-if="activeTab === 'ingredientes'">
+      <div class="flex justify-end mb-4">
+        <BotonDudas @click="abrirAyuda('ingredientes')" />
+      </div>
       <!-- ... (todo tu código de ingredientes existente se mantiene igual) ... -->
       <div class="flex items-center justify-between mb-6">
         <div>
@@ -282,6 +291,9 @@
 
     <!-- ── ANUNCIOS / OFERTAS ───────────────────────────────────── -->
     <div v-else-if="activeTab === 'anuncios'">
+      <div class="flex justify-end mb-4">
+        <BotonDudas @click="abrirAyuda('anuncios')" />
+      </div>
       <AnunciosView />
     </div>
  
@@ -340,10 +352,19 @@
       @saved="handlePaqueteSaved"
     />
 
+    <!-- Modal de Dudas -->
+    <AyudaModal
+      v-if="showAyuda"
+      :titulo="ayudaInfo.titulo"
+      :secciones="ayudaInfo.secciones"
+      @close="showAyuda = false"
+    />
+
   </div>
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -361,6 +382,9 @@ import PaquetesTable from '../components/productos/PaquetesTable.vue'
 import PaqueteFormModal from '../components/productos/PaqueteFormModal.vue'
 import AnunciosView from './anunciosview.vue'
 import BundleStrategyCard from '../components/administraccion/BundleStrategyCard.vue'
+import InfoBox from '../components/administraccion/InfoBox.vue'
+import BotonDudas from '../components/administraccion/BotonDudas.vue'
+import AyudaModal from '../components/administraccion/AyudaModal.vue'
 
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -368,7 +392,7 @@ import { apiClient } from '@/utils/apiClient'
 const router = useRouter()
 
 // ── ESTADO GLOBAL ──────────────────────────────────────────
-const activeTab = ref('productos')
+const activeTab = ref('ingredientes')
 const products = ref([])
 const categories = ref([])
 const ingredientes = ref([])
@@ -428,9 +452,9 @@ const loading = reactive({
 
 // ── TABS ───────────────────────────────────────────────────
 const tabs = [
+  { key: 'ingredientes', label: '🧄 Ingredientes' },
   { key: 'productos',    label: '📦 Productos' },
   { key: 'paquetes',     label: '🎁 Paquetes' },
-  { key: 'ingredientes', label: '🧄 Ingredientes' },
   { key: 'anuncios',     label: '📢 Anuncios' },
 ]
 
@@ -441,6 +465,100 @@ const getTabCount = (key) => {
   if (key === 'ingredientes') return ingredientes.value.length
   if (key === 'anuncios') return anuncios.value.length
   return 0
+}
+
+// ── Botón de Dudas ────────────────────────────────────────────────────────────
+const showAyuda = ref(false)
+const ayudaTab  = ref('ingredientes')
+const abrirAyuda = (tab) => { ayudaTab.value = tab; showAyuda.value = true }
+const ayudaInfo = computed(() => AYUDA[ayudaTab.value] || AYUDA.ingredientes)
+
+const AYUDA = {
+  ingredientes: {
+    titulo: 'Productos → Ingredientes',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'La despensa del negocio. Aquí creas y controlas los ingredientes que usan tus platillos.', nota: 'El costo unitario afecta la utilidad de todos los productos que lo usan.' },
+      { icon: '➕', titulo: 'Formulario "＋ Nuevo ingrediente"', texto: 'Cómo se llena cada campo:', lista: [
+        'Nombre * — cómo se llama el ingrediente (ej. Jitomate).',
+        'Unidad * — en qué se mide: gr, kg, ml, lt o pz.',
+        'Costo unitario * — cuánto vale UNA unidad (ej. $15 por kg). Es el dato más importante: de aquí sale el costo de tus platillos.',
+        'Stock actual — cuánto tienes en la despensa hoy.',
+        'Stock mínimo — lo calcula el sistema según tus recetas; no se edita.',
+        'Proveedor — quién te lo surte (opcional).',
+      ], nota: 'Los campos marcados con * son obligatorios.' },
+      { icon: '📦', titulo: 'Formulario "📦 Stock" (ajustar inventario)', texto: 'Para reponer o dar de baja stock sin borrar el ingrediente.', lista: [
+        'Tipo de movimiento — ➕ Entrada (compraste) o ➖ Salida (merma/uso).',
+        'Cantidad — cuánto entró o salió, en la unidad del ingrediente.',
+        'Motivo — opcional, ej. "Compra semanal" o "Merma".',
+        'El sistema muestra el stock resultante antes de aplicar.',
+      ]},
+      { icon: '📊', titulo: 'Estados e inventario', texto: 'OK (verde) · Bajo stock ⚠️ (amarillo) · Sin stock 🚨 (rojo).', nota: 'Valor inventario = stock actual × costo unitario. Usa "Lista de compras" para reponer lo urgente.' },
+      { icon: '✏️', titulo: 'Editar y borrar', texto: '✏️ abre el mismo formulario ya precargado. 🗑️ elimina el ingrediente (solo si no está en uso por alguna receta).' },
+    ],
+  },
+  productos: {
+    titulo: 'Productos → Menú',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Tu menú. El botón "＋ Nuevo producto" abre un formulario en 2 pasos: información general y receta.', nota: 'Primero creas el producto y después le asignas su receta.' },
+      { icon: '1️⃣', titulo: 'Paso 1 — Información general', texto: 'Los campos del formulario:', lista: [
+        'Imagen — arrastra una foto o haz clic para subirla (JPG, PNG, WebP · máx. 250 KB).',
+        'Nombre * — nombre del platillo (ej. Hamburguesa Gourmet).',
+        'Categoría * — cocina, barra, postres, etc.',
+        'Descripción — qué incluye el platillo (opcional).',
+        'Tamaños — si tiene chico/grande, cada tamaño lleva su nombre, precio y stock.',
+        'Precio de venta * — lo que paga el cliente (si no usas tamaños).',
+        'Stock — lo calcula el sistema con la receta; no se edita.',
+        'Stock mínimo — mínimo sugerido para avisar reposición.',
+        'Termina el paso 1 con "🚀 Crear Producto".',
+      ]},
+      { icon: '2️⃣', titulo: 'Paso 2 — Receta e insumos', texto: 'Define de qué está hecho el platillo:', lista: [
+        'Busca un ingrediente por nombre o elígelo del catálogo y presiona "Agregar".',
+        'Escribe la cantidad necesaria de cada ingrediente en la receta.',
+        'Con la receta lista, el sistema calcula: costo de insumos + mano de obra + 5% indirectos.',
+        'Tiempo prep. estimado — minutos que tarda en prepararse; afecta el costo de mano de obra y el precio sugerido.',
+        'Precio sugerido — pulsa "Aplicar Precio Sugerido" si quieres venderlo con esa ganancia.',
+        'Termina con "Guardar Receta" y después "Guardar Información".',
+      ]},
+      { icon: '📊', titulo: 'Panel de costos y margen', texto: 'Muestra el costo total de producción, el margen real con tu precio y el % de utilidad.', nota: 'Si el margen sale en rojo, el precio no alcanza a cubrir los costos.' },
+      { icon: '⚙️', titulo: 'Editar y estado', texto: 'Editas con ✏️ el mismo formulario precargado. Con Activo/inactivo controlas si el producto se puede vender.' },
+    ],
+  },
+  paquetes: {
+    titulo: 'Productos → Paquetes',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Los combos: vendes varios productos juntos a un solo precio.' },
+      { icon: '➕', titulo: 'Formulario "＋ Nuevo paquete"', texto: 'Cómo se llena cada campo:', lista: [
+        'Nombre del paquete * — ej. Combo Familiar.',
+        'Precio final * — el precio que pagará el cliente.',
+        'Imagen — opcional; haz clic para subir una foto del combo.',
+        'Descripción — qué incluye (opcional).',
+        'Productos incluidos * — busca un producto (o tamaño) y agrégalo; ajusta la cantidad de cada uno con − / +.',
+      ], nota: 'Faltan los 3 obligatorios (nombre, precio y al menos 1 producto) y no se guarda.' },
+      { icon: '💰', titulo: 'Análisis financiero del paquete', texto: 'Al agregar productos ves en vivo: costo de producción, margen real y % de utilidad.', lista: [
+        'Precio sugerido (con 30% de utilidad) — pulsa "Aplicar Sugerido" para usarlo.',
+      ]},
+      { icon: '💡', titulo: 'Sugerencia estratégica', texto: 'Arriba la app sugiere combos según lo más vendido y lo más rentable; pulsa "Ejecutar" para cargarlos automáticamente en el formulario.' },
+    ],
+  },
+  anuncios: {
+    titulo: 'Productos → Anuncios',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'La marquesina: promociones que se muestran a tus clientes y en el menú digital.', nota: 'Hay una vista previa arriba para ver cómo se verá antes de publicarlo.' },
+      { icon: '➕', titulo: 'Formulario "＋ Nuevo anuncio"', texto: 'Cómo se llena cada campo:', lista: [
+        'Tipo de anuncio — qué categoría representa.',
+        'Título del mensaje * — lo más visible, ej. "¡Happy Hour Activado!".',
+        'Emoji — el icono que acompaña al título.',
+        'Contenido — descripción breve de la oferta (opcional).',
+        'Color de énfasis — tono visual del anuncio.',
+        'Orden / Prioridad — qué tan arriba debe mostrarse.',
+        'Vincular a un platillo/combo — búscalo y añádelo.',
+        'Precio promocional — el precio con descuento (opcional).',
+        'Mostrar en — activa clientes y/o menú digital con los interruptores.',
+        'Fecha de inicio y fin — la vigencia del anuncio.',
+      ]},
+      { icon: '👁️', titulo: 'Activación', texto: 'Pulsa ● / ○ en cada tarjeta para mostrar u ocultar el anuncio al instante.' },
+    ],
+  },
 }
 
 // ── COMPUTED ───────────────────────────────────────────────
@@ -470,7 +588,7 @@ const removeToast = (id) => {
 
 // ── HELPERS ────────────────────────────────────────────────
 const checkAuth = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   if (!token) { 
     router.push('/')
     return false 
@@ -606,7 +724,7 @@ const loadCategories = async () => {
   try {
     const data = await apiClient.get('/categorias')
     if (data.success || data.data) {
-      const baseNames = ['cocina', 'barra', 'postres']
+      const baseNames = ['cocina', 'barra', 'postres', 'comida', 'comidas', 'bebida', 'bebidas']
       categories.value = (data.data || data || []).filter(c => 
         baseNames.includes((c.nombre || '').toLowerCase())
       )

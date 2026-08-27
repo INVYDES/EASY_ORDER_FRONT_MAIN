@@ -1,4 +1,5 @@
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -25,7 +26,7 @@ import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
 
-const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const userRaw = sessionGet('user') ?? '{}'
 const user = JSON.parse(userRaw)
 const esAdminOPropietario = computed(() => {
   const roles = user.roles || []
@@ -197,7 +198,7 @@ const toLocalTime = (dateStr) => {
 };
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -368,7 +369,7 @@ const loadOrders = async () => {
     const jsonResults = await Promise.all(fetches)
     const map = new Map()
     
-    const rid = restauranteActivo.value?.id || localStorage.getItem('restaurante_id_activo')
+    const rid = restauranteActivo.value?.id || sessionGet('restaurante_id_activo')
 
     jsonResults.forEach(r => {
       if (r.success || r.data) {
@@ -404,7 +405,7 @@ const loadHistorial = async () => {
 }
 
 const loadAllData = async (silent = true) => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   if (!token) {
     router.push('/')
     return

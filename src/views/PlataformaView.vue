@@ -144,6 +144,13 @@
                 >
                   Editar Licencia
                 </button>
+                <button
+                  v-else
+                  @click="openAddLicencia(prop)"
+                  class="text-emerald-600 hover:text-emerald-900 font-semibold text-xs bg-emerald-50 px-3 py-2 rounded-lg hover:bg-emerald-100 transition-colors"
+                >
+                  Asignar Licencia
+                </button>
                 <button 
                   @click="selectedPropietario = prop"
                   class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs bg-indigo-50 px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors"
@@ -279,12 +286,12 @@
       </div>
     </div>
 
-    <!-- Modal Editar Licencia -->
+    <!-- Modal Editar/Asignar Licencia -->
     <div v-if="editLicenciaModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] flex items-center justify-center p-4">
       <div class="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl border border-gray-100">
         <div class="p-8">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-gray-900">Editar Licencia</h3>
+            <h3 class="text-xl font-bold text-gray-900">{{ editLicenciaModal.id ? 'Editar Licencia' : 'Asignar Licencia' }}</h3>
             <button @click="editLicenciaModal.show = false" class="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -295,10 +302,22 @@
           <p class="text-sm text-gray-500 mb-6">
             Propietario: <span class="font-semibold text-gray-800">{{ editLicenciaModal.propietario_nombre }}</span>
             <br>
-            Licencia: <span class="font-semibold text-gray-800">{{ editLicenciaModal.licencia_nombre }}</span>
+            Licencia actual: <span class="font-semibold text-gray-800">{{ editLicenciaModal.licencia_nombre }}</span>
           </p>
 
           <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipo de Licencia / Plan</label>
+              <select
+                v-model="editLicenciaModal.licencia_id"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option v-for="lic in licencias" :key="lic.id" :value="lic.id">
+                  {{ lic.nombre }} · {{ lic.tipo }} ({{ lic.max_restaurantes }} suc · {{ lic.max_usuarios }} usr)
+                </option>
+              </select>
+              <p class="text-[10px] text-gray-400 mt-1">Selecciona el plan que tendrá el propietario</p>
+            </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1.5">Fecha de Inicio</label>
               <input
@@ -315,6 +334,19 @@
                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Estado de la Licencia</label>
+              <select
+                v-model="editLicenciaModal.estado"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="ACTIVA">Activa</option>
+                <option value="INACTIVA">Inactiva</option>
+                <option value="CANCELADA">Cancelada</option>
+                <option value="EXPIRADA">Expirada</option>
+                <option value="PENDIENTE">Pendiente</option>
+              </select>
+            </div>
           </div>
 
           <div class="flex flex-col gap-3 mt-8">
@@ -324,7 +356,14 @@
               class="w-full py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <span v-if="editLicenciaModal.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              {{ editLicenciaModal.loading ? 'Guardando...' : 'Guardar Cambios' }}
+              {{ editLicenciaModal.loading ? 'Guardando...' : (editLicenciaModal.id ? 'Guardar Cambios' : 'Asignar Licencia') }}
+            </button>
+            <button
+              v-if="editLicenciaModal.id"
+              @click="removeLicencia(editLicenciaModal.id)"
+              class="w-full py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-all"
+            >
+              Quitar Licencia
             </button>
             <button
               @click="editLicenciaModal.show = false"
@@ -346,6 +385,7 @@ import { apiClient } from '@/utils/apiClient';
 
 const propietarios = ref([]);
 const stats = ref({});
+const licencias = ref([]);
 const loading = ref(false);
 const searchQuery = ref('');
 const selectedPropietario = ref(null);
@@ -379,6 +419,7 @@ const editLicenciaModal = ref({
   id: null,
   propietario_nombre: '',
   licencia_nombre: '',
+  licencia_id: null,
   fecha_inicio: '',
   fecha_expiracion: ''
 });
@@ -391,43 +432,90 @@ const openEditLicencia = (prop) => {
     id: lic.id,
     propietario_nombre: prop.nombre_completo,
     licencia_nombre: lic.nombre || '',
+    licencia_id: lic.licencia_id ?? lic.id,
     fecha_inicio: lic.inicio ? lic.inicio.slice(0, 10) : '',
-    fecha_expiracion: lic.expira ? lic.expira.slice(0, 10) : ''
+    fecha_expiracion: lic.expira ? lic.expira.slice(0, 10) : '',
+    estado: lic.estado || 'ACTIVA'
+  };
+};
+
+const openAddLicencia = (prop) => {
+  editLicenciaModal.value = {
+    show: true,
+    loading: false,
+    id: null,
+    propietario_id: prop.id,
+    propietario_nombre: prop.nombre_completo,
+    licencia_nombre: 'Ninguna',
+    licencia_id: licencias.value[0]?.id || null,
+    fecha_inicio: new Date().toISOString().slice(0, 10),
+    fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    estado: 'ACTIVA'
   };
 };
 
 const updateLicencia = async () => {
-  if (!editLicenciaModal.value.id) return;
   try {
     editLicenciaModal.value.loading = true;
     const body = {};
+    if (editLicenciaModal.value.licencia_id) body.licencia_id = editLicenciaModal.value.licencia_id;
     if (editLicenciaModal.value.fecha_inicio) body.fecha_inicio = editLicenciaModal.value.fecha_inicio;
     if (editLicenciaModal.value.fecha_expiracion) body.fecha_expiracion = editLicenciaModal.value.fecha_expiracion;
-    const res = await apiClient.put(`/propietario-licencias/${editLicenciaModal.value.id}`, body);
+    if (editLicenciaModal.value.estado) body.estado = editLicenciaModal.value.estado;
+
+    let res;
+    if (editLicenciaModal.value.id) {
+      res = await apiClient.put(`/propietario-licencias/${editLicenciaModal.value.id}`, body);
+    } else {
+      body.propietario_id = editLicenciaModal.value.propietario_id;
+      res = await apiClient.post('/propietario-licencias', body);
+    }
+
     if (res.success) {
-      showToast('Licencia actualizada correctamente', 'success');
+      showToast(editLicenciaModal.value.id ? 'Licencia actualizada correctamente' : 'Licencia asignada correctamente', 'success');
       editLicenciaModal.value.show = false;
       fetchPlataformaData();
     } else {
-      showToast(res.message || 'Error al actualizar la licencia', 'error');
+      showToast(res.message || 'Error al guardar la licencia', 'error');
     }
   } catch (error) {
-    showToast(error.message || 'Error al actualizar la licencia', 'error');
+    showToast(error.message || 'Error al guardar la licencia', 'error');
   } finally {
     editLicenciaModal.value.loading = false;
   }
 };
 
+const removeLicencia = async (id) => {
+  confirmModal.value = {
+    show: true,
+    title: '¿QUITAR LICENCIA?',
+    message: `Esta acción ELIMINARÁ la asignación de licencia del propietario. El propietario quedará sin licencia activa.`,
+    confirmText: 'Sí, quitar licencia',
+    action: async () => {
+      editLicenciaModal.value.show = false;
+      const res = await apiClient.delete(`/propietario-licencias/${id}`);
+      if (res.success) {
+        showToast('Licencia quitada correctamente', 'success');
+        fetchPlataformaData();
+      } else {
+        showToast(res.message || 'Error al quitar la licencia', 'error');
+      }
+    }
+  };
+};
+
 const fetchPlataformaData = async () => {
   try {
     loading.value = true;
-    const [resProps, resStats] = await Promise.all([
+    const [resProps, resStats, resLicencias] = await Promise.all([
       apiClient.get('/plataforma/propietarios'),
-      apiClient.get('/plataforma/stats')
+      apiClient.get('/plataforma/stats'),
+      apiClient.get('/licencias?per_page=100')
     ]);
     
     if (resProps.success) propietarios.value = resProps.data;
     if (resStats.success) stats.value = resStats.data;
+    if (resLicencias.success) licencias.value = resLicencias.data;
   } catch (error) {
     console.error('Error fetching platform data:', error);
   } finally {

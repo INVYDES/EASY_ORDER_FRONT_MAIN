@@ -12,20 +12,21 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, onMounted } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 
 const restauranteNombre = ref('')
 
 const getToken = () => {
-  return localStorage.getItem('token') || sessionStorage.getItem('token')
+  return sessionGet('token')
 }
 
 const fetchSucursalActual = async () => {
   try {
     const token = getToken()
     if (!token) {
-      restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
+      restauranteNombre.value = sessionGet('restaurante_nombre') || ''
       return
     }
 
@@ -35,14 +36,14 @@ const fetchSucursalActual = async () => {
     // ✅ El nombre viene en userData.restaurante.nombre
     if (userData.restaurante?.nombre) {
       restauranteNombre.value = userData.restaurante.nombre
-      localStorage.setItem('restaurante_nombre', restauranteNombre.value)
+      sessionSet('restaurante_nombre', restauranteNombre.value)
     } else {
-      restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
+      restauranteNombre.value = sessionGet('restaurante_nombre') || ''
     }
 
   } catch (error) {
     console.error("❌ [SucursalBadge] Error:", error.message)
-    restauranteNombre.value = localStorage.getItem('restaurante_nombre') || ''
+    restauranteNombre.value = sessionGet('restaurante_nombre') || ''
   }
 }
 

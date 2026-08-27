@@ -108,6 +108,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -143,7 +144,7 @@ const formatMoney = (v) =>
   v === undefined || v === null ? '0.00' : Number(v).toFixed(2)
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',

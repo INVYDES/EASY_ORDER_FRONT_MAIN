@@ -218,6 +218,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import SucursalBadge from '../components/SucursalBadge.vue'
@@ -228,7 +229,7 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 const POLL_INTERVAL = 15000 // Aumentamos intervalo ya que tenemos WS
 const router        = useRouter()
 
-const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const userRaw = sessionGet('user') ?? '{}'
 const user = JSON.parse(userRaw)
 const esAdminOPropietario = computed(() => {
   const roles = user.roles || []
@@ -263,7 +264,7 @@ const modalIngredientes = ref({
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 
@@ -344,7 +345,7 @@ const loadOrders = async (silent = false) => {
   }
 }
 
-const getToken = () => localStorage.getItem('token') ?? sessionStorage.getItem('token')
+const getToken = () => sessionGet('token')
 
 // ── WebSockets ────────────────────────────────────────────────────────────────
 const onOrdenWS = async (evento) => {

@@ -237,6 +237,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AjustarStockModal from '../components/ingredientes/AjusteStockModal.vue'
@@ -284,7 +285,7 @@ const ajusteForm = ref({
 
 // Headers
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   if (!token) {
     router.push('/')
     return {}

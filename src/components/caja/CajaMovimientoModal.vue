@@ -252,6 +252,7 @@
 }
 </style>
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { reactive, ref } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 
@@ -264,7 +265,7 @@ const loading = ref(false)
 const error   = ref('')
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 

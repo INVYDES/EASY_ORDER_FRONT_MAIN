@@ -1,3 +1,4 @@
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 // src/config/api.ts
 
 // 1. Obtenemos la URL base del .env
@@ -19,8 +20,8 @@ export const API_URL = `${cleanBase}/api`;
 export const STORAGE_URL = `${base.replace(/\/index\.php(\/.*)?$/, '').replace(/\/api$/, '').replace(/\/+$/, '')}/storage/`;
 
 export const getHeaders = (customHeaders: Record<string, string> = {}) => {
-    const token = localStorage.getItem('token') ?? sessionStorage.getItem('token');
-    const restauranteId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id');
+    const token = sessionGet('token');
+    const restauranteId = sessionGet('restaurante_id_activo') ?? sessionGet('restaurante_id');
 
     return {
         'Content-Type': 'application/json',

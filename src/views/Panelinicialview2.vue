@@ -10,6 +10,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Columnaventa from '../components/panel/columnaventa.vue'
@@ -24,7 +25,7 @@ const fechaFin = ref(new Date().toLocaleDateString('en-CA')) // Hoy
 
 // Verificar autenticación
 const checkAuth = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   if (!token) {
     router.push('/')
     return false

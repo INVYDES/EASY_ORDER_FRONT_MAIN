@@ -56,6 +56,7 @@
           <p class="text-sm font-bold text-gray-700 truncate">{{ userName }}</p>
           <p class="text-xs text-gray-500 truncate flex items-center gap-1">
             <span class="text-amber-500">👑</span> {{ userRoleLabel }}
+            <span v-if="user?.licencia_activa === false" class="ml-1 text-[10px] bg-red-100 text-red-700 border border-red-200 px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider">Inactiva</span>
           </p>
         </div>
         <i v-show="!isCollapsed || isMobile" class="fa-solid fa-chevron-down text-gray-400 text-[10px]" :class="{'rotate-180': showUserMenu}"></i>

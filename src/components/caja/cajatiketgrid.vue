@@ -579,6 +579,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, nextTick } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -721,7 +722,7 @@ const cambio = computed(() => {
 })
 
 // --- Datos del Usuario e Identidad de Sucursal ---
-const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const userRaw = sessionGet('user') ?? '{}'
 const user = JSON.parse(userRaw)
 const userName = computed(() => user.name || 'Personal')
 
@@ -1221,7 +1222,7 @@ const imprimirTicketMultiple = (cuentas, folioOriginal, ordenesIds = []) => {
 }
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 

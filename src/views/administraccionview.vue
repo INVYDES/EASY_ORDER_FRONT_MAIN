@@ -16,6 +16,20 @@
       </div>
     </div>
 
+    <!-- Banner Licencia Inactiva -->
+    <div v-if="currentUser?.licencia_activa === false || (licenciaActiva && licenciaActiva.estado === 'INACTIVA')" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-red-100">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div>
+          <h4 class="font-bold text-red-800 text-sm">Licencia Inactiva</h4>
+          <p class="text-xs text-red-600 mt-0.5">Tu suscripción actual se encuentra inactiva. Algunas funciones y creación de usuarios o sucursales podrían estar restringidas.</p>
+        </div>
+      </div>
+      <RouterLink to="/panel/licencias" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shrink-0 shadow-sm">
+        Renovar Licencia
+      </RouterLink>
+    </div>
+
     <!-- Encabezado -->
     <div class="flex items-center justify-between">
       <div>
@@ -408,8 +422,7 @@
     </template>
 
     <!-- ══ MODAL EMPLEADO (Componente Nuevo) ══ -->
-    <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
-      @click.self="cerrarModalEmpleado">
+    <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
         <!-- Botón cerrar X -->
         <button @click="cerrarModalEmpleado" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl z-10">✕</button>
@@ -417,7 +430,8 @@
         <FormularioTrabajador 
           ref="formEmpleadoRef"
           :empleado="empleadoEditando"
-          :restaurantes="restaurantes"
+          :restaurantes="sucursalesDueno"
+          :restaurante-activo-id="restauranteActivoId"
           :es-cuenta-menu="esModoMenu"
           @guardar="handleGuardarEmpleado"
           @cancelar="cerrarModalEmpleado"
@@ -546,6 +560,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import SucursalBadge       from '../components/SucursalBadge.vue'
@@ -701,7 +716,7 @@ const cuentasMenu = computed(() => empleados.value.filter(e => {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 
@@ -763,7 +778,7 @@ const cargarEmpleados = async () => {
 
 // ── Cargar datos ───────────────────────────────────────────────────────────────
 const loadData = async () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   if (!token) { router.push('/'); return }
   loading.general = true
   try {

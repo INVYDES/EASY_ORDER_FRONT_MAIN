@@ -232,6 +232,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, watch } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -423,7 +424,7 @@ const handleGuardar = async () => {
   errorLocal.value = ''
 
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    const token = sessionGet('token')
     
     if (!token) {
       errorLocal.value = 'No hay sesión activa. Por favor, inicia sesión nuevamente.'

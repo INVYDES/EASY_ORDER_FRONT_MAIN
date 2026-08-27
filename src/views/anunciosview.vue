@@ -134,8 +134,11 @@
           
           <div class="mt-5 pt-4 border-t border-gray-50 flex items-center justify-between">
             <div class="text-[10px] font-bold text-gray-400 flex flex-col uppercase tracking-tighter">
-               <span>Inicio: {{ a.fecha_inicio || 'Inmediato' }}</span>
-               <span>Fin: {{ a.fecha_fin || 'Indefinido' }}</span>
+               <span><span class="text-emerald-500">Inicia:</span> {{ a.fecha_inicio ? formatFechaCorta(a.fecha_inicio) : 'Inmediato' }}</span>
+               <span><span class="text-rose-500">Finaliza:</span> {{ a.fecha_fin ? formatFechaCorta(a.fecha_fin) : 'Indefinido' }}</span>
+               <span v-if="formatoDias(a.dias_semana)" class="mt-0.5">
+                 <span class="text-violet-500">Días:</span> {{ formatoDias(a.dias_semana) }}
+               </span>
             </div>
             <div class="flex gap-2">
               <button @click="abrirModal(a)" class="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
@@ -154,7 +157,7 @@
       <div v-if="showModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-gray-950/40 backdrop-blur-sm" @click="showModal=false"></div>
         
-        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden relative flex flex-col max-h-[90vh]">
+        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-3xl overflow-hidden relative flex flex-col max-h-[92vh]">
           <div class="p-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
             <div>
               <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ editando ? 'Editar Anuncio' : 'Crear Anuncio' }}</h3>
@@ -278,10 +281,9 @@
               </div>
             </section>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-              <div class="space-y-4">
+            <section class="space-y-4 pt-2">
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mostrar anuncio en:</label>
-                <div class="flex flex-col gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label class="flex items-center gap-3 cursor-pointer group p-3 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-indigo-100 transition-all">
                     <input v-model="form.mostrar_cliente" type="checkbox" class="w-5 h-5 rounded-lg accent-indigo-600" />
                     <span class="font-bold text-gray-700 text-sm group-hover:text-indigo-600">📱 APP CLIENTES</span>
@@ -291,22 +293,16 @@
                     <span class="font-bold text-gray-700 text-sm group-hover:text-indigo-600 uppercase">👨‍🍳 MENÚ DIGITAL</span>
                   </label>
                 </div>
-              </div>
-              <div class="space-y-3">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Periodo de Vigencia</label>
-                <div class="space-y-2">
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs">🕒</span>
-                    <input v-model="form.fecha_inicio" type="date" class="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl text-xs font-bold text-gray-600 outline-none focus:bg-white border border-transparent focus:border-indigo-200" />
-                  </div>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs">🏁</span>
-                    <input v-model="form.fecha_fin" type="date" class="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl text-xs font-bold text-gray-600 outline-none focus:bg-white border border-transparent focus:border-indigo-200" />
-                  </div>
-                  <p class="text-[9px] text-gray-400 italic px-1">Si dejas vacío, el anuncio será permanente.</p>
-                </div>
-              </div>
-            </div>
+              </section>
+
+            <section class="pt-2">
+              <CalendarioVigencia
+                v-model:inicio="form.fecha_inicio"
+                v-model:fin="form.fecha_fin"
+                :dias="form.dias_semana"
+                @update:dias="form.dias_semana = $event"
+              />
+            </section>
           </div>
           
           <div class="p-6 border-t border-gray-50 flex gap-4 bg-gray-50/30 sticky bottom-0">
@@ -324,8 +320,10 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import MarquesitaWidget from '../components/MarquesitaWidget.vue'
+import CalendarioVigencia from '../components/CalendarioVigencia.vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
@@ -335,6 +333,21 @@ const resolveImageUrl = (path) => {
   if (path.startsWith('http') || path.startsWith('data:')) return path
   if (path.startsWith('/storage/')) return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}`
   return `${STORAGE_URL}${path}`
+}
+
+// Formatea una fecha (yyyy-mm-dd o ISO) en formato corto tipo "6 ago 2026"
+const formatFechaCorta = (fecha) => {
+  if (!fecha) return ''
+  const d = new Date(String(fecha).replace(' ', 'T'))
+  if (isNaN(d)) return fecha
+  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Convierte [0..6] a "Dom, Jue, Sáb"
+const NOMBRES_DIA_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const formatoDias = (dias) => {
+  if (!Array.isArray(dias) || dias.length === 0) return ''
+  return dias.map(d => NOMBRES_DIA_CORTOS[Number(d)]).join(', ')
 }
 
 // --- ESTADO ---
@@ -358,11 +371,11 @@ watch(previewVariant, (newVal) => {
 })
 
 // Variable reactiva para el ID del restaurante - esto asegura que el Widget se entere del cambio
-const restauranteId = ref(localStorage.getItem('restaurante_id_activo'))
+const restauranteId = ref(sessionGet('restaurante_id_activo'))
 
 // Si no hay id activo, intentamos sacar el del usuario
 if (!restauranteId.value) {
-  const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+  const userRaw = sessionGet('user') ?? '{}'
   try {
     restauranteId.value = JSON.parse(userRaw)?.restaurante_id || null
   } catch { restauranteId.value = null }
@@ -370,7 +383,7 @@ if (!restauranteId.value) {
 
 // Cronómetro para detectar cambios de sucursal en el header (localStorage no es reactivo por sí solo)
 const checkRestaurante = setInterval(() => {
-  const currentId = localStorage.getItem('restaurante_id_activo')
+  const currentId = sessionGet('restaurante_id_activo')
   if (currentId && currentId !== restauranteId.value) {
     restauranteId.value = currentId
     cargar()
@@ -383,7 +396,7 @@ const lastRestId = ref(restauranteId.value)
 
 // --- AUTH HEADERS ---
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 
     'Content-Type': 'application/json', 
     'Accept': 'application/json', 
@@ -420,7 +433,7 @@ const filtros = [
 const defaultForm = () => ({
   titulo: '', contenido: '', tipo: 'info', emoji: '📢', color: 'indigo',
   mostrar_cliente: true, mostrar_interno: false,
-  fecha_inicio: '', fecha_fin: '', orden: 0,
+  fecha_inicio: '', fecha_fin: '', dias_semana: [], orden: 0,
   producto_id: null, paquete_id: null, precio_promo: null, activo: true
 })
 const form = ref(defaultForm())
@@ -513,7 +526,9 @@ const cargar = async () => {
     if (data.success) {
       const hoy = new Date()
       anuncios.value = data.data.map(a => {
+        const dias = Array.isArray(a.dias_semana) ? a.dias_semana.map(Number) : []
         let esVigente = a.activo
+        if (dias.length > 0 && !dias.includes(hoy.getDay())) esVigente = false
         if (a.fecha_inicio) {
           const inicio = new Date(a.fecha_inicio)
           if (hoy < inicio) esVigente = false
@@ -523,7 +538,7 @@ const cargar = async () => {
           fin.setHours(23, 59, 59, 999) // Hacer fin de día inclusivo
           if (hoy > fin) esVigente = false
         }
-        return { ...a, vigente: esVigente }
+        return { ...a, dias_semana: dias, vigente: esVigente }
       })
     }
   } catch (err) {
@@ -539,6 +554,8 @@ const abrirModal = (a = null) => {
   
   if (a) {
     form.value = { ...defaultForm(), ...a }
+    // Normalizar días de la semana a números
+    form.value.dias_semana = Array.isArray(a.dias_semana) ? a.dias_semana.map(Number) : []
     // Asignar IDs de producto o paquete vinculados
     if (a.producto_id) form.value.producto_id = a.producto_id
     else if (a.producto && a.producto.id) form.value.producto_id = a.producto.id

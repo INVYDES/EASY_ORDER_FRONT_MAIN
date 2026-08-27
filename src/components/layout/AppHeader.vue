@@ -99,6 +99,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_URL } from '@/config/api'
@@ -156,7 +157,8 @@ const cambiarRestaurante = async (restaurante) => {
   showRestMenu.value = false
   
   // Guardamos en localStorage para persistencia rápida
-  localStorage.setItem('restaurante_id_activo', restaurante.id)
+  sessionSet('restaurante_id_activo', restaurante.id)
+  sessionSet('restaurante_id', restaurante.id)
   
   // Emitir evento por si el componente padre (Dashboard) necesita refrescar estadísticas
   emit('cambioRestaurante', restaurante.id)
@@ -173,9 +175,8 @@ const logout = async () => {
   try {
     await apiClient.post('/logout')
   } finally {
-    localStorage.removeItem('token')
-    sessionStorage.removeItem('token')
-    localStorage.removeItem('restaurante_id_activo')
+    sessionRemove('token')
+    sessionRemove('restaurante_id_activo')
     router.push('/')
   }
 }

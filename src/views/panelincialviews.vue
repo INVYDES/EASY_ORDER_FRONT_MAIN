@@ -1,4 +1,5 @@
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '../components/layout/AppSidebar.vue'
@@ -56,13 +57,13 @@ const loadRestaurantes = async () => {
     const data = await apiClient.get('/restaurantes')
     if (data.success || data.data) {
       userRestaurantes.value = (data.data?.restaurantes || data.restaurantes || [])
-      const stored = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
+      const stored = sessionGet('restaurante_id_activo') ?? sessionGet('restaurante_id')
       if (stored && userRestaurantes.value.some(r => r.id === parseInt(stored))) {
         restauranteActivo.value = parseInt(stored)
       } else if (userRestaurantes.value.length > 0) {
         restauranteActivo.value = userRestaurantes.value[0].id
-        localStorage.setItem('restaurante_id_activo', restauranteActivo.value)
-        localStorage.setItem('restaurante_id', restauranteActivo.value)
+        sessionSet('restaurante_id_activo', restauranteActivo.value)
+        sessionSet('restaurante_id', restauranteActivo.value)
       }
     }
   } catch (e) { console.error('Error al cargar restaurantes:', e) }
@@ -73,8 +74,8 @@ const cambiarRestaurante = async () => {
   try {
     const data = await apiClient.post('/cambiar-restaurante', { restaurante_id: restauranteActivo.value })
     if (data.success || data.data) {
-      localStorage.setItem('restaurante_id_activo', restauranteActivo.value)
-      localStorage.setItem('restaurante_id', restauranteActivo.value)
+      sessionSet('restaurante_id_activo', restauranteActivo.value)
+      sessionSet('restaurante_id', restauranteActivo.value)
       window.location.reload()
     }
   } catch (e) { console.error('Error al cambiar restaurante:', e) }

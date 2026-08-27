@@ -39,6 +39,12 @@
       </div>
     </div>
 
+    <!-- ── TOOLTIP: cómo se calcula cada métrica ─────────────────────────── -->
+    <div v-if="infoVisible" class="calc-tooltip" :style="{ left: infoX + 'px', top: infoY + 'px' }">
+      <div class="calc-tooltip__head">🧮 ¿Cómo se calcula?</div>
+      <p class="calc-tooltip__text">{{ infoTexto }}</p>
+    </div>
+
     <!-- ── LOADING ──────────────────────────────────────────────────────── -->
     <div v-if="loading" class="loading-state">
       <div class="spinner spinner--lg"></div>
@@ -53,38 +59,42 @@
       <template v-if="filtros.mesero_id && metricasMeseros.length === 1">
 
         <!-- KPIs individuales -->
-        <div class="kpi-strip">
-          <div class="kpi-tile kpi-tile--amber">
+        <div class="kpi-strip" @mouseleave="ocultarInfo">
+          <div class="kpi-tile kpi-tile--amber" @mouseenter="mostrarInfo($event, KPIS.meseroDinero)">
             <span class="kpi-tile__icon">💵</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Dinero Vendido</span>
               <span class="kpi-tile__value">{{ formatMoney(metricasMeseros[0].total_ventas) }}</span>
               <span class="kpi-tile__desc">Total cobrado en el periodo</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
-          <div class="kpi-tile kpi-tile--blue">
+          <div class="kpi-tile kpi-tile--blue" @mouseenter="mostrarInfo($event, KPIS.meseroTicket)">
             <span class="kpi-tile__icon">🛍️</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Ticket Promedio</span>
               <span class="kpi-tile__value">{{ formatMoney(metricasMeseros[0].ticket_promedio) }}</span>
               <span class="kpi-tile__desc">Gasto promedio por cliente</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
-          <div class="kpi-tile kpi-tile--purple">
+          <div class="kpi-tile kpi-tile--purple" @mouseenter="mostrarInfo($event, KPIS.meseroCuentas)">
             <span class="kpi-tile__icon">🍽️</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Cuentas / Mesas</span>
               <span class="kpi-tile__value">{{ metricasMeseros[0].total_ordenes }} <small>/ {{ metricasMeseros[0].mesas_atendidas }}</small></span>
               <span class="kpi-tile__desc">Órdenes · Mesas atendidas</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
-          <div class="kpi-tile kpi-tile--green">
+          <div class="kpi-tile kpi-tile--green" @mouseenter="mostrarInfo($event, KPIS.meseroPropinas)">
             <span class="kpi-tile__icon">💰</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Propinas Est. 10%</span>
               <span class="kpi-tile__value">{{ formatMoney((metricasMeseros[0].total_ventas || 0) * 0.10) }}</span>
               <span class="kpi-tile__desc">Estimado de propinas</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
         </div>
 
@@ -114,38 +124,42 @@
       <template v-else>
 
         <!-- KPI strip general -->
-        <div class="kpi-strip">
-          <div class="kpi-tile kpi-tile--amber">
+        <div class="kpi-strip" @mouseleave="ocultarInfo">
+          <div class="kpi-tile kpi-tile--amber" @mouseenter="mostrarInfo($event, KPIS.generalVentas)">
             <span class="kpi-tile__icon">💵</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Ventas Totales</span>
               <span class="kpi-tile__value">{{ formatMoney(resumenGeneral.total_ventas) }}</span>
               <span class="kpi-tile__desc">Suma de todos los meseros</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
-          <div class="kpi-tile kpi-tile--blue">
+          <div class="kpi-tile kpi-tile--blue" @mouseenter="mostrarInfo($event, KPIS.generalTicket)">
             <span class="kpi-tile__icon">🧾</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Ticket Promedio</span>
               <span class="kpi-tile__value">{{ formatMoney(resumenGeneral.ticket_promedio_general) }}</span>
               <span class="kpi-tile__desc">Por orden en el periodo</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
-          <div class="kpi-tile kpi-tile--purple">
+          <div class="kpi-tile kpi-tile--purple" @mouseenter="mostrarInfo($event, KPIS.generalOrdenes)">
             <span class="kpi-tile__icon">📋</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Total Órdenes</span>
               <span class="kpi-tile__value">{{ resumenGeneral.total_ordenes }}</span>
               <span class="kpi-tile__desc">Órdenes completadas</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
-          <div class="kpi-tile kpi-tile--green">
+          <div class="kpi-tile kpi-tile--green" @mouseenter="mostrarInfo($event, KPIS.generalMeseros)">
             <span class="kpi-tile__icon">🤵</span>
             <div class="kpi-tile__body">
               <span class="kpi-tile__label">Meseros Activos</span>
               <span class="kpi-tile__value">{{ resumenGeneral.total_meseros_activos }}</span>
               <span class="kpi-tile__desc">En el periodo seleccionado</span>
             </div>
+            <span class="kpi-tile__info">ℹ️</span>
           </div>
         </div>
 
@@ -439,6 +453,33 @@ const empleadosReales = computed(() =>
 // ── Estado ────────────────────────────────────────────────────────────────
 const loading         = ref(false)
 const metricasMeseros = ref([])
+const infoVisible   = ref(false)
+const infoX         = ref(0)
+const infoY         = ref(0)
+const infoTexto     = ref('')
+
+// ── Fórmulas mostradas al pasar el mouse ──────────────────────────────────
+const KPIS = {
+  meseroDinero:  'Suma de las ventas de todas las órdenes que cerró el mesero en el periodo: Ʃ total de cada orden.',
+  meseroTicket:  'Ventas del mesero ÷ número de órdenes: Total Vendido / Total Órdenes.',
+  meseroCuentas: 'Total de órdenes cerradas y mesas distintas atendidas en el periodo.',
+  meseroPropinas: 'Estimado simple = 10% de sus ventas: Total Vendido × 0.10.',
+  generalVentas: 'Suma de las ventas de todos los meseros en el periodo: Ʃ (Ventas por mesero).',
+  generalTicket: 'Ventas totales ÷ total de órdenes: Ventas Totales / Total Órdenes.',
+  generalOrdenes: 'Conteo de órdenes completadas dentro del rango de fechas seleccionado.',
+  generalMeseros: 'Meseros con al menos una orden registrada en el periodo.',
+}
+
+const mostrarInfo = (e, texto) => {
+  infoTexto.value = texto
+  infoX.value = e.clientX + 14
+  infoY.value = e.clientY + 16
+  infoVisible.value = true
+}
+
+const ocultarInfo = () => {
+  infoVisible.value = false
+}
 
 const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
 const hoy    = getServerToday()
@@ -782,6 +823,22 @@ onMounted(cargar)
 }
 .filters-tip__icon { color: var(--c-indigo); flex-shrink: 0; }
 
+/* ─── Tooltip (cómo se calcula) ─────────────────────────────────────────── */
+.calc-tooltip {
+  position: fixed; z-index: 9999; max-width: 280px;
+  background: #0f172a; color: #e2e8f0;
+  border: 1px solid #334155; border-radius: 12px;
+  padding: .75rem 1rem; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  pointer-events: none; font-size: .72rem; line-height: 1.55;
+  opacity: 0; animation: tooltipFade .15s ease-out forwards;
+}
+.calc-tooltip__head {
+  font-size: .68rem; font-weight: 800; color: #a5b4fc;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: .3rem;
+}
+.calc-tooltip__text { color: #cbd5e1; }
+@keyframes tooltipFade { to { opacity: 1; } }
+
 /* ─── Fields ─────────────────────────────────────────────────────────────── */
 .field        { display: flex; flex-direction: column; gap: .375rem; }
 .field__label { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--c-text-3); }
@@ -828,7 +885,12 @@ onMounted(cargar)
 }
 .kpi-tile:hover { transform: translateY(-2px); }
 .kpi-tile__icon { font-size: 1.75rem; line-height: 1; margin-top: .1rem; }
-.kpi-tile__body { display: flex; flex-direction: column; gap: .2rem; }
+.kpi-tile__body { display: flex; flex-direction: column; gap: .2rem; flex: 1; }
+.kpi-tile__info {
+  font-size: .8rem; flex-shrink: 0; align-self: flex-start;
+  opacity: .5; transition: opacity .15s, transform .15s;
+}
+.kpi-tile:hover .kpi-tile__info { opacity: 1; transform: scale(1.1); }
 .kpi-tile__label { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
 .kpi-tile__value { font-size: 1.35rem; font-weight: 900; color: #f8fafc; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .kpi-tile__value small { font-size: .8rem; font-weight: 600; color: #94a3b8; }

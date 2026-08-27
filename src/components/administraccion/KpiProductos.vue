@@ -69,7 +69,11 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">🏆 Todos los Productos del Menú</h3>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+            🏆 Todos los Productos del Menú
+            <MetricInfoTip titulo="Popularidad de Productos" paraQue="Ranking de qué productos se venden más en tu menú."
+              comoSeMide="Los productos se ordenan de mayor a menor según las unidades vendidas en el período seleccionado." />
+          </h3>
           <p class="text-xs text-slate-400 font-medium">Filtrado por período seleccionado · ordenado por unidades vendidas</p>
         </div>
       </div>
@@ -110,7 +114,11 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">📊 Rentabilidad de Mayor a Menor</h3>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+            📊 Rentabilidad de Mayor a Menor
+            <MetricInfoTip titulo="Rentabilidad por Producto" paraQue="Compara el margen real de cada platillo para saber cuáles dejan más dinero."
+              comoSeMide="(Precio de venta - costo de insumos, mano de obra e indirectos) ÷ precio × 100. A mayor %, más rentable." />
+          </h3>
           <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
         </div>
       </div>
@@ -136,7 +144,11 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">🔴 Platillos con Retraso en Preparación</h3>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+            🔴 Platillos con Retraso en Preparación
+            <MetricInfoTip titulo="Retrasos en Preparación" paraQue="Identifica los platillos que están tardando más de lo que deberían."
+              comoSeMide="Se comparan los minutos de preparación a tiempo real contra el tiempo estimado de la receta: exceso = real - estimado." />
+          </h3>
           <p class="text-xs text-slate-400">Productos que superaron el tiempo estimado en receta</p>
         </div>
         <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
@@ -170,7 +182,11 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg">📉 Platillos Devueltos / Cancelados</h3>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+            📉 Platillos Devueltos / Cancelados
+            <MetricInfoTip titulo="Devoluciones y Merma" paraQue="Muestra el dinero perdido por platillos que fueron eliminados del ticket."
+              comoSeMide="Suma del subtotal de los items cancelados. Se clasifica como merma cuando el producto no puede reutilizarse." />
+          </h3>
           <p class="text-xs text-slate-400 font-medium">Historial de productos eliminados con motivo de cancelación</p>
         </div>
         <div class="flex flex-wrap items-center gap-3 ml-auto sm:ml-0">
@@ -248,6 +264,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 import { STORAGE_URL } from '@/config/api'
+import MetricInfoTip from './MetricInfoTip.vue'
 
 const props = defineProps({
   apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },

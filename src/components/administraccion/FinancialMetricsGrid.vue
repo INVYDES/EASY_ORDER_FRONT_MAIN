@@ -3,7 +3,11 @@
 
     <!-- 1. Utilidad Objetivo / Real -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Utilidad Objetivo / Real</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilidad Objetivo / Real</p>
+        <MetricInfoTip titulo="Utilidad Objetivo / Real" paraQue="Compara la meta de ganancia fijada contra lo que realmente llevas generado."
+          comoSeMide="Objetivo: meta configurada para el mes. Real: ganancia neta acumulada del mes." />
+      </div>
       <div class="grid grid-cols-2 gap-2">
         <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
           <span class="block text-[10px] text-gray-400 uppercase">Objetivo</span>
@@ -18,42 +22,66 @@
 
     <!-- 2. Inversión Inicial -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Inversión Inicial</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Inversión Inicial</p>
+        <MetricInfoTip titulo="Inversión Inicial" paraQue="Capital total invertido para arrancar el negocio."
+          comoSeMide="Monto registrado en la configuración; se usa como base para calcular el ROI." />
+      </div>
       <span class="text-2xl font-bold text-gray-800">${{ metrics.inversionInicial || 0 }}</span>
     </div>
 
     <!-- 3. Ventas Mensuales -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Ventas Mensuales</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ventas Mensuales</p>
+        <MetricInfoTip titulo="Ventas Mensuales" paraQue="Ingresos acumulados del mes actual."
+          comoSeMide="Suma del total de todas las ventas cerradas durante el mes." />
+      </div>
       <span class="text-2xl font-bold text-emerald-600">${{ metrics.ventasMensuales || 0 }}</span>
       <p class="text-[10px] text-gray-400 mt-1">Acumulado del mes</p>
     </div>
 
     <!-- 4. Gastos Variables -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Gastos Variables</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gastos Variables</p>
+        <MetricInfoTip titulo="Gastos Variables" paraQue="Costos que cambian según el volumen de ventas."
+          comoSeMide="Insumos, empaque y comisiones generadas en el mes." />
+      </div>
       <span class="text-2xl font-bold text-red-500">${{ metrics.gastosVariables || 0 }}</span>
       <p class="text-[10px] text-gray-400 mt-1">Insumos, empaque, comisiones</p>
     </div>
 
     <!-- 5. Gastos Operativos -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Gastos Operativos</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gastos Operativos</p>
+        <MetricInfoTip titulo="Gastos Operativos" paraQue="Costos fijos necesarios para mantener el negocio operando."
+          comoSeMide="Renta, nómina, servicios, software y marketing del mes." />
+      </div>
       <span class="text-2xl font-bold text-red-500">${{ metrics.gastosOperativos || 0 }}</span>
       <p class="text-[10px] text-gray-400 mt-1">Renta, nómina, servicios, soft, mkt</p>
     </div>
 
     <!-- 6. ⭐ Ganancia Neta Mensual — destacada -->
-    <div class="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-2xl border-2 border-indigo-400 shadow-lg shadow-indigo-100 relative overflow-hidden">
+    <div class="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-2xl border-2 border-indigo-400 shadow-lg shadow-indigo-100 relative">
       <span class="absolute top-2 right-2 text-[10px] bg-indigo-600 text-white font-bold px-2 py-0.5 rounded-full">⭐ Métrica Clave</span>
-      <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-3">Ganancia Neta Mensual</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Ganancia Neta Mensual</p>
+        <MetricInfoTip titulo="Ganancia Neta Mensual" paraQue="Lo que realmente le queda al negocio después de todos los gastos. Métrica clave."
+          comoSeMide="Ventas mensuales - gastos variables - gastos operativos." />
+      </div>
       <span class="text-2xl font-bold text-indigo-700">${{ metrics.gananciaNeta || 0 }}</span>
     </div>
 
     <!-- 7. Punto de Equilibrio + Barra de Cumplimiento -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm col-span-1 sm:col-span-2">
       <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-1.5 mb-2">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ventas vs. Punto de Equilibrio</p>
+        <MetricInfoTip titulo="Punto de Equilibrio" paraQue="Ventas mínimas que necesitas para no perder dinero."
+          comoSeMide="P. Equilibrio = gastos fijos ÷ % margen de contribución. Cumplimiento = ventas ÷ punto × 100." />
+      </div>
         <span class="text-xs font-bold px-2 py-0.5 rounded-full"
           :class="cumplimientoPE >= 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
           {{ cumplimientoPE >= 100 ? '✅ Superado' : '⚠ Pendiente' }}
@@ -87,7 +115,11 @@
 
     <!-- 8. ROI con Semáforo -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">ROI</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">ROI</p>
+        <MetricInfoTip titulo="ROI (Retorno de Inversión)" paraQue="Mide qué tan redituable es el negocio respecto a lo invertido."
+          comoSeMide="(Ganancia neta ÷ inversión inicial) × 100. Verde >15%, amarillo 5-15%, rojo <5%." />
+      </div>
       <div class="flex items-center gap-3 mb-3">
         <!-- Semáforo -->
         <div class="flex flex-col gap-1.5">
@@ -117,13 +149,21 @@
 
     <!-- 9. Margen de Contribución -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Margen Contribución</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Margen Contribución</p>
+        <MetricInfoTip titulo="Margen de Contribución" paraQue="Dinero que queda de cada venta para cubrir los costos fijos."
+          comoSeMide="Precio de venta - costo variable de cada producto (promedio del menú)." />
+      </div>
       <span class="text-2xl font-bold text-gray-800">${{ metrics.margenContribucion || 0 }}</span>
     </div>
 
     <!-- 10. % Utilidad -->
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">% Utilidad</p>
+      <div class="flex items-center gap-1.5 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">% Utilidad</p>
+        <MetricInfoTip titulo="% Utilidad" paraQue="Rentabilidad del negocio sobre cada peso vendido."
+          comoSeMide="(Ganancia neta ÷ ventas) × 100. Menos de 8% se considera riesgo." />
+      </div>
       <span class="text-2xl font-bold" :class="Number(metrics.porcentajeUtilidad || 0) < 8 ? 'text-red-600' : 'text-indigo-600'">{{ metrics.porcentajeUtilidad || 0 }}%</span>
     </div>
 
@@ -132,6 +172,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import MetricInfoTip from './MetricInfoTip.vue'
 
 const props = defineProps({
   metrics: { type: Object, required: true, default: () => ({}) }

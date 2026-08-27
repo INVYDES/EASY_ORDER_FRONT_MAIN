@@ -110,6 +110,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
+import { sessionSet } from '@/utils/session'
 
 const router = useRouter()
 
@@ -137,12 +138,10 @@ const handleSubmit = async () => {
 
 
     if (data?.data && data?.data?.token && data?.data?.user) {
-      const storage = keepLoggedIn.value ? localStorage : sessionStorage
-
-      storage.setItem('token', data.data.token)
-      storage.setItem('user',  JSON.stringify(data.data.user))
-      storage.setItem('restaurante_activo', String(data.data.user.restaurante_activo ?? ''))
-      storage.setItem('restaurante_id',     String(data.data.user.restaurante_activo ?? ''))
+      sessionSet('token', data.data.token, keepLoggedIn.value)
+      sessionSet('user',  JSON.stringify(data.data.user), keepLoggedIn.value)
+      sessionSet('restaurante_activo', String(data.data.user.restaurante_activo ?? ''), keepLoggedIn.value)
+      sessionSet('restaurante_id',     String(data.data.user.restaurante_activo ?? ''), keepLoggedIn.value)
 
 
 

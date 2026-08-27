@@ -588,6 +588,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarquesitaWidget from '../components/Marquesitawidget.vue'
@@ -652,13 +653,13 @@ const tiempoPorComensal = (cIdx) => {
   return getItemsForComensal(cIdx).reduce((total, i) => total + ((i.minutos_produccion || 0) * i.cantidad), 0)
 }
 
-const userRaw    = localStorage.getItem('user') ?? sessionStorage.getItem('user') ?? '{}'
+const userRaw    = sessionGet('user') ?? '{}'
 const userActual = (() => { try { return JSON.parse(userRaw) } catch { return {} } })()
 const empleadoId = userActual?.id ?? null
 
 // --- Helpers ---
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
   return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
 const getImageUrl = (path) => {
@@ -671,8 +672,8 @@ const mostrarError = (msg, dur = 4000) => { errorOrden.value = msg; setTimeout((
 const mostrarExito = () => { ordenConfirmada.value = true; setTimeout(() => { ordenConfirmada.value = false }, 3000) }
 
 const cerrarSesion = () => {
-  localStorage.removeItem('token'); localStorage.removeItem('user')
-  sessionStorage.removeItem('token'); sessionStorage.removeItem('user')
+  sessionRemove('token'); sessionRemove('user')
+  sessionRemove('token'); sessionRemove('user')
   router.push('/')
 }
 
@@ -755,28 +756,28 @@ const cargarRestauranteActivo = async () => {
       
       if (userData.restaurante) {
         restauranteSeleccionado.value = userData.restaurante
-        localStorage.setItem('restaurante_id_activo', userData.restaurante.id)
+        sessionSet('restaurante_id_activo', userData.restaurante.id)
         return userData.restaurante.id
       }
       const ra = userData.restaurante_activo;
       if (ra) { 
         const id = typeof ra === 'object' ? ra.id : ra;
         restauranteSeleccionado.value = typeof ra === 'object' ? ra : { id: ra, nombre: 'Restaurante' };
-        localStorage.setItem('restaurante_id_activo', id);
+        sessionSet('restaurante_id_activo', id);
         return id;
       }
       const listaRest = userData.restaurantes || userData.data?.restaurantes;
       if (Array.isArray(listaRest) && listaRest.length > 0) {
         const id = listaRest[0].id;
         restauranteSeleccionado.value = listaRest[0];
-        localStorage.setItem('restaurante_id_activo', id);
+        sessionSet('restaurante_id_activo', id);
         return id;
       }
     }
-    const savedId = localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
+    const savedId = sessionGet('restaurante_id_activo') ?? sessionGet('restaurante_id')
     return savedId
   } catch (err) { 
-    return localStorage.getItem('restaurante_id_activo') || localStorage.getItem('restaurante_id')
+    return sessionGet('restaurante_id_activo') ?? sessionGet('restaurante_id')
   }
 }
 

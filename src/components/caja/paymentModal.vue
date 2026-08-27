@@ -223,6 +223,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
@@ -244,7 +245,7 @@ const detectedRestId = ref(null)
 const datosSucursal  = ref({ direccion: '', telefono: '', propietario_id: '' })
 
 // --- Datos del Usuario ---
-const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'
+const userRaw = sessionGet('user') ?? '{}'
 const user = JSON.parse(userRaw)
 const userName = computed(() => user.name || 'Personal')
 

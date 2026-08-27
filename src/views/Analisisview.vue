@@ -45,6 +45,10 @@
 
     <!-- ══ TAB RESUMEN ══ -->
     <template v-if="activeTab === 'resumen'">
+      <div class="flex justify-end">
+        <BotonDudas @click="abrirAyuda('resumen')" />
+      </div>
+
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p class="text-gray-400">Cargando métricas...</p>
@@ -82,6 +86,9 @@
 
     <!-- ══ TAB ANÁLISIS FINANCIERO ══ -->
     <template v-if="activeTab === 'financiero'">
+      <div class="flex justify-end">
+        <BotonDudas @click="abrirAyuda('financiero')" />
+      </div>
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p class="text-gray-400">Cargando datos financieros...</p>
@@ -96,17 +103,26 @@
 
     <!-- ══ TAB KPIs VENTAS ══ -->
     <template v-if="activeTab === 'kpis'">
+      <div class="flex justify-end">
+        <BotonDudas @click="abrirAyuda('kpis')" />
+      </div>
       <KpiVentas :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" :refresh-key="refreshCounter" :server-date="serverDate" />
     </template>
 
     <!-- ══ TAB KPIs PRODUCTOS ══ -->
     <template v-if="activeTab === 'productos'">
+      <div class="flex justify-end">
+        <BotonDudas @click="abrirAyuda('productos')" />
+      </div>
       <KpiProductos :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
 
 
     <!-- ══ TAB KPIs EMPLEADOS ══ -->
     <template v-if="activeTab === 'meseros'">
+      <div class="flex justify-end">
+        <BotonDudas @click="abrirAyuda('meseros')" />
+      </div>
       <div class="space-y-6">
         <!-- Distribución de Equipo (Fuerza Operativa) -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -141,11 +157,20 @@
       </div>
     </template>
 
+    <!-- ══ MODAL DE DUDAS ══ -->
+    <AyudaModal
+      v-if="showAyuda"
+      :titulo="ayudaInfo.titulo"
+      :secciones="ayudaInfo.secciones"
+      @close="showAyuda = false"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
+import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
 import SucursalBadge        from '../components/SucursalBadge.vue'
 import DashboardKpis        from '../components/administraccion/DashboardKpis.vue'
 import VentasPorHoraChart   from '../components/administraccion/Ventasxhorachart.vue'
@@ -162,6 +187,8 @@ import KpiCocinaModule     from '../components/administraccion/KpiCocinaModule.v
 import KpiCajaModule       from '../components/administraccion/KpiCajaModule.vue'
 import FinancialMetricsGrid from '../components/administraccion/FinancialMetricsGrid.vue'
 import CanalVentasChart     from '../components/administraccion/CanalVentasChart.vue'
+import BotonDudas           from '../components/administraccion/BotonDudas.vue'
+import AyudaModal           from '../components/administraccion/AyudaModal.vue'
 import { API_URL }          from '@/config/api'
 import { apiClient }        from '@/utils/apiClient'
 
@@ -241,9 +268,71 @@ const subTabs = [
   { key: 'caja_sub',    label: '💵 Caja' },
 ]
 
+// ── Botón de Dudas ────────────────────────────────────────────────────────────
+const showAyuda = ref(false)
+const ayudaTab  = ref('resumen')
+const abrirAyuda = (tab) => { ayudaTab.value = tab; showAyuda.value = true }
+const ayudaInfo = computed(() => AYUDA[ayudaTab.value] || AYUDA.resumen)
+
+const AYUDA = {
+  resumen: {
+    titulo: 'Métricas → Resumen General',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Resumen del negocio del día de hoy: cuánto vendiste y cuánto ganaste.', nota: 'Los números se actualizan solos cada minuto.' },
+      { icon: '💰', titulo: 'Ventas hoy', texto: 'Todo lo que ingresó por órdenes cerradas de hoy.', formula: 'Suma de todas las órdenes cerradas del día', nota: 'Se llena solo cuando cierras órdenes en Caja.' },
+      { icon: '📈', titulo: 'Ticket promedio', texto: 'Cuánto gasta cada comensal por orden.', formula: 'Ventas del día ÷ Órdenes del día' },
+      { icon: '⭐', titulo: 'Utilidad bruta', texto: 'Lo que ganaste antes de sacar dinero de caja.', formula: 'Ventas − Costo de producción (ingredientes + mano de obra)', nota: 'Para que sea exacto, registra ingredientes y tiempo de producción en tus productos.' },
+      { icon: '🏆', titulo: 'Utilidad neta', texto: 'Lo que de verdad te queda al final del día.', formula: 'Utilidad bruta − Retiros de caja' },
+      { icon: '📊', titulo: 'Gráficas', texto: 'Ventas por hora, ventas de la semana, canal (Local/Pickup/Delivery), forma de pago y top productos.', nota: 'Toda la info proviene automático de las órdenes de caja.' },
+    ],
+  },
+  financiero: {
+    titulo: 'Métricas → Análisis Financiero',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'La salud financiera del mes: cuánto vendes, cuánto gastas y cuánto ganas.' },
+      { icon: '💵', titulo: 'Ventas y Gastos del mes', texto: 'Ventas acumuladas del mes. Gastos variables (insumos y empaque) y operativos (renta, nómina, servicios).' },
+      { icon: '🏆', titulo: 'Ganancia neta mensual', texto: 'Lo que de verdad queda del mes.', formula: 'Ventas − Gastos variables − Gastos operativos' },
+      { icon: '⚖️', titulo: 'Punto de equilibrio', texto: 'Lo mínimo que debes vender para no perder dinero.', formula: 'Gastos fijos ÷ % margen de contribución', nota: 'Si no aparece, registra tus gastos operativos.' },
+      { icon: '📈', titulo: 'ROI', texto: 'Qué tan redituable es el negocio sobre lo invertido.', formula: '(Ganancia ÷ Inversión inicial) × 100 · Verde >15% · Amarillo 5-15% · Rojo <5%' },
+      { icon: '🧮', titulo: '% Utilidad', texto: 'Lo que ganas por cada peso vendido.', formula: '(Ganancia ÷ Ventas) × 100', nota: 'Menos de 8% = riesgo, revisa precios o costos.' },
+      { icon: '⚙️', titulo: '¿Qué configuro y dónde?', texto: 'Inversión inicial y utilidad objetivo se capturan en el módulo Financiero. El resto se calcula solo.' },
+    ],
+  },
+  kpis: {
+    titulo: 'Métricas → KPIs Ventas',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Ventas, tiempos de preparación, utilidad del día y propinas de un período que eliges.' },
+      { icon: '💰', titulo: 'Ingresos · Órdenes · Ticket', texto: 'Lo que vendiste, cuántas órdenes y el gasto promedio.' },
+      { icon: '⏱️', titulo: 'Tiempos de cocina, barra y postres', texto: 'Cuánto tarda cada área en despachar un pedido.', nota: 'A menor tiempo, más rápido el servicio.' },
+      { icon: '💵', titulo: 'Utilidad y propinas del día', texto: 'Inversión en producto (insumos + mano de obra), utilidad total y lo que tu equipo recibió de propinas.' },
+      { icon: '🎛️', titulo: 'Filtros', texto: 'Elige Hoy/Semana/Mes/Todo, un mesero, agrupa por día/semana/mes y compara contra el período anterior.', nota: 'Todo se llena solo con las ventas de caja.' },
+    ],
+  },
+  productos: {
+    titulo: 'Métricas → KPIs Productos',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Qué vendes más, cuánto dejan tus platillos y qué se está tardando o se pierde.' },
+      { icon: '🏆', titulo: 'Popularidad', texto: 'Ranking de los productos más vendidos en el período.' },
+      { icon: '📊', titulo: 'Rentabilidad', texto: 'El margen real de cada platillo.', formula: '(Precio − Costo de insumos y mano de obra) ÷ Precio × 100', nota: 'Se alimenta de los ingredientes y tiempos que registres en tu menú.' },
+      { icon: '🔴', titulo: 'Retrasos', texto: 'Platillos que tardan más de lo estimado en prepararse.' },
+      { icon: '📉', titulo: 'Mermas y cancelaciones', texto: 'Platillos que se eliminaron del ticket: 🔥 merma (se pierde todo) o ↩️ cancelación.', nota: 'Usa Exportar PDF / Excel para guardar el reporte.' },
+    ],
+  },
+  meseros: {
+    titulo: 'Métricas → KPIs Empleados',
+    secciones: [
+      { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Desempeño de tu equipo por rol: Meseros, Cocina y Caja (usas la subtab de abajo).' },
+      { icon: '🚶', titulo: 'Meseros', texto: 'Ventas, ticket promedio, productos por ticket, tiempo de servicio y un ranking con semáforo (verde, amarillo, rojo).', nota: 'Haz clic en un mesero para ver su detalle.' },
+      { icon: '👨‍🍳', titulo: 'Cocina', texto: '% de órdenes con retraso, volumen de producción, el platillo más tardado y tolerancia por carga (ajustable con ⚙).' },
+      { icon: '💵', titulo: 'Caja', texto: 'Diferencia acumulada de cierres (ideal $0.00) y tiempo promedio de cobro por cajero.' },
+      { icon: '🔄', titulo: 'Datos', texto: 'Se llenan solos con los empleados registrados y las operaciones del día.' },
+    ],
+  },
+}
+
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
-  const restauranteId = localStorage.getItem('restaurante_id')
+  const token = sessionGet('token')
+  const restauranteId = sessionGet('restaurante_id')
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',

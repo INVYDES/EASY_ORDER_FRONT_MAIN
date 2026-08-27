@@ -143,6 +143,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed } from 'vue'
 import PaymentModal from './paymentModal.vue'
 import { API_URL } from '@/config/api'
@@ -283,8 +284,8 @@ const formatTime = (ts) => {
 
 const getHeaders = () => {
   const token =
-    localStorage.getItem('token') ??
-    sessionStorage.getItem('token')
+    sessionGet('token') ??
+    sessionGet('token')
 
   return {
     'Content-Type': 'application/json',

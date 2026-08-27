@@ -201,6 +201,7 @@
 </template>
 
 <script setup lang="ts">
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
@@ -466,7 +467,7 @@ const handleSubmit = async (): Promise<void> => {
 
     // Guardar token y datos del usuario si vienen en la respuesta
     if (data.data?.token) {
-      localStorage.setItem('token', data.data.token)
+      sessionSet('token', data.data.token, true)
 
       // ✅ FIX: guardar user con roles para que el guard funcione correctamente
       // La respuesta del propietario no incluye roles → los inferimos
@@ -477,7 +478,7 @@ const handleSubmit = async (): Promise<void> => {
           ? rawRoles.map(r => typeof r === 'string' ? r : r.nombre)
           : ['PROPIETARIO']
       }
-      localStorage.setItem('user', JSON.stringify(userConRol))
+      sessionSet('user', JSON.stringify(userConRol), true)
 
       successMessage.value = '¡Cuenta creada! Entrando al panel...'
 

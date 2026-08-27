@@ -411,6 +411,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 
@@ -501,7 +502,7 @@ const safeGetHeaders = () => {
   if (typeof props.getHeaders === 'function') {
     return props.getHeaders()
   }
-  const token = localStorage.getItem('token')
+  const token = sessionGet('token')
   return {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

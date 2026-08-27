@@ -1,4 +1,5 @@
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ProductoGrid from './productogrid.vue'
@@ -14,7 +15,7 @@ const loading = ref(true)
 const error = ref('')
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
 
   return {
     'Content-Type': 'application/json',
@@ -24,7 +25,7 @@ const getHeaders = () => {
 }
 
 const checkAuth = () => {
-  const token = localStorage.getItem('token') ?? sessionStorage.getItem('token')
+  const token = sessionGet('token')
 
   if (!token) {
     router.push('/')

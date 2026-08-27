@@ -1,3 +1,4 @@
+import { clearSession } from '@/utils/session'
 import router from '@/router';
 
 const originalFetch = window.fetch;
@@ -13,10 +14,7 @@ window.fetch = async (...args) => {
 
         // Global Error Handling: Single Session (Unauthorized)
         if (response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('user');
+            clearSession();
             
             if (!window.location.pathname.includes('/login') && window.location.pathname !== '/' && !window.location.pathname.includes('/registro')) {
                 router.push('/');

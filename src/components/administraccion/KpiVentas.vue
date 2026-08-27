@@ -4,21 +4,33 @@
 
     <!-- ══ TIEMPOS DE PREPARACIÓN ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-5 relative overflow-hidden">
+      <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-5 relative">
         <span class="absolute right-4 top-3 text-4xl opacity-15">🍳</span>
-        <p class="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">⏱ Cocina</p>
+        <div class="flex items-center gap-1.5 mb-1">
+          <p class="text-xs font-bold text-orange-500 uppercase tracking-wider">⏱ Cocina</p>
+          <MetricInfoTip titulo="Tiempo Cocina" paraQue="Rapidez con la que la cocina despacha cada pedido."
+            comoSeMide="Tiempo promedio en minutos desde que se envía la orden a cocina hasta que queda lista." />
+        </div>
         <p class="text-3xl font-black text-orange-700">{{ tiempos.cocina ?? '—' }}</p>
         <p class="text-xs text-orange-400 mt-1">min promedio hoy</p>
       </div>
-      <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border border-blue-100 p-5 relative overflow-hidden">
+      <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border border-blue-100 p-5 relative">
         <span class="absolute right-4 top-3 text-4xl opacity-15">🍹</span>
-        <p class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">⏱ Barra</p>
+        <div class="flex items-center gap-1.5 mb-1">
+          <p class="text-xs font-bold text-blue-500 uppercase tracking-wider">⏱ Barra</p>
+          <MetricInfoTip titulo="Tiempo Barra" paraQue="Cuánto tarda en salir cada bebida."
+            comoSeMide="Tiempo promedio en minutos desde que se envía la orden a barra hasta que queda lista." />
+        </div>
         <p class="text-3xl font-black text-blue-700">{{ tiempos.barra ?? '—' }}</p>
         <p class="text-xs text-blue-400 mt-1">min promedio hoy</p>
       </div>
-      <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl border border-pink-100 p-5 relative overflow-hidden">
+      <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl border border-pink-100 p-5 relative">
         <span class="absolute right-4 top-3 text-4xl opacity-15">🍰</span>
-        <p class="text-xs font-bold text-pink-500 uppercase tracking-wider mb-1">⏱ Postres</p>
+        <div class="flex items-center gap-1.5 mb-1">
+          <p class="text-xs font-bold text-pink-500 uppercase tracking-wider">⏱ Postres</p>
+          <MetricInfoTip titulo="Tiempo Postres" paraQue="Cuánto tarda la preparación de postres."
+            comoSeMide="Tiempo promedio en minutos desde que se envía la orden a postres hasta que queda lista." />
+        </div>
         <p class="text-3xl font-black text-pink-700">{{ tiempos.postres ?? '—' }}</p>
         <p class="text-xs text-pink-400 mt-1">min promedio hoy</p>
       </div>
@@ -30,7 +42,10 @@
         class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-xs font-bold text-gray-400 uppercase">{{ card.label }}</p>
+            <p class="text-xs font-bold text-gray-400 uppercase flex items-center gap-1.5">
+              {{ card.label }}
+              <MetricInfoTip :titulo="card.label" :paraQue="card.paraQue" :comoSeMide="card.comoSeMide" />
+            </p>
             <p class="text-2xl font-black text-gray-900 mt-1">{{ card.value }}</p>
           </div>
           <div class="p-2 bg-indigo-50 rounded-lg text-xl">{{ card.icon }}</div>
@@ -47,21 +62,33 @@
 
     <!-- ══ INVERSIÓN / UTILIDAD + PROPINAS ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 relative overflow-hidden">
+      <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 relative">
         <span class="absolute right-3 top-2 text-4xl opacity-10">📦</span>
-        <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
+        <div class="flex items-center gap-1.5">
+          <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
+          <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de lo que se vende en el día."
+            comoSeMide="Costo de insumos + mano de obra usados para producir lo vendido." />
+        </div>
         <p class="text-2xl font-black text-red-600 mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
         <p class="text-xs text-gray-400 mt-1">costo de insumos + MO</p>
       </div>
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
-        <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Utilidad Total del Día</p>
+        <div class="flex items-center gap-1.5">
+          <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Utilidad Total del Día</p>
+          <MetricInfoTip titulo="Utilidad Total del Día" paraQue="Ganancia real generada en el día."
+            comoSeMide="Ventas del día - inversión en producto y mano de obra. No descuenta salidas de efectivo del día." />
+        </div>
         <p class="text-2xl font-black text-emerald-700 mt-1">${{ fm(finanzasDia.utilidadTotal) }}</p>
         <p class="text-xs text-emerald-500 mt-1">Utilidad bruta del dia no se consideran salidad de efectivo del dia</p>
       </div>
       <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
-        <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas</p>
+        <div class="flex items-center gap-1.5">
+          <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas</p>
+          <MetricInfoTip titulo="Propinas" paraQue="Propinas que recibió el equipo en el período."
+            comoSeMide="Suma de propinas en efectivo + terminal + transferencia." />
+        </div>
         <p class="text-2xl font-black text-violet-700 mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
         <p class="text-xs text-gray-400 mt-1">Efectivo + Terminal + Transferencia</p>
       </div>
@@ -215,6 +242,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 import Chart from 'chart.js/auto'
 import CanalVentasChart from './CanalVentasChart.vue'
+import MetricInfoTip from './MetricInfoTip.vue'
 
 const props = defineProps({
   apiUrl: { type: String, default: '/api' },
@@ -303,9 +331,15 @@ const setKpiPeriodo = (key) => {
 
 // --- KPI CARDS ---
 const kpiCards = computed(() => [
-  { label: 'Ingresos', value: '$' + fm(kpiData.value.totales?.total_ventas), icon: '💰', raw: kpiData.value.totales?.total_ventas, rawAnterior: kpiAnterior.value.totales?.total_ventas },
-  { label: 'Órdenes', value: kpiData.value.totales?.total_ordenes || 0, icon: '🧾', raw: kpiData.value.totales?.total_ordenes, rawAnterior: kpiAnterior.value.totales?.total_ordenes },
-  { label: 'Ticket Prom.', value: '$' + fm(kpiData.value.totales?.promedio_por_orden), icon: '📈', raw: kpiData.value.totales?.promedio_por_orden, rawAnterior: kpiAnterior.value.totales?.promedio_por_orden },
+  { label: 'Ingresos', value: '$' + fm(kpiData.value.totales?.total_ventas), icon: '💰', raw: kpiData.value.totales?.total_ventas, rawAnterior: kpiAnterior.value.totales?.total_ventas,
+    paraQue: 'Total facturado en el período seleccionado.',
+    comoSeMide: 'Suma del total de todas las ventas cerradas en el rango de fechas elegido.' },
+  { label: 'Órdenes', value: kpiData.value.totales?.total_ordenes || 0, icon: '🧾', raw: kpiData.value.totales?.total_ordenes, rawAnterior: kpiAnterior.value.totales?.total_ordenes,
+    paraQue: 'Número de órdenes cerradas durante el período.',
+    comoSeMide: 'Conteo de todas las órdenes con estado cerrado en el rango de fechas.' },
+  { label: 'Ticket Prom.', value: '$' + fm(kpiData.value.totales?.promedio_por_orden), icon: '📈', raw: kpiData.value.totales?.promedio_por_orden, rawAnterior: kpiAnterior.value.totales?.promedio_por_orden,
+    paraQue: 'Cuánto gasta en promedio cada comanda.',
+    comoSeMide: 'Ingresos del período ÷ número de órdenes del período.' },
 ])
 
 // --- API FETCH ---

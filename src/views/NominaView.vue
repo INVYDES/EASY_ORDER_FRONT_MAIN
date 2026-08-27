@@ -359,6 +359,7 @@
 </template>
 
 <script setup>
+import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, onMounted, reactive, watch, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'
@@ -393,7 +394,7 @@ const verifyPassword = async () => {
   verifying.value = true
   authError.value = ''
   try {
-    const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user')
+    const userRaw = sessionGet('user')
     if (!userRaw) { authError.value = 'Sesión no encontrada. Reinicia sesión.'; return }
     let user = {}
     try { user = JSON.parse(userRaw) } catch { authError.value = 'Error en datos de sesión.'; return }
@@ -404,8 +405,7 @@ const verifyPassword = async () => {
     })
     if (resp.success || resp.data?.token || resp.token) {
       const newToken = resp.data?.token || resp.token
-      const storage = localStorage.getItem('token') ? localStorage : sessionStorage
-      storage.setItem('token', newToken)
+      sessionSet('token', newToken)
       sessionStorage.setItem('nomina_unlocked', 'true')
       isAuthenticated.value = true
       initData()
@@ -432,7 +432,7 @@ const showPaymentModal = ref(false)
 const showEmpConfigModal = ref(false)
 
 const getTenantHeader = () => {
-  const restId = localStorage.getItem('restaurante_id')
+  const restId = sessionGet('restaurante_id')
   return restId ? { 'X-Restaurante-Id': String(restId) } : {}
 }
 

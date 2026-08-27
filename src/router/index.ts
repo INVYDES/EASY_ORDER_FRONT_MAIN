@@ -1,3 +1,4 @@
+import { sessionGet } from '@/utils/session'
 import { createRouter, createWebHistory } from "vue-router";
 
 // Auth
@@ -186,8 +187,8 @@ const router = createRouter({
 // -------------------------
 
 const getSession = () => {
-  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-  const raw   = localStorage.getItem("user")  || sessionStorage.getItem("user");
+  const token = sessionGet('token');
+  const raw   = sessionGet('user');
   const user  = raw ? JSON.parse(raw) : null;
   return { token, user };
 };
@@ -228,8 +229,11 @@ router.beforeEach((to, _from, next) => {
   const roleRaw = user?.roles?.[0];
   const role = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre;
 
-  // 1. Ya logueado intentando ir al login → redirigir a su panel
+  // 1. Ya logueado intentando ir al login → redirigir a su panel o licencias si está vencida
   if (token && to.path === "/") {
+    if (user && user.licencia_activa === false) {
+      return next("/panel/licencias");
+    }
     const dest = defaultRouteForRole(role);
     // Evitar loop si defaultRoute también es "/"
     if (dest !== "/") return next(dest);
@@ -246,6 +250,11 @@ router.beforeEach((to, _from, next) => {
     return next("/");
   }
 
+  // 3b. Si la licencia no está activa, redirigir siempre a licencias
+  if (user && user.licencia_activa === false && to.path !== "/panel/licencias") {
+    return next("/panel/licencias");
+  }
+
   // 4. Verificar rol
   if (to.meta.roles) {
     const allowed = to.meta.roles as string[];
@@ -256,6 +265,11 @@ router.beforeEach((to, _from, next) => {
     const hasPermission = userRoles.some((r: string) => allowed.includes(r));
 
     if (!hasPermission) {
+      // Excepción: Si la licencia está inactiva y la ruta es /panel/licencias, permitir acceso
+      if (user?.licencia_activa === false && to.path === "/panel/licencias") {
+        return next();
+      }
+
       const fallback = defaultRouteForRole(role);
       if (fallback !== to.path) return next(fallback);
     }
