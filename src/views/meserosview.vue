@@ -1096,14 +1096,20 @@ let pollTimer = null
 let pollingEnProgreso = false
 
 const restauranteObjeto = ref(null)
+const toBoolServicioRapido = (v) => {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0 || v == null) return false
+  const s = String(v).trim().toLowerCase()
+  return s === '1' || s === 'true'
+}
 const isServicioRapido = computed(() => {
   if (restauranteObjeto.value?.servicio_rapido !== undefined) {
-    return !!restauranteObjeto.value.servicio_rapido
+    return toBoolServicioRapido(restauranteObjeto.value.servicio_rapido)
   }
   try {
     const u = JSON.parse(sessionGet('user') || '{}')
     if (u?.restaurante_activo && typeof u.restaurante_activo === 'object') {
-      return !!u.restaurante_activo.servicio_rapido
+      return toBoolServicioRapido(u.restaurante_activo.servicio_rapido)
     }
   } catch {}
   return false
@@ -1911,9 +1917,21 @@ const handleStorageEvent = (e) => {
   }
 }
 
+const onRestauranteActualizado = (e) => {
+  const detail = e?.detail
+  if (!detail) return
+  const activoId = restauranteActivo.value
+  if (detail.id && activoId && Number(detail.id) !== Number(activoId)) return
+  if (restauranteObjeto.value) {
+    restauranteObjeto.value = { ...restauranteObjeto.value, servicio_rapido: toBoolServicioRapido(detail.servicio_rapido) }
+  } else {
+    restauranteObjeto.value = { id: detail.id, servicio_rapido: toBoolServicioRapido(detail.servicio_rapido) }
+  }
+}
 onMounted(async () => {
   marquesinaVariant.value = localStorage.getItem('marquesina_variant') || 'dark'
   window.addEventListener('storage', handleStorageEvent)
+  window.addEventListener('restaurante:actualizado', onRestauranteActualizado)
   await verificarCaja()
   if (cajaAbierta.value) {
     // Primera carga explícita no silenciosa para mostrar el spinner inicial
@@ -1929,11 +1947,11 @@ onMounted(async () => {
     if (ra) {
       if (typeof ra === 'object' && ra !== null) {
         restauranteActivo.value = ra.id
-        restauranteObjeto.value = ra
+        restauranteObjeto.value = { ...ra, servicio_rapido: toBoolServicioRapido(ra.servicio_rapido) }
       } else {
         restauranteActivo.value = ra
         apiClient.get(`/restaurantes/${ra}`).then(rData => {
-          if (rData?.data) restauranteObjeto.value = rData.data
+          if (rData?.data) restauranteObjeto.value = { ...rData.data, servicio_rapido: toBoolServicioRapido(rData.data.servicio_rapido) }
         }).catch(() => {})
       }
     }
@@ -1952,10 +1970,7 @@ onMounted(async () => {
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
   window.removeEventListener('storage', handleStorageEvent)
-})
-
-onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  window.removeEventListener('restaurante:actualizado', onRestauranteActualizado)
 })
 </script>
 

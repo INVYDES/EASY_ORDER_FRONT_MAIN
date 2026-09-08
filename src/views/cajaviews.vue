@@ -65,7 +65,13 @@ const ultimaActualizacion = ref(null)
 const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 let pollTimer = null
 const restauranteObjeto = ref(null)
-const isServicioRapido  = computed(() => !!restauranteObjeto.value?.servicio_rapido)
+const toBoolServicioRapido = (v) => {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0 || v == null) return false
+  const s = String(v).trim().toLowerCase()
+  return s === '1' || s === 'true'
+}
+const isServicioRapido  = computed(() => toBoolServicioRapido(restauranteObjeto.value?.servicio_rapido))
 
 // ── Propinas (Oficiales de API) ──
 const propinasEfectivo = ref(0)
@@ -528,6 +534,17 @@ const handleMovimientoSaved = async ({ monto, tipo }) => {
     tipo === 'ingreso' ? 'success' : 'warning')
 }
 
+const onRestauranteActualizado = (e) => {
+  const detail = e?.detail
+  if (!detail) return
+  const activoId = restauranteActivo.value
+  if (detail.id && Number(detail.id) !== Number(activoId)) return
+  if (restauranteObjeto.value) {
+    restauranteObjeto.value = { ...restauranteObjeto.value, servicio_rapido: toBoolServicioRapido(detail.servicio_rapido) }
+  } else {
+    restauranteObjeto.value = { id: detail.id, servicio_rapido: toBoolServicioRapido(detail.servicio_rapido) }
+  }
+}
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
   // Primera carga explícita no silenciosa para mostrar el spinner inicial
@@ -540,6 +557,7 @@ onMounted(async () => {
   }
   pollTimer = setTimeout(poll, POLL_INTERVAL)
 
+  window.addEventListener('restaurante:actualizado', onRestauranteActualizado)
   try {
     const data = await apiClient.get('/me')
     if (data.success || data.data) {
@@ -548,11 +566,11 @@ onMounted(async () => {
       if (ra) {
         if (typeof ra === 'object' && ra !== null) {
           restauranteActivo.value = ra.id
-          restauranteObjeto.value = ra
+          restauranteObjeto.value = { ...ra, servicio_rapido: toBoolServicioRapido(ra.servicio_rapido) }
         } else {
           restauranteActivo.value = ra
           apiClient.get(`/restaurantes/${ra}`).then(rData => {
-            if (rData?.data) restauranteObjeto.value = rData.data
+            if (rData?.data) restauranteObjeto.value = { ...rData.data, servicio_rapido: toBoolServicioRapido(rData.data.servicio_rapido) }
           }).catch(() => {})
         }
       }
@@ -562,6 +580,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
+  window.removeEventListener('restaurante:actualizado', onRestauranteActualizado)
 })
 </script>
 <template>

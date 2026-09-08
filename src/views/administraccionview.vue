@@ -754,6 +754,14 @@ const getRolId = (emp) => {
 
 const getInitials = (name) => !name ? 'U' : name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2)
 
+// Helper robusto para servicio_rapido: corrige bug !! "0" === true
+const toBoolServicioRapido = (v) => {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0 || v == null) return false
+  const s = String(v).trim().toLowerCase()
+  return s === '1' || s === 'true'
+}
+
 const showToast = (message, type='info') => {
   const id = Date.now()
   toasts.value.push({ id, message, type })
@@ -791,8 +799,18 @@ const loadData = async () => {
       apiClient.get(`/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`),
     ])
 
-    if (uData.success || uData.data) currentUser.value = uData.data || uData
-    if (rData.success || rData.data) restaurantes.value = rData.data?.restaurantes || rData.data || []
+    if (uData.success || uData.data) {
+      const rawUser = uData.data || uData
+      // Normalizar servicio_rapido en restaurante_activo
+      if (rawUser?.restaurante_activo && typeof rawUser.restaurante_activo === 'object' && rawUser.restaurante_activo.servicio_rapido !== undefined) {
+        rawUser.restaurante_activo.servicio_rapido = toBoolServicioRapido(rawUser.restaurante_activo.servicio_rapido)
+      }
+      currentUser.value = rawUser
+    }
+    if (rData.success || rData.data) {
+      const rawRest = rData.data?.restaurantes || rData.data || []
+      restaurantes.value = rawRest.map(r => ({ ...r, servicio_rapido: toBoolServicioRapido(r.servicio_rapido) }))
+    }
 
     await loadLicencia()
     await cargarTotalUsuariosSistema()
@@ -1184,7 +1202,7 @@ const editarRestaurante = (rest) => {
   restauranteEditando.value = rest; formError.value = ''
   Object.assign(restForm, {
     nombre: rest.nombre||'', telefono: rest.telefono||'', calle: rest.calle||'',
-    ciudad: rest.ciudad||'', estado: rest.estado||'', servicio_rapido: !!rest.servicio_rapido, activo: rest.es_activo!==false,
+    ciudad: rest.ciudad||'', estado: rest.estado||'', servicio_rapido: toBoolServicioRapido(rest.servicio_rapido), activo: rest.es_activo!==false,
     imagen: null, imagen_url: rest.imagen_url, eliminar_imagen: false
   })
   imgPreview.value = null
@@ -1233,10 +1251,41 @@ const guardarRestaurante = async () => {
       : await apiClient.post('/restaurantes', formData)
     
     if (r.success) {
+      // Normalizar servicio_rapido del response con helper robusto
+      if (r.data && r.data.servicio_rapido !== undefined) {
+        r.data.servicio_rapido = toBoolServicioRapido(r.data.servicio_rapido)
+      }
       if (isEdit) {
         const idx = restaurantes.value.findIndex(x => x.id === restauranteEditando.value.id)
         if (idx !== -1) restaurantes.value[idx] = { ...restaurantes.value[idx], ...(r.data || {}) }
+        // Sincronizar sucursal activa en currentUser y sessionStorage para reactividad inmediata (fix bug: cambio no se veía hasta F5)
+        const activeId = restauranteActivoId.value
+        if (activeId && Number(activeId) === Number(restauranteEditando.value.id)) {
+          if (currentUser.value?.restaurante_activo && typeof currentUser.value.restaurante_activo === 'object') {
+            currentUser.value.restaurante_activo.servicio_rapido = toBoolServicioRapido(r.data?.servicio_rapido ?? restForm.servicio_rapido)
+          } else if (currentUser.value) {
+            currentUser.value.restaurante_activo = { id: activeId, servicio_rapido: toBoolServicioRapido(r.data?.servicio_rapido ?? restForm.servicio_rapido) }
+          }
+          try {
+            const raw = sessionGet('user')
+            if (raw) {
+              const u = JSON.parse(raw)
+              const nuevoValor = toBoolServicioRapido(r.data?.servicio_rapido ?? restForm.servicio_rapido)
+              if (u.restaurante_activo && typeof u.restaurante_activo === 'object') {
+                u.restaurante_activo.servicio_rapido = nuevoValor
+              } else if (u.restaurante_activo != null) {
+                // Si era solo ID numérico, convertir a objeto para persistir el flag
+                u.restaurante_activo = { id: activeId, servicio_rapido: nuevoValor }
+              }
+              sessionSet('user', JSON.stringify(u))
+              // Disparar evento para que AppSidebar/caja/mesero reaccionen sin recargar
+              const detail = (u.restaurante_activo && typeof u.restaurante_activo === 'object') ? u.restaurante_activo : { id: activeId, servicio_rapido: nuevoValor }
+              window.dispatchEvent(new CustomEvent('restaurante:actualizado', { detail }))
+            }
+          } catch {}
+        }
       } else {
+        if (r.data && r.data.servicio_rapido !== undefined) r.data.servicio_rapido = toBoolServicioRapido(r.data.servicio_rapido)
         restaurantes.value.push(r.data)
       }
       showToast(isEdit ? 'Restaurante actualizado' : 'Restaurante creado', 'success')

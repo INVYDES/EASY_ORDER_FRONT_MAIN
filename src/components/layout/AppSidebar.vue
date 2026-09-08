@@ -232,14 +232,20 @@ const activeRestName = computed(() => {
   return props.restaurantes.find(r => r && r.id === props.restauranteActivo)?.nombre || 'Seleccionar...'
 })
 
+const toBoolServicioRapido = (v) => {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0 || v == null) return false
+  const s = String(v).trim().toLowerCase()
+  return s === '1' || s === 'true'
+}
 const isServicioRapido = computed(() => {
   if (isSuperAdmin.value) return false
   const rest = props.restaurantes.find(r => r && r.id === props.restauranteActivo)
   if (rest && rest.servicio_rapido !== undefined) {
-    return !!rest.servicio_rapido
+    return toBoolServicioRapido(rest.servicio_rapido)
   }
   if (props.user?.restaurante_activo && typeof props.user.restaurante_activo === 'object') {
-    return !!props.user.restaurante_activo.servicio_rapido
+    return toBoolServicioRapido(props.user.restaurante_activo.servicio_rapido)
   }
   return false
 })

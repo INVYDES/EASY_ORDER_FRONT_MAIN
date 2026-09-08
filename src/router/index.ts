@@ -1,5 +1,7 @@
 import { sessionGet } from '@/utils/session'
 import { createRouter, createWebHistory } from "vue-router";
+import { useSeo } from '@/composables/useSeo'
+import { ROUTE_SEO, type SeoMeta } from '@/config/seo'
 
 // Auth
 import Signin         from "../views/Auth/signin.vue";
@@ -34,12 +36,12 @@ const routes = [
   // RUTAS PÚBLICAS
   // -------------------------
 
-  { path: "/",                   name: "login",            component: Signin         },
-  { path: "/registro/dueno",     name: "registro-dueno",   component: Signup         },
+  { path: "/",                   name: "login",            component: Signin,        meta: { seo: ROUTE_SEO['/'] as SeoMeta } },
+  { path: "/registro/dueno",     name: "registro-dueno",   component: Signup,        meta: { seo: ROUTE_SEO['/registro/dueno'] as SeoMeta } },
   
-  { path: "/registro/cliente",   name: "registro-cliente", component: SignupCliente  },
-  { path: "/recuperar-contrasena", name: "forgot-password",component: ForgotPassword },
-  { path: "/reset-password",     name: "reset-password",   component: ResetPassword  },
+  { path: "/registro/cliente",   name: "registro-cliente", component: SignupCliente, meta: { seo: ROUTE_SEO['/registro/cliente'] as SeoMeta } },
+  { path: "/recuperar-contrasena", name: "forgot-password",component: ForgotPassword, meta: { seo: ROUTE_SEO['/recuperar-contrasena'] as SeoMeta } },
+  { path: "/reset-password",     name: "reset-password",   component: ResetPassword, meta: { seo: ROUTE_SEO['/reset-password'] as SeoMeta } },
   { path: "/registro",           redirect: { name: "registro-dueno" }                },
 
   // -------------------------
@@ -49,7 +51,7 @@ const routes = [
     path: "/menu",
     name: "menu",
     component: Menuview,
-    meta: { requiresAuth: true, roles: ["MENU", "ADMIN", "PROPIETARIO"] }
+    meta: { requiresAuth: true, roles: ["MENU", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/menu'] as SeoMeta }
   },
 
   // -------------------------
@@ -67,90 +69,90 @@ const routes = [
         path: "mesero",
         name: "mesero",
         component: Meserosview,
-        meta: { roles: ["MESERO", "ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["MESERO", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/mesero'] as SeoMeta }
       },
 
       {
         path: "cliente",
         name: "cliente",
         component: Clienteview,
-        meta: { roles: ["CLIENTE"] }
+        meta: { roles: ["CLIENTE"], seo: ROUTE_SEO['/panel/cliente'] as SeoMeta }
       },
 
       {
         path: "Gestion",
         name: "Gestion",
         component: Administraccionview,
-        meta: { roles: ["ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/Gestion'] as SeoMeta }
       },
 
       {
         path: "caja",
         name: "caja",
         component: Cajaviews,
-        meta: { roles: ["CAJA", "ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["CAJA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/caja'] as SeoMeta }
       },
       {
         path: "analisis",
         name: "analisis",
         component: Analisisview,
-        meta: { roles: ["ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/analisis'] as SeoMeta }
       },
 
       {
         path: "cocina",
         name: "cocina",
         component: Cocinaview,
-        meta: { roles: ["COCINA", "ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["COCINA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/cocina'] as SeoMeta }
       },
 
       {
         path: "postres",
         name: "postres",
         component: Postresview,
-        meta: { roles: ["COCINA", "ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["COCINA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/postres'] as SeoMeta }
       },
 
       {
         path: "productos",
         name: "productos",
         component: Productosview,
-        meta: { roles: ["ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/productos'] as SeoMeta }
       },
 
       {
         path: "barra",
         name: "barra",
         component: Barraview,
-        meta: { roles: ["BARRA", "COCINA", "ADMIN", "PROPIETARIO"] }
+        meta: { roles: ["BARRA", "COCINA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/barra'] as SeoMeta }
       },
 
       {
         path: "perfil",
         name: "perfil",
         component: Perfilview,
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true, seo: ROUTE_SEO['/panel/perfil'] as SeoMeta }
       },
 
       {
         path: "licencias",
         name: "licencias",
         component: LicenciasView,
-        meta: { roles: ["PROPIETARIO", "ADMIN"] }
+        meta: { roles: ["PROPIETARIO", "ADMIN"], seo: ROUTE_SEO['/panel/licencias'] as SeoMeta }
       },
 
       {
         path: "nomina",
         name: "nomina",
         component: NominaView,
-        meta: { roles: ["PROPIETARIO", "ADMIN"] }
+        meta: { roles: ["PROPIETARIO", "ADMIN"], seo: ROUTE_SEO['/panel/nomina'] as SeoMeta }
       },
 
       {
         path: "plataforma",
         name: "plataforma",
         component: PlataformaView,
-        meta: { roles: ["SUPER_ADMIN"] }
+        meta: { roles: ["SUPER_ADMIN"], seo: ROUTE_SEO['/panel/plataforma'] as SeoMeta }
       },
 
       // Redirección por defecto al entrar a /panel
@@ -169,7 +171,8 @@ const routes = [
   {
     path: "/terminos-y-condiciones",
     name: "Terms",
-    component: () => import("../views/Legal/TermsView.vue")
+    component: () => import("../views/Legal/TermsView.vue"),
+    meta: { seo: ROUTE_SEO['/terminos-y-condiciones'] as SeoMeta }
   },
 
   { path: "/:pathMatch(.*)*", redirect: "/" }
@@ -278,5 +281,29 @@ router.beforeEach((to, _from, next) => {
 
   next();
 });
+
+// -------------------------
+// SEO — Actualización dinámica de <head>
+// -------------------------
+router.afterEach((to) => {
+  // SEO definido en meta.seo, fallback por path, fallback global con noindex si es privada
+  const matchedSeo = (to.meta as any)?.seo as SeoMeta | undefined
+  const fallbackSeo = ROUTE_SEO[to.path] as SeoMeta | undefined
+  const isPrivate = (to.meta as any)?.requiresAuth || !!(to.meta as any)?.roles
+
+  const seo: SeoMeta = matchedSeo || fallbackSeo || {
+    title: (to.name as string) || undefined,
+    noindex: isPrivate ? true : false,
+    canonical: to.fullPath,
+  }
+
+  // Asegurar canonical siempre refleje la ruta actual
+  const finalSeo: SeoMeta = {
+    ...seo,
+    canonical: seo.canonical || to.fullPath,
+  }
+
+  useSeo(finalSeo)
+})
 
 export default router;

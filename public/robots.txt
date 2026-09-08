@@ -1,0 +1,18 @@
+# robots.txt — EASY ORDER
+User-agent: *
+Allow: /$
+Allow: /registro
+Allow: /registro/dueno
+Allow: /registro/cliente
+Allow: /terminos-y-condiciones
+Disallow: /panel/
+Disallow: /menu
+Disallow: /recuperar-contrasena
+Disallow: /reset-password
+Disallow: /*?*
+
+# Sitemap
+Sitemap: https://easyorder.com/sitemap.xml
+
+# Crawl-delay opcional
+# Crawl-delay: 10

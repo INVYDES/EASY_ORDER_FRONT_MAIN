@@ -52,11 +52,19 @@ const loadUserData = async () => {
   } catch (e) { console.error('Error al cargar usuario:', e) }
 }
 
+const toBoolServicioRapido = (v) => {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0 || v == null) return false
+  const s = String(v).trim().toLowerCase()
+  return s === '1' || s === 'true'
+}
 const loadRestaurantes = async () => {
   try {
     const data = await apiClient.get('/restaurantes')
     if (data.success || data.data) {
-      userRestaurantes.value = (data.data?.restaurantes || data.restaurantes || [])
+      const raw = (data.data?.restaurantes || data.restaurantes || [])
+      // Normalizar servicio_rapido para evitar bug !! "0"
+      userRestaurantes.value = raw.map(r => ({ ...r, servicio_rapido: toBoolServicioRapido(r.servicio_rapido) }))
       const stored = sessionGet('restaurante_id_activo') ?? sessionGet('restaurante_id')
       if (stored && userRestaurantes.value.some(r => r.id === parseInt(stored))) {
         restauranteActivo.value = parseInt(stored)
@@ -101,13 +109,28 @@ const handleResize = () => {
   if (!isMobile.value) sidebarOpen.value = false
 }
 
+const onRestauranteActualizado = (e) => {
+  // Actualización reactiva sin reload completo cuando se cambia modo rápido en administración
+  const updated = e?.detail
+  if (updated && updated.id && userRestaurantes.value.length) {
+    const idx = userRestaurantes.value.findIndex(r => Number(r.id) === Number(updated.id))
+    if (idx !== -1) {
+      userRestaurantes.value[idx] = { ...userRestaurantes.value[idx], servicio_rapido: toBoolServicioRapido(updated.servicio_rapido) }
+    }
+  } else {
+    loadRestaurantes()
+  }
+  loadUserData()
+}
 onMounted(() => {
   loadUserData()
   window.addEventListener('resize', handleResize)
+  window.addEventListener('restaurante:actualizado', onRestauranteActualizado)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('restaurante:actualizado', onRestauranteActualizado)
 })
 </script>
 

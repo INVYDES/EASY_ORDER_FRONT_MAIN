@@ -26,8 +26,8 @@
               <span class="status-dot"></span>
             </div>
             <div>
-              <h3 class="font-bold text-white text-sm">Asistente TiendaFer</h3>
-              <p class="text-[10px] text-indigo-200 uppercase tracking-widest font-black">En línea • IA Gemini</p>
+              <h3 class="font-bold text-white text-sm">Asistente eOrder</h3>
+              <p class="text-[10px] text-indigo-200 uppercase tracking-widest font-black">Soporte Administrativo • IA</p>
             </div>
           </div>
           <button @click="clearChat" class="text-indigo-300 hover:text-white transition text-xs font-bold">Limpiar</button>
@@ -152,10 +152,10 @@ const suggestionForm = reactive({
 })
 
 const quickActions = [
-  '¿Tienen promociones?',
-  '¿Cuál es el horario?',
-  'Dejar una sugerencia',
-  'Consultar menú'
+  '¿Cómo agrego un nuevo producto?',
+  '¿Dónde veo los reportes de ventas?',
+  '¿Cómo crear usuarios de mesero o caja?',
+  '¿Cómo hacer un corte de caja?'
 ]
 
 // --- Métodos ---
@@ -221,10 +221,6 @@ const handleSend = async () => {
 }
 
 const sendQuick = (text) => {
-  if (text === 'Dejar una sugerencia') {
-    showSuggestionForm.value = true
-    return
-  }
   inputValue.value = text
   handleSend()
 }
@@ -235,7 +231,7 @@ const submitSuggestion = async () => {
     const resp = await apiClient.post('/chatbot/sugerencia', suggestionForm)
     if (resp.success) {
       showSuggestionForm.value = false
-      messages.value.push({ role: 'bot', content: '✅ ¡Tu sugerencia ha sido enviada directamente al dueño! Gracias por ayudarnos a mejorar.' })
+      messages.value.push({ role: 'bot', content: '✅ ¡Tu reporte ha sido enviado al equipo de soporte! Te contactaremos a la brevedad.' })
       scrollToBottom()
       // Limpiar form
       suggestionForm.name = ''
@@ -250,9 +246,9 @@ const submitSuggestion = async () => {
 }
 
 const clearChat = () => {
-  messages.value = [{ 
-    role: 'bot', 
-    content: '¡Hola! Soy el asistente virtual de TiendaFer. ¿En qué puedo ayudarte hoy?' 
+  messages.value = [{
+    role: 'bot',
+    content: '¡Hola! Soy tu Asistente Administrativo eOrder. 👨‍🍳\n\nTe ayudo a resolver cualquier duda sobre el sistema: cómo agregar productos, revisar ventas, configurar usuarios, cortes de caja o comandas.'
   }]
   sessionStorage.removeItem('chat_history')
 }
@@ -260,7 +256,16 @@ const clearChat = () => {
 const loadHistory = () => {
   const saved = sessionStorage.getItem('chat_history')
   if (saved) {
-    messages.value = JSON.parse(saved)
+    try {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed) && parsed.some(m => typeof m.content === 'string' && (m.content.includes('TiendaFer') || m.content.includes('E-Order') || m.content.includes('asistente virtual')))) {
+        clearChat()
+        return
+      }
+      messages.value = parsed
+    } catch {
+      clearChat()
+    }
   } else {
     clearChat()
   }

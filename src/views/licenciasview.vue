@@ -494,9 +494,19 @@ const loading = reactive({
 // ── Computed ──────────────────────────────────────────────────────────────────
 const isLicenciaRealmenteActiva = computed(() => {
   if (!licenciaActiva.value) return false
-  const est = String(licenciaActiva.value.estado || '').toUpperCase()
-  const dias = licenciaActiva.value.dias_restantes ?? 0
-  return (est === 'ACTIVA' || est === '') && dias > 0
+  const est = String(licenciaActiva.value.estado || '').toUpperCase().trim()
+  // Solo 'ACTIVA' puede considerarse realmente activa — cualquier otro estado (INACTIVA, CANCELADA, PENDIENTE, EXPIRADA, vacío) es inactiva
+  if (est !== 'ACTIVA') return false
+  const dias = Number(licenciaActiva.value.dias_restantes ?? 0)
+  if (dias <= 0) return false
+  // Validación extra por fecha: si ya expiró aunque dias venga >0 por desfase horario/timezone del backend, forzar inactiva
+  if (licenciaActiva.value.fecha_expiracion) {
+    const exp = new Date(licenciaActiva.value.fecha_expiracion)
+    if (isNaN(exp.getTime())) return false
+    // Comparación exacta: si ya pasó el instante de expiración, no es activa
+    if (exp < new Date()) return false
+  }
+  return true
 })
 
 const porcentajeRestante = computed(() => {
@@ -547,15 +557,21 @@ const formatDate = (d) => {
 
 const getEstadoLabel = (lic) => {
   if (!lic) return 'Inactiva'
-  const st = String(lic.estado || '').toLowerCase()
+  const st = String(lic.estado || '').toLowerCase().trim()
   if (st === 'cancelada') return 'Cancelada'
   if (st === 'inactiva') return 'Inactiva'
+  if (st === 'pendiente') return 'Pendiente'
+  if (st === 'expirada') return 'Vencida'
   const hoyDate = new Date()
   if (lic.fecha_expiracion) {
     const exp = new Date(lic.fecha_expiracion)
-    if (exp < hoyDate) return 'Vencida'
+    if (!isNaN(exp.getTime()) && exp < hoyDate) return 'Vencida'
   }
-  return st === 'activa' ? 'Activa' : (st ? st.toUpperCase() : 'Inactiva')
+  if (st === 'activa') {
+    // Aunque diga ACTIVA, si ya expiró se muestra como Vencida
+    return 'Activa'
+  }
+  return st ? st.charAt(0).toUpperCase() + st.slice(1) : 'Inactiva'
 }
 
 const getEstadoClass = (lic) => {
@@ -565,6 +581,7 @@ const getEstadoClass = (lic) => {
     'Inactiva':  'bg-red-100 text-red-700 font-bold',
     'Vencida':   'bg-amber-100 text-amber-700 font-bold',
     'Cancelada': 'bg-gray-100 text-gray-600 font-bold',
+    'Pendiente': 'bg-amber-100 text-amber-700 font-bold',
   }[label] || 'bg-red-100 text-red-700 font-bold'
 }
 
@@ -604,6 +621,7 @@ const loadPlanes = async () => {
 }
 
 const loadLicenciaActiva = async () => {
+  loading.activa = true
   try {
     const data = await apiClient.get('/mi-licencia')
     
@@ -615,6 +633,8 @@ const loadLicenciaActiva = async () => {
   } catch (e) { 
     console.error('Error licencia activa:', e) 
     licenciaActiva.value = null
+  } finally {
+    loading.activa = false
   }
 }
 
