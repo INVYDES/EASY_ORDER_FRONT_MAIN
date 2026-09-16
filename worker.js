@@ -3,6 +3,11 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    // 0. Canonicalizar www.eorder.mx -> eorder.mx (evita contenido duplicado ante Google)
+    if (url.hostname === 'www.eorder.mx') {
+      return Response.redirect(new URL(pathname + url.search, 'https://eorder.mx'), 301);
+    }
+
     // 1. Intentar servir asset estático exacto (incluye prerenderizados: /registro/dueno/index.html, /terminos-y-condiciones/index.html, etc.)
     //    Cloudflare Assets resuelve /registro/dueno -> /registro/dueno/index.html automáticamente si existe.
     let response = await env.ASSETS.fetch(request);
