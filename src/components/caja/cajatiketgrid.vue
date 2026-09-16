@@ -401,37 +401,30 @@
             </div>
           </div>
           <div v-if="type === 'open'" class="space-y-2">
-            <!-- Acciones de Servicio Rápido si la orden no se ha entregado aún -->
-            <div v-if="servicioRapido && ['EN_PREPARACION', 'POR_PREPARAR', 'ABIERTA'].includes((order.estado || '').toUpperCase())" class="space-y-2">
-              <div class="flex gap-2">
-                <button v-if="!esMesero" @click="imprimirComanda(order)" type="button"
-                  class="flex-1 py-2.5 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm">
-                  🖨️ Imprimir Comanda
-                </button>
-                <button @click="marcarEntregada(order)" type="button" :disabled="marcandoEntregadaId === order.id"
-                  class="flex-1 py-2.5 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm disabled:opacity-50">
-                  {{ marcandoEntregadaId === order.id ? 'Cambiando...' : '✅ Entregada' }}
-                </button>
-              </div>
-              <button disabled type="button"
-                class="w-full py-2.5 text-[11px] font-black rounded-2xl bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none uppercase tracking-wider">
-                ⏳ Esperando Entrega para Cobrar
+            <!-- Acciones de Servicio Rápido: comanda / entrega si la orden no se ha entregado aún -->
+            <div v-if="servicioRapido && ['EN_PREPARACION', 'POR_PREPARAR', 'ABIERTA'].includes((order.estado || '').toUpperCase())" class="flex gap-2">
+              <button v-if="!esMesero" @click="imprimirComanda(order)" type="button"
+                class="flex-1 py-2 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm">
+                🖨️ Comanda
+              </button>
+              <button @click="marcarEntregada(order)" type="button" :disabled="marcandoEntregadaId === order.id"
+                class="flex-1 py-2 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm disabled:opacity-50">
+                {{ marcandoEntregadaId === order.id ? 'Cambiando...' : '✅ Entregada' }}
               </button>
             </div>
-            <!-- Botón Cobrar habitual cuando ya está ENTREGADA o modo normal -->
-            <div v-else class="space-y-2">
-              <button v-if="servicioRapido && !esMesero" @click="imprimirComanda(order)" type="button"
-                class="w-full py-2 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm mb-1">
-                🖨️ Re-imprimir Comanda Cocina
-              </button>
-              <button
-                :disabled="esAdminOPropietario"
-                @click="abrirCobrar(order)"
-                :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
-                         esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
-                {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
-              </button>
-            </div>
+            <button v-else-if="servicioRapido && !esMesero" @click="imprimirComanda(order)" type="button"
+              class="w-full py-2 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm mb-1">
+              🖨️ Re-imprimir Comanda Cocina
+            </button>
+
+            <!-- Botón Cobrar SIEMPRE activo en Servicio Rápido y modo normal -->
+            <button
+              :disabled="esAdminOPropietario"
+              @click="abrirCobrar(order)"
+              :class="['w-full py-3 text-xs font-black rounded-2xl transition shadow-lg active:scale-95',
+                       esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100']">
+              {{ esAdminOPropietario ? '🚫 Cobros Bloqueados' : '💳 Cobrar orden' }}
+            </button>
           </div>
           <div v-else class="space-y-2">
             <div class="w-full py-2.5 text-center text-[10px] font-black rounded-2xl uppercase tracking-widest"

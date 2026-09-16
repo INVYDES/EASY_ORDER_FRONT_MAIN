@@ -288,7 +288,7 @@ const esCocina = (detalle) => {
   return !esBebida(detalle) && !esPostre(detalle)
 }
 
-const isCocinaOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
+const isCocinaOrder = (o) => ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
 const getDetallesCocina = (o) => (o.detalles || []).filter(esCocina)
 
 const pendingOrders = computed(() => {
@@ -331,7 +331,7 @@ const loadOrders = async (silent = false) => {
   if (!token) { router.push('/'); return }
   if (!silent) loading.value = true
   try {
-    const data = await apiClient.get('/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')
+    const data = await apiClient.get('/ordenes?estado=ABIERTA,POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')
     if (data.success || data.data) {
       const lista = Array.isArray(data.data) ? data.data : (data.data?.data || [])
       orders.value = lista

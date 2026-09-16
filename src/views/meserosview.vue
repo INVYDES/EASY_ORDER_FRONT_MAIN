@@ -1307,13 +1307,16 @@ const subOrdenesFiltradas = computed(() => {
   return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
 })
 
-const ordenesParaCobrar = computed(() =>
-  ordenes.value.filter(o => 
+const ordenesParaCobrar = computed(() => {
+  if (isServicioRapido.value) {
+    return ordenes.value.filter(o => !['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado))
+  }
+  return ordenes.value.filter(o => 
     o.estado === 'ENTREGADA' ||
     (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado) && 
       (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
   )
-)
+})
 
 const contarOrdenes = (key) => {
   if (key === 'cobrar')   return ordenesParaCobrar.value.length

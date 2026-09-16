@@ -71,7 +71,15 @@ const toBoolServicioRapido = (v) => {
   const s = String(v).trim().toLowerCase()
   return s === '1' || s === 'true'
 }
-const isServicioRapido  = computed(() => toBoolServicioRapido(restauranteObjeto.value?.servicio_rapido))
+const isServicioRapido = computed(() => {
+  if (restauranteObjeto.value?.servicio_rapido !== undefined) {
+    return toBoolServicioRapido(restauranteObjeto.value.servicio_rapido)
+  }
+  if (user?.restaurante_activo && typeof user.restaurante_activo === 'object' && user.restaurante_activo.servicio_rapido !== undefined) {
+    return toBoolServicioRapido(user.restaurante_activo.servicio_rapido)
+  }
+  return false
+})
 
 // ── Propinas (Oficiales de API) ──
 const propinasEfectivo = ref(0)

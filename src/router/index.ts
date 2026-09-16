@@ -44,6 +44,12 @@ const routes = [
   { path: "/reset-password",     name: "reset-password",   component: ResetPassword, meta: { seo: ROUTE_SEO['/reset-password'] as SeoMeta } },
   { path: "/registro",           redirect: { name: "registro-dueno" }                },
 
+  // Landing — Planes y Contacto (públicas, indexables)
+  { path: "/planes",       name: "planes",       component: () => import("../views/PlanesView.vue"),       meta: { seo: ROUTE_SEO['/planes'] as SeoMeta } },
+  { path: "/contactanos",  name: "contactanos",  component: () => import("../views/ContactanosView.vue"),  meta: { seo: ROUTE_SEO['/contactanos'] as SeoMeta } },
+  { path: "/contacto",     redirect: "/contactanos" },
+  { path: "/pricing",      redirect: "/planes" },
+
   // -------------------------
   // KIOSKO DE MENÚ (Sin barra lateral)
   // -------------------------
@@ -118,6 +124,13 @@ const routes = [
         name: "productos",
         component: Productosview,
         meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/productos'] as SeoMeta }
+      },
+
+      {
+        path: "contactos",
+        name: "contactos",
+        component: () => import("../views/ContactosView.vue"),
+        meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/contactos'] as SeoMeta }
       },
 
       {
@@ -220,6 +233,10 @@ const PUBLIC_PATHS = [
   "/recuperar-contrasena",
   "/reset-password",
   "/terminos-y-condiciones",
+  "/planes",
+  "/contactanos",
+  "/contacto",
+  "/pricing",
 ];
 
 

@@ -167,6 +167,12 @@
             <i class="fa-solid fa-box text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
           </RouterLink>
+          <RouterLink v-if="hasPermission('VER_CONTACTOS')" to="/panel/contactos" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/contactos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+            <i class="fa-solid fa-envelope-open-text text-lg w-6 text-center"></i>
+            <span v-show="!isCollapsed || isMobile" class="text-sm">Solicitudes</span>
+            <span v-if="pendingCounts.solicitudes > 0" @click.stop.prevent="verSolicitudesNuevas" title="Ver solicitudes nuevas sin atender"
+              class="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto cursor-pointer transition">{{ pendingCounts.solicitudes }}</span>
+          </RouterLink>
 
         </div>
       </div>
@@ -201,8 +207,11 @@ const showRestMenu = ref(false)
 const pendingCounts = ref({
   cocina: 0,
   barra: 0,
-  postres: 0
+  postres: 0,
+  solicitudes: 0
 })
+
+let solicitudesTimer = null
 
 // Computed
 const userName = computed(() => props.user?.name || 'Usuario')
@@ -309,6 +318,12 @@ const selectRest = (id) => {
   emit('seleccionar-restaurante', id)
 }
 
+// Abre el panel de solicitudes ya filtrado por las que están sin atender
+const verSolicitudesNuevas = () => {
+  router.push({ name: 'contactos', query: { estatus: 'nuevo' } })
+  handleMobileClose()
+}
+
 const handleMobileClose = () => {
   if (isMobile.value) emit('close')
 }
@@ -356,6 +371,22 @@ const fetchPendingCounts = async () => {
   }
 }
 
+// El panel de solicitudes de contacto es global (no depende de la sucursal
+// activa), por eso se consulta aparte y se refresca cada minuto.
+const fetchSolicitudesPendientes = async () => {
+  if (!hasPermission('VER_CONTACTOS')) return
+  try {
+    const response = await apiClient.get('/contactos/resumen')
+    const resData = response.data?.success ? response.data : response
+
+    if (resData.success) {
+      pendingCounts.value.solicitudes = resData.data?.por_estatus?.nuevo || 0
+    }
+  } catch (error) {
+    console.error('❌ Error cargando solicitudes pendientes:', error)
+  }
+}
+
 // Configurar WebSockets para actualizaciones en tiempo real
 useRestauranteChannel(computed(() => props.restauranteActivo), {
   onOrden: () => {
@@ -375,6 +406,8 @@ onMounted(() => {
   if (saved !== null && !isMobile.value) isCollapsed.value = saved === 'true'
   
   fetchPendingCounts()
+  fetchSolicitudesPendientes()
+  solicitudesTimer = setInterval(fetchSolicitudesPendientes, 60000)
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('aside')) {
@@ -386,6 +419,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  if (solicitudesTimer) clearInterval(solicitudesTimer)
 })
 </script>
 

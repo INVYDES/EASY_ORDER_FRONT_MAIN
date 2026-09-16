@@ -278,7 +278,7 @@ const esPostre = (detalle) => {
   return cat.includes('postre') || cat.includes('reposteria') || cat.includes('pastel')
 }
 
-const isPostreOrder = (o) => ['POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
+const isPostreOrder = (o) => ['ABIERTA', 'POR_PREPARAR', 'EN_PREPARACION', 'LISTA'].includes(o.estado)
 const getDetallesPostres = (o) => (o.detalles || []).filter(esPostre)
 
 const pendingOrders = computed(() => {
@@ -318,7 +318,7 @@ const loadOrders = async (silent = false) => {
   if (!token) { router.push('/'); return }
   if (!silent) loading.value = true
   try {
-    const data = await apiClient.get('/ordenes?estado=POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')
+    const data = await apiClient.get('/ordenes?estado=ABIERTA,POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')
     if (data.success || data.data) {
       const lista = Array.isArray(data.data) ? data.data : (data.data?.data || [])
       orders.value = lista
