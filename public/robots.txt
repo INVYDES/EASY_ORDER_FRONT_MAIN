@@ -1,6 +1,8 @@
 # robots.txt — EASY ORDER
 User-agent: *
 Allow: /$
+Allow: /planes
+Allow: /contactanos
 Allow: /registro
 Allow: /registro/dueno
 Allow: /registro/cliente
