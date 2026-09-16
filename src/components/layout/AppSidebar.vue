@@ -349,7 +349,7 @@ const logout = async () => {
   } catch {}
   finally {
     localStorage.clear(); sessionStorage.clear()
-    router.push('/')
+    router.push('/login')
   }
 }
 

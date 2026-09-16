@@ -9,7 +9,7 @@
         <nav class="nav-links" aria-label="Navegación principal">
           <router-link to="/planes" class="nav-link active">Planes</router-link>
           <router-link to="/contactanos" class="nav-link">Contáctanos</router-link>
-          <router-link to="/" class="nav-link ghost">Ingresar</router-link>
+          <router-link to="/login" class="nav-link ghost">Ingresar</router-link>
           <router-link to="/registro/dueno" class="nav-cta">Crear cuenta</router-link>
         </nav>
         <button class="menu-btn" @click="mobileOpen = !mobileOpen" aria-label="Abrir menú">
@@ -20,7 +20,7 @@
       <div v-if="mobileOpen" class="mobile-menu">
         <router-link to="/planes" @click="mobileOpen=false">Planes</router-link>
         <router-link to="/contactanos" @click="mobileOpen=false">Contáctanos</router-link>
-        <router-link to="/" @click="mobileOpen=false">Ingresar</router-link>
+        <router-link to="/login" @click="mobileOpen=false">Ingresar</router-link>
         <router-link to="/registro/dueno" class="mobile-cta" @click="mobileOpen=false">Crear cuenta gratis</router-link>
       </div>
     </header>

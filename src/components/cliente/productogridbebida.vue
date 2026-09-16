@@ -28,7 +28,7 @@ const checkAuth = () => {
   const token = sessionGet('token')
 
   if (!token) {
-    router.push('/')
+    router.push('/login')
     return false
   }
 

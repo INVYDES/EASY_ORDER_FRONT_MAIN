@@ -3,6 +3,9 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useSeo } from '@/composables/useSeo'
 import { ROUTE_SEO, type SeoMeta } from '@/config/seo'
 
+// Landing pública
+import LandingView     from "../views/LandingView.vue";
+
 // Auth
 import Signin         from "../views/Auth/signin.vue";
 import Signup         from "../views/Auth/signup.vue";
@@ -36,7 +39,8 @@ const routes = [
   // RUTAS PÚBLICAS
   // -------------------------
 
-  { path: "/",                   name: "login",            component: Signin,        meta: { seo: ROUTE_SEO['/'] as SeoMeta } },
+  { path: "/",                   name: "landing",          component: LandingView,   meta: { seo: ROUTE_SEO['/'] as SeoMeta } },
+  { path: "/login",             name: "login",            component: Signin,        meta: { seo: ROUTE_SEO['/login'] as SeoMeta } },
   { path: "/registro/dueno",     name: "registro-dueno",   component: Signup,        meta: { seo: ROUTE_SEO['/registro/dueno'] as SeoMeta } },
   
   { path: "/registro/cliente",   name: "registro-cliente", component: SignupCliente, meta: { seo: ROUTE_SEO['/registro/cliente'] as SeoMeta } },
@@ -226,6 +230,7 @@ const defaultRouteForRole = (role?: string): string => {
 
 const PUBLIC_PATHS = [
   "/",
+  "/login",
   "/registro",
   "/registro/dueno",
   "/registro/empleado",
@@ -250,7 +255,7 @@ router.beforeEach((to, _from, next) => {
   const role = typeof roleRaw === 'string' ? roleRaw : roleRaw?.nombre;
 
   // 1. Ya logueado intentando ir al login → redirigir a su panel o licencias si está vencida
-  if (token && to.path === "/") {
+  if (token && (to.path === "/login" || to.name === "login")) {
     if (user && user.licencia_activa === false) {
       return next("/panel/licencias");
     }
@@ -267,7 +272,7 @@ router.beforeEach((to, _from, next) => {
 
   // 3. Sin token → login
   if (!token) {
-    return next("/");
+    return next("/login");
   }
 
   // 3b. Si la licencia no está activa, redirigir siempre a licencias

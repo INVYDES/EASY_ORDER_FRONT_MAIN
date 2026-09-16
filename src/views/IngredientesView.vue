@@ -287,7 +287,7 @@ const ajusteForm = ref({
 const getHeaders = () => {
   const token = sessionGet('token')
   if (!token) {
-    router.push('/')
+    router.push('/login')
     return {}
   }
   return {

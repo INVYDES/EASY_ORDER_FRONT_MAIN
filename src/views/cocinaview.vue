@@ -328,7 +328,7 @@ const removeToast = (id) => { toasts.value = toasts.value.filter(t => t.id !== i
 // ── Cargar órdenes (polling) ───────────────────────────────────────────────────
 const loadOrders = async (silent = false) => {
   const token = getToken()
-  if (!token) { router.push('/'); return }
+  if (!token) { router.push('/login'); return }
   if (!silent) loading.value = true
   try {
     const data = await apiClient.get('/ordenes?estado=ABIERTA,POR_PREPARAR,EN_PREPARACION,LISTA&per_page=100')

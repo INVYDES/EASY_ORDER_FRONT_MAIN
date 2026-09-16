@@ -31,9 +31,15 @@ function buildCanonical(route) {
 // Mapa SEO — debe mantenerse sincronizado con src/config/seo.ts
 const ROUTE_SEO = {
   '/': {
+    title: 'EASY ORDER — Sistema de Gestión para Restaurantes | POS, Cocina y Administración',
+    description:
+      'eOrder conecta meseros, cocina, barra y caja en una sola plataforma. Gestiona pedidos, inventario y ventas de tu restaurante en tiempo real. Prueba 30 días gratis.',
+    robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+  },
+  '/login': {
     title: 'Iniciar Sesión | EASY ORDER',
     description: 'Accede a EASY ORDER y gestiona tu restaurante. Inicia sesión como mesero, cocina, caja, barra o administrador.',
-    robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    robots: 'noindex, follow',
   },
   '/registro/dueno': {
     title: 'Registro de Dueño — Crea tu Restaurante | EASY ORDER',

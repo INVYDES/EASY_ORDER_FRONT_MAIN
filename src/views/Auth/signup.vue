@@ -176,7 +176,7 @@
 
         <p class="mt-6 pb-10 text-sm text-gray-600 text-center">
           ¿Ya tienes cuenta?
-          <RouterLink to="/" class="text-indigo-600 font-bold hover:underline">Iniciar sesión</RouterLink>
+          <RouterLink to="/login" class="text-indigo-600 font-bold hover:underline">Iniciar sesión</RouterLink>
         </p>
 
       </div>
@@ -490,7 +490,7 @@ const handleSubmit = async (): Promise<void> => {
     } else {
       // Sin token → que inicie sesión manualmente
       successMessage.value = '✅ ¡Cuenta creada con éxito! Redirigiendo al inicio de sesión...'
-      setTimeout(() => router.push('/'), 2000)
+      setTimeout(() => router.push('/login'), 2000)
     }
 
   } catch (error: any) {

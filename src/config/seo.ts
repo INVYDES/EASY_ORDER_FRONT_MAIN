@@ -71,9 +71,15 @@ export function buildTitle(pageTitle?: string): string {
  */
 export const ROUTE_SEO: Record<string, SeoMeta> = {
   '/': {
+    title: 'EASY ORDER — Sistema de Gestión para Restaurantes | POS, Cocina y Administración',
+    description:
+      'eOrder conecta meseros, cocina, barra y caja en una sola plataforma. Gestiona pedidos, inventario y ventas de tu restaurante en tiempo real. Prueba 30 días gratis.',
+    noindex: false,
+  },
+  '/login': {
     title: 'Iniciar Sesión | EASY ORDER',
     description: 'Accede a EASY ORDER y gestiona tu restaurante. Inicia sesión como mesero, cocina, caja, barra o administrador.',
-    noindex: false,
+    noindex: true,
   },
   '/registro/dueno': {
     title: 'Registro de Dueño — Crea tu Restaurante | EASY ORDER',

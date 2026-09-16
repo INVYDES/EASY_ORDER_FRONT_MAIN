@@ -787,7 +787,7 @@ const cargarEmpleados = async () => {
 // ── Cargar datos ───────────────────────────────────────────────────────────────
 const loadData = async () => {
   const token = sessionGet('token')
-  if (!token) { router.push('/'); return }
+  if (!token) { router.push('/login'); return }
   loading.general = true
   try {
     const today = new Date().toLocaleDateString('en-CA')

@@ -421,7 +421,7 @@ const loadHistorial = async () => {
 const loadAllData = async (silent = true) => {
   const token = sessionGet('token')
   if (!token) {
-    router.push('/')
+    router.push('/login')
     return
   }
   if (!silent) loading.general = true

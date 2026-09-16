@@ -177,7 +177,7 @@ const logout = async () => {
   } finally {
     sessionRemove('token')
     sessionRemove('restaurante_id_activo')
-    router.push('/')
+    router.push('/login')
   }
 }
 

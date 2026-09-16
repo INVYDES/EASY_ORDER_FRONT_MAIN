@@ -16,8 +16,9 @@ window.fetch = async (...args) => {
         if (response.status === 401) {
             clearSession();
             
-            if (!window.location.pathname.includes('/login') && window.location.pathname !== '/' && !window.location.pathname.includes('/registro')) {
-                router.push('/');
+            const path = window.location.pathname;
+            if (path !== '/' && path !== '/login' && !path.includes('/registro')) {
+                router.push('/login');
             }
         }
 

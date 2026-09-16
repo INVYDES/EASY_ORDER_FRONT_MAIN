@@ -16,7 +16,7 @@
         <div v-if="!token" class="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl mb-6">
           <p class="font-semibold">Enlace inválido o expirado</p>
           <p class="mt-1">Solicita un nuevo enlace desde la pantalla de inicio de sesión.</p>
-          <router-link to="/" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
+          <router-link to="/login" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
             Volver al inicio
           </router-link>
         </div>
@@ -25,7 +25,7 @@
         <div v-else-if="successMessage" class="p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl mb-6">
           <p class="font-semibold mb-1">✅ Contraseña restablecida</p>
           <p>{{ successMessage }}</p>
-          <router-link to="/" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
+          <router-link to="/login" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
             Iniciar sesión
           </router-link>
         </div>
@@ -165,7 +165,7 @@ const handleSubmit = async () => {
     })
     if (data.errors) throw new Error(Object.values(data.errors).flat().join(' '))
     successMessage.value = data.message || 'Tu contraseña fue restablecida. Ya puedes iniciar sesión.'
-    setTimeout(() => router.push('/'), 3000)
+    setTimeout(() => router.push('/login'), 3000)
   } catch (error: any) {
     errorMessage.value = error.message || 'No pudimos restablecer tu contraseña. El enlace puede haber expirado.'
   } finally {

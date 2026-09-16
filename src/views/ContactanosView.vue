@@ -6,7 +6,7 @@
         <nav class="nav-links">
           <router-link to="/planes" class="nav-link">Planes</router-link>
           <router-link to="/contactanos" class="nav-link active">Contáctanos</router-link>
-          <router-link to="/" class="nav-link ghost">Ingresar</router-link>
+          <router-link to="/login" class="nav-link ghost">Ingresar</router-link>
           <router-link to="/registro/dueno" class="nav-cta">Crear cuenta</router-link>
         </nav>
         <button class="menu-btn" @click="mobileOpen=!mobileOpen">{{ mobileOpen ? '✕' : '☰' }}</button>
@@ -14,7 +14,7 @@
       <div v-if="mobileOpen" class="mobile-menu">
         <router-link to="/planes" @click="mobileOpen=false">Planes</router-link>
         <router-link to="/contactanos" @click="mobileOpen=false">Contáctanos</router-link>
-        <router-link to="/" @click="mobileOpen=false">Ingresar</router-link>
+        <router-link to="/login" @click="mobileOpen=false">Ingresar</router-link>
       </div>
     </header>
 

@@ -27,7 +27,7 @@ const fechaFin = ref(new Date().toLocaleDateString('en-CA')) // Hoy
 const checkAuth = () => {
   const token = sessionGet('token')
   if (!token) {
-    router.push('/')
+    router.push('/login')
     return false
   }
   return true

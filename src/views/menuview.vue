@@ -674,7 +674,7 @@ const mostrarExito = () => { ordenConfirmada.value = true; setTimeout(() => { or
 const cerrarSesion = () => {
   sessionRemove('token'); sessionRemove('user')
   sessionRemove('token'); sessionRemove('user')
-  router.push('/')
+  router.push('/login')
 }
 
 // --- Computed ---

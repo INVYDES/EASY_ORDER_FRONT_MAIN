@@ -7,7 +7,7 @@
 
         <!-- Volver -->
         <router-link
-          to="/"
+          to="/login"
           class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition mb-8"
         >
           ← Volver al inicio de sesión

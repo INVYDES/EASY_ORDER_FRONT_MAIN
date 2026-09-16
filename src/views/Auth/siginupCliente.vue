@@ -98,7 +98,7 @@
 
         <p class="mt-6 text-center text-sm text-gray-500">
           ¿Ya tienes cuenta?
-          <RouterLink to="/" class="text-indigo-600 font-bold hover:underline">Inicia sesión</RouterLink>
+          <RouterLink to="/login" class="text-indigo-600 font-bold hover:underline">Inicia sesión</RouterLink>
         </p>
 
         <p class="mt-3 text-center text-xs text-gray-400">
