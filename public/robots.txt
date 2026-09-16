@@ -12,7 +12,7 @@ Disallow: /reset-password
 Disallow: /*?*
 
 # Sitemap
-Sitemap: https://easyorder.com/sitemap.xml
+Sitemap: https://eorder.mx/sitemap.xml
 
 # Crawl-delay opcional
 # Crawl-delay: 10

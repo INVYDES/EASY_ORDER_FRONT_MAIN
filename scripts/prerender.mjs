@@ -4,7 +4,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://easyorder.com').replace(/\/+$/, '')
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://eorder.mx').replace(/\/+$/, '')
 const DIST = path.resolve('dist')
 const TEMPLATE_PATH = path.join(DIST, 'index.html')
 
@@ -97,7 +97,7 @@ function patchHtml(html, route, seo) {
   out = out.replace(/<meta name="twitter:image" content="[^"]*" \/>/, `<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`)
 
   // JSON-LD breadcrumb + SoftwareApplication tweak (opcional): inyecta canonical correcto en el JSON-LD existente
-  // Reemplaza "url": "https://easyorder.com/" por canonical en el script JSON-LD (solo el de SoftwareApplication/Organization)
+  // Reemplaza "url": "https://eorder.mx/" por canonical en el script JSON-LD (solo el de SoftwareApplication/Organization)
   // Hacemos un reemplazo simple: si route !== '/', reemplazamos la url base en los ld+json
   if (route !== '/') {
     // No romper el JSON: reemplazar solo la url del sitio por la canónica no sería correcto para Organization.

@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   defaultTitle: 'EASY ORDER — Sistema de Gestión para Restaurantes | POS, Cocina y Administración',
   description:
     'EASY ORDER es el sistema integral para restaurantes. Gestiona pedidos, cocina, barra, caja y administración en tiempo real. Optimiza tu restaurante con nuestra plataforma todo en uno.',
-  siteUrl: (import.meta.env.VITE_SITE_URL as string) || 'https://easyorder.com',
+  siteUrl: (import.meta.env.VITE_SITE_URL as string) || 'https://eorder.mx',
   ogImage: '/logo.svg',
   locale: 'es_ES',
   lang: 'es',
