@@ -179,7 +179,7 @@
 
           <div v-for="(bloqueo, pi) in advertenciaPrecio" :key="pi" class="rounded-xl border border-gray-100 overflow-hidden">
             <div class="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between gap-3">
-              <span class="text-sm font-bold text-gray-700">{{ bloqueo.producto?.nombre }}</span>
+              <span class="text-sm font-bold text-gray-700">{{ bloqueo.item?.nombre }}</span>
               <span class="flex items-center gap-2 shrink-0">
                 <span v-for="(c, ci) in bloqueo.cambios" :key="ci" class="text-xs font-black text-amber-700">
                   ${{ Number(c.antes).toFixed(2) }} → ${{ Number(c.despues).toFixed(2) }}
@@ -230,7 +230,7 @@
                       <span v-if="cambiaPrecio(d)" class="text-[9px] font-black uppercase bg-amber-600 text-white rounded px-1 ml-1 whitespace-nowrap">
                         {{ formatDiferencia(d.diferencia) }}
                       </span>
-                      <span v-else-if="d.es_producto" class="text-[9px] uppercase bg-gray-100 text-gray-400 rounded px-1 ml-1 whitespace-nowrap">este producto</span>
+                      <span v-else-if="d.es_afectado" class="text-[9px] uppercase bg-gray-100 text-gray-400 rounded px-1 ml-1 whitespace-nowrap">este producto</span>
                       <span v-if="d.cancelado" class="text-[9px] uppercase text-red-400 ml-1">cancelado</span>
                     </span>
                     <span class="shrink-0 text-right" :class="d.cancelado ? 'line-through' : ''">
@@ -363,7 +363,7 @@ const overwriteExisting = ref(true)
 const createCategories  = ref(false)
 
 // ── Guardia de cambio de precio (productos en órdenes sin cobrar) ─────────────
-const advertenciaPrecio   = ref(null)   // [{ producto, cambios, ordenes }]
+const advertenciaPrecio   = ref(null)   // [{ item, cambios, ordenes }]
 const confirmacionPrecio  = ref(false)
 const forzarPrecio        = ref(false)
 const ordenDetalleAbierta = ref(null)   // "<índiceProducto>-<ordenId>"
@@ -524,7 +524,7 @@ const startImport = async () => {
     // El backend bloquea la importación si sobrescribiría el precio de productos
     // que están en órdenes sin cobrar: aquí se pide confirmación en dos pasos.
     if (e?.response?.status === 409 && e.response.data?.code === 'PRECIO_EN_ORDEN_SIN_COBRAR') {
-      advertenciaPrecio.value = e.response.data.data?.productos || []
+      advertenciaPrecio.value = e.response.data.data?.items || []
       importProgress.value    = 0
       forzarPrecio.value      = false
     } else {

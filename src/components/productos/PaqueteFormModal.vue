@@ -248,6 +248,185 @@
         </button>
       </div>
     </div>
+
+    <!-- ══ PASO 1: AVISO — paquete en órdenes sin cobrar ══ -->
+    <div v-if="advertenciaPrecio && !confirmacionPrecio" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] px-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Paquete en órdenes sin cobrar</h3>
+            <p class="text-xs text-gray-500 mt-0.5">{{ advertenciaPrecio.item?.nombre }}</p>
+          </div>
+        </div>
+
+        <div class="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+          <p class="text-sm text-gray-600">
+            {{ advertenciaPrecio.ordenes?.length }} orden(es) tienen este paquete y todavía no se han cobrado.
+            El precio ya capturado en esas órdenes <strong>no cambiará</strong>; el nuevo precio solo aplicará a órdenes nuevas.
+          </p>
+
+          <div v-if="advertenciaPrecio.cambios?.length" class="rounded-xl bg-amber-50 border border-amber-100 p-3 space-y-1">
+            <p class="text-[10px] font-black uppercase tracking-widest text-amber-700">Cambios de precio</p>
+            <div v-for="(c, i) in advertenciaPrecio.cambios" :key="i" class="flex justify-between text-xs font-bold text-amber-800">
+              <span>{{ c.nombre }}</span>
+              <span>${{ Number(c.antes).toFixed(2) }} → ${{ Number(c.despues).toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- Impacto: cuánto cambiaría el total de las cuentas abiertas -->
+          <div v-if="advertenciaPrecio.impacto" class="rounded-xl border p-3 flex items-center justify-between gap-3"
+            :class="advertenciaPrecio.impacto.diferencia > 0 ? 'bg-red-50 border-red-100'
+              : advertenciaPrecio.impacto.diferencia < 0 ? 'bg-emerald-50 border-emerald-100'
+              : 'bg-gray-50 border-gray-100'">
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                Si se aplicara el nuevo precio
+              </p>
+              <p class="text-[11px] text-gray-500 mt-0.5">
+                El total ya capturado en las {{ advertenciaPrecio.impacto.ordenes }} cuenta(s) abiertas cambiaría
+              </p>
+            </div>
+            <span class="text-lg font-black shrink-0" :class="colorDiferencia(advertenciaPrecio.impacto.diferencia)">
+              {{ formatDiferencia(advertenciaPrecio.impacto.diferencia) }}
+            </span>
+          </div>
+
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+              Órdenes afectadas · toca una para ver su detalle
+            </p>
+            <div class="rounded-xl border border-gray-100 divide-y divide-gray-100">
+              <div v-for="o in advertenciaPrecio.ordenes" :key="o.id">
+                <button type="button" @click="toggleDetalleOrden(o.id)"
+                  class="w-full flex items-center justify-between px-3 py-2 text-xs gap-3 text-left hover:bg-gray-50 transition">
+                  <span class="font-bold text-gray-700 shrink-0 flex items-center gap-1.5">
+                    <span class="text-[9px] text-gray-400">{{ ordenDetalleAbierta === o.id ? '▼' : '▶' }}</span>
+                    {{ o.folio }}<span v-if="o.mesa"> · Mesa {{ o.mesa }}</span>
+                  </span>
+                  <span class="text-gray-400 text-right flex items-center justify-end gap-1.5">
+                    <span>
+                      {{ o.estado }} · {{ o.cantidad }} pza(s)
+                      <template v-if="o.precios_unitarios?.length"> · {{ formatPrecios(o.precios_unitarios) }}</template>
+                    </span>
+                    <!-- Cuánto cambiaría el total de esta cuenta -->
+                    <span v-if="o.diferencia" class="shrink-0 text-[10px] font-black rounded px-1.5 py-0.5"
+                      :class="o.diferencia > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'">
+                      {{ formatDiferencia(o.diferencia) }}
+                    </span>
+                  </span>
+                </button>
+
+                <!-- Detalle de la orden -->
+                <div v-if="ordenDetalleAbierta === o.id" class="px-3 pb-3 pt-1 bg-gray-50/70">
+                  <!-- Solo se resaltan las líneas cuyo precio cambiaría -->
+                  <div v-for="d in o.detalles" :key="d.id"
+                    class="flex items-start justify-between text-[11px] gap-3 py-1"
+                    :class="cambiaPrecio(d) ? 'text-amber-800 font-bold bg-amber-50 rounded px-1.5 -mx-1.5' : 'text-gray-500'">
+                    <span class="min-w-0">
+                      <span :class="d.cancelado ? 'line-through' : ''">
+                        {{ Number(d.cantidad) }}× {{ d.nombre }}
+                      </span>
+                      <span v-if="cambiaPrecio(d)"
+                        class="text-[9px] font-black uppercase bg-amber-600 text-white rounded px-1 ml-1 whitespace-nowrap">
+                        {{ formatDiferencia(d.diferencia) }}
+                      </span>
+                      <span v-else-if="d.es_afectado"
+                        class="text-[9px] uppercase bg-gray-100 text-gray-400 rounded px-1 ml-1 whitespace-nowrap">
+                        este paquete
+                      </span>
+                      <span v-if="d.cancelado" class="text-[9px] uppercase text-red-400 ml-1">cancelado</span>
+                    </span>
+                    <span class="shrink-0 text-right" :class="d.cancelado ? 'line-through' : ''">
+                      ${{ Number(d.subtotal).toFixed(2) }}
+                      <template v-if="d.subtotal_nuevo !== null && d.subtotal_nuevo !== undefined">
+                        <span class="text-gray-400 mx-0.5">→</span>
+                        <span class="font-black text-amber-700">${{ Number(d.subtotal_nuevo).toFixed(2) }}</span>
+                      </template>
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-[11px] font-black border-t border-gray-200 pt-1.5 mt-1.5"
+                    :class="o.diferencia ? 'text-amber-800' : 'text-gray-700'">
+                    <span>
+                      Total de la orden
+                      <span v-if="o.diferencia" class="font-normal text-[10px] text-gray-400">si se aplica el precio nuevo</span>
+                    </span>
+                    <span class="text-right">
+                      ${{ Number(o.total || 0).toFixed(2) }}
+                      <template v-if="o.diferencia">
+                        <span class="text-gray-400 mx-0.5">→</span>
+                        <span>${{ Number(o.total_nuevo || 0).toFixed(2) }}</span>
+                      </template>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+          <button @click="cancelarCambioPrecio" type="button"
+            class="flex-1 py-3 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition">
+            Cancelar
+          </button>
+          <button @click="confirmarCambioPrecio" type="button"
+            class="flex-[2] py-3 text-sm font-black text-white bg-amber-600 rounded-2xl hover:bg-amber-700 shadow-lg shadow-amber-100 transition">
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PASO 2: CONFIRMACIÓN FINAL para aplicar el cambio de precio ══ -->
+    <div v-if="confirmacionPrecio" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[80] px-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="px-6 py-5 flex items-start gap-3">
+          <span class="text-2xl">🔒</span>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">¿Confirmas el cambio de precio?</h3>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Esta es la última confirmación. El nuevo precio solo se aplicará a órdenes nuevas.
+            </p>
+          </div>
+        </div>
+
+        <div v-if="advertenciaPrecio?.cambios?.length" class="px-6 space-y-1">
+          <div v-for="(c, i) in advertenciaPrecio.cambios" :key="i"
+            class="flex justify-between text-xs font-bold text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+            <span>{{ c.nombre }}</span>
+            <span>${{ Number(c.antes).toFixed(2) }} → ${{ Number(c.despues).toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <!-- Impacto en el total de las cuentas abiertas -->
+        <div v-if="advertenciaPrecio?.impacto" class="px-6 pt-3">
+          <div class="flex justify-between items-center gap-3 text-xs font-bold rounded-lg px-3 py-2 border"
+            :class="advertenciaPrecio.impacto.diferencia > 0 ? 'bg-red-50 border-red-100 text-red-700'
+              : advertenciaPrecio.impacto.diferencia < 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+              : 'bg-gray-50 border-gray-100 text-gray-600'">
+            <span>
+              Total de las {{ advertenciaPrecio.impacto.ordenes }} cuentas abiertas
+              <span class="block font-normal text-[10px] text-gray-400">si se aplicara el nuevo precio</span>
+            </span>
+            <span class="text-base font-black shrink-0">
+              {{ formatDiferencia(advertenciaPrecio.impacto.diferencia) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+          <button @click="volverCambioPrecio" type="button"
+            class="flex-1 py-3 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition">
+            No, volver
+          </button>
+          <button @click="aplicarCambioPrecio" :disabled="loading" type="button"
+            class="flex-[2] py-3 text-sm font-black text-white bg-red-600 rounded-2xl hover:bg-red-700 shadow-lg shadow-red-100 transition disabled:opacity-50">
+            {{ loading ? 'Guardando...' : 'Sí, cambiar precio' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -265,8 +444,11 @@ const emit = defineEmits(['close', 'saved'])
 
 const isEdit = computed(() => !!props.paquete)
 const loading = ref(false)
-// Confirmación de cambio de precio con órdenes sin cobrar (409 del backend).
-const forzarPrecio = ref(false)
+// ── Guardia de cambio de precio (paquete en órdenes sin cobrar) ──────────────
+const advertenciaPrecio   = ref(null)
+const confirmacionPrecio  = ref(false)
+const forzarPrecio        = ref(false)
+const ordenDetalleAbierta = ref(null)
 const searchProd = ref('')
 const isFocused = ref(false)
 const previewUrl = ref(null)
@@ -280,6 +462,10 @@ const form = reactive({
 })
 
 onMounted(() => {
+  advertenciaPrecio.value   = null
+  confirmacionPrecio.value  = false
+  forzarPrecio.value        = false
+  ordenDetalleAbierta.value = null
   cargarNominaReal()
   if (props.paquete) {
     form.nombre = props.paquete.nombre
@@ -483,37 +669,69 @@ const save = async () => {
     }
   } catch (error) {
     // El backend bloquea el cambio de precio si el paquete está en órdenes sin
-    // cobrar (409). Se avisa al usuario y, si confirma, se reintenta con
-    // forzar_precio; el precio capturado en esas órdenes no se modifica.
+    // cobrar (409): se abre el aviso de dos pasos y, al confirmar, se reintenta
+    // con forzar_precio. El precio ya capturado en esas órdenes no se modifica.
     if (error?.response?.status === 409 && error.response.data?.code === 'PRECIO_EN_ORDEN_SIN_COBRAR') {
-      const aviso      = error.response.data.data || {}
-      const ordenes    = aviso.ordenes || []
-      const diferencia = Number(aviso.impacto?.diferencia || 0)
-      const signo      = diferencia < 0 ? '-' : '+'
-
-      const confirmado = window.confirm(
-        `Este paquete está en ${ordenes.length} orden(es) sin cobrar.\n\n` +
-        'El precio ya capturado en esas órdenes NO cambiará; el nuevo precio solo aplicará a órdenes nuevas.\n\n' +
-        `Impacto si se aplicara ahora: ${signo}$${Math.abs(diferencia).toFixed(2)}\n\n` +
-        '¿Deseas continuar?'
-      )
-
-      if (confirmado) {
-        forzarPrecio.value = true
-        await save()
-        return
-      }
-
-      forzarPrecio.value = false
-      return
+      advertenciaPrecio.value = error.response.data.data
+    } else {
+      console.error('Error saving package:', error)
+      alert('Error de conexión')
     }
-
-    console.error('Error saving package:', error)
-    alert('Error de conexión')
   } finally {
     loading.value = false
   }
 }
+
+// ── Confirmación en dos pasos del cambio de precio con órdenes sin cobrar ─────
+// Paso 1 → 2: aviso con el detalle de las órdenes afectadas y confirmación final.
+const confirmarCambioPrecio = () => {
+  confirmacionPrecio.value = true
+}
+
+// Muestra/oculta el detalle completo de una orden dentro del aviso.
+const toggleDetalleOrden = (id) => {
+  ordenDetalleAbierta.value = ordenDetalleAbierta.value === id ? null : id
+}
+
+// Paso 2: confirmación final; recién aquí se aplica el cambio.
+const aplicarCambioPrecio = async () => {
+  advertenciaPrecio.value  = null
+  confirmacionPrecio.value = false
+  forzarPrecio.value       = true
+  await save()
+}
+
+const volverCambioPrecio = () => {
+  confirmacionPrecio.value = false
+}
+
+const cancelarCambioPrecio = () => {
+  advertenciaPrecio.value   = null
+  confirmacionPrecio.value  = false
+  forzarPrecio.value        = false
+  ordenDetalleAbierta.value = null
+}
+
+const formatPrecios = (precios) =>
+  (precios || []).map(p => '$' + Number(p).toFixed(2)).join(' / ')
+
+// Diferencia con signo (p. ej. +$5.00 / -$5.00) para el impacto del cambio.
+const formatDiferencia = (valor) => {
+  const n = Number(valor || 0)
+  if (!n) return '$0.00'
+  return (n > 0 ? '+' : '-') + '$' + Math.abs(n).toFixed(2)
+}
+
+const colorDiferencia = (valor) => {
+  const n = Number(valor || 0)
+  if (n > 0) return 'text-red-600'
+  if (n < 0) return 'text-emerald-600'
+  return 'text-gray-500'
+}
+
+// El backend solo manda la diferencia en las líneas cuyo precio cambiaría.
+const cambiaPrecio = (detalle) =>
+  detalle?.diferencia !== null && detalle?.diferencia !== undefined
 </script>
 
 <style scoped>

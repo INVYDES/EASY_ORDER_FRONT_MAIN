@@ -469,7 +469,7 @@
           <span class="text-2xl">⚠️</span>
           <div>
             <h3 class="text-lg font-bold text-gray-800">Producto en órdenes sin cobrar</h3>
-            <p class="text-xs text-gray-500 mt-0.5">{{ advertenciaPrecio.producto?.nombre }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ advertenciaPrecio.item?.nombre }}</p>
           </div>
         </div>
 
@@ -544,7 +544,7 @@
                         class="text-[9px] font-black uppercase bg-amber-600 text-white rounded px-1 ml-1 whitespace-nowrap">
                         {{ formatDiferencia(d.diferencia) }}
                       </span>
-                      <span v-else-if="d.es_producto"
+                      <span v-else-if="d.es_afectado"
                         class="text-[9px] uppercase bg-gray-100 text-gray-400 rounded px-1 ml-1 whitespace-nowrap">
                         este producto
                       </span>
