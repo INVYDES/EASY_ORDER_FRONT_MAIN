@@ -30,7 +30,7 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center overflow-hidden border border-indigo-100 shrink-0">
-                  <img v-if="pkg.imagen_url" :src="pkg.imagen_url" class="w-full h-full object-cover" />
+                  <img v-if="pkg.imagen_url" :src="pkg.imagen_url" :alt="pkg.nombre || 'Paquete'" class="w-full h-full object-cover" />
                   <span v-else class="text-xl">🎁</span>
                 </div>
                 <div>

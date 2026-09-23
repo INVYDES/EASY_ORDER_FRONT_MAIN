@@ -52,7 +52,7 @@
                 class="w-full px-4 py-4 text-left border-2 border-white rounded-[20px] bg-white flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                 <div class="flex items-center gap-3 overflow-hidden">
                   <template v-if="selectedProduct">
-                    <img v-if="selectedProduct.imagen_url" :src="resolveImageUrl(selectedProduct.imagen_url)" class="w-8 h-8 rounded-lg object-cover" />
+                    <img v-if="selectedProduct.imagen_url" :src="resolveImageUrl(selectedProduct.imagen_url)" :alt="selectedProduct.nombre || 'Imagen del producto seleccionado'" class="w-8 h-8 rounded-lg object-cover" />
                     <div class="min-w-0">
                       <p class="font-black text-gray-800 text-sm truncate uppercase">{{ selectedProduct.nombre }}</p>
                       <p class="text-[10px] text-indigo-500 font-bold">{{ selectedProduct.precio_formateado }}</p>
@@ -66,7 +66,7 @@
               <div v-if="dropdownOpen" class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-[24px] shadow-2xl max-h-60 overflow-y-auto">
                 <div v-for="p in products" :key="p.id" @click="seleccionarProducto(p)"
                   class="p-4 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 flex items-center gap-3">
-                  <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-10 h-10 rounded-xl object-cover" />
+                  <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" :alt="p.nombre || 'Producto'" class="w-10 h-10 rounded-xl object-cover" />
                   <div class="flex-1">
                     <p class="text-sm font-black text-gray-800 uppercase">{{ p.nombre }}</p>
                     <p class="text-[10px] text-indigo-500 font-bold">{{ p.precio_formateado }}</p>

@@ -21,7 +21,7 @@
           >
             <!-- IMAGEN DEL PRODUCTO / COMBO O EMOJI -->
             <div v-if="(a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
-              <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" class="w-full h-full object-cover" @error="onImageError" />
+              <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" :alt="(a.producto || a.paquete).nombre || 'Imagen de la promoción'" class="w-full h-full object-cover" @error="onImageError" />
             </div>
             <span v-else class="text-4xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
 

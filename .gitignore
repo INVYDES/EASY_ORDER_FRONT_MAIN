@@ -4,3 +4,4 @@ dist
 /dist
 .env
 resumen_mejores_versiones.txt
+.image-backups/

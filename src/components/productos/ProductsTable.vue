@@ -207,6 +207,7 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { API_URL, STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import { useNotificationStore } from '@/stores/notifications'
 
 // 1. Props y Emits
 const props = defineProps({

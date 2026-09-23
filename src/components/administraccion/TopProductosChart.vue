@@ -34,7 +34,7 @@
         </div>
 
         <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
-          <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" class="w-full h-full object-cover" />
+          <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre || 'Producto'" class="w-full h-full object-cover" />
           <i v-else class="fa-solid fa-image text-slate-300"></i>
         </div>
 

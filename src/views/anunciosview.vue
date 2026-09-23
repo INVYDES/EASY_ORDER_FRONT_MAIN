@@ -117,7 +117,7 @@
           
           <div v-if="a.producto || a.paquete" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 group-hover:bg-indigo-50/50 transition-colors">
             <div class="w-12 h-12 rounded-xl overflow-hidden bg-white shrink-0 border border-gray-100 shadow-sm">
-               <img v-if="(a.producto || a.paquete).imagen_url" :src="resolveImageUrl((a.producto || a.paquete).imagen_url)" class="w-full h-full object-cover" />
+               <img v-if="(a.producto || a.paquete).imagen_url" :src="resolveImageUrl((a.producto || a.paquete).imagen_url)" :alt="(a.producto || a.paquete).nombre || 'Imagen del anuncio'" class="w-full h-full object-cover" />
                <span v-else class="flex h-full items-center justify-center text-xl">🍽️</span>
             </div>
             <div class="flex-1 min-w-0">
@@ -228,7 +228,7 @@
                   class="w-full px-4 py-4 text-left border-2 border-white rounded-[20px] bg-white flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                   <div class="flex items-center gap-3 overflow-hidden">
                     <template v-if="selectedItem">
-                      <img v-if="selectedItem.imagen_url" :src="resolveImageUrl(selectedItem.imagen_url)" class="w-8 h-8 rounded-lg object-cover ring-1 ring-gray-100" />
+                      <img v-if="selectedItem.imagen_url" :src="resolveImageUrl(selectedItem.imagen_url)" :alt="selectedItem.nombre || 'Imagen del elemento seleccionado'" class="w-8 h-8 rounded-lg object-cover ring-1 ring-gray-100" />
                       <span v-else class="text-xl">🍽️</span>
                       <div class="min-w-0">
                         <p class="font-black text-gray-800 text-sm truncate uppercase tracking-tighter">
@@ -251,7 +251,7 @@
                   <div class="overflow-y-auto flex-1 custom-scrollbar">
                     <div v-for="p in itemsFiltrados" :key="p.uid" @click="seleccionarItem(p)"
                       class="p-4 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors">
-                      <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-10 h-10 rounded-xl object-cover border border-gray-100 bg-gray-100" />
+                      <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" :alt="p.nombre || 'Producto'" class="w-10 h-10 rounded-xl object-cover border border-gray-100 bg-gray-100" />
                       <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1.5 mb-0.5">
                           <span :class="['text-[8px] font-black px-1 py-0.5 rounded', p.es_paquete ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700']">

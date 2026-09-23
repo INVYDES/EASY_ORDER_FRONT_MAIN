@@ -39,7 +39,7 @@
           @click="seleccionarRestaurante(rest)"
           class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-left hover:shadow-md hover:-translate-y-0.5 transition-all group">
           <div class="w-full h-36 bg-gradient-to-br from-indigo-500 to-purple-600 relative overflow-hidden flex items-center justify-center">
-            <img v-if="rest.imagen" :src="getImageUrl(rest.imagen)" class="w-full h-full object-cover" @error="onImageError" />
+            <img v-if="rest.imagen" :src="getImageUrl(rest.imagen)" :alt="rest.nombre || 'Imagen del restaurante'" class="w-full h-full object-cover" @error="onImageError" />
             <span v-else class="text-6xl opacity-30">🍽️</span>
             <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-all"></div>
             <div class="absolute top-3 right-3">
@@ -104,7 +104,7 @@
                 <div class="relative h-28 bg-gradient-to-br from-amber-400 to-orange-500">
                   <img 
                     v-if="oferta.imagen_url" 
-                    :src="getImageUrl(oferta.imagen_url)" 
+                    :src="getImageUrl(oferta.imagen_url)" alt="Imagen de la oferta" 
                     class="w-full h-full object-cover"
                     @error="onImageError"
                   />

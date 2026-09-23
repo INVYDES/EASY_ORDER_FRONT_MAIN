@@ -139,14 +139,212 @@
       </div>
 
     </div>
+
+    <!-- ══ PASO 1: AVISO — productos en órdenes sin cobrar ══ -->
+    <div
+      v-if="advertenciaPrecio && !confirmacionPrecio"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] px-4"
+      @click.self="cancelarCambioPrecio"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="px-6 py-5 border-b border-gray-100 flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Productos en órdenes sin cobrar</h3>
+            <p class="text-xs text-gray-500 mt-0.5">
+              {{ advertenciaPrecio.length }} producto(s) de la importación cambiarían de precio.
+              El precio ya capturado en esas órdenes <strong>no cambiará</strong>; el nuevo precio solo aplicará a órdenes nuevas.
+            </p>
+          </div>
+        </div>
+
+        <div class="px-6 py-5 space-y-4 overflow-y-auto">
+          <!-- Impacto: cuánto cambiaría el total de las cuentas abiertas -->
+          <div class="rounded-xl border p-3 flex items-center justify-between gap-3"
+            :class="sumarDiferencia(advertenciaPrecio) > 0 ? 'bg-red-50 border-red-100'
+              : sumarDiferencia(advertenciaPrecio) < 0 ? 'bg-emerald-50 border-emerald-100'
+              : 'bg-gray-50 border-gray-100'">
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                Si se aplicara el nuevo precio
+              </p>
+              <p class="text-[11px] text-gray-500 mt-0.5">
+                El total ya capturado en las órdenes abiertas cambiaría
+              </p>
+            </div>
+            <span class="text-lg font-black shrink-0" :class="colorDiferencia(sumarDiferencia(advertenciaPrecio))">
+              {{ formatDiferencia(sumarDiferencia(advertenciaPrecio)) }}
+            </span>
+          </div>
+
+          <div v-for="(bloqueo, pi) in advertenciaPrecio" :key="pi" class="rounded-xl border border-gray-100 overflow-hidden">
+            <div class="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between gap-3">
+              <span class="text-sm font-bold text-gray-700">{{ bloqueo.producto?.nombre }}</span>
+              <span class="flex items-center gap-2 shrink-0">
+                <span v-for="(c, ci) in bloqueo.cambios" :key="ci" class="text-xs font-black text-amber-700">
+                  ${{ Number(c.antes).toFixed(2) }} → ${{ Number(c.despues).toFixed(2) }}
+                </span>
+                <!-- Cuánto cambiaría el total de las cuentas de este producto -->
+                <span v-if="bloqueo.impacto?.diferencia" class="text-[10px] font-black rounded px-1.5 py-0.5 whitespace-nowrap"
+                  :class="bloqueo.impacto.diferencia > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'">
+                  {{ formatDiferencia(bloqueo.impacto.diferencia) }} en {{ bloqueo.impacto.ordenes }} cuenta(s)
+                </span>
+              </span>
+            </div>
+
+            <div class="divide-y divide-gray-50">
+              <div v-for="o in bloqueo.ordenes" :key="o.id">
+                <button
+                  type="button"
+                  @click="toggleDetalleOrden(pi, o.id)"
+                  class="w-full flex items-center justify-between px-3 py-2 text-xs gap-3 text-left hover:bg-gray-50 transition"
+                >
+                  <span class="font-bold text-gray-700 shrink-0 flex items-center gap-1.5">
+                    <span class="text-[9px] text-gray-400">{{ ordenDetalleAbierta === pi + '-' + o.id ? '▼' : '▶' }}</span>
+                    {{ o.folio }}<span v-if="o.mesa"> · Mesa {{ o.mesa }}</span>
+                  </span>
+                  <span class="text-gray-400 text-right flex items-center justify-end gap-1.5">
+                    <span>
+                      {{ o.estado }} · {{ o.cantidad }} pza(s)
+                      <template v-if="o.precios_unitarios?.length"> · {{ formatPrecios(o.precios_unitarios) }}</template>
+                    </span>
+                    <!-- Cuánto cambiaría el total de esta cuenta -->
+                    <span v-if="o.diferencia" class="shrink-0 text-[10px] font-black rounded px-1.5 py-0.5"
+                      :class="o.diferencia > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'">
+                      {{ formatDiferencia(o.diferencia) }}
+                    </span>
+                  </span>
+                </button>
+
+                <!-- Detalle de la orden -->
+                <div v-if="ordenDetalleAbierta === pi + '-' + o.id" class="px-3 pb-3 pt-1 bg-gray-50/70">
+                  <!-- Solo se resaltan las líneas cuyo precio cambiaría -->
+                  <div
+                    v-for="d in o.detalles"
+                    :key="d.id"
+                    class="flex items-start justify-between text-[11px] gap-3 py-1"
+                    :class="cambiaPrecio(d) ? 'text-amber-800 font-bold bg-amber-50 rounded px-1.5 -mx-1.5' : 'text-gray-500'"
+                  >
+                    <span class="min-w-0">
+                      <span :class="d.cancelado ? 'line-through' : ''">{{ Number(d.cantidad) }}× {{ d.nombre }}</span>
+                      <span v-if="cambiaPrecio(d)" class="text-[9px] font-black uppercase bg-amber-600 text-white rounded px-1 ml-1 whitespace-nowrap">
+                        {{ formatDiferencia(d.diferencia) }}
+                      </span>
+                      <span v-else-if="d.es_producto" class="text-[9px] uppercase bg-gray-100 text-gray-400 rounded px-1 ml-1 whitespace-nowrap">este producto</span>
+                      <span v-if="d.cancelado" class="text-[9px] uppercase text-red-400 ml-1">cancelado</span>
+                    </span>
+                    <span class="shrink-0 text-right" :class="d.cancelado ? 'line-through' : ''">
+                      ${{ Number(d.subtotal).toFixed(2) }}
+                      <template v-if="d.subtotal_nuevo !== null && d.subtotal_nuevo !== undefined">
+                        <span class="text-gray-400 mx-0.5">→</span>
+                        <span class="font-black text-amber-700">${{ Number(d.subtotal_nuevo).toFixed(2) }}</span>
+                      </template>
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-[11px] font-black border-t border-gray-200 pt-1.5 mt-1.5"
+                    :class="o.diferencia ? 'text-amber-800' : 'text-gray-700'">
+                    <span>
+                      Total de la orden
+                      <span v-if="o.diferencia" class="font-normal text-[10px] text-gray-400">si se aplica el precio nuevo</span>
+                    </span>
+                    <span class="text-right">
+                      ${{ Number(o.total || 0).toFixed(2) }}
+                      <template v-if="o.diferencia">
+                        <span class="text-gray-400 mx-0.5">→</span>
+                        <span>${{ Number(o.total_nuevo || 0).toFixed(2) }}</span>
+                      </template>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+          <button
+            @click="cancelarCambioPrecio"
+            type="button"
+            class="flex-1 py-3 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="confirmarCambioPrecio"
+            type="button"
+            class="flex-[2] py-3 text-sm font-black text-white bg-amber-600 rounded-2xl hover:bg-amber-700 shadow-lg shadow-amber-100 transition"
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PASO 2: CONFIRMACIÓN FINAL para aplicar los nuevos precios ══ -->
+    <div v-if="confirmacionPrecio" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[80] px-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="px-6 py-5 flex items-start gap-3">
+          <span class="text-2xl">🔒</span>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">¿Confirmas la importación?</h3>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Esta es la última confirmación. Los nuevos precios solo se aplicarán a órdenes nuevas.
+            </p>
+          </div>
+        </div>
+
+        <!-- Impacto en el total de las cuentas abiertas -->
+        <div v-if="advertenciaPrecio?.length" class="px-6 pt-3">
+          <div class="flex justify-between items-center gap-3 text-xs font-bold rounded-lg px-3 py-2 border"
+            :class="sumarDiferencia(advertenciaPrecio) > 0 ? 'bg-red-50 border-red-100 text-red-700'
+              : sumarDiferencia(advertenciaPrecio) < 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+              : 'bg-gray-50 border-gray-100 text-gray-600'">
+            <span>
+              Total de las cuentas abiertas
+              <span class="block font-normal text-[10px] text-gray-400">si se aplicara el nuevo precio</span>
+            </span>
+            <span class="text-base font-black shrink-0">
+              {{ formatDiferencia(sumarDiferencia(advertenciaPrecio)) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+          <button
+            @click="volverCambioPrecio"
+            type="button"
+            class="flex-1 py-3 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition"
+          >
+            No, volver
+          </button>
+          <button
+            @click="aplicarCambioPrecio"
+            :disabled="importing"
+            type="button"
+            class="flex-[2] py-3 text-sm font-black text-white bg-red-600 rounded-2xl hover:bg-red-700 shadow-lg shadow-red-100 transition disabled:opacity-50"
+          >
+            {{ importing ? 'Importando...' : 'Sí, importar' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import * as XLSX from 'xlsx'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+
+// xlsx (~430 KB minificado) se importa de forma diferida: solo descarga cuando
+// el usuario realmente selecciona un archivo Excel, no al abrir el panel.
+let XLSX = null
+const cargarXLSX = async () => {
+  if (!XLSX) {
+    XLSX = await import('xlsx')
+  }
+  return XLSX
+}
 
 // Emits consumidos por ProductosView: @close, @imported
 const emit = defineEmits(['close', 'imported'])
@@ -163,6 +361,61 @@ const errorMessage      = ref('')
 const importResult      = ref(null)
 const overwriteExisting = ref(true)
 const createCategories  = ref(false)
+
+// ── Guardia de cambio de precio (productos en órdenes sin cobrar) ─────────────
+const advertenciaPrecio   = ref(null)   // [{ producto, cambios, ordenes }]
+const confirmacionPrecio  = ref(false)
+const forzarPrecio        = ref(false)
+const ordenDetalleAbierta = ref(null)   // "<índiceProducto>-<ordenId>"
+
+const toggleDetalleOrden = (productoIdx, ordenId) => {
+  const key = productoIdx + '-' + ordenId
+  ordenDetalleAbierta.value = ordenDetalleAbierta.value === key ? null : key
+}
+
+const formatPrecios = (precios) =>
+  (precios || []).map(p => '$' + Number(p).toFixed(2)).join(' / ')
+
+// Diferencia con signo (p. ej. +$5.00 / -$5.00) para el impacto del cambio.
+const formatDiferencia = (valor) => {
+  const n = Number(valor || 0)
+  if (!n) return '$0.00'
+  return (n > 0 ? '+' : '-') + '$' + Math.abs(n).toFixed(2)
+}
+
+const colorDiferencia = (valor) => {
+  const n = Number(valor || 0)
+  if (n > 0) return 'text-red-600'
+  if (n < 0) return 'text-emerald-600'
+  return 'text-gray-500'
+}
+
+// Suma de las diferencias de todos los productos bloqueados.
+const sumarDiferencia = (productos) =>
+  (productos || []).reduce((a, p) => a + Number(p.impacto?.diferencia || 0), 0)
+
+// El backend solo manda la diferencia en las líneas cuyo precio cambiaría.
+const cambiaPrecio = (detalle) =>
+  detalle?.diferencia !== null && detalle?.diferencia !== undefined
+
+// Confirmación en dos pasos: paso 1 aviso, paso 2 confirmación final.
+const confirmarCambioPrecio = () => { confirmacionPrecio.value = true }
+
+const volverCambioPrecio = () => { confirmacionPrecio.value = false }
+
+const aplicarCambioPrecio = () => {
+  advertenciaPrecio.value  = null
+  confirmacionPrecio.value = false
+  forzarPrecio.value       = true
+  startImport()
+}
+
+const cancelarCambioPrecio = () => {
+  advertenciaPrecio.value   = null
+  confirmacionPrecio.value  = false
+  forzarPrecio.value        = false
+  ordenDetalleAbierta.value = null
+}
 
 // ── HELPERS ────────────────────────────────────────────────
 const normalizeRow = (item) => ({
@@ -184,12 +437,13 @@ const processFile = (file) => {
   importResult.value = null
 
   const reader = new FileReader()
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
+      const lib      = await cargarXLSX()
       const data     = new Uint8Array(e.target.result)
-      const workbook = XLSX.read(data, { type: 'array' })
+      const workbook = lib.read(data, { type: 'array' })
       const sheet    = workbook.Sheets[workbook.SheetNames[0]]
-      const jsonData = XLSX.utils.sheet_to_json(sheet)
+      const jsonData = lib.utils.sheet_to_json(sheet)
 
       if (jsonData.length === 0) {
         errorMessage.value = 'El archivo no contiene datos'
@@ -231,19 +485,32 @@ const startImport = async () => {
   errorMessage.value   = ''
   importResult.value   = null
 
+  if (!forzarPrecio.value) {
+    advertenciaPrecio.value   = null
+    ordenDetalleAbierta.value = null
+  }
+
+  let interval = null
+
   try {
     const productos = rawData.value.map(normalizeRow)
 
-    const interval = setInterval(() => {
+    interval = setInterval(() => {
       importProgress.value = Math.min(importProgress.value + 10, 90)
     }, 150)
 
-    const data = await apiClient.post(`/productos/import`, { productos, sobrescribir: overwriteExisting.value })
+    const data = await apiClient.post(`/productos/import`, {
+      productos,
+      sobrescribir:  overwriteExisting.value,
+      forzar_precio: forzarPrecio.value
+    })
 
     clearInterval(interval)
+    interval = null
     importProgress.value = 100
 
     if (data.success || data.data) {
+      forzarPrecio.value = false
       importResult.value = data.data || data
       // Avisa al padre y cierra tras mostrar el resultado
       setTimeout(() => {
@@ -253,9 +520,18 @@ const startImport = async () => {
     } else {
       errorMessage.value = data.message || 'Error al importar productos'
     }
-  } catch {
-    errorMessage.value = 'Error al conectar con el servidor'
+  } catch (e) {
+    // El backend bloquea la importación si sobrescribiría el precio de productos
+    // que están en órdenes sin cobrar: aquí se pide confirmación en dos pasos.
+    if (e?.response?.status === 409 && e.response.data?.code === 'PRECIO_EN_ORDEN_SIN_COBRAR') {
+      advertenciaPrecio.value = e.response.data.data?.productos || []
+      importProgress.value    = 0
+      forzarPrecio.value      = false
+    } else {
+      errorMessage.value = 'Error al conectar con el servidor'
+    }
   } finally {
+    if (interval) clearInterval(interval)
     importing.value = false
   }
 }

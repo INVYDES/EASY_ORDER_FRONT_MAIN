@@ -538,7 +538,7 @@
                       
                       <!-- Product Image Container -->
                       <div class="w-full h-32 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center relative shadow-sm border border-slate-100/50">
-                        <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <img v-if="p.imagen_url" :src="resolveImageUrl(p.imagen_url)" :alt="p.nombre || 'Producto'" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         <span v-else class="text-3xl">🍽️</span>
                         
                         <!-- Agotado Overlay -->
@@ -584,7 +584,7 @@
                     
                     <!-- Package Image Container -->
                     <div class="w-full h-32 rounded-2xl overflow-hidden bg-indigo-50 flex items-center justify-center relative shadow-sm border border-indigo-100/50">
-                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <img v-if="paq.imagen_url" :src="resolveImageUrl(paq.imagen_url)" :alt="paq.nombre || 'Paquete'" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <span v-else class="text-3xl">🎁</span>
                       <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-xl shadow-sm z-20">COMBO</div>
                       

@@ -201,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
+import { sessionSet } from '@/utils/session'
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '@/utils/apiClient'

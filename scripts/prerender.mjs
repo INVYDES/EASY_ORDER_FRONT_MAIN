@@ -17,6 +17,116 @@ const SITE_NAME = 'EASY ORDER'
 const DEFAULT_TITLE = 'EASY ORDER — Sistema de Gestión para Restaurantes | POS, Cocina y Administración'
 const DEFAULT_DESC = 'EASY ORDER es el sistema integral para restaurantes. Gestiona pedidos, cocina, barra, caja y administración en tiempo real. Optimiza tu restaurante con nuestra plataforma todo en uno.'
 
+// JSON-LD de identidad del sitio (debe mantenerse sincronizado con src/config/seo.ts)
+const ORGANIZATION_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'eOrder',
+  alternateName: 'EASY ORDER',
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo-eorder.jpg`,
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    email: 'eorder.mexico@gmail.com',
+    areaServed: 'MX',
+    availableLanguage: 'es',
+  },
+}
+
+const FAQ_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    // FAQ de la landing (6) — sincronizado con src/config/seo.ts
+    {
+      '@type': 'Question',
+      name: '¿Necesito comprar hardware especializado?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No. eOrder funciona desde cualquier navegador web, iPad, tablet Android o computadora convencional.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Qué pasa si se cae el internet?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'El POS cuenta con modo de resiliencia local para seguir registrando ventas y sincronizar automáticamente cuando la conexión vuelva.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Puedo cancelar en cualquier momento?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sin plazos forzosos ni letras chiquitas. Cancela o cambia de plan con un clic desde tu panel.',
+      },
+    },
+    // FAQ de planes (4)
+    {
+      '@type': 'Question',
+      name: '¿Puedo cambiar de plan después?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, puedes escalar o reducir tu plan en cualquier momento. El cambio aplica en el siguiente ciclo de facturación.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Los precios incluyen IVA?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, todos los precios mostrados son en MXN e incluyen IVA.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Qué incluye la prueba de 30 días?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Acceso completo a todas las funciones de tu plan (menos Enterprise) para una sucursal, sin compromiso ni tarjeta.',
+      },
+    },
+  ],
+}
+
+const LANDING_FAQ_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_JSONLD.mainEntity.slice(0, 6),
+}
+
+const PLANES_FAQ_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    ...FAQ_JSONLD.mainEntity.slice(3, 6),
+    {
+      '@type': 'Question',
+      name: '¿Necesito hardware especial?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No necesariamente. eOrder funciona con computadoras, tabletas y equipos que ya tengas. Te asesoramos en la implementación.',
+      },
+    },
+  ],
+}
+
+const PLANES_PRODUCT_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Planes eOrder',
+  description: 'Software integral para restaurantes: POS, cocina, inventario y administración.',
+  brand: { '@type': 'Brand', name: 'eOrder' },
+  offers: [
+    { '@type': 'Offer', name: 'Emprendimiento', price: '299', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', name: 'Básico', price: '899', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', name: 'Crecimiento', price: '1899', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', name: 'Pro', price: '3399', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
+  ],
+}
+
 function buildTitle(pageTitle) {
   if (!pageTitle) return DEFAULT_TITLE
   if (pageTitle.includes('EASY ORDER')) return pageTitle
@@ -35,6 +145,7 @@ const ROUTE_SEO = {
     description:
       'eOrder conecta meseros, cocina, barra y caja en una sola plataforma. Gestiona pedidos, inventario y ventas de tu restaurante en tiempo real. Prueba 30 días gratis.',
     robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    jsonLd: [ORGANIZATION_JSONLD, LANDING_FAQ_JSONLD],
   },
   '/login': {
     title: 'Iniciar Sesión | EASY ORDER',
@@ -66,6 +177,18 @@ const ROUTE_SEO = {
     description: 'Consulta los términos y condiciones de uso de la plataforma EASY ORDER.',
     robots: 'index, follow',
   },
+  '/planes': {
+    title: 'Planes eOrder — El plan ideal para tu restaurante desde $299 MXN',
+    description: 'Planes eOrder para digitalizar tu restaurante desde $299 MXN/mes con 30 días gratis. Emprendimiento, Básico, Crecimiento, Pro, Food Hall y Enterprise. POS, KDS, inventario y más.',
+    robots: 'index, follow',
+    jsonLd: [ORGANIZATION_JSONLD, PLANES_FAQ_JSONLD, PLANES_PRODUCT_JSONLD],
+  },
+  '/contactanos': {
+    title: 'Contáctanos — Habla con eOrder | Asesoría para tu restaurante',
+    description: 'Contacta a un distribuidor o representante de eOrder. Asesoría para elegir el plan ideal para tu restaurante. Respuesta rápida.',
+    robots: 'index, follow',
+    jsonLd: [ORGANIZATION_JSONLD],
+  },
 }
 
 const routes = Object.keys(ROUTE_SEO)
@@ -77,7 +200,7 @@ function patchHtml(html, route, seo) {
   const desc = seo.description || DEFAULT_DESC
   const canonical = buildCanonical(route)
   const robots = seo.robots || 'index, follow'
-  const ogImage = `${SITE_URL}/logo.svg`
+  const ogImage = `${SITE_URL}/logo-eorder.jpg`
 
   let out = html
 
@@ -102,12 +225,14 @@ function patchHtml(html, route, seo) {
   out = out.replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${escapeAttr(desc)}" />`)
   out = out.replace(/<meta name="twitter:image" content="[^"]*" \/>/, `<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`)
 
-  // JSON-LD breadcrumb + SoftwareApplication tweak (opcional): inyecta canonical correcto en el JSON-LD existente
-  // Reemplaza "url": "https://eorder.mx/" por canonical en el script JSON-LD (solo el de SoftwareApplication/Organization)
-  // Hacemos un reemplazo simple: si route !== '/', reemplazamos la url base en los ld+json
-  if (route !== '/') {
-    // No romper el JSON: reemplazar solo la url del sitio por la canónica no sería correcto para Organization.
-    // Mejor dejar la url base de Organization como SITE_URL y solo asegurar que el canonical esté bien.
+  // JSON-LD por ruta: elimina los inyectados dinámicamente heredados del template
+  // y agrega solo los que corresponden a esta página (marcados con data-seo-jsonld)
+  out = out.replace(/<script type="application\/ld\+json" data-seo-jsonld="true">[\s\S]*?<\/script>/g, '')
+  if (seo.jsonLd && seo.jsonLd.length) {
+    const scripts = seo.jsonLd
+      .map((obj) => `<script type="application/ld+json" data-seo-jsonld="true">${JSON.stringify(obj)}</script>`)
+      .join('\n  ')
+    out = out.replace(/<\/head>/, `  ${scripts}\n</head>`)
   }
 
   return out

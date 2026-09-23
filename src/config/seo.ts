@@ -1,6 +1,8 @@
 // src/config/seo.ts
 // Configuración centralizada de SEO para EASY ORDER
 
+import { PLAN_BY_ID, type PlanId } from './planes'
+
 export const SITE_CONFIG = {
   name: 'EASY ORDER',
   shortName: 'Easy Order',
@@ -9,7 +11,10 @@ export const SITE_CONFIG = {
   description:
     'EASY ORDER es el sistema integral para restaurantes. Gestiona pedidos, cocina, barra, caja y administración en tiempo real. Optimiza tu restaurante con nuestra plataforma todo en uno.',
   siteUrl: (import.meta.env.VITE_SITE_URL as string) || 'https://eorder.mx',
-  ogImage: '/logo.svg',
+  // Imagen Open Graph dedicada 1200×630 (og-image.svg en /public).
+  // Las redes sociales no renderizan SVG: public/og-image.png es el fallback
+  // rasterizado (ver notas de despliegue en scripts/generar-og-png.mjs).
+  ogImage: '/og-image.png',
   locale: 'es_ES',
   lang: 'es',
   author: 'TiendaFer',
@@ -25,7 +30,7 @@ export const SITE_CONFIG = {
     'meseros',
     'administración restaurante',
     'Easy Order',
-    'TiendaFer',
+    'software pos para restaurantes',
     'software restaurante',
     'comandas',
   ].join(', '),
@@ -65,6 +70,143 @@ export function buildTitle(pageTitle?: string): string {
   return SITE_CONFIG.titleTemplate.replace('%s', pageTitle)
 }
 
+/** Planes publicados como ofertas en el JSON-LD (precio de lista mensual) */
+const OFFER_PLAN_IDS: PlanId[] = ['emprendimiento', 'basico', 'crecimiento', 'pro']
+
+/** Ofertas derivadas de planes.ts para no duplicar precios */
+const PLAN_OFFERS = OFFER_PLAN_IDS.flatMap((id) => {
+  const { name, mensual } = PLAN_BY_ID[id]
+  if (mensual === null) return []
+  return [
+    {
+      '@type': 'Offer',
+      name,
+      price: String(mensual),
+      priceCurrency: 'MXN',
+      availability: 'https://schema.org/InStock',
+    },
+  ]
+})
+
+/**
+ * JSON-LD de identidad del sitio (válido en todas las páginas).
+ */
+export const ORGANIZATION_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'eOrder',
+  alternateName: 'EASY ORDER',
+  url: SITE_CONFIG.siteUrl,
+  logo: `${SITE_CONFIG.siteUrl}/logo-eorder.jpg`,
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    email: 'eorder.mexico@gmail.com',
+    areaServed: 'MX',
+    availableLanguage: 'es',
+  },
+} as const
+
+/**
+ * FAQ de la landing (debe coincidir con las preguntas visibles ahí).
+ */
+export const LANDING_FAQ_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '¿Necesito comprar hardware especializado?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No. eOrder funciona desde cualquier navegador web, iPad, tablet Android o computadora convencional.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Qué pasa si se cae el internet?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'El POS cuenta con modo de resiliencia local para seguir registrando ventas y sincronizar automáticamente cuando la conexión vuelva.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Puedo cancelar en cualquier momento?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sin plazos forzosos ni letras chiquitas. Cancela o cambia de plan con un clic desde tu panel.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Puedo cambiar de plan después?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, puedes escalar o reducir tu plan en cualquier momento. El cambio aplica en el siguiente ciclo de facturación.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Los precios incluyen IVA?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, todos los precios mostrados son en MXN e incluyen IVA.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Qué incluye la prueba de 30 días?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Acceso completo a todas las funciones de tu plan (menos Enterprise) para una sucursal, sin compromiso ni tarjeta.',
+      },
+    },
+  ],
+} as const
+
+/**
+ * FAQ de la página de planes (debe coincidir con las preguntas visibles ahí).
+ */
+export const FAQ_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '¿Puedo cambiar de plan después?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, puedes escalar o reducir tu plan en cualquier momento. El cambio aplica en el siguiente ciclo de facturación.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Los precios incluyen IVA?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, todos los precios mostrados son en MXN e incluyen IVA.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Qué incluye la prueba de 30 días?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Acceso completo a todas las funciones de tu plan (menos Enterprise) para una sucursal, sin compromiso ni tarjeta.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Necesito hardware especial?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No necesariamente. eOrder funciona con computadoras, tabletas y equipos que ya tengas. Te asesoramos en la implementación.',
+      },
+    },
+  ],
+} as const
+
 /**
  * Mapa de SEO por ruta. Las rutas privadas usan noindex automáticamente
  * pero se define título/descripción para UX y si alguna se vuelve pública.
@@ -75,6 +217,7 @@ export const ROUTE_SEO: Record<string, SeoMeta> = {
     description:
       'eOrder conecta meseros, cocina, barra y caja en una sola plataforma. Gestiona pedidos, inventario y ventas de tu restaurante en tiempo real. Prueba 30 días gratis.',
     noindex: false,
+    jsonLd: [ORGANIZATION_JSONLD, LANDING_FAQ_JSONLD],
   },
   '/login': {
     title: 'Iniciar Sesión | EASY ORDER',
@@ -103,6 +246,21 @@ export const ROUTE_SEO: Record<string, SeoMeta> = {
     title: 'Términos y Condiciones | EASY ORDER',
     description: 'Consulta los términos y condiciones de uso de la plataforma EASY ORDER.',
   },
+  '/politica-de-seguridad': {
+    title: 'Política de Seguridad | EASY ORDER',
+    description:
+      'Conoce cómo EASY ORDER protege la información de tu restaurante: cifrado TLS, control de acceso por roles, aislamiento de datos por negocio, respaldos y respuesta a incidentes.',
+  },
+  '/gracias': {
+    title: '¡Gracias! Recibimos tu solicitud | EASY ORDER',
+    description: 'Tu solicitud fue recibida. Un especialista de EASY ORDER te contactará en menos de 24 horas hábiles.',
+    noindex: true,
+  },
+  '/404': {
+    title: 'Página no encontrada | EASY ORDER',
+    description: 'La página que buscas no existe o cambió de dirección. Te ayudamos a volver a la sección correcta.',
+    noindex: true,
+  },
   '/menu': {
     title: 'Menú Digital | EASY ORDER',
     description: 'Explora el menú digital y realiza tu pedido en EASY ORDER.',
@@ -112,19 +270,18 @@ export const ROUTE_SEO: Record<string, SeoMeta> = {
     title: 'Planes eOrder — El plan ideal para tu restaurante desde $299 MXN',
     description: 'Planes eOrder para digitalizar tu restaurante desde $299 MXN/mes con 30 días gratis. Emprendimiento, Básico, Crecimiento, Pro, Food Hall y Enterprise. POS, KDS, inventario y más.',
     noindex: false,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: 'Planes eOrder',
-      description: 'Software integral para restaurantes: POS, cocina, inventario y administración.',
-      brand: { '@type': 'Brand', name: 'eOrder' },
-      offers: [
-        { '@type': 'Offer', name: 'Emprendimiento', price: '299', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
-        { '@type': 'Offer', name: 'Básico', price: '899', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
-        { '@type': 'Offer', name: 'Crecimiento', price: '1899', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
-        { '@type': 'Offer', name: 'Pro', price: '3399', priceCurrency: 'MXN', availability: 'https://schema.org/InStock' },
-      ],
-    },
+    jsonLd: [
+      ORGANIZATION_JSONLD,
+      FAQ_JSONLD,
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: 'Planes eOrder',
+        description: 'Software integral para restaurantes: POS, cocina, inventario y administración.',
+        brand: { '@type': 'Brand', name: 'eOrder' },
+        offers: PLAN_OFFERS,
+      },
+    ],
   },
   '/contactanos': {
     title: 'Contáctanos — Habla con eOrder | Asesoría para tu restaurante',

@@ -48,7 +48,7 @@
               @click="$refs.fileInput.click()"
               class="relative aspect-video rounded-2xl border-2 border-dashed border-gray-200 hover:border-indigo-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group"
             >
-              <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
+              <img v-if="previewUrl" :src="previewUrl" alt="Vista previa de la imagen del paquete" class="w-full h-full object-cover" />
               <div v-else class="text-center p-4">
                 <span class="text-3xl block mb-2">🖼️</span>
                 <p class="text-xs text-gray-400 font-medium">Click para subir imagen</p>
@@ -112,7 +112,7 @@
                 >
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-white">
-                      <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
+                      <img v-if="p.imagen_url" :src="p.imagen_url" :alt="p.nombre || 'Producto'" class="w-full h-full object-cover" />
                       <span v-else class="text-lg">🍽️</span>
                     </div>
                     <div>
@@ -143,7 +143,7 @@
             >
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                  <img v-if="p.imagen_url" :src="p.imagen_url" class="w-full h-full object-cover" />
+                  <img v-if="p.imagen_url" :src="p.imagen_url" :alt="p.nombre || 'Producto'" class="w-full h-full object-cover" />
                   <span v-else>🍽️</span>
                 </div>
                 <div>
@@ -265,6 +265,8 @@ const emit = defineEmits(['close', 'saved'])
 
 const isEdit = computed(() => !!props.paquete)
 const loading = ref(false)
+// Confirmación de cambio de precio con órdenes sin cobrar (409 del backend).
+const forzarPrecio = ref(false)
 const searchProd = ref('')
 const isFocused = ref(false)
 const previewUrl = ref(null)
@@ -459,6 +461,11 @@ const save = async () => {
     }
   })
 
+  // Confirmado desde el aviso de "órdenes sin cobrar": se aplica el precio igualmente.
+  if (forzarPrecio.value) {
+    formData.append('forzar_precio', '1')
+  }
+
   // Para Laravel spoofing de PUT
   if (isEdit.value) {
     formData.append('_method', 'PUT')
@@ -475,6 +482,32 @@ const save = async () => {
       alert(data.message || 'Error al guardar el paquete')
     }
   } catch (error) {
+    // El backend bloquea el cambio de precio si el paquete está en órdenes sin
+    // cobrar (409). Se avisa al usuario y, si confirma, se reintenta con
+    // forzar_precio; el precio capturado en esas órdenes no se modifica.
+    if (error?.response?.status === 409 && error.response.data?.code === 'PRECIO_EN_ORDEN_SIN_COBRAR') {
+      const aviso      = error.response.data.data || {}
+      const ordenes    = aviso.ordenes || []
+      const diferencia = Number(aviso.impacto?.diferencia || 0)
+      const signo      = diferencia < 0 ? '-' : '+'
+
+      const confirmado = window.confirm(
+        `Este paquete está en ${ordenes.length} orden(es) sin cobrar.\n\n` +
+        'El precio ya capturado en esas órdenes NO cambiará; el nuevo precio solo aplicará a órdenes nuevas.\n\n' +
+        `Impacto si se aplicara ahora: ${signo}$${Math.abs(diferencia).toFixed(2)}\n\n` +
+        '¿Deseas continuar?'
+      )
+
+      if (confirmado) {
+        forzarPrecio.value = true
+        await save()
+        return
+      }
+
+      forzarPrecio.value = false
+      return
+    }
+
     console.error('Error saving package:', error)
     alert('Error de conexión')
   } finally {

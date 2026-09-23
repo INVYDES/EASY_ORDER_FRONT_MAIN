@@ -1,4 +1,4 @@
-import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
+import { sessionGet } from '@/utils/session'
 // src/plugins/echo.ts
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'

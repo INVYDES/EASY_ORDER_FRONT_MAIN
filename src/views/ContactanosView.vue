@@ -1,14 +1,24 @@
 <template>
   <div class="contact-page">
+    <div class="bg-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
     <header class="topbar">
       <div class="wrap nav">
-        <router-link to="/planes" class="logo"><span><i>e</i>Order</span><small>Easy Order</small></router-link>
+        <router-link to="/" class="logo" aria-label="eOrder - Inicio"><span><i>e</i>Order</span><small>Easy Order</small></router-link>
         <nav class="nav-links">
           <router-link to="/planes" class="nav-link">Planes</router-link>
           <router-link to="/contactanos" class="nav-link active">Contáctanos</router-link>
           <router-link to="/login" class="nav-link ghost">Ingresar</router-link>
           <router-link to="/registro/dueno" class="nav-cta">Crear cuenta</router-link>
+          <PreferenciasControl />
         </nav>
+        <div class="nav-auth-mobile">
+          <router-link to="/login" class="nav-link ghost">Ingresar</router-link>
+          <PreferenciasControl />
+        </div>
         <button class="menu-btn" @click="mobileOpen=!mobileOpen">{{ mobileOpen ? '✕' : '☰' }}</button>
       </div>
       <div v-if="mobileOpen" class="mobile-menu">
@@ -19,7 +29,7 @@
     </header>
 
     <main class="wrap">
-      <section class="hero">
+      <section class="hero reveal">
         <span class="eyebrow">Estamos para ayudarte</span>
         <h1>Hablemos de tu restaurante</h1>
         <p>Déjanos tus datos y un distribuidor o representante de eOrder te ayudará a elegir la solución adecuada para tu operación.</p>
@@ -30,7 +40,7 @@
         </div>
       </section>
 
-      <section class="layout">
+      <section class="layout reveal">
         <div class="panel form-panel">
           <h2>Solicita información</h2>
           <p class="intro">Completa el formulario. Los campos marcados con <span class="required">*</span> son obligatorios.</p>
@@ -157,7 +167,7 @@
         </aside>
       </section>
 
-      <section class="faq">
+      <section class="faq reveal">
         <h2>Preguntas frecuentes</h2>
         <div class="faq-list">
           <details open><summary>¿Puedo probar eOrder antes de contratar?</summary><p>Sí. Los planes disponibles en línea incluyen 30 días de prueba para una sucursal, excepto Enterprise.</p></details>
@@ -168,16 +178,19 @@
       </section>
     </main>
 
-    <footer class="site-footer">© {{ year }} eOrder · Easy Order. Todos los derechos reservados. <router-link to="/planes">Planes</router-link> · <router-link to="/terminos-y-condiciones">Términos</router-link></footer>
+    <footer class="site-footer">© {{ year }} eOrder · Easy Order. Todos los derechos reservados. <router-link to="/planes">Planes</router-link> · <router-link to="/terminos-y-condiciones">Términos</router-link> · <router-link to="/politica-de-seguridad">Política de seguridad</router-link></footer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSeo } from '@/composables/useSeo'
 import { ROUTE_SEO } from '@/config/seo'
 import { apiClient } from '@/utils/apiClient'
+import PreferenciasControl from '@/components/PreferenciasControl.vue'
 
+const router = useRouter()
 const year = new Date().getFullYear()
 const mobileOpen = ref(false)
 const loading = ref(false)
@@ -256,6 +269,8 @@ async function submitForm(){
     status.type = ok ? 'ok' : 'error'
     if (ok) {
       form.nombre=''; form.negocio=''; form.email=''; form.telefono=''; form.ciudad=''; form.tipo_contacto=''; form.mensaje=''; form.aviso_privacidad=false
+      // Conversión: página de gracias dedicada
+      router.push('/gracias')
     }
   } catch(err:any){
     status.message = err.response?.data?.message || err.message || 'No se pudo enviar. Intenta por WhatsApp.'
@@ -280,11 +295,67 @@ function openChat(){
   }
 }
 
-onMounted(()=> useSeo(ROUTE_SEO['/contactanos']))
+onMounted(()=>{
+  useSeo(ROUTE_SEO['/contactanos'])
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed')
+      }
+    })
+  }, { threshold: 0.1 })
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+})
 </script>
 
 <style scoped>
-.contact-page{ color:#07183a; background: radial-gradient(circle at 50% 0, rgba(7,91,201,.10), transparent 34rem), #f7faff; min-height:100vh; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing:antialiased; }
+.contact-page{
+  color:#07183a;
+  background: radial-gradient(circle at 50% 0, rgba(7,91,201,.10), transparent 34rem), #f7faff;
+  min-height:100vh;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing:antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Dynamic Background Blobs */
+.bg-blobs {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.3;
+  animation: float-blob 20s infinite alternate ease-in-out;
+}
+.blob-1 { width: 40rem; height: 40rem; background: #eef4ff; top: -10rem; left: -10rem; animation-delay: 0s; }
+.blob-2 { width: 30rem; height: 30rem; background: #fff3eb; bottom: 10rem; right: -5rem; animation-delay: -5s; }
+.blob-3 { width: 25rem; height: 25rem; background: #e6f5ea; top: 40%; left: 50%; animation-delay: -10s; }
+
+@keyframes float-blob {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(5rem, 5rem) scale(1.1); }
+}
+
+/* Reveal Animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .wrap{ width:min(1180px, calc(100% - 36px)); margin:auto; }
 a{ color:inherit; }
 .topbar{ position:sticky; top:0; z-index:30; backdrop-filter:blur(12px); background:rgba(255,255,255,.86); border-bottom:1px solid #e6edf7; }
@@ -297,6 +368,7 @@ a{ color:inherit; }
 .nav-link.active, .nav-link:hover{ color:#075bc9; background:#eef4ff; }
 .nav-link.ghost{ border:1px solid #dbe6f6; }
 .nav-cta{ background:#075bc9; color:#fff; padding:10px 16px; border-radius:10px; font-weight:800; font-size:14px; text-decoration:none; box-shadow:0 8px 18px rgba(7,91,201,.18); }
+.nav-auth-mobile{ display:none; }
 .menu-btn{ display:none; background:#fff; border:1px solid #dde6f4; border-radius:8px; width:42px; height:42px; }
 .mobile-menu{ display:grid; gap:8px; padding:0 0 16px; }
 .hero{ max-width:820px; margin:28px auto 34px; text-align:center; }
@@ -306,7 +378,8 @@ a{ color:inherit; }
 .hero-badges{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
 .hero-badges span{ background:#fff; border:1px solid #e6edf7; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; box-shadow:0 4px 14px rgba(0,0,0,.04); }
 .layout{ display:grid; grid-template-columns: minmax(0,1.35fr) minmax(310px,.65fr); gap:24px; align-items:start; padding-bottom:42px; }
-.panel{ background:#fff; border:1px solid #dce4ef; border-radius:20px; box-shadow:0 18px 50px rgba(18,37,70,.11); }
+.panel{ background:#fff; border:1px solid #dce4ef; border-radius:20px; box-shadow:0 18px 50px rgba(18,37,70,.11); transition: transform .3s ease, box-shadow .3s ease; }
+.panel:hover{ transform: translateY(-5px); box-shadow:0 25px 60px rgba(18,37,70,.15); }
 .form-panel{ padding:32px; }
 .panel h2{ margin:0 0 8px; font-size:24px; letter-spacing:-.4px; }
 .intro{ margin:0 0 22px; color:#607089; line-height:1.5; font-size:14px; }
@@ -325,8 +398,20 @@ textarea{ min-height:120px; resize:vertical; }
 .hp{ position:absolute!important; left:-9999px!important; width:1px!important; height:1px!important; overflow:hidden!important; }
 .err{ color:#b42318; font-size:11px; font-weight:600; }
 .submit{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px 20px; color:#fff; background:linear-gradient(135deg,#075bc9,#0649a2); border:0; border-radius:10px; font:inherit; font-weight:850; cursor:pointer; box-shadow:0 10px 22px rgba(7,91,201,.22); transition: transform .15s; }
-.submit:hover{ transform: translateY(-1px); }
+.submit:hover{ transform: translateY(-2px); box-shadow:0 14px 28px rgba(7,91,201,.30); filter:brightness(1.06); }
+.submit:active{ transform: translateY(0) scale(.985); }
 .submit:disabled{ opacity:.65; cursor:wait; }
+.chat-button{ transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
+.chat-button:hover{ transform: translateY(-2px); box-shadow:0 10px 22px rgba(241,90,0,.35); filter:brightness(1.05); }
+.chat-button:active{ transform: translateY(0) scale(.98); }
+.nav-cta{ transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.nav-cta:hover{ transform: translateY(-1px); box-shadow:0 10px 24px rgba(7,91,201,.28); }
+.nav-cta:active{ transform: translateY(0) scale(.98); }
+.contact-item{ transition: transform .2s ease; }
+.contact-item:hover{ transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce){
+  .submit, .chat-button, .nav-cta, .contact-item { transition: none; }
+}
 .spinner{ width:16px; height:16px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
 .status{ display:none; margin-top:12px; padding:12px 14px; border-radius:9px; font-size:14px; line-height:1.4; }
@@ -354,16 +439,63 @@ textarea{ min-height:120px; resize:vertical; }
 .faq{ margin:0 auto 50px; }
 .faq h2{ text-align:center; font-size:26px; }
 .faq-list{ display:grid; max-width:850px; margin:18px auto 0; gap:10px; }
-details{ padding:16px 20px; background:#fff; border:1px solid #dce4ef; border-radius:12px; }
+details{ padding:16px 20px; background:#fff; border:1px solid #dce4ef; border-radius:12px; transition: all .3s ease; }
 summary{ cursor:pointer; font-weight:800; font-size:14px; }
-details p{ margin:10px 0 0; color:#607089; line-height:1.5; font-size:14px; }
+details p{ margin:10px 0 0; color:#607089; line-height:1.5; font-size:14px; animation: fadeIn 0.4s ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .site-footer{ padding:20px; color:#68768a; text-align:center; font-size:13px; border-top:1px solid #dce4ef; }
 .site-footer a{ color:#075bc9; font-weight:700; text-decoration:none; }
 @media(max-width:820px){ .layout{ grid-template-columns:1fr; } }
 @media(max-width:620px){
   .wrap{ width:min(100% - 24px, 520px); }
-  .nav-links{ display:none; } .menu-btn{ display:grid; place-items:center; }
+  .nav-links{ display:none; }
+  .nav-auth-mobile{ display:flex; margin-right: 12px; }
+  .menu-btn{ display:grid; place-items:center; }
   .grid{ grid-template-columns:1fr; }
   .form-panel,.contact-card,.chat-card,.info-card{ padding:22px; }
 }
+
+/* ── Modo oscuro (página de contacto) ──────────────────────────────────
+   La clase .tema-oscuro la pone el store de preferencias en <html>
+   (ver src/utils/tema.ts). Solo se redefinen colores. */
+html.tema-oscuro .contact-page{ background: radial-gradient(circle at 50% 0, rgba(99,102,241,.12), transparent 34rem), #0b1220; color:#e2e8f0; }
+html.tema-oscuro .topbar{ background: rgba(11,18,32,.92); border-bottom-color: rgba(255,255,255,.09); }
+html.tema-oscuro .logo{ color:#a5b4fc; }
+html.tema-oscuro .logo small{ color:#8fa0bd; }
+html.tema-oscuro .nav-link{ color:#c7d2e4; }
+html.tema-oscuro .nav-link.active, html.tema-oscuro .nav-link:hover{ color:#a5b4fc; background: rgba(99,102,241,.15); }
+html.tema-oscuro .nav-link.ghost{ border-color: rgba(165,180,252,.35); }
+html.tema-oscuro .nav-auth-mobile .nav-link{ background: rgba(11,18,32,.7); }
+html.tema-oscuro .menu-btn{ background:#111c33; border-color: rgba(255,255,255,.14); color:#e2e8f0; }
+html.tema-oscuro .mobile-menu a{ background:#111c33; border-color: rgba(255,255,255,.10); color:#e2e8f0; }
+html.tema-oscuro .eyebrow{ color:#fdba74; background: rgba(241,90,0,.15); border-color: rgba(241,90,0,.35); }
+html.tema-oscuro .hero h1{ color:#f1f5ff; }
+html.tema-oscuro .hero p{ color:#b6c2d9; }
+html.tema-oscuro .hero-badges span{ background:#111c33; border-color: rgba(255,255,255,.10); color:#c7d2e4; }
+html.tema-oscuro .panel{ background:#111c33; border-color: rgba(255,255,255,.09); box-shadow:0 18px 50px rgba(0,0,0,.45); }
+html.tema-oscuro .intro{ color:#8fa0bd; }
+html.tema-oscuro label{ color:#c7d2e4; }
+html.tema-oscuro input, html.tema-oscuro select, html.tema-oscuro textarea{ background:#0b1220; border-color: rgba(255,255,255,.16); color:#e2e8f0; }
+html.tema-oscuro input:focus, html.tema-oscuro select:focus, html.tema-oscuro textarea:focus{ border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.25); }
+html.tema-oscuro input::placeholder, html.tema-oscuro textarea::placeholder{ color:#64748b; }
+html.tema-oscuro .check{ color:#9fb0cb; }
+html.tema-oscuro .check a{ color:#a5b4fc; }
+html.tema-oscuro .err{ color:#fca5a5; }
+html.tema-oscuro .status.ok{ color:#6ee7b7; background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.35); }
+html.tema-oscuro .status.error{ color:#fca5a5; background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.35); }
+html.tema-oscuro .trust-row{ color:#8fa0bd; }
+html.tema-oscuro .contact-icon{ color:#a5b4fc; background: rgba(99,102,241,.15); }
+html.tema-oscuro .link{ color:#a5b4fc; }
+html.tema-oscuro .muted{ color:#8fa0bd; }
+html.tema-oscuro .social-proof{ background:#0b1220; border-color: rgba(255,255,255,.12); color:#c7d2e4; }
+html.tema-oscuro details{ background:#111c33; border-color: rgba(255,255,255,.09); }
+html.tema-oscuro summary{ color:#f1f5ff; }
+html.tema-oscuro details p{ color:#9fb0cb; }
+html.tema-oscuro .char-count{ color:#64748b; }
+html.tema-oscuro .site-footer{ color:#8fa0bd; border-top-color: rgba(255,255,255,.09); }
+html.tema-oscuro .site-footer a{ color:#a5b4fc; }
 </style>

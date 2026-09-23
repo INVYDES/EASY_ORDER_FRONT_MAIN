@@ -12,15 +12,10 @@
     "noEmit": true,
     "jsx": "preserve",
     "strict": true,
-    
-    /* LA SOLUCIÓN DEFINITIVA */
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
-    /* ---------------------- */
-
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

@@ -5,8 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prerender.mjs",
+    "build": "vite build && node scripts/prerender.mjs && node scripts/generar-og-png.mjs",
     "build:only": "vite build",
+    "typecheck": "vue-tsc -b",
+    "images": "node scripts/optimize-images.mjs",
+    "images:write": "node scripts/optimize-images.mjs --write",
+    "og:image": "node scripts/generar-og-png.mjs",
+    "check:ui": "node scripts/ui-audit.mjs",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
     "deploy:wrangler": "wrangler deploy"
@@ -32,6 +37,7 @@
     "@vue/tsconfig": "^0.8.1",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",

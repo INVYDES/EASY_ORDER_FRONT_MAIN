@@ -2,6 +2,9 @@
   <div class="chatbot-wrapper">
     <!-- Botón Flotante -->
     <button 
+      type="button"
+      :aria-expanded="isOpen"
+      :aria-label="isOpen ? 'Cerrar asistente' : 'Abrir asistente de soporte'"
       @click="toggleChat"
       class="chat-trigger shadow-2xl transition-all duration-300 active:scale-90"
       :class="{ 'trigger-active': isOpen }"

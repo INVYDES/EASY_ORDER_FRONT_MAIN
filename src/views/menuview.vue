@@ -7,7 +7,7 @@
         <div class="flex items-center gap-3">
           <!-- Logo del Restaurante -->
           <div v-if="restauranteSeleccionado?.imagen_url" class="w-12 h-12 rounded-2xl overflow-hidden bg-white shadow-sm border border-white/20 shrink-0">
-            <img :src="getImageUrl(restauranteSeleccionado.imagen_url)" class="w-full h-full object-cover" />
+            <img :src="getImageUrl(restauranteSeleccionado.imagen_url)" :alt="restauranteSeleccionado.nombre || 'Imagen del restaurante'" class="w-full h-full object-cover" />
           </div>
           <div>
             <h2 class="text-xl font-bold text-white leading-tight">
@@ -40,7 +40,7 @@
               <div class="relative h-24 bg-amber-50">
                 <img 
                   v-if="oferta.imagen_url" 
-                  :src="getImageUrl(oferta.imagen_url)" 
+                  :src="getImageUrl(oferta.imagen_url)" alt="Imagen de la oferta" 
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
                 <div class="absolute top-2 left-2">
@@ -155,7 +155,7 @@
                      :class="sidebarAbierta ? 'h-40' : 'h-64'">
                   <img 
                     v-if="pkg.imagen_url" 
-                    :src="getImageUrl(pkg.imagen_url)" 
+                    :src="getImageUrl(pkg.imagen_url)" :alt="pkg.nombre || 'Paquete'" 
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div v-else class="w-full h-full flex items-center justify-center text-5xl text-indigo-100">🎁</div>
@@ -289,7 +289,7 @@
                   class="p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:border-indigo-200 group transition-all">
                   <div class="flex items-center gap-3 mb-2">
                     <div class="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 flex items-center justify-center shadow-sm border border-slate-100">
-                      <img v-if="item.imagen" :src="item.imagen" class="w-full h-full object-cover" />
+                      <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre || 'Producto'" class="w-full h-full object-cover" />
                       <span v-else class="text-lg">{{ item.es_paquete ? '🎁' : '🍽️' }}</span>
                     </div>
                     <div class="flex-1 min-w-0 flex justify-between items-start">

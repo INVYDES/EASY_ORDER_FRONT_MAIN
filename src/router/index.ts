@@ -2,36 +2,16 @@ import { sessionGet } from '@/utils/session'
 import { createRouter, createWebHistory } from "vue-router";
 import { useSeo } from '@/composables/useSeo'
 import { ROUTE_SEO, type SeoMeta } from '@/config/seo'
+import { trackPageview } from '@/plugins/analytics'
 
-// Landing pública
-import LandingView     from "../views/LandingView.vue";
-
-// Auth
-import Signin         from "../views/Auth/signin.vue";
-import Signup         from "../views/Auth/signup.vue";
-
-import SignupCliente   from "../views/Auth/siginupCliente.vue";
-import ForgotPassword from "../views/Auth/Forgotpassword.vue";
-import ResetPassword  from "../views/Auth/ResetPassword.vue";
-
-// Panel Layout
-import Panelincialviews from "../views/panelincialviews.vue";
-
-// Vistas
-import Meserosview        from "../views/meserosview.vue";
-import Clienteview        from "../views/clienteview.vue";
-import Administraccionview from "../views/administraccionview.vue";
-import Analisisview from "../views/Analisisview.vue";
-import Cajaviews          from "../views/cajaviews.vue";
-import Cocinaview         from "../views/cocinaview.vue";
-import Postresview        from "../views/postresview.vue";
-import Productosview      from "../views/productosview.vue";
-import Barraview          from "../views/barraview.vue";
-import Perfilview         from "../views/perfilview.vue";
-import LicenciasView      from "../views/LicenciasView.vue";
-import Menuview           from "../views/menuview.vue";
-import NominaView         from "../views/NominaView.vue";
-import PlataformaView     from "../views/PlataformaView.vue";
+// ───────────────────────────────────────────────────────────────────────
+// Code-splitting de rutas:
+// SOLO la landing se importa estáticamente (es la página de aterrizaje y su
+// código viaja en el chunk inicial para el LCP). Todas las demás vistas
+// (auth, panel, kiosco, legales) van con import() perezoso: cada ruta genera
+// su propio chunk y el bundle inicial baja de ~2.2 MB a <1 MB.
+// ───────────────────────────────────────────────────────────────────────
+import LandingView from "../views/LandingView.vue";
 
 const routes = [
 
@@ -40,12 +20,12 @@ const routes = [
   // -------------------------
 
   { path: "/",                   name: "landing",          component: LandingView,   meta: { seo: ROUTE_SEO['/'] as SeoMeta } },
-  { path: "/login",             name: "login",            component: Signin,        meta: { seo: ROUTE_SEO['/login'] as SeoMeta } },
-  { path: "/registro/dueno",     name: "registro-dueno",   component: Signup,        meta: { seo: ROUTE_SEO['/registro/dueno'] as SeoMeta } },
+  { path: "/login",             name: "login",            component: () => import("../views/Auth/signin.vue"),         meta: { seo: ROUTE_SEO['/login'] as SeoMeta } },
+  { path: "/registro/dueno",     name: "registro-dueno",   component: () => import("../views/Auth/signup.vue"),         meta: { seo: ROUTE_SEO['/registro/dueno'] as SeoMeta } },
   
-  { path: "/registro/cliente",   name: "registro-cliente", component: SignupCliente, meta: { seo: ROUTE_SEO['/registro/cliente'] as SeoMeta } },
-  { path: "/recuperar-contrasena", name: "forgot-password",component: ForgotPassword, meta: { seo: ROUTE_SEO['/recuperar-contrasena'] as SeoMeta } },
-  { path: "/reset-password",     name: "reset-password",   component: ResetPassword, meta: { seo: ROUTE_SEO['/reset-password'] as SeoMeta } },
+  { path: "/registro/cliente",   name: "registro-cliente", component: () => import("../views/Auth/siginupCliente.vue"),  meta: { seo: ROUTE_SEO['/registro/cliente'] as SeoMeta } },
+  { path: "/recuperar-contrasena", name: "forgot-password",component: () => import("../views/Auth/Forgotpassword.vue"), meta: { seo: ROUTE_SEO['/recuperar-contrasena'] as SeoMeta } },
+  { path: "/reset-password",     name: "reset-password",   component: () => import("../views/Auth/ResetPassword.vue"),   meta: { seo: ROUTE_SEO['/reset-password'] as SeoMeta } },
   { path: "/registro",           redirect: { name: "registro-dueno" }                },
 
   // Landing — Planes y Contacto (públicas, indexables)
@@ -60,7 +40,7 @@ const routes = [
   {
     path: "/menu",
     name: "menu",
-    component: Menuview,
+    component: () => import("../views/menuview.vue"),
     meta: { requiresAuth: true, roles: ["MENU", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/menu'] as SeoMeta }
   },
 
@@ -70,7 +50,7 @@ const routes = [
 
   {
     path: "/panel",
-    component: Panelincialviews,
+    component: () => import("../views/panelincialviews.vue"),
     meta: { requiresAuth: true },
 
     children: [
@@ -78,55 +58,55 @@ const routes = [
       {
         path: "mesero",
         name: "mesero",
-        component: Meserosview,
+        component: () => import("../views/meserosview.vue"),
         meta: { roles: ["MESERO", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/mesero'] as SeoMeta }
       },
 
       {
         path: "cliente",
         name: "cliente",
-        component: Clienteview,
+        component: () => import("../views/clienteview.vue"),
         meta: { roles: ["CLIENTE"], seo: ROUTE_SEO['/panel/cliente'] as SeoMeta }
       },
 
       {
         path: "Gestion",
         name: "Gestion",
-        component: Administraccionview,
+        component: () => import("../views/administraccionview.vue"),
         meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/Gestion'] as SeoMeta }
       },
 
       {
         path: "caja",
         name: "caja",
-        component: Cajaviews,
+        component: () => import("../views/cajaviews.vue"),
         meta: { roles: ["CAJA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/caja'] as SeoMeta }
       },
       {
         path: "analisis",
         name: "analisis",
-        component: Analisisview,
+        component: () => import("../views/Analisisview.vue"),
         meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/analisis'] as SeoMeta }
       },
 
       {
         path: "cocina",
         name: "cocina",
-        component: Cocinaview,
+        component: () => import("../views/cocinaview.vue"),
         meta: { roles: ["COCINA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/cocina'] as SeoMeta }
       },
 
       {
         path: "postres",
         name: "postres",
-        component: Postresview,
+        component: () => import("../views/postresview.vue"),
         meta: { roles: ["COCINA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/postres'] as SeoMeta }
       },
 
       {
         path: "productos",
         name: "productos",
-        component: Productosview,
+        component: () => import("../views/productosview.vue"),
         meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/productos'] as SeoMeta }
       },
 
@@ -134,41 +114,41 @@ const routes = [
         path: "contactos",
         name: "contactos",
         component: () => import("../views/ContactosView.vue"),
-        meta: { roles: ["ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/contactos'] as SeoMeta }
+        meta: { roles: ["ADMIN", "PROPIETARIO", "SUPER_ADMIN"], seo: ROUTE_SEO['/panel/contactos'] as SeoMeta }
       },
 
       {
         path: "barra",
         name: "barra",
-        component: Barraview,
+        component: () => import("../views/barraview.vue"),
         meta: { roles: ["BARRA", "COCINA", "ADMIN", "PROPIETARIO"], seo: ROUTE_SEO['/panel/barra'] as SeoMeta }
       },
 
       {
         path: "perfil",
         name: "perfil",
-        component: Perfilview,
+        component: () => import("../views/perfilview.vue"),
         meta: { requiresAuth: true, seo: ROUTE_SEO['/panel/perfil'] as SeoMeta }
       },
 
       {
         path: "licencias",
         name: "licencias",
-        component: LicenciasView,
+        component: () => import("../views/LicenciasView.vue"),
         meta: { roles: ["PROPIETARIO", "ADMIN"], seo: ROUTE_SEO['/panel/licencias'] as SeoMeta }
       },
 
       {
         path: "nomina",
         name: "nomina",
-        component: NominaView,
+        component: () => import("../views/NominaView.vue"),
         meta: { roles: ["PROPIETARIO", "ADMIN"], seo: ROUTE_SEO['/panel/nomina'] as SeoMeta }
       },
 
       {
         path: "plataforma",
         name: "plataforma",
-        component: PlataformaView,
+        component: () => import("../views/PlataformaView.vue"),
         meta: { roles: ["SUPER_ADMIN"], seo: ROUTE_SEO['/panel/plataforma'] as SeoMeta }
       },
 
@@ -191,14 +171,42 @@ const routes = [
     component: () => import("../views/Legal/TermsView.vue"),
     meta: { seo: ROUTE_SEO['/terminos-y-condiciones'] as SeoMeta }
   },
+  {
+    path: "/politica-de-seguridad",
+    name: "Security",
+    component: () => import("../views/Legal/SecurityView.vue"),
+    meta: { seo: ROUTE_SEO['/politica-de-seguridad'] as SeoMeta }
+  },
 
-  { path: "/:pathMatch(.*)*", redirect: "/" }
+  // -------------------------
+  // CONVERSIÓN
+  // -------------------------
+  {
+    path: "/gracias",
+    name: "Gracias",
+    component: () => import("../views/GraciasView.vue"),
+    meta: { seo: ROUTE_SEO['/gracias'] as SeoMeta }
+  },
+
+  // -------------------------
+  // 404 — SIEMPRE al final
+  // -------------------------
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("../views/NotFoundView.vue"),
+    meta: { seo: ROUTE_SEO['/404'] as SeoMeta }
+  }
 
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
+  routes,
+  // Al cambiar de página se vuelve arriba (o a la posición recordada al volver atrás)
+  scrollBehavior(_to, _from, savedPosition) {
+    return savedPosition || { top: 0 };
+  }
 });
 
 
@@ -242,6 +250,8 @@ const PUBLIC_PATHS = [
   "/contactanos",
   "/contacto",
   "/pricing",
+  "/politica-de-seguridad",
+  "/gracias",
 ];
 
 
@@ -267,6 +277,11 @@ router.beforeEach((to, _from, next) => {
 
   // 2. Rutas públicas → siempre accesibles
   if (PUBLIC_PATHS.includes(to.path)) {
+    return next();
+  }
+
+  // 2b. La página 404 es pública: si no, cualquier URL rota pediría login
+  if (to.name === "NotFound") {
     return next();
   }
 
@@ -326,6 +341,9 @@ router.afterEach((to) => {
   }
 
   useSeo(finalSeo)
+
+  // Analítica (opcional): registra la vista de la ruta pública
+  trackPageview(to.path, document.title)
 })
 
 export default router;

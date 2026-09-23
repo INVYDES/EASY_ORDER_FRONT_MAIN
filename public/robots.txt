@@ -7,11 +7,15 @@ Allow: /registro
 Allow: /registro/dueno
 Allow: /registro/cliente
 Allow: /terminos-y-condiciones
+Allow: /politica-de-seguridad
 Disallow: /panel/
 Disallow: /menu
 Disallow: /recuperar-contrasena
 Disallow: /reset-password
 Disallow: /*?*
+Allow: /*.jpg$
+Allow: /*.png$
+Allow: /*.svg$
 
 # Sitemap
 Sitemap: https://eorder.mx/sitemap.xml

@@ -1,4 +1,4 @@
-import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
+import { sessionGet } from '@/utils/session'
 // src/config/api.ts
 
 // 1. Obtenemos la URL base del .env

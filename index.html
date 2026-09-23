@@ -19,8 +19,9 @@
     <link rel="canonical" href="https://eorder.mx/" />
 
     <!-- Favicon & Icons -->
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <link rel="apple-touch-icon" href="/logo.svg" />
+    <link rel="icon" type="image/jpeg" href="/logo-eorder.jpg" sizes="192x192" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" sizes="any" />
+    <link rel="apple-touch-icon" href="/logo-eorder.jpg" />
 
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,8 +33,10 @@
     <meta property="og:url" content="https://eorder.mx/" />
     <meta property="og:title" content="EASY ORDER — Sistema de Gestión para Restaurantes" />
     <meta property="og:description" content="Sistema integral para restaurantes. Gestiona pedidos, cocina, barra, caja y administración en tiempo real." />
-    <meta property="og:image" content="https://eorder.mx/logo.svg" />
-    <meta property="og:image:alt" content="EASY ORDER - Sistema de Gestión para Restaurantes" />
+    <meta property="og:image" content="https://eorder.mx/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="eOrder — El sistema todo en uno para tu restaurante: POS, cocina, barra y caja" />
     <meta property="og:locale" content="es_ES" />
 
     <!-- Twitter -->
@@ -41,7 +44,7 @@
     <meta name="twitter:url" content="https://eorder.mx/" />
     <meta name="twitter:title" content="EASY ORDER — Sistema de Gestión para Restaurantes" />
     <meta name="twitter:description" content="Sistema integral para restaurantes. Gestiona pedidos, cocina, barra, caja y administración en tiempo real." />
-    <meta name="twitter:image" content="https://eorder.mx/logo.svg" />
+    <meta name="twitter:image" content="https://eorder.mx/og-image.png" />
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -53,23 +56,19 @@
         "operatingSystem": "Web",
         "description": "Sistema integral de gestión para restaurantes: POS, cocina, barra, meseros y administración en tiempo real.",
         "url": "https://eorder.mx/",
+        "image": "https://eorder.mx/og-image.png",
         "publisher": {
           "@type": "Organization",
           "name": "TiendaFer",
           "logo": {
             "@type": "ImageObject",
-            "url": "https://eorder.mx/logo.svg"
+            "url": "https://eorder.mx/logo-eorder.jpg"
           }
         },
         "offers": {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "MXN"
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "ratingCount": "120"
         }
       }
     </script>
@@ -79,16 +78,81 @@
         "@type": "Organization",
         "name": "EASY ORDER",
         "url": "https://eorder.mx/",
-        "logo": "https://eorder.mx/logo.svg",
+        "logo": "https://eorder.mx/logo-eorder.jpg",
         "sameAs": []
       }
     </script>
+  <!-- Pantalla de carga inicial: se sustituye cuando Vue monta. Sin JS externo. -->
+  <style>
+    .eo-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      background: #0b1220;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      z-index: 9999;
+    }
+    .eo-splash-logo {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: #fff;
+    }
+    .eo-splash-logo i { font-style: normal; color: #818cf8; }
+    .eo-splash-bar {
+      width: 190px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .14);
+      overflow: hidden;
+    }
+    .eo-splash-bar span {
+      display: block;
+      width: 40%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed, #db2777);
+      animation: eo-splash-slide 1.1s ease-in-out infinite;
+    }
+    @keyframes eo-splash-slide {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .eo-splash-bar span { animation: none; width: 100%; }
+    }
+
+  </style>
+
+  <!-- Modo oscuro anticipado: evita el destello blanco si el visitante ya
+       eligió tema oscuro (la clase exacta la confirma utils/tema.ts). -->
+  <script>
+    try {
+      var prefs = JSON.parse(localStorage.getItem('eorder:preferencias') || '{}');
+      var oscuro = prefs.tema === 'oscuro' ||
+        (!prefs.tema && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (oscuro) {
+        document.documentElement.classList.add('tema-oscuro');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b1220');
+      }
+    } catch (e) { /* almacenamiento bloqueado */ }
+  </script>
   </head>
   <body>
     <noscript>
       <strong>EASY ORDER requiere JavaScript habilitado para funcionar. Por favor habilita JavaScript en tu navegador.</strong>
     </noscript>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Pantalla de carga inicial (Vue la reemplaza al montar) -->
+      <div class="eo-splash">
+        <div class="eo-splash-logo"><i>e</i>Order</div>
+        <div class="eo-splash-bar"><span></span></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

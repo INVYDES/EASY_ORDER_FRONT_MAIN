@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* ── Modo oscuro global (páginas públicas) ──────────────────────────────
+   El store de preferencias añade la clase .tema-oscuro a <html> (ver
+   src/utils/tema.ts). Este variant hace que las utilidades `dark:` de
+   Tailwind respondan a esa clase en lugar de a la preferencia del sistema,
+   para que el usuario la controle desde el toggle de la interfaz. */
+@custom-variant dark (&:where(.tema-oscuro, .tema-oscuro *));

@@ -480,7 +480,7 @@
             <label class="block text-sm font-medium text-gray-700">Logo o Foto del Restaurante</label>
             <div class="flex items-center gap-4">
               <div class="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
-                <img v-if="imgPreview || restForm.imagen_url" :src="imgPreview || getImageUrl(restForm.imagen_url)" class="w-full h-full object-cover" />
+                <img v-if="imgPreview || restForm.imagen_url" :src="imgPreview || getImageUrl(restForm.imagen_url)" alt="Imagen del restaurante" class="w-full h-full object-cover" />
                 <span v-else class="text-gray-300 text-2xl">📸</span>
               </div>
               <div class="flex-1">
