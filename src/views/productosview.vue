@@ -25,6 +25,7 @@
 
     <ProductsHeader
       v-model="searchTerm"
+      :exporting="exportingProducts"
       @new="openCreate"
       @import="showImport = true"
       @export="exportProducts"
@@ -86,6 +87,13 @@
             class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition text-xs"
           >✕</button>
         </div>
+        <button
+          @click="showImportPaquetes = true"
+          class="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition"
+        >
+          📥 Importar
+        </button>
+        <ExportMenu :exporting="exportingPaquetes" @export="exportPaquetes" />
         <button
           @click="openCreatePaquete"
           class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition ml-auto"
@@ -158,6 +166,13 @@
           <p class="text-gray-500 text-sm mt-0.5">Inventario y costos de ingredientes</p>
         </div>
         <div class="flex items-center gap-2">
+          <button
+            @click="showImportIngredientes = true"
+            class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition shadow-sm cursor-pointer"
+          >
+            📥 Importar
+          </button>
+          <ExportMenu :exporting="exportingIngredientes" @export="exportIngredientes" />
           <button
             @click="showListaCompras = true"
             class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition shadow-sm cursor-pointer"
@@ -352,6 +367,41 @@
       @saved="handlePaqueteSaved"
     />
 
+    <!-- Paquetes: importar -->
+    <ImportModal
+      v-if="showImportPaquetes"
+      titulo="Importar Paquetes"
+      endpoint="/paquetes/import"
+      clave-items="paquetes"
+      etiqueta-items="paquetes"
+      hoja="Paquetes"
+      nombre-archivo-plantilla="plantilla_paquetes.xlsx"
+      nota-formato="En productos, separa cada uno con | y su cantidad con x (ej. Taco x2 | Refresco x1). La columna stock es calculada y se ignora al importar."
+      :columnas-plantilla="['nombre', 'precio', 'descripcion', 'activo', 'stock', 'productos']"
+      :columnas-preview="columnasPreviewPaquetes"
+      :mapear-fila="mapearPaquete"
+      @close="showImportPaquetes = false"
+      @imported="handleImportadoPaquetes"
+    />
+
+    <!-- Ingredientes: importar -->
+    <ImportModal
+      v-if="showImportIngredientes"
+      titulo="Importar Ingredientes"
+      endpoint="/ingredientes/import"
+      clave-items="ingredientes"
+      etiqueta-items="ingredientes"
+      hoja="Ingredientes"
+      nombre-archivo-plantilla="plantilla_ingredientes.xlsx"
+      nota-formato="Se emparejan por nombre y los cambios de stock quedan registrados en el historial."
+      :max-filas="500"
+      :columnas-plantilla="['nombre', 'unidad', 'costo_unitario', 'stock_actual', 'stock_minimo', 'proveedor', 'activo']"
+      :columnas-preview="columnasPreviewIngredientes"
+      :mapear-fila="mapearIngrediente"
+      @close="showImportIngredientes = false"
+      @imported="handleImportadoIngredientes"
+    />
+
     <!-- Modal de Dudas -->
     <AyudaModal
       v-if="showAyuda"
@@ -371,6 +421,8 @@ import { useRouter } from 'vue-router'
 // Componentes
 import SucursalBadge from '../components/SucursalBadge.vue'
 import ProductsHeader from '../components/productos/ProductsHeader.vue'
+import ExportMenu from '@/components/ExportMenu.vue'
+import ImportModal from '@/components/ImportModal.vue'
 import ProductsTable from '../components/productos/ProductsTable.vue'
 import ProductFormModal from '../components/productos/ProductFormModal.vue'
 import ProductImportModal from '../components/productos/ProductImportModal.vue'
@@ -388,6 +440,7 @@ import AyudaModal from '../components/administraccion/AyudaModal.vue'
 
 import { STORAGE_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import { exportarDesdeBackend } from '@/utils/exportar'
 
 const router = useRouter()
 
@@ -428,6 +481,8 @@ const paginationPaquetes = ref({
 // Modales
 const showForm = ref(false)
 const showImport = ref(false)
+const showImportPaquetes = ref(false)
+const showImportIngredientes = ref(false)
 const showCategoriaModal = ref(false)
 const showIngredienteModal = ref(false)
 const showListaCompras = ref(false)
@@ -708,8 +763,109 @@ const handleToggleActive = async (id) => {
   }
 }
 
-const exportProducts = () => { 
-  showToast('Exportación próximamente', 'info') 
+// ── EXPORTAR ───────────────────────────────────────────────
+// El backend entrega CSV (GET .../export) y el .xlsx se arma con el util
+// compartido: src/utils/exportar.ts
+const exportingProducts     = ref(false)
+const exportingPaquetes     = ref(false)
+const exportingIngredientes = ref(false)
+
+const exportar = async ({ ref_estado, endpoint, nombreBase, hoja, formato, params, etiqueta }) => {
+  if (ref_estado.value) return
+  ref_estado.value = true
+  try {
+    await exportarDesdeBackend({ endpoint, nombreBase, hoja, formato, params })
+    showToast(`${etiqueta} exportados en ${formato === 'csv' ? 'CSV' : 'Excel'}`, 'success')
+  } catch (error) {
+    console.error(`Error al exportar ${etiqueta.toLowerCase()}:`, error)
+    showToast(`Error al exportar ${etiqueta.toLowerCase()}`, 'error')
+  } finally {
+    ref_estado.value = false
+  }
+}
+
+const exportProducts = (formato = 'xlsx') => exportar({
+  ref_estado: exportingProducts,
+  endpoint: '/productos/export',
+  nombreBase: 'productos',
+  hoja: 'Productos',
+  formato,
+  params: { buscar: searchTerm.value },
+  etiqueta: 'Productos'
+})
+
+const exportPaquetes = (formato = 'xlsx') => exportar({
+  ref_estado: exportingPaquetes,
+  endpoint: '/paquetes/export',
+  nombreBase: 'paquetes',
+  hoja: 'Paquetes',
+  formato,
+  params: { buscar: searchTermPaquetes.value },
+  etiqueta: 'Paquetes'
+})
+
+const exportIngredientes = (formato = 'xlsx') => exportar({
+  ref_estado: exportingIngredientes,
+  endpoint: '/ingredientes/export',
+  nombreBase: 'ingredientes',
+  hoja: 'Ingredientes',
+  formato,
+  params: {
+    buscar: buscarIngrediente.value,
+    bajo_stock: filtroBajoStock.value || undefined
+  },
+  etiqueta: 'Ingredientes'
+})
+
+// ── IMPORTAR PAQUETES / INGREDIENTES ───────────────────────
+const columnasPreviewPaquetes = [
+  { key: 'nombre', label: 'Nombre' },
+  { key: 'precio', label: 'Precio' },
+  { key: 'productos', label: 'Contenido' }
+]
+
+const columnasPreviewIngredientes = [
+  { key: 'nombre', label: 'Ingrediente' },
+  { key: 'unidad', label: 'Unidad' },
+  { key: 'costo_unitario', label: 'Costo' },
+  { key: 'stock_actual', label: 'Stock' }
+]
+
+// El export escribe activo como 1/0; el archivo puede venir editado a mano.
+const parseActivo = (valor, porDefecto = true) => {
+  if (valor === undefined || valor === null || valor === '') return porDefecto
+  const v = String(valor).trim().toLowerCase()
+  return !(v === '0' || v === 'false' || v === 'no')
+}
+
+const mapearPaquete = (item) => ({
+  nombre:      item.nombre      || item.Nombre      || '',
+  precio:      parseFloat(item.precio || item.Precio) || 0,
+  descripcion: item.descripcion || item.Descripcion || '',
+  activo:      parseActivo(item.activo ?? item.Activo),
+  productos:   item.productos   || item.Productos   || item.contenido || ''
+})
+
+const mapearIngrediente = (item) => ({
+  nombre:         item.nombre         || item.Nombre         || '',
+  unidad:         item.unidad         || item.Unidad         || '',
+  costo_unitario: parseFloat(item.costo_unitario || item.CostoUnitario) || 0,
+  stock_actual:   item.stock_actual !== undefined ? parseFloat(item.stock_actual) || 0 : undefined,
+  stock_minimo:   item.stock_minimo !== undefined ? parseFloat(item.stock_minimo) || 0 : undefined,
+  proveedor:      item.proveedor      || item.Proveedor      || null,
+  activo:         parseActivo(item.activo ?? item.Activo)
+})
+
+const handleImportadoPaquetes = () => {
+  showImportPaquetes.value = false
+  loadPaquetes(1)
+  showToast('Paquetes importados correctamente', 'success')
+}
+
+const handleImportadoIngredientes = async () => {
+  showImportIngredientes.value = false
+  await loadIngredientes()
+  showToast('Ingredientes importados correctamente', 'success')
 }
 
 const handleImported = () => { 

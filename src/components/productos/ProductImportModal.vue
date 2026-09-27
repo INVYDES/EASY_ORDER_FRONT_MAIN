@@ -17,9 +17,24 @@
         <p>
           El archivo debe ser <strong>CSV o Excel</strong> con las columnas:
           <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs font-mono ml-1">
-            nombre, precio, descripcion, categoria_id, stock, stock_minimo
+            nombre, precio, descripcion, categoria_id, categoria, stock, stock_minimo, minutos_produccion
           </code>
         </p>
+        <p class="mt-1 text-xs text-blue-600">
+          Para la categoría basta con una: el <strong>categoria_id</strong> o el nombre en
+          <strong>categoria</strong>.
+        </p>
+
+        <!-- Plantilla vacía con los encabezados correctos -->
+        <button
+          type="button"
+          @click="descargarPlantilla"
+          :disabled="descargandoPlantilla"
+          class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <span>{{ descargandoPlantilla ? '⏳' : '⬇️' }}</span>
+          {{ descargandoPlantilla ? 'Generando plantilla...' : 'Descargar plantilla (.xlsx)' }}
+        </button>
       </div>
 
       <!-- Dropzone -->
@@ -48,7 +63,7 @@
         <p class="text-sm font-medium text-gray-700">
           {{ fileName || 'Arrastra un archivo o haz clic para seleccionar' }}
         </p>
-        <p class="text-xs text-gray-400 mt-1">CSV o Excel · máximo 100 productos</p>
+        <p class="text-xs text-gray-400 mt-1">CSV o Excel · máximo 500 productos</p>
       </div>
 
       <!-- Opciones -->
@@ -75,7 +90,7 @@
                 <th class="text-left px-3 py-2 font-semibold text-gray-500">Nombre</th>
                 <th class="text-left px-3 py-2 font-semibold text-gray-500">Precio</th>
                 <th class="text-left px-3 py-2 font-semibold text-gray-500">Stock</th>
-                <th class="text-left px-3 py-2 font-semibold text-gray-500">Categoría ID</th>
+                <th class="text-left px-3 py-2 font-semibold text-gray-500">Categoría</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -83,7 +98,7 @@
                 <td class="px-3 py-2 text-gray-800">{{ item.nombre || '—' }}</td>
                 <td class="px-3 py-2">${{ Number(item.precio || 0).toFixed(2) }}</td>
                 <td class="px-3 py-2">{{ item.stock || 0 }}</td>
-                <td class="px-3 py-2 text-gray-400">{{ item.categoria_id || '—' }}</td>
+                <td class="px-3 py-2 text-gray-400">{{ item.categoria || item.categoria_id || '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -335,16 +350,7 @@
 import { ref } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
-
-// xlsx (~430 KB minificado) se importa de forma diferida: solo descarga cuando
-// el usuario realmente selecciona un archivo Excel, no al abrir el panel.
-let XLSX = null
-const cargarXLSX = async () => {
-  if (!XLSX) {
-    XLSX = await import('xlsx')
-  }
-  return XLSX
-}
+import { leerFilasDeArchivo, descargarPlantillaExcel } from '@/utils/excel'
 
 // Emits consumidos por ProductosView: @close, @imported
 const emit = defineEmits(['close', 'imported'])
@@ -361,6 +367,7 @@ const errorMessage      = ref('')
 const importResult      = ref(null)
 const overwriteExisting = ref(true)
 const createCategories  = ref(false)
+const descargandoPlantilla = ref(false)
 
 // ── Guardia de cambio de precio (productos en órdenes sin cobrar) ─────────────
 const advertenciaPrecio   = ref(null)   // [{ item, cambios, ordenes }]
@@ -423,12 +430,32 @@ const normalizeRow = (item) => ({
   precio:       parseFloat(item.precio || item.Precio   || item.price       || item.Price)      || 0,
   descripcion:  item.descripcion  || item.Descripcion  || item.description || item.Description || '',
   categoria_id: item.categoria_id || item.CategoriaId  || item.category_id || null,
+  categoria:    item.categoria    || item.Categoria    || item.category    || item.Category    || '',
   stock:        parseInt(item.stock        || item.Stock)       || 0,
   stock_minimo: parseInt(item.stock_minimo || item.StockMinimo) || 5,
+  minutos_produccion: parseInt(item.minutos_produccion || item.MinutosProduccion) || 0,
 })
 
+// ── PLANTILLA ──────────────────────────────────────────────
+const COLUMNAS_PLANTILLA = ['nombre', 'precio', 'descripcion', 'categoria_id', 'categoria', 'stock', 'stock_minimo', 'minutos_produccion']
+
+// Genera una plantilla .xlsx vacía (solo encabezados) para que el usuario la
+// llene en Excel respetando el formato que espera la importación.
+const descargarPlantilla = async () => {
+  if (descargandoPlantilla.value) return
+  descargandoPlantilla.value = true
+  errorMessage.value = ''
+  try {
+    await descargarPlantillaExcel(COLUMNAS_PLANTILLA, 'plantilla_productos.xlsx', 'Productos')
+  } catch (err) {
+    errorMessage.value = 'No se pudo generar la plantilla'
+  } finally {
+    descargandoPlantilla.value = false
+  }
+}
+
 // ── FILE HANDLING ──────────────────────────────────────────
-const processFile = (file) => {
+const processFile = async (file) => {
   fileName.value     = file.name
   fileSelected.value = true
   errorMessage.value = ''
@@ -436,34 +463,26 @@ const processFile = (file) => {
   rawData.value      = []
   importResult.value = null
 
-  const reader = new FileReader()
-  reader.onload = async (e) => {
-    try {
-      const lib      = await cargarXLSX()
-      const data     = new Uint8Array(e.target.result)
-      const workbook = lib.read(data, { type: 'array' })
-      const sheet    = workbook.Sheets[workbook.SheetNames[0]]
-      const jsonData = lib.utils.sheet_to_json(sheet)
+  try {
+    const jsonData = await leerFilasDeArchivo(file)
 
-      if (jsonData.length === 0) {
-        errorMessage.value = 'El archivo no contiene datos'
-        fileSelected.value = false
-        return
-      }
-      if (jsonData.length > 100) {
-        errorMessage.value = 'El archivo excede el límite de 100 productos'
-        fileSelected.value = false
-        return
-      }
-
-      rawData.value     = jsonData
-      previewData.value = jsonData.slice(0, 5)
-    } catch (err) {
-      errorMessage.value = 'Error al leer el archivo. Verifica el formato.'
+    if (jsonData.length === 0) {
+      errorMessage.value = 'El archivo no contiene datos'
       fileSelected.value = false
+      return
     }
+    if (jsonData.length > 500) {
+      errorMessage.value = 'El archivo excede el límite de 500 productos'
+      fileSelected.value = false
+      return
+    }
+
+    rawData.value     = jsonData
+    previewData.value = jsonData.slice(0, 5)
+  } catch (err) {
+    errorMessage.value = 'Error al leer el archivo. Verifica el formato.'
+    fileSelected.value = false
   }
-  reader.readAsArrayBuffer(file)
 }
 
 const handleFileSelect = (e) => {
@@ -501,8 +520,9 @@ const startImport = async () => {
 
     const data = await apiClient.post(`/productos/import`, {
       productos,
-      sobrescribir:  overwriteExisting.value,
-      forzar_precio: forzarPrecio.value
+      sobrescribir:    overwriteExisting.value,
+      crear_categorias: createCategories.value,
+      forzar_precio:   forzarPrecio.value
     })
 
     clearInterval(interval)

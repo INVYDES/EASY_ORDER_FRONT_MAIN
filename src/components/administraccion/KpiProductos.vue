@@ -47,22 +47,6 @@
           </button>
         </div>
       </div>
-
-      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-slate-50 pt-4">
-        <!-- Botones de Exportación -->
-        <div class="flex gap-2 ml-auto">
-          <button @click="exportarReporte('pdf')"
-            class="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all border border-rose-100 group">
-            <i class="fa-solid fa-file-pdf"></i>
-            <span class="text-xs font-bold uppercase">Exportar PDF</span>
-          </button>
-          <button @click="exportarReporte('excel')"
-            class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 group">
-            <i class="fa-solid fa-file-excel"></i>
-            <span class="text-xs font-bold uppercase">Descargar Excel</span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- TODOS LOS PRODUCTOS — Gráfica de barras filtrable -->
@@ -266,7 +250,7 @@ import { apiClient } from '@/utils/apiClient'
 import { STORAGE_URL } from '@/config/api'
 import MetricInfoTip from './MetricInfoTip.vue'
 
-const props = defineProps({
+defineProps({
   apiUrl:     { type: String,   default: () => import.meta.env.VITE_API_URL || 'http://localhost:8000/api' },
   getHeaders: { type: Function, required: true },
   empleados: { type: Array, default: () => [] }
@@ -494,18 +478,6 @@ const loadDevueltos = async () => {
     console.error(e)
     productosDevueltos.value = []
   }
-}
-
-const exportarReporte = async (formato) => {
-  try {
-    const res = await fetch(`${props.apiUrl}/reportes/exportar`, {
-      method: 'POST',
-      headers: { ...props.getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: 'ventas', formato, fecha_inicio: kpiFechaInicio.value || null, fecha_fin: kpiFechaFin.value || null })
-    })
-    const data = await res.json()
-    if (data.success) window.open(data.data.url, '_blank')
-  } catch (e) { console.error(e) }
 }
 
 onMounted(() => setKpiPeriodo('hoy'))

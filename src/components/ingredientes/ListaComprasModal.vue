@@ -292,6 +292,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { descargarBlob } from '@/utils/exportar'
 
 const props = defineProps({
   ingredientes: {
@@ -456,15 +457,8 @@ const exportarCSV = () => {
   csvContent += `\n"Total Items a Adquirir:",${itemsAComprar.value.length}\n`
   csvContent += `"Presupuesto Estimado Total:",$${presupuestoTotal.value.toFixed(2)}\n`
 
-  // Download logic
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.setAttribute('href', url)
-  link.setAttribute('download', `lista_compras_${new Date().toISOString().slice(0,10)}.csv`)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // Descarga con el helper compartido (crea y revoca el object URL).
+  descargarBlob(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), `lista_compras_${new Date().toISOString().slice(0,10)}.csv`)
 }
 </script>
 

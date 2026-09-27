@@ -350,7 +350,10 @@
                   <p class="text-xs font-black text-gray-500 uppercase tracking-widest">
                     Ingredientes en Receta {{ tamanos.length > 0 ? '(' + (tamanos[activeTamanoIdx]?.nombre || 'Tamaño') + ')' : '' }}
                   </p>
-                  <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ recetaActive.length }} items</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ recetaActive.length }} items</span>
+                    <ExportMenu v-if="recetaActive.length" :exporting="exportandoReceta" label="Exportar receta" @export="exportarReceta" />
+                  </div>
                 </div>
 
                 <div v-if="!recetaActive.length" class="py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl">
@@ -648,6 +651,8 @@ import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 // ── Importa la URL base desde tu config centralizado ──────────────────────────
 import { apiClient } from '@/utils/apiClient'
+import ExportMenu from '@/components/ExportMenu.vue'
+import { exportarHojas } from '@/utils/exportar'
 
 // ── Props / Emits ─────────────────────────────────────────────────────────────
 const props = defineProps<{
@@ -697,6 +702,7 @@ const busquedaIngrediente  = ref('')
 const ingredientesBusqueda = ref<any[]>([])
 const todosIngredientes    = ref<any[]>([])
 const showDropdown         = ref(false)
+const exportandoReceta     = ref(false)
 
 // ── Estado Tamaños ─────────────────────────────────────────────────────────────
 const tamanos = ref<any[]>([])
@@ -992,6 +998,45 @@ const quitarDeReceta = (idx: number) => {
   list.splice(idx, 1)
   recetaActive.value = list
   recetaModificada.value = true
+}
+
+// ── Exportar receta (ingredientes del platillo) ───────────────────────────────
+const filasDeReceta = (items: any[]) =>
+  items.map(i => ({
+    Ingrediente: i.nombre,
+    Unidad: i.unidad ?? '',
+    Cantidad: Number(i.cantidad_receta ?? 0),
+    'Costo unitario': Number(i.costo_unitario ?? 0),
+    'Costo total': Number(i.cantidad_receta ?? 0) * Number(i.costo_unitario ?? 0),
+  }))
+
+const exportarReceta = async (formato: 'xlsx' | 'csv' = 'xlsx') => {
+  // Con tamaños se exporta una hoja por tamaño; si no, la receta normal.
+  const hojas = tamanos.value.length > 0
+    ? tamanos.value.map((t: any, idx: number) => ({
+        nombre: (t.nombre || `Tamaño ${idx + 1}`).slice(0, 31),
+        filas: filasDeReceta(t.ingredientes || []),
+      }))
+    : [{ nombre: 'Receta', filas: filasDeReceta(receta.value) }]
+
+  const conDatos = hojas.filter(h => h.filas.length)
+  if (!conDatos.length) {
+    console.warn('La receta no tiene ingredientes para exportar')
+    return
+  }
+
+  const nombre = (form.nombre || props.product?.nombre || 'producto')
+    .toString()
+    .replace(/[^\w\-]+/g, '_')
+
+  exportandoReceta.value = true
+  try {
+    await exportarHojas(conDatos, `receta_${nombre}`, formato)
+  } catch (e) {
+    console.error('Error al exportar la receta:', e)
+  } finally {
+    exportandoReceta.value = false
+  }
 }
 
 // ── Guardar receta ────────────────────────────────────────────────────────────

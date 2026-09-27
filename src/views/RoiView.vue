@@ -42,13 +42,7 @@
         {{ loading ? 'Calculando...' : 'Aplicar' }}
       </button>
       
-      <button 
-        @click="exportarReporte" 
-        class="px-4 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-700 transition"
-      >
-        <i class="fa-solid fa-download mr-1"></i>
-        Exportar
-      </button>
+      <ExportMenu :exporting="exporting" @export="exportarReporte" />
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-16 gap-3">
@@ -414,6 +408,8 @@
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { apiClient } from '@/utils/apiClient'
+import ExportMenu from '@/components/ExportMenu.vue'
+import { exportarHojas } from '@/utils/exportar'
 
 const props = defineProps({
   apiUrl: { type: String, required: true },
@@ -426,6 +422,7 @@ const periodo = ref(30)
 const fechaInicio = ref('')
 const fechaFin = ref('')
 const showDetalleIngredientes = ref(false)
+const exporting = ref(false)
 
 const productosRoi = ref([])
 const gastoResumen = ref({ 
@@ -900,34 +897,64 @@ const verDetalleIngredientes = () => {
   }
 }
 
-const exportarReporte = () => {
-  const reporte = {
-    periodo: { inicio: fechaInicio.value, fin: fechaFin.value },
-    roi_ingredientes: {
-      ventas: roiIngredientes.value.ventas,
-      costo: roiIngredientes.value.costo,
-      margen: roiIngredientes.value.margen,
-      porcentaje: roiIngredientes.value.pct
+const exportarReporte = async (formato = 'xlsx') => {
+  const ing = roiIngredientes.value
+  const op = gastoResumen.value
+
+  // Mismo formato Excel/CSV que el resto de la app (utils/exportar.ts)
+  const hojas = [
+    {
+      nombre: 'Resumen',
+      filas: [
+        { Concepto: 'Período', Valor: `${fechaInicio.value} a ${fechaFin.value}` },
+        { Concepto: 'ROI insumos · Ventas', Valor: ing.ventas },
+        { Concepto: 'ROI insumos · Costo', Valor: ing.costo },
+        { Concepto: 'ROI insumos · Margen', Valor: ing.margen },
+        { Concepto: 'ROI insumos · % margen', Valor: ing.pct },
+        { Concepto: 'ROI operativo · Ventas', Valor: op.ventas },
+        { Concepto: 'ROI operativo · Gastos', Valor: op.total_gastos },
+        { Concepto: 'ROI operativo · Utilidad', Valor: op.utilidad_bruta },
+        { Concepto: 'ROI operativo · ROI %', Valor: op.roi_pct },
+      ],
     },
-    roi_operativo: {
-      ventas: gastoResumen.value.ventas,
-      gastos: gastoResumen.value.total_gastos,
-      utilidad: gastoResumen.value.utilidad_bruta,
-      roi: gastoResumen.value.roi_pct
+    {
+      nombre: 'Productos ROI',
+      filas: productosRoi.value.map(p => ({
+        Producto: p.nombre,
+        Unidades: p.total_vendido ?? 0,
+        'Venta total': p.venta_total ?? 0,
+        'Costo total': p.costo_total ?? 0,
+        Margen: p.margen ?? 0,
+        '% Margen': p.margen_pct ?? 0,
+      })),
     },
-    productos: productosRoi.value,
-    gastos_por_categoria: gastoResumen.value.por_categoria,
-    comparacion: comparacion.value
+    {
+      nombre: 'Gastos por categoría',
+      filas: Object.entries(op.por_categoria || {}).map(([categoria, monto]) => ({
+        Categoría: categoria,
+        Monto: monto,
+      })),
+    },
+    {
+      nombre: 'Comparación',
+      filas: comparacion.value.map(i => ({
+        Indicador: i.label,
+        'Período actual': i.actual,
+        'Período anterior': i.anterior,
+        Diferencia: i.diff,
+      })),
+    },
+  ]
+
+  exporting.value = true
+  try {
+    await exportarHojas(hojas, `reporte_roi_${fechaInicio.value}_${fechaFin.value}`, formato)
+  } catch (error) {
+    console.error('Error al exportar ROI:', error)
+    if (window.showToast) window.showToast('Error al exportar el reporte', 'error')
+  } finally {
+    exporting.value = false
   }
-  
-  const dataStr = JSON.stringify(reporte, null, 2)
-  const blob = new Blob([dataStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `reporte_roi_${fechaInicio.value}_${fechaFin.value}.json`
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 // ── Watchers ──────────────────────────────────────────────────────────────────

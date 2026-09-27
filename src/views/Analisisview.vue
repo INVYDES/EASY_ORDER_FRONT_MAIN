@@ -315,7 +315,7 @@ const AYUDA = {
       { icon: '🏆', titulo: 'Popularidad', texto: 'Ranking de los productos más vendidos en el período.' },
       { icon: '📊', titulo: 'Rentabilidad', texto: 'El margen real de cada platillo.', formula: '(Precio − Costo de insumos y mano de obra) ÷ Precio × 100', nota: 'Se alimenta de los ingredientes y tiempos que registres en tu menú.' },
       { icon: '🔴', titulo: 'Retrasos', texto: 'Platillos que tardan más de lo estimado en prepararse.' },
-      { icon: '📉', titulo: 'Mermas y cancelaciones', texto: 'Platillos que se eliminaron del ticket: 🔥 merma (se pierde todo) o ↩️ cancelación.', nota: 'Usa Exportar PDF / Excel para guardar el reporte.' },
+      { icon: '📉', titulo: 'Mermas y cancelaciones', texto: 'Platillos que se eliminaron del ticket: 🔥 merma (se pierde todo) o ↩️ cancelación.' },
     ],
   },
   meseros: {
