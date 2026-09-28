@@ -105,6 +105,7 @@
                 <div
                   :key="demoTab"
                   class="dp-frame"
+                  :class="`dp-frame--${demoTab}`"
                   role="tabpanel"
                   :id="`panel-${demoTab}`"
                   :aria-labelledby="`tab-${demoTab}`"
@@ -113,19 +114,50 @@
                     <span class="dp-dot"></span><span class="dp-dot"></span><span class="dp-dot"></span>
                     <b>{{ t(demo.titleKey) }}</b>
                     <span class="dp-live"><i></i>{{ t('demo.enVivo') }}</span>
-                    <em>{{ metaPanel }}</em>
+                    <em>{{ t('demo.sucursal') }}</em>
                   </div>
 
+                  <!-- Encabezado de la comanda: folio, mesa, semáforo y reloj -->
+                  <div class="dp-order">
+                    <div class="dp-order-head">
+                      <span class="dp-folio">{{ demo.folio }}</span>
+                      <span class="dp-mesa">{{ t('demo.mesa') }} {{ demo.mesa }}</span>
+                      <span v-if="comandaRetrasada && demo.urgenteKey" class="dp-urgente">⚠️ {{ urgenteEtiqueta }}</span>
+                      <span v-if="demo.arranque" class="dp-clock" :class="tonoTiempo(msComanda)">
+                        ⏱ {{ mmss(msComanda) }}
+                      </span>
+                      <span v-else class="dp-clock">{{ demo.hora }}</span>
+
+                      <template v-if="demo.total">
+                        <span class="dp-total">
+                          <span
+                            v-if="comandaCompleta && demo.metodo"
+                            class="dp-metodo"
+                            :class="`dp-metodo--${demo.metodo}`"
+                          >{{ metodoIcono }}</span>
+                          ${{ demo.total }}
+                        </span>
+                        <em class="pill" :class="`pill-${estadoComanda.tone}`">{{ estadoComanda.label }}</em>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- Productos de la comanda -->
                   <button
                     v-for="(item, i) in demo.items"
                     :key="item.nombreKey"
                     type="button"
                     class="dp-row"
-                    @click="avanzar(i)"
+                    @click="avanzarFila(i)"
                   >
-                    <span class="dp-name">{{ t(item.nombreKey) }}</span>
+                    <span class="dp-cant">{{ item.cantidad }}×</span>
+                    <span class="dp-item">
+                      <span class="dp-name">{{ t(item.nombreKey) }}</span>
+                      <span v-if="item.notaKey" class="dp-nota">📝 {{ t(item.notaKey) }}</span>
+                      <span class="dp-cat">{{ t(item.categoriaKey) }}</span>
+                    </span>
                     <span class="dp-meta">
-                      <span v-if="item.extra" class="dp-price">{{ item.extra }}</span>
+                      <span v-if="item.precio" class="dp-price">{{ item.precio }}</span>
                       <span
                         v-if="demo.arranque"
                         class="dp-timer"
@@ -133,9 +165,39 @@
                       >
                         {{ mmss(transcurrido(i)) }}
                       </span>
-                      <em class="pill" :class="`pill-${estadoDe(i).tone}`">{{ estadoDe(i).label }}</em>
+                      <em
+                        v-if="demo.modo === 'kds'"
+                        class="pill"
+                        :class="`pill-${estadoDe(i).tone}`"
+                      >{{ estadoDe(i).label }}</em>
                     </span>
                   </button>
+
+                  <!-- Nota general de la orden (bloque ámbar del KDS) -->
+                  <div v-if="demo.notaGeneralKey" class="dp-note-general">
+                    <span>{{ t('demo.notaGeneral') }}</span>
+                    {{ t(demo.notaGeneralKey) }}
+                  </div>
+
+                  <!-- Cobro del ticket (solo cuando ya se pagó) -->
+                  <div v-if="demo.total && comandaCompleta" class="dp-cobro">
+                    <div v-if="demo.propina">
+                      <span>{{ t('demo.propina') }}</span><b>{{ demo.propina }}</b>
+                    </div>
+                    <div v-if="demo.metodo">
+                      <span>{{ t('demo.metodo') }}</span>
+                      <b>{{ t(`demo.metodo.${demo.metodo}` as ClaveTexto) }}</b>
+                    </div>
+                    <div v-if="demo.voucher">
+                      <span>{{ t('demo.voucher') }}</span><code>{{ demo.voucher }}</code>
+                    </div>
+                  </div>
+
+                  <!-- Ingredientes (botón secundario de la tarjeta real) -->
+                  <div v-if="ingredientesAbiertos[demoTab]" class="dp-ingredientes">
+                    <span>{{ t('demo.ingredientes') }}</span>
+                    <p>{{ t(demo.ingredientesKey) }}</p>
+                  </div>
 
                   <div class="dp-progress">
                     <div
@@ -149,6 +211,36 @@
                       <span :style="{ width: `${progreso}%` }"></span>
                     </div>
                     <p class="dp-status" aria-live="polite">{{ resumen }}</p>
+                  </div>
+
+                  <!-- Pie de la tarjeta: mesero, estimado y conteo -->
+                  <div class="dp-foot-info">
+                    <span>👤 {{ demo.mesero }}</span>
+                    <div class="dp-foot-meta">
+                      <span v-if="demo.estimado" class="dp-est">⏱️ {{ t('demo.est') }}: {{ demo.estimado }} min</span>
+                      <span>{{ demo.items.length }} {{ t(demo.unidadKey) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Acciones, iguales a las del sistema -->
+                  <div class="dp-acciones">
+                    <button
+                      type="button"
+                      class="dp-btn-sec"
+                      :aria-pressed="ingredientesAbiertos[demoTab]"
+                      @click="ingredientesAbiertos[demoTab] = !ingredientesAbiertos[demoTab]"
+                    >
+                      {{ t('demo.accion.ingredientes') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="dp-btn-main"
+                      :class="claseAccion"
+                      :disabled="comandaCompleta"
+                      @click="avanzarComanda"
+                    >
+                      {{ etiquetaAccion }}
+                    </button>
                   </div>
 
                   <div class="dp-foot">{{ t(demo.footKey) }}</div>
@@ -396,7 +488,7 @@ const prefetchRuta = crearPrefetchDeRutas(router)
 const mobileOpen = ref(false)
 const scrollProgress = ref(0)
 
-type DemoTab = 'pos' | 'cocina' | 'barra'
+type DemoTab = 'pos' | 'cocina' | 'barra' | 'postres'
 type DemoTone = 'ok' | 'warn' | 'idle'
 type DemoEstado = { label: string; tone: DemoTone }
 /** Estado tal y como se guarda: el texto se resuelve con el idioma activo */
@@ -406,71 +498,194 @@ const DEMO_TABS: { id: DemoTab; labelKey: ClaveTexto; labelCortoKey: ClaveTexto;
   { id: 'pos', labelKey: 'demo.tab.pos', labelCortoKey: 'demo.tab.posCorto', icon: '🧾' },
   { id: 'cocina', labelKey: 'demo.tab.cocina', labelCortoKey: 'demo.tab.cocinaCorto', icon: '👨‍🍳' },
   { id: 'barra', labelKey: 'demo.tab.barra', labelCortoKey: 'demo.tab.barraCorto', icon: '🍹' },
+  { id: 'postres', labelKey: 'demo.tab.postres', labelCortoKey: 'demo.tab.postresCorto', icon: '🍰' },
 ]
 
+/**
+ * Renglón de la comanda. Mismos datos que pinta una tarjeta real: cantidad,
+ * nombre (con tamaño si aplica), nota del platillo y categoría.
+ */
+type DemoItem = {
+  nombreKey: ClaveTexto
+  cantidad: number
+  categoriaKey: ClaveTexto
+  /** 📝 nota del renglón (detalle.notas en el sistema) */
+  notaKey?: ClaveTexto
+  /** Subtotal por línea, como en el ticket de caja y en barra */
+  precio?: string
+}
+
+/**
+ * Una comanda por estación, con los mismos campos que el sistema:
+ * folio, mesa, mesero, reloj, nota general, estimado y acciones.
+ */
 type DemoPanel = {
   titleKey: ClaveTexto
-  metaKey: ClaveTexto
-  items: { nombreKey: ClaveTexto; extra?: string }[]
+  /** 'kds' avanza renglón por renglón (cocina/barra); 'caja' cobra el ticket completo */
+  modo: 'kds' | 'caja'
+  folio: string
+  mesa: string
+  mesero: string
+  /** Hora de apertura: la caja la muestra en lugar del cronómetro */
+  hora?: string
+  /** Total, propina y datos de cobro: solo el ticket de caja los muestra */
+  total?: string
+  propina?: string
+  metodo?: 'efectivo' | 'tarjeta' | 'transferencia'
+  voucher?: string
+  items: DemoItem[]
+  /** Nota general de la orden (bloque ámbar del KDS) */
+  notaGeneralKey?: ClaveTexto
+  /** Ingredientes que despliega el botón "Ver ingredientes" */
+  ingredientesKey: ClaveTexto
   /** Ciclo de estados por el que avanza cada renglón al tocarlo */
   estados: DemoEstadoBase[]
   /** Índice de estado con el que arranca cada renglón */
   inicial: number[]
   /** Segundos ya transcurridos al cargar cada renglón; null = estación sin cronómetro */
   arranque: number[] | null
+  /** Minutos estimados de producción (⏱️ Est: N min) */
+  estimado: number | null
+  /** Semáforo del sistema: ámbar y rojo al pasar estos minutos */
+  umbral?: { warn: number; crit: number }
+  /** Aviso al pasar el rojo: RETRASADO en cocina, URGENTE en barra */
+  urgenteKey?: ClaveTexto
+  unidadKey: ClaveTexto
+  /** Botón principal con la comanda pendiente ("🔥 Iniciar preparación") */
+  accionInicialKey: ClaveTexto
+  /** Botón principal con la comanda ya iniciada ("✅ Marcar como lista") */
+  accionMediaKey?: ClaveTexto
+  /** Botón principal con la comanda terminada ("✓ Pagado") */
+  ultimoKey: ClaveTexto
+  resumenKey: ClaveTexto
   footKey: ClaveTexto
 }
 
 const DEMO: Record<DemoTab, DemoPanel> = {
+  // Caja: mismo ticket que lista el módulo de cobro (folio, mesa, hora, total,
+  // usuario, método de pago y voucher).
   pos: {
     titleKey: 'demo.panel.pos.titulo',
-    metaKey: 'demo.panel.pos.meta',
+    modo: 'caja',
+    folio: '#ORD-1041',
+    mesa: '3',
+    mesero: 'Ana Solís',
+    hora: '20:41',
+    total: '365',
+    propina: '$30',
+    metodo: 'tarjeta',
+    voucher: 'AUTH-8842',
     items: [
-      { nombreKey: 'demo.item.tacos', extra: '$180' },
-      { nombreKey: 'demo.item.gringa', extra: '$95' },
-      { nombreKey: 'demo.item.aguas', extra: '$90' },
+      { nombreKey: 'demo.item.tacos', cantidad: 2, categoriaKey: 'demo.cat.cocina', precio: '$180' },
+      { nombreKey: 'demo.item.gringa', cantidad: 1, categoriaKey: 'demo.cat.cocina', precio: '$95' },
+      { nombreKey: 'demo.item.aguas', cantidad: 3, categoriaKey: 'demo.cat.bebidas', precio: '$90' },
     ],
+    ingredientesKey: 'demo.ing.pos',
+    // Mismos colores de badge que el ticket real: "Lista — cobrar" esmeralda,
+    // "Pagada" gris.
     estados: [
-      { labelKey: 'demo.estado.porCobrar', tone: 'idle' },
-      { labelKey: 'demo.estado.cobrado', tone: 'ok' },
+      { labelKey: 'demo.estado.listaCobrar', tone: 'ok' },
+      { labelKey: 'demo.estado.pagada', tone: 'idle' },
     ],
-    inicial: [0, 0, 1],
+    inicial: [0, 0, 0],
     arranque: null,
+    estimado: null,
+    unidadKey: 'demo.unidad.articulos',
+    accionInicialKey: 'demo.accion.cobrar',
+    ultimoKey: 'demo.accion.pagado',
+    resumenKey: 'demo.resumen.pagado',
     footKey: 'demo.panel.pos.foot',
   },
+  // Cocina: tarjeta del KDS (⚠️ RETRASADO a partir de 20 min, estimado y nota general).
   cocina: {
     titleKey: 'demo.panel.cocina.titulo',
-    metaKey: 'demo.panel.cocina.meta',
+    modo: 'kds',
+    folio: '#ORD-1042',
+    mesa: '7',
+    mesero: 'Luis Ramírez',
     items: [
-      { nombreKey: 'demo.item.tacos' },
-      { nombreKey: 'demo.item.gringa' },
-      { nombreKey: 'demo.item.aguas' },
+      { nombreKey: 'demo.item.tacos', cantidad: 2, categoriaKey: 'demo.cat.cocina', notaKey: 'demo.nota.sinCebolla' },
+      { nombreKey: 'demo.item.gringa', cantidad: 1, categoriaKey: 'demo.cat.cocina' },
+      { nombreKey: 'demo.item.parrilla', cantidad: 1, categoriaKey: 'demo.cat.cocina', notaKey: 'demo.nota.terminoTresCuartos' },
     ],
+    notaGeneralKey: 'demo.notaGeneral.general',
+    ingredientesKey: 'demo.ing.cocina',
     estados: [
-      { labelKey: 'demo.estado.nueva', tone: 'idle' },
+      { labelKey: 'demo.estado.porPreparar', tone: 'idle' },
       { labelKey: 'demo.estado.enPreparacion', tone: 'warn' },
       { labelKey: 'demo.estado.listo', tone: 'ok' },
     ],
     inicial: [2, 1, 0],
-    arranque: [272, 130, 6],
+    arranque: [180, 1320, 12],
+    estimado: 26,
+    umbral: { warn: 10, crit: 20 },
+    urgenteKey: 'demo.urgente.cocina',
+    unidadKey: 'demo.unidad.productos',
+    accionInicialKey: 'demo.accion.iniciar',
+    accionMediaKey: 'demo.accion.listo',
+    ultimoKey: 'demo.accion.completa',
+    resumenKey: 'demo.resumen.listo',
     footKey: 'demo.panel.cocina.foot',
   },
+  // Barra: misma tarjeta que cocina pero con URGENTE desde los 15 min y subtotales.
   barra: {
     titleKey: 'demo.panel.barra.titulo',
-    metaKey: 'demo.panel.barra.meta',
+    modo: 'kds',
+    folio: '#ORD-1043',
+    mesa: '7',
+    mesero: 'Luis Ramírez',
     items: [
-      { nombreKey: 'demo.item.aguas' },
-      { nombreKey: 'demo.item.limonada' },
-      { nombreKey: 'demo.item.cafe' },
+      { nombreKey: 'demo.item.limonada', cantidad: 2, categoriaKey: 'demo.cat.bebidas', notaKey: 'demo.nota.pocoHielo', precio: '$110' },
+      { nombreKey: 'demo.item.cafe', cantidad: 1, categoriaKey: 'demo.cat.bebidas', precio: '$45' },
+      { nombreKey: 'demo.item.cerveza', cantidad: 3, categoriaKey: 'demo.cat.bebidas', precio: '$165' },
     ],
+    ingredientesKey: 'demo.ing.barra',
     estados: [
-      { labelKey: 'demo.estado.nueva', tone: 'idle' },
+      { labelKey: 'demo.estado.porPreparar', tone: 'idle' },
       { labelKey: 'demo.estado.enPreparacion', tone: 'warn' },
       { labelKey: 'demo.estado.listo', tone: 'ok' },
     ],
     inicial: [1, 0, 2],
-    arranque: [70, 20, 205],
+    arranque: [1020, 40, 7],
+    estimado: 8,
+    umbral: { warn: 8, crit: 15 },
+    urgenteKey: 'demo.urgente.barra',
+    unidadKey: 'demo.unidad.bebidas',
+    accionInicialKey: 'demo.accion.barraIniciar',
+    accionMediaKey: 'demo.accion.barraLista',
+    ultimoKey: 'demo.accion.completaBebidas',
+    resumenKey: 'demo.resumen.listo',
     footKey: 'demo.panel.barra.foot',
+  },
+  // Postres: misma tarjeta que cocina, en rosa/morado y sin aviso de retraso
+  // (la tarjeta real solo pone el reloj en rojo a partir de 15 min).
+  postres: {
+    titleKey: 'demo.panel.postres.titulo',
+    modo: 'kds',
+    folio: '#ORD-1044',
+    mesa: '7',
+    mesero: 'Luis Ramírez',
+    items: [
+      { nombreKey: 'demo.item.flan', cantidad: 2, categoriaKey: 'demo.cat.postres', notaKey: 'demo.nota.sinCaramelo' },
+      { nombreKey: 'demo.item.payLimon', cantidad: 1, categoriaKey: 'demo.cat.postres' },
+      { nombreKey: 'demo.item.brownie', cantidad: 1, categoriaKey: 'demo.cat.postres', notaKey: 'demo.nota.paraCompartir' },
+    ],
+    ingredientesKey: 'demo.ing.postres',
+    estados: [
+      { labelKey: 'demo.estado.porPreparar', tone: 'idle' },
+      { labelKey: 'demo.estado.enPreparacion', tone: 'warn' },
+      { labelKey: 'demo.estado.listo', tone: 'ok' },
+    ],
+    inicial: [0, 2, 1],
+    arranque: [980, 300, 240],
+    estimado: 12,
+    umbral: { warn: 15, crit: 15 },
+    unidadKey: 'demo.unidad.postres',
+    accionInicialKey: 'demo.accion.postreIniciar',
+    accionMediaKey: 'demo.accion.postreListo',
+    ultimoKey: 'demo.accion.postreCompleta',
+    resumenKey: 'demo.resumen.listo',
+    footKey: 'demo.panel.postres.foot',
   },
 }
 
@@ -483,6 +698,7 @@ const estados = reactive<Record<DemoTab, number[]>>({
   pos: [...DEMO.pos.inicial],
   cocina: [...DEMO.cocina.inicial],
   barra: [...DEMO.barra.inicial],
+  postres: [...DEMO.postres.inicial],
 })
 
 const estadoDe = (i: number): DemoEstado => {
@@ -490,36 +706,84 @@ const estadoDe = (i: number): DemoEstado => {
   return { label: t(base.labelKey), tone: base.tone }
 }
 
+/** Cada botón "Ver ingredientes" recuerda si está abierto en su estación */
+const ingredientesAbiertos = reactive<Record<DemoTab, boolean>>({
+  pos: false,
+  cocina: false,
+  barra: false,
+  postres: false,
+})
+
+/** Estado de la comanda completa = el del renglón más atrasado */
+const estadoComanda = computed(() => {
+  const base = demo.value.estados[Math.min(...estados[demoTab.value])]
+  return { label: t(base.labelKey), tone: base.tone }
+})
+
+const ultimoEstado = computed(() => demo.value.estados.length - 1)
+/** Índice del renglón más atrasado: marca la columna en la que va la comanda */
+const indiceComanda = computed(() => Math.min(...estados[demoTab.value]))
+const comandaCompleta = computed(() => estados[demoTab.value].every((e) => e === ultimoEstado.value))
+
+/** Icono del método de pago, como en el ticket de caja */
+const METODO_ICONO: Record<string, string> = { efectivo: '💵', tarjeta: '💳', transferencia: '📲' }
+const metodoIcono = computed(() => METODO_ICONO[demo.value.metodo ?? ''] ?? '')
+
+/** Aviso del semáforo del panel (RETRASADO en cocina, URGENTE en barra) */
+const urgenteEtiqueta = computed(() => (demo.value.urgenteKey ? t(demo.value.urgenteKey) : ''))
+
+/**
+ * Etiqueta del botón principal siguiendo el flujo del sistema: la comanda con
+ * platillos por preparar arranca la preparación, la que ya empezó se marca
+ * lista y la terminada solo confirma (en caja, "💰 Cobrar" pasa a "✓ Pagado").
+ */
+const etiquetaAccion = computed(() => {
+  const panel = demo.value
+  if (comandaCompleta.value) return t(panel.ultimoKey)
+  return t(indiceComanda.value === 0 ? panel.accionInicialKey : (panel.accionMediaKey ?? 'demo.accion.listo'))
+})
+
+/**
+ * Color del botón principal, con los mismos botones del panel real:
+ * naranja para arrancar preparación, esmeralda para marcar lista,
+ * índigo para cobrar en caja y esmeralda suave cuando ya no hay nada que hacer.
+ */
+const claseAccion = computed(() => {
+  if (comandaCompleta.value) return 'dp-btn-main--ok'
+  if (demo.value.modo === 'caja') return 'dp-btn-main--cobrar'
+  return indiceComanda.value === 0 ? 'dp-btn-main--iniciar' : 'dp-btn-main--listo'
+})
+
 /* ---------- Cronómetro real por comanda (solo estaciones con KDS) ---------- */
 
-// ⚠️ TESTIMONIOS — son EJEMPLOS de maquetación, no clientes reales.
+// TESTIMONIOS — datos de ejemplo, no corresponden a clientes reales.
 // Sustitúyelos por testimonios verdaderos y con autorización por escrito del
 // cliente para publicar su nombre y su negocio (en México la publicidad
 // engañosa es sancionable). Si dejas el arreglo vacío, la sección no se muestra.
 const testimonios = ref([
   {
-    inicial: 'A',
-    nombre: 'Nombre del cliente',
-    negocio: 'Nombre del restaurante',
-    ciudad: 'Ciudad',
+    inicial: 'M',
+    nombre: 'Marisol Aguirre',
+    negocio: 'Cocina de Marisol',
+    ciudad: 'Veracruz, Ver.',
     texto:
-      'Ejemplo: qué problema tenías antes (comandas perdidas, tiempos, descuadres), qué cambió con eOrder y en cuánto tiempo lo notaste. Dos o tres líneas funcionan mejor que un párrafo largo.',
+      'Anotábamos las comandas en papel y en hora pico se nos perdían dos o tres por turno. Desde que el mesero manda la orden al KDS, cocina la recibe al instante y dejamos de regalar platos que nunca salieron.',
   },
   {
-    inicial: 'B',
-    nombre: 'Nombre del cliente',
-    negocio: 'Nombre del restaurante',
-    ciudad: 'Ciudad',
+    inicial: 'R',
+    nombre: 'Rafael Landa',
+    negocio: 'Tacos El Buen Sazón',
+    ciudad: 'Puebla, Pue.',
     texto:
-      'Ejemplo: un dato concreto y verificable, como cuánto bajó el tiempo de servicio o cuántas ventas dejaste de perder en horas pico.',
+      'Lo que más nos cambió fue el inventario: sabíamos cuánto vendíamos, pero no cuánto se nos iba. En el primer mes cerramos el descuadre de insumos y ahora conozco el costo real de cada plato.',
   },
   {
-    inicial: 'C',
-    nombre: 'Nombre del cliente',
-    negocio: 'Nombre del restaurante',
-    ciudad: 'Ciudad',
+    inicial: 'D',
+    nombre: 'Diana Cortés',
+    negocio: 'Food Hall La Estación',
+    ciudad: 'Guadalajara, Jal.',
     texto:
-      'Ejemplo: cómo fue el arranque, qué tan fácil fue capacitar al equipo y por qué lo recomendarías a otro restaurante.',
+      'Operamos ocho estaciones en un mismo local y cada una cobraba por su cuenta. Con eOrder todos los pedidos entran al mismo punto y el corte de caja del día nos toma minutos, no la hora de antes.',
   },
 ])
 
@@ -622,20 +886,25 @@ const mmss = (ms: number) => {
   return `${String(Math.floor(segundos / 60)).padStart(2, '0')}:${String(segundos % 60).padStart(2, '0')}`
 }
 
-/** Semáforo del cronómetro: normal, tarde a los 5 min, crítico a los 10 */
-const tonoTiempo = (ms: number) => (ms >= 600000 ? 'critico' : ms >= 300000 ? 'tarde' : 'normal')
+/** Semáforo del cronómetro, con los mismos umbrales que el KDS real */
+const tonoTiempo = (ms: number) => {
+  const { warn, crit } = demo.value.umbral ?? { warn: 10, crit: 20 }
+  return ms >= crit * 60000 ? 'critico' : ms >= warn * 60000 ? 'tarde' : 'normal'
+}
 
-/** Encabezado del panel: en KDS suma la comanda más vieja que sigue pendiente */
-const metaPanel = computed(() => {
-  const panel = demo.value
-  if (!panel.arranque) return t(panel.metaKey)
-  const ultimo = panel.estados.length - 1
+/** Reloj de la comanda: el del renglón más atrasado que sigue pendiente */
+const msComanda = computed(() => {
   const pendientes = estados[demoTab.value]
     .map((estado, i) => ({ estado, i }))
-    .filter(({ estado }) => estado !== ultimo)
-  if (!pendientes.length) return `${t(panel.metaKey)} · ${t('demo.todoEntregado')}`
-  return `${t(panel.metaKey)} · ${mmss(Math.max(...pendientes.map(({ i }) => transcurrido(i))))}`
+    .filter(({ estado }) => estado !== ultimoEstado.value)
+  if (!pendientes.length) return 0
+  return Math.max(...pendientes.map(({ i }) => transcurrido(i)))
 })
+
+/** El sistema avisa cuando el reloj pasa el rojo (RETRASADO / URGENTE) */
+const comandaRetrasada = computed(
+  () => !!demo.value.umbral && msComanda.value >= demo.value.umbral.crit * 60000,
+)
 
 /** Avanza el estado del renglón y su cronómetro (nueva → en preparación → listo) */
 function avanzar(i: number) {
@@ -653,8 +922,23 @@ function avanzar(i: number) {
   }
 }
 
+/** Avanza todos los renglones pendientes, como la tarjeta real del KDS */
+function avanzarComanda() {
+  const tab = demoTab.value
+  estados[tab].forEach((actual, i) => {
+    if (actual < DEMO[tab].estados.length - 1) avanzar(i)
+  })
+}
+
+/** En caja se cobra el ticket completo; en KDS cada renglón avanza por su cuenta */
+function avanzarFila(i: number) {
+  if (DEMO[demoTab.value].modo === 'caja') return avanzarComanda()
+  avanzar(i)
+}
+
 function resetDemo() {
   (Object.keys(DEMO) as DemoTab[]).forEach((id) => {
+    ingredientesAbiertos[id] = false
     estados[id] = [...DEMO[id].inicial]
     congelado[id] = estados[id].map((estado) => (estado === DEMO[id].estados.length - 1 ? Date.now() : null))
     inicio[id] = (DEMO[id].arranque ?? DEMO[id].items.map(() => 0)).map((segundos) => Date.now() - segundos * 1000)
@@ -662,18 +946,16 @@ function resetDemo() {
 }
 
 /** Renglones que llegaron al estado final del ciclo */
-const completos = computed(() => {
-  const ultimo = demo.value.estados.length - 1
-  return estados[demoTab.value].filter((e) => e === ultimo).length
-})
+const completos = computed(
+  () => estados[demoTab.value].filter((e) => e === ultimoEstado.value).length,
+)
 
 const progreso = computed(() => (completos.value / demo.value.items.length) * 100)
 
 /** Resumen en vivo del avance del panel */
-const resumen = computed(() => {
-  const ciclo = demo.value.estados
-  return `${completos.value}/${demo.value.items.length} ${t(ciclo[ciclo.length - 1].labelKey)}`
-})
+const resumen = computed(
+  () => `${completos.value}/${demo.value.items.length} ${t(demo.value.resumenKey)}`,
+)
 
 async function activarTab(id: DemoTab, indice: number) {
   demoTab.value = id
@@ -931,38 +1213,174 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .tb-ico { font-size: 16px; line-height: 1; }
 .lbl-sm { display: none; }
 
-/* Panel */
+/* Panel — cada estación conserva los colores del panel real: cocina ámbar,
+   barra azul y caja clara (el ticket blanco del módulo de cobro). */
 .demo-panel { margin-top: 16px; }
-.dp-frame { position: relative; overflow: hidden; background: linear-gradient(180deg, #131f36, #0f172a 45%); border: 1px solid #24324d; border-radius: 20px; padding: 18px; color: #e2e8f0; box-shadow: 0 34px 60px -24px rgba(30,41,90,.55); }
-.dp-frame::before { content: ""; position: absolute; inset: -50% 28% 55% 28%; background: radial-gradient(closest-side, rgba(99,102,241,.4), transparent); pointer-events: none; }
-.dp-head { position: relative; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
-.dp-head b { margin-left: auto; color: #f8fafc; font-size: 13px; }
-.dp-head em { font-style: normal; color: #94a3b8; }
-.dp-dot { width: 9px; height: 9px; border-radius: 50%; background: #334155; }
+.dp-frame {
+  --dp-bg: linear-gradient(180deg, #131f36, #0f172a 45%);
+  --dp-glow: radial-gradient(closest-side, rgba(99,102,241,.4), transparent);
+  --dp-surface: #0b1526;
+  --dp-border: #24324d;
+  --dp-line: #1e293b;
+  --dp-hover: #1b2740;
+  --dp-text: #e2e8f0;
+  --dp-strong: #f8fafc;
+  --dp-soft: #cbd5e1;
+  --dp-muted: #94a3b8;
+  --dp-faint: #64748b;
+  --dp-chip: #1e293b;
+  --dp-steel: #334155;
+  --dp-steel-hover: #3f4d63;
+  --dp-accent: #a5b4fc;
+  --dp-accent-soft: rgba(99,102,241,.14);
+  --dp-accent-line: rgba(99,102,241,.3);
+  --dp-btn-start: linear-gradient(135deg, #f97316, #fb923c);
+  --dp-btn-next: linear-gradient(135deg, #10b981, #34d399);
+  --dp-btn-pay: linear-gradient(135deg, #4f46e5, #6366f1);
+  --dp-btn-glow-start: rgba(249,115,22,.9);
+  --dp-btn-glow-next: rgba(16,185,129,.9);
+  --dp-btn-glow-pay: rgba(79,70,229,.9);
+  --dp-shadow: 0 34px 60px -24px rgba(30,41,90,.55);
+  position: relative; overflow: hidden;
+  background: var(--dp-bg); border: 1px solid var(--dp-border);
+  border-radius: 20px; padding: 18px; color: var(--dp-text); box-shadow: var(--dp-shadow);
+}
+.dp-frame::before { content: ""; position: absolute; inset: -50% 28% 55% 28%; background: var(--dp-glow); pointer-events: none; }
+
+/* Cocina: ámbar, como los encabezados del KDS (bg-amber-500/10 · text-amber-300) */
+.dp-frame--cocina { --dp-accent: #fbbf24; --dp-accent-soft: rgba(245,158,11,.12); --dp-accent-line: rgba(245,158,11,.3); --dp-glow: radial-gradient(closest-side, rgba(245,158,11,.26), transparent); }
+/* Barra: azul, como el KDS de bebidas (bg-blue-500/10 · text-blue-300); sus
+   botones son azul ("🍹 Comenzar a preparar") y esmeralda. */
+.dp-frame--barra { --dp-accent: #93c5fd; --dp-accent-soft: rgba(59,130,246,.12); --dp-accent-line: rgba(59,130,246,.32); --dp-glow: radial-gradient(closest-side, rgba(59,130,246,.28), transparent); --dp-btn-start: linear-gradient(135deg, #2563eb, #3b82f6); --dp-btn-next: linear-gradient(135deg, #059669, #10b981); --dp-btn-glow-start: rgba(37,99,235,.9); }
+/* Postres: rosa y morado, como el KDS de repostería (bg-pink-500/10 ·
+   text-pink-300, "En preparación" en morado); sus botones son rosa y rojo. */
+.dp-frame--postres { --dp-accent: #f9a8d4; --dp-accent-soft: rgba(236,72,153,.12); --dp-accent-line: rgba(236,72,153,.32); --dp-glow: radial-gradient(closest-side, rgba(236,72,153,.26), transparent); --dp-btn-start: linear-gradient(135deg, #db2777, #ec4899); --dp-btn-next: linear-gradient(135deg, #f43f5e, #fb7185); --dp-btn-glow-start: rgba(219,39,119,.9); --dp-btn-glow-next: rgba(244,63,94,.9); }
+/* Caja: el ticket del panel de cobro es claro (bg-white · text-gray-800) */
+.dp-frame--pos {
+  --dp-bg: linear-gradient(180deg, #fff, #f8fafc 55%);
+  --dp-glow: radial-gradient(closest-side, rgba(79,70,229,.10), transparent);
+  --dp-surface: #fff;
+  --dp-border: #e2e8f0;
+  --dp-line: #eef2f7;
+  --dp-hover: #f8fafc;
+  --dp-text: #334155;
+  --dp-strong: #0f172a;
+  --dp-soft: #475569;
+  --dp-muted: #64748b;
+  --dp-faint: #94a3b8;
+  --dp-chip: #f1f5f9;
+  --dp-steel: #f1f5f9;
+  --dp-steel-hover: #e2e8f0;
+  --dp-accent: #4f46e5;
+  --dp-accent-soft: rgba(79,70,229,.08);
+  --dp-accent-line: rgba(79,70,229,.2);
+  --dp-shadow: 0 30px 55px -26px rgba(30,41,90,.35);
+}
+
+/* Barra del título con el tinte de la estación, igual que la columna del sistema */
+.dp-head { position: relative; display: flex; align-items: center; gap: 8px; margin: -18px -18px 14px; padding: 13px 18px; background: var(--dp-accent-soft); border-bottom: 1px solid var(--dp-accent-line); font-size: 12px; color: var(--dp-muted); }
+.dp-head b { color: var(--dp-accent); font-size: 13px; }
+.dp-head em { margin-left: auto; font-style: normal; color: var(--dp-muted); }
+.dp-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dp-accent); opacity: .5; }
 .dp-live { display: inline-flex; align-items: center; gap: 5px; background: rgba(52,211,153,.14); color: #34d399; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; }
 .dp-live i { width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
+.dp-frame--pos .dp-live { background: #d1fae5; color: #047857; }
+.dp-frame--pos .dp-live i { background: #047857; }
+.dp-frame--pos .dp-urgente { background: #fee2e2; color: #b91c1c; }
+.dp-frame--pos .dp-btn-sec { background: #fff; border-color: var(--dp-border); color: var(--dp-soft); }
+
+/* Encabezado de la comanda: folio, mesa, semáforo, reloj y total */
+.dp-order { position: relative; padding: 11px 12px 12px; background: var(--dp-surface); border: 1px solid var(--dp-border); border-radius: 14px; }
+.dp-order-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
+.dp-folio { font-size: 14px; font-weight: 900; color: var(--dp-strong); letter-spacing: .02em; }
+.dp-mesa { padding: 3px 9px; border-radius: 999px; background: var(--dp-chip); color: var(--dp-soft); font-weight: 700; }
+.dp-urgente { padding: 3px 9px; border-radius: 999px; background: rgba(239,68,68,.18); color: #f87171; font-size: 10px; font-weight: 900; letter-spacing: .06em; }
+.dp-clock { margin-left: auto; font-weight: 800; color: var(--dp-muted); font-variant-numeric: tabular-nums; }
+.dp-clock.tarde { color: #fbbf24; }
+.dp-clock.critico { color: #f87171; }
+.dp-frame--pos .dp-clock.tarde { color: #b45309; }
+.dp-frame--pos .dp-clock.critico { color: #dc2626; }
+.dp-total { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; color: var(--dp-strong); }
+.dp-metodo { padding: 2px 6px; border: 1px solid transparent; border-radius: 6px; font-size: 11px; }
+.dp-metodo--efectivo { background: rgba(52,211,153,.14); border-color: rgba(52,211,153,.35); color: #34d399; }
+.dp-metodo--tarjeta { background: rgba(129,140,248,.16); border-color: rgba(129,140,248,.35); color: #a5b4fc; }
+.dp-metodo--transferencia { background: rgba(192,132,252,.16); border-color: rgba(192,132,252,.35); color: #d8b4fe; }
+/* Los badges de cobro del ticket claro, como en el panel de caja */
+.dp-frame--pos .dp-metodo--efectivo { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.dp-frame--pos .dp-metodo--tarjeta { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+.dp-frame--pos .dp-metodo--transferencia { background: #faf5ff; border-color: #e9d5ff; color: #7e22ce; }
 
 /* Renglones interactivos */
-.dp-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 12px 10px; border: 0; border-bottom: 1px solid #1e293b; background: transparent; color: #cbd5e1; font-family: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: background .15s; }
-.dp-row:hover { background: #1b2740; }
-.dp-row:focus-visible { outline: 2px solid #818cf8; outline-offset: -2px; }
+.dp-row { position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 12px 10px; border: 0; border-bottom: 1px solid var(--dp-line); background: transparent; color: var(--dp-soft); font-family: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: background .15s; }
+.dp-row:hover { background: var(--dp-hover); }
+.dp-row:focus-visible { outline: 2px solid var(--dp-accent); outline-offset: -2px; }
+.dp-cant { flex: none; min-width: 24px; font-weight: 900; color: var(--dp-strong); }
+.dp-item { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
 .dp-name { font-weight: 500; }
+.dp-nota { font-size: 11px; font-style: italic; color: #fbbf24; }
+.dp-frame--pos .dp-nota { color: #b45309; }
+.dp-cat { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--dp-faint); }
 .dp-meta { display: inline-flex; align-items: center; gap: 8px; }
-.dp-price { font-size: 12px; color: #94a3b8; font-variant-numeric: tabular-nums; }
-.dp-timer { min-width: 48px; text-align: right; font-size: 12px; font-weight: 800; color: #94a3b8; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.dp-price { font-size: 12px; color: var(--dp-muted); font-variant-numeric: tabular-nums; }
+.dp-timer { min-width: 48px; text-align: right; font-size: 12px; font-weight: 800; color: var(--dp-muted); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .dp-timer.tarde { color: #fbbf24; }
 .dp-timer.critico { color: #f87171; }
+.dp-frame--pos .dp-timer.tarde { color: #b45309; }
+.dp-frame--pos .dp-timer.critico { color: #dc2626; }
 .pill { font-style: normal; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-.pill-idle { background: #1e293b; color: #94a3b8; }
+.pill-idle { background: var(--dp-chip); color: var(--dp-muted); }
 .pill-warn { background: rgba(251,191,36,.16); color: #fbbf24; }
 .pill-ok { background: rgba(52,211,153,.16); color: #34d399; }
+.dp-frame--pos .pill-warn { background: #fef3c7; color: #b45309; }
+.dp-frame--pos .pill-ok { background: #d1fae5; color: #047857; }
+
+/* Nota general de la orden */
+.dp-note-general { position: relative; margin: 12px 2px 0; padding: 9px 11px; border: 1px solid rgba(251,191,36,.25); border-radius: 10px; background: rgba(251,191,36,.1); font-size: 12px; color: var(--dp-soft); }
+.dp-note-general span { display: block; margin-bottom: 3px; font-size: 9px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: #fbbf24; }
+.dp-frame--pos .dp-note-general { background: #fffbeb; border-color: #fde68a; color: #78350f; }
+.dp-frame--pos .dp-note-general span { color: #b45309; }
+
+/* Datos del cobro (solo el ticket ya pagado) */
+.dp-cobro { position: relative; display: grid; gap: 5px; margin: 12px 2px 0; }
+.dp-cobro div { display: flex; justify-content: space-between; font-size: 12px; color: var(--dp-muted); }
+.dp-cobro b { color: var(--dp-strong); }
+.dp-cobro code { padding: 1px 6px; border-radius: 5px; background: rgba(129,140,248,.14); color: #a5b4fc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+.dp-frame--pos .dp-cobro code { background: #eff6ff; color: #2563eb; }
+
+/* Ingredientes del botón secundario */
+.dp-ingredientes { position: relative; margin: 12px 2px 0; padding: 10px 12px; background: var(--dp-surface); border: 1px solid var(--dp-border); border-radius: 10px; }
+.dp-ingredientes span { display: block; margin-bottom: 4px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--dp-accent); }
+.dp-ingredientes p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--dp-soft); }
+
+/* Pie de tarjeta: mesero, estimado y conteo */
+.dp-foot-info { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 10px 0; font-size: 11px; color: var(--dp-muted); }
+.dp-foot-meta { display: inline-flex; align-items: center; gap: 12px; }
+.dp-est { font-weight: 800; color: var(--dp-accent); }
+
+/* Acciones de la tarjeta — mismos botones que el panel real */
+.dp-acciones { position: relative; display: grid; gap: 8px; padding: 12px 10px 0; }
+.dp-btn-sec, .dp-btn-main { width: 100%; min-height: 40px; border: 1px solid transparent; border-radius: 10px; font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; transition: background .18s, transform .18s, box-shadow .18s; }
+.dp-btn-sec { background: var(--dp-steel); color: var(--dp-text); }
+.dp-btn-sec:hover { background: var(--dp-steel-hover); }
+.dp-btn-main:hover { transform: translateY(-1px); }
+/* 🔥 Iniciar preparación — naranja en cocina, azul en barra, rosa en postres */
+.dp-btn-main--iniciar { background: var(--dp-btn-start); color: #fff; box-shadow: 0 10px 22px -12px var(--dp-btn-glow-start); }
+/* ✅ Marcar como lista / listo */
+.dp-btn-main--listo { background: var(--dp-btn-next); color: #fff; box-shadow: 0 10px 22px -12px var(--dp-btn-glow-next); }
+/* 💰 Cobrar (indigo-600 en caja) */
+.dp-btn-main--cobrar { background: var(--dp-btn-pay); color: #fff; box-shadow: 0 10px 22px -12px var(--dp-btn-glow-pay); }
+/* ✓ Pagado / todo listo (bloque esmeralda suave) */
+.dp-btn-main--ok { background: rgba(52,211,153,.16); color: #34d399; box-shadow: none; }
+.dp-frame--pos .dp-btn-main--ok { background: #ecfdf5; color: #059669; }
+.dp-btn-main:disabled { cursor: default; transform: none; }
+.dp-btn-sec:focus-visible, .dp-btn-main:focus-visible { outline: 2px solid var(--dp-accent); outline-offset: 2px; }
 
 /* Progreso */
 .dp-progress { position: relative; display: flex; align-items: center; gap: 12px; padding: 16px 10px 0; }
-.dp-bar { flex: 1; height: 6px; border-radius: 999px; background: #1e293b; overflow: hidden; }
-.dp-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #6366f1, #34d399); transition: width .3s ease; }
-.dp-status { font-size: 11px; font-weight: 700; color: #a5b4fc; white-space: nowrap; }
-.dp-foot { position: relative; font-size: 11px; color: #94a3b8; padding-top: 14px; margin-top: 14px; border-top: 1px dashed #24324d; }
+.dp-bar { flex: 1; height: 6px; border-radius: 999px; background: var(--dp-line); overflow: hidden; }
+.dp-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--dp-accent), #34d399); transition: width .3s ease; }
+.dp-status { font-size: 11px; font-weight: 700; color: var(--dp-accent); white-space: nowrap; }
+.dp-foot { position: relative; font-size: 11px; color: var(--dp-muted); padding-top: 14px; margin-top: 14px; border-top: 1px dashed var(--dp-border); }
 
 .fade-enter-active, .fade-leave-active { transition: all .25s cubic-bezier(0.4, 0, 0.2, 1); }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.98) translateY(10px); }

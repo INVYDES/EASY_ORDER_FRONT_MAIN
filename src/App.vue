@@ -49,11 +49,13 @@ function resolverComponente(Component, route) {
   return markRaw(
     defineAsyncComponent({
       loader: async () => {
+        // vue-router ya resolvió el import() dinámico antes de confirmar la
+        // navegación: aquí `Component` es el componente en sí (un objeto), no
+        // una función que devuelve el módulo. Llamarlo como función rompía la
+        // ruta y dejaba la página en blanco.
+        const modulo = typeof Component === 'function' ? await Component() : Component
         // Pequeño respiro para que el skeleton parpadee lo mínimo necesario
-        const [modulo] = await Promise.all([
-          Component(),
-          new Promise((res) => setTimeout(res, 120)),
-        ])
+        await new Promise((res) => setTimeout(res, 120))
         return modulo
       },
       loadingComponent: () => h(EoSkeleton, { variante: varianteSkeleton }),

@@ -186,6 +186,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSeo } from '@/composables/useSeo'
+import { useRevealEnScroll } from '@/composables/useRevealEnScroll'
 import { ROUTE_SEO } from '@/config/seo'
 import { apiClient } from '@/utils/apiClient'
 import PreferenciasControl from '@/components/PreferenciasControl.vue'
@@ -297,17 +298,10 @@ function openChat(){
 
 onMounted(()=>{
   useSeo(ROUTE_SEO['/contactanos'])
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('revealed')
-      }
-    })
-  }, { threshold: 0.1 })
-
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
 })
+
+// Misma entrada animada que la landing: nunca deja contenido invisible.
+useRevealEnScroll()
 </script>
 
 <style scoped>
@@ -346,10 +340,14 @@ onMounted(()=>{
 }
 
 /* Reveal Animation */
+/* Igual que la landing: el bloque solo se oculta cuando el observer está
+   "armado" (.reveal-armed), así nunca se queda invisible. */
 .reveal {
+  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal-armed {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .reveal.revealed {
   opacity: 1;
