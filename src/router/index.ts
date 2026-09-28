@@ -114,7 +114,7 @@ const routes = [
         path: "contactos",
         name: "contactos",
         component: () => import("../views/ContactosView.vue"),
-        meta: { roles: ["ADMIN", "PROPIETARIO", "SUPER_ADMIN"], seo: ROUTE_SEO['/panel/contactos'] as SeoMeta }
+        meta: { roles: ["SUPER_ADMIN"], seo: ROUTE_SEO['/panel/contactos'] as SeoMeta }
       },
 
       {
@@ -203,6 +203,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+  // Desactivar las clases automáticas de Vue Router para evitar estilos
+  // azules residuales. El estado activo se controla manualmente con :class
+  // en cada RouterLink del sidebar.
+  linkActiveClass: '',
+  linkExactActiveClass: '',
   // Al cambiar de página se vuelve arriba (o a la posición recordada al volver atrás)
   scrollBehavior(_to, _from, savedPosition) {
     return savedPosition || { top: 0 };

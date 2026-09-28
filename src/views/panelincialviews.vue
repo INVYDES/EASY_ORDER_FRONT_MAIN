@@ -135,8 +135,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
   <div class="min-h-screen bg-gray-50 flex">
 
     <!-- SIDEBAR NUEVO (Con datos conectados) -->
@@ -165,6 +163,7 @@ onUnmounted(() => {
       <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8">
         <router-view v-slot="{ Component }">
           <transition
+            mode="out-in"
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="opacity-0 translate-y-2"
             enter-to-class="opacity-100 translate-y-0"

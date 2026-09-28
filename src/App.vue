@@ -97,4 +97,16 @@ const VARIANTE_POR_RUTA = {
     transition: none;
   }
 }
+
+/* ── Eliminar outline azul global al hacer clic/cambiar pestaña ──── */
+*:focus {
+  outline: none;
+}
+*:focus-visible {
+  outline: 2px solid #9ca3af;
+  outline-offset: 2px;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 </style>

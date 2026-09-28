@@ -99,11 +99,11 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Plataforma</p>
         </div>
         <div class="space-y-1">
-          <RouterLink to="/panel/plataforma" @mouseenter="prefetchRuta('/panel/plataforma')" @focusin="prefetchRuta('/panel/plataforma')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/plataforma', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/plataforma" @mouseenter="prefetchRuta('/panel/plataforma')" @focusin="prefetchRuta('/panel/plataforma')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/plataforma', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-screwdriver-wrench text-lg w-6 text-center text-indigo-600"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Plataforma</span>
           </RouterLink>
-          <RouterLink to="/panel/contactos" @mouseenter="prefetchRuta('/panel/contactos')" @focusin="prefetchRuta('/panel/contactos')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/contactos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/contactos" @mouseenter="prefetchRuta('/panel/contactos')" @focusin="prefetchRuta('/panel/contactos')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/contactos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-envelope-open-text text-lg w-6 text-center text-indigo-600"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Solicitudes</span>
             <span v-if="pendingCounts.solicitudes > 0" @click.stop.prevent="verSolicitudesNuevas" title="Ver solicitudes nuevas sin atender"
@@ -118,11 +118,11 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Operaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" @mouseenter="prefetchRuta('/panel/mesero')" @focusin="prefetchRuta('/panel/mesero')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_MESERO')" to="/panel/mesero" @mouseenter="prefetchRuta('/panel/mesero')" @focusin="prefetchRuta('/panel/mesero')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/mesero', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-users text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Mesero</span>
           </RouterLink>
-          <RouterLink v-if="hasPermission('VER_CAJA')" to="/panel/caja" @mouseenter="prefetchRuta('/panel/caja')" @focusin="prefetchRuta('/panel/caja')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/caja', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_CAJA')" to="/panel/caja" @mouseenter="prefetchRuta('/panel/caja')" @focusin="prefetchRuta('/panel/caja')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/caja', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cash-register text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Caja</span>
           </RouterLink>
@@ -135,19 +135,19 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Estaciones</p>
         </div>
         <div class="space-y-1">
-          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" @mouseenter="prefetchRuta('/panel/cocina')" @focusin="prefetchRuta('/panel/cocina')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_COCINA')" to="/panel/cocina" @mouseenter="prefetchRuta('/panel/cocina')" @focusin="prefetchRuta('/panel/cocina')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/cocina', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-utensils text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Alimentos</span>
             <span v-if="pendingCounts.cocina > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.cocina }}</span>
           </RouterLink>
           
-          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" @mouseenter="prefetchRuta('/panel/barra')" @focusin="prefetchRuta('/panel/barra')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_BARRA')" to="/panel/barra" @mouseenter="prefetchRuta('/panel/barra')" @focusin="prefetchRuta('/panel/barra')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/barra', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-martini-glass text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Bebidas</span>
             <span v-if="pendingCounts.barra > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.barra }}</span>
           </RouterLink>
           
-          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" @mouseenter="prefetchRuta('/panel/postres')" @focusin="prefetchRuta('/panel/postres')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink v-if="hasPermission('VER_POSTRES')" to="/panel/postres" @mouseenter="prefetchRuta('/panel/postres')" @focusin="prefetchRuta('/panel/postres')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none relative" :class="{ 'bg-gray-100 text-gray-900 font-medium': $route.path === '/panel/postres', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-cake-candles text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Postres</span>
             <span v-if="pendingCounts.postres > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto">{{ pendingCounts.postres }}</span>
@@ -161,23 +161,17 @@
           <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Administración</p>
         </div>
         <div class="space-y-1">
-          <RouterLink to="/panel/Gestion" @mouseenter="prefetchRuta('/panel/Gestion')" @focusin="prefetchRuta('/panel/Gestion')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/Gestion', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/Gestion" @mouseenter="prefetchRuta('/panel/Gestion')" @focusin="prefetchRuta('/panel/Gestion')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/Gestion', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-gear text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Gestión</span>
           </RouterLink>
-          <RouterLink to="/panel/analisis" @mouseenter="prefetchRuta('/panel/analisis')" @focusin="prefetchRuta('/panel/analisis')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/analisis', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/analisis" @mouseenter="prefetchRuta('/panel/analisis')" @focusin="prefetchRuta('/panel/analisis')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/analisis', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-magnifying-glass-chart text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Métricas</span>
           </RouterLink>
-          <RouterLink to="/panel/productos" @mouseenter="prefetchRuta('/panel/productos')" @focusin="prefetchRuta('/panel/productos')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/productos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
+          <RouterLink to="/panel/productos" @mouseenter="prefetchRuta('/panel/productos')" @focusin="prefetchRuta('/panel/productos')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 outline-none" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/productos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
             <i class="fa-solid fa-box text-lg w-6 text-center"></i>
             <span v-show="!isCollapsed || isMobile" class="text-sm">Productos</span>
-          </RouterLink>
-          <RouterLink v-if="hasPermission('VER_CONTACTOS')" to="/panel/contactos" class="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 transition" :class="{ 'bg-[#eef2ff] text-indigo-600 font-bold shadow-sm': $route.path === '/panel/contactos', 'justify-center': isCollapsed && !isMobile }" @click="handleMobileClose">
-            <i class="fa-solid fa-envelope-open-text text-lg w-6 text-center"></i>
-            <span v-show="!isCollapsed || isMobile" class="text-sm">Solicitudes</span>
-            <span v-if="pendingCounts.solicitudes > 0" @click.stop.prevent="verSolicitudesNuevas" title="Ver solicitudes nuevas sin atender"
-              class="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm ml-auto cursor-pointer transition">{{ pendingCounts.solicitudes }}</span>
           </RouterLink>
 
         </div>
@@ -195,6 +189,9 @@ import { apiClient } from '@/utils/apiClient'
 import { useRestauranteChannel } from '@/composables/useRestauranteChannel'
 import { crearPrefetchDeRutas } from '@/utils/prefetch'
 
+const router = useRouter()
+const route = useRoute()
+
 // Precarga el chunk de la vista al apuntar el enlace con el cursor (o al
 // enfocarlo con Tab): la navegación posterior se siente instantánea.
 const prefetchRuta = crearPrefetchDeRutas(router)
@@ -207,8 +204,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'seleccionar-restaurante'])
-const router = useRouter()
-const route = useRoute()
 
 const isCollapsed = ref(false)
 const isMobile = ref(window.innerWidth < 1024)
@@ -438,5 +433,9 @@ onUnmounted(() => {
 nav::-webkit-scrollbar { width: 4px; }
 nav::-webkit-scrollbar-track { background: transparent; }
 nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-.router-link-active { background-color: #eef2ff; color: #4f46e5; font-weight: 600; }
+
+/* Eliminar el highlight azul predeterminado en móviles y navegadores al hacer clic o tap */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 </style>

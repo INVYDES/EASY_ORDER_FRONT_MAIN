@@ -27,7 +27,7 @@
                 type="text"
                 required
                 placeholder="ej: nombre@mail.com o 3-1-2"
-                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition-all placeholder-gray-300 shadow-sm text-sm"
+                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-all placeholder-gray-300 shadow-sm text-sm"
               />
             </div>
             <p class="text-[10px] text-gray-400 mt-2 px-1">
@@ -52,7 +52,7 @@
                 :type="showPassword ? 'text' : 'password'"
                 required
                 placeholder="••••••••"
-                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition-all shadow-sm text-sm"
+                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-all shadow-sm text-sm"
               />
               <button
                 type="button"
@@ -67,7 +67,7 @@
           <!-- Mantener sesión -->
           <div class="flex items-center justify-between py-1">
             <label class="flex items-center gap-2 cursor-pointer select-none group">
-              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm" />
+              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 text-gray-800 focus:ring-0 cursor-pointer shadow-sm" />
               <span class="text-xs text-gray-500 group-hover:text-gray-700 transition">Recordarme en este equipo</span>
             </label>
           </div>
@@ -203,4 +203,14 @@ const handleSubmit = async () => {
   75% { transform: translateX(5px); }
 }
 .animate-shake { animation: shake 0.3s ease-in-out; }
+
+/* Override WebKit Autofill blue background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #111827 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
 </style>
