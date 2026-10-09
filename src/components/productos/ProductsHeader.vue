@@ -30,16 +30,8 @@
       <!-- Exportar -->
       <ExportMenu :exporting="exporting" @export="emit('export', $event)" />
 
-      <!-- Nuevo producto -->
-      <button
-        @click="$emit('new')"
-        class="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Nuevo Producto
-      </button>
+      <!-- El botón "Nuevo Producto" vive en la barra de la lista (productosview.vue)
+           para que siempre sea visible, sin depender de este header. -->
 
     </div>
   </div>

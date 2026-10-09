@@ -390,11 +390,8 @@ const getHeaders = () => {
   const token = sessionGet('token')
   return { 'Content-Type':'application/json', Accept:'application/json', Authorization: token ? `Bearer ${token}` : '' }
 }
-const getImageUrl = (path) => {
-  if (!path) return null
-  if (path.startsWith('http')) return path
-  return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}`
-}
+import { resolveImageUrl } from '@/config/api'
+const getImageUrl = (path) => resolveImageUrl(path)
 const onImageError = (e) => { e.target.style.display = 'none' }
 const mostrarError = (msg, dur = 4000) => { errorOrden.value = msg; setTimeout(() => { if(errorOrden.value===msg) errorOrden.value='' }, dur) }
 const mostrarExito = () => { ordenConfirmada.value = true; setTimeout(() => { ordenConfirmada.value = false }, 3000) }

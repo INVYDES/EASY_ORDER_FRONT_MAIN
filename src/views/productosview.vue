@@ -118,6 +118,18 @@
       <div class="flex justify-end mb-4">
         <BotonDudas @click="abrirAyuda('productos')" />
       </div>
+      <!-- Barra de la lista de productos -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <p class="text-sm font-semibold text-gray-700">Lista de productos</p>
+        <button
+          @click="openCreate"
+          class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm"
+        >
+          <span class="text-base leading-none">＋</span>
+          Nuevo Producto
+        </button>
+      </div>
+
       <!-- Buscador de productos -->
       <div class="mb-4">
         <div class="relative max-w-md">

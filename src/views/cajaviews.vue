@@ -1,7 +1,7 @@
 <script setup>
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 // Layout
 import SucursalBadge from '../components/SucursalBadge.vue'
@@ -25,6 +25,7 @@ import { useRestauranteChannel } from '../composables/useRestauranteChannel'
 import { apiClient } from '@/utils/apiClient'
 
 const router = useRouter()
+const route = useRoute()
 
 const userRaw = sessionGet('user') ?? '{}'
 const user = JSON.parse(userRaw)
@@ -558,6 +559,21 @@ onMounted(async () => {
   // Primera carga explícita no silenciosa para mostrar el spinner inicial
   await loadAllData(false)
   
+  // Resultado del OAuth de Mercado Pago Point (?mp=ok|error)
+  const mp = route.query.mp
+  if (mp === 'ok') {
+    showToast('Mercado Pago conectado correctamente ✅', 'success')
+    router.replace({ query: { ...route.query, mp: undefined, motivo: undefined } })
+  } else if (mp === 'error') {
+    const motivos = {
+      faltan_parametros: 'faltan parámetros',
+      state_invalido: 'la sesión de conexión expiró',
+      token: 'no se pudo obtener el token',
+    }
+    showToast(`No se pudo conectar Mercado Pago (${motivos[route.query.motivo] || 'error'})`, 'error', 6000)
+    router.replace({ query: { ...route.query, mp: undefined, motivo: undefined } })
+  }
+
   // Polling silencioso de seguridad
   const poll = async () => {
     await loadAllData(true)

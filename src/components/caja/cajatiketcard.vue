@@ -29,9 +29,10 @@
             :class="{
               'bg-emerald-50 text-emerald-700 border-emerald-200': ticket.metodo_pago === 'efectivo',
               'bg-indigo-50 text-indigo-700 border-indigo-200': ticket.metodo_pago === 'tarjeta',
-              'bg-purple-50 text-purple-700 border-purple-200': ticket.metodo_pago === 'transferencia'
+              'bg-purple-50 text-purple-700 border-purple-200': ticket.metodo_pago === 'transferencia',
+              'bg-sky-50 text-sky-700 border-sky-200': ticket.metodo_pago === 'mercadopago'
             }">
-            {{ ticket.metodo_pago === 'efectivo' ? '💵' : ticket.metodo_pago === 'tarjeta' ? '💳' : '📲' }}
+            {{ ticket.metodo_pago === 'efectivo' ? '💵' : ticket.metodo_pago === 'tarjeta' ? '💳' : ticket.metodo_pago === 'mercadopago' ? '📟' : '📲' }}
           </span>
           ${{ formatMoney(ticket.total) }}
         </p>
@@ -139,6 +140,7 @@
     :ticket="ticket"
     @close="showModal = false"
     @payment-processed="handlePaymentProcessed"
+    @terminal-confirmed="handleTerminalConfirmed"
   />
 </template>
 
@@ -300,6 +302,19 @@ const getHeaders = () => {
 // ─────────────────────────────────────────────
 // PROCESAR PAGO
 // ─────────────────────────────────────────────
+
+// Cobro con terminal Mercado Pago Point: el backend ya cerró la orden vía
+// webhook, por lo que solo cerramos el modal y refrescamos (sin llamar a la API).
+const handleTerminalConfirmed = (paymentData = {}) => {
+  showModal.value = false
+  emit('updated', {
+    id: props.ticket.id,
+    metodo_pago: 'mercadopago',
+    propina: paymentData.propina || 0,
+    cambio: 0,
+    folio: paymentData.folio || null,
+  })
+}
 
 const handlePaymentProcessed = async (paymentData) => {
   if (processing.value) return

@@ -205,7 +205,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-import { API_URL, STORAGE_URL } from '@/config/api'
+import { API_URL, STORAGE_URL, resolveImageUrl } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import { useNotificationStore } from '@/stores/notifications'
 
@@ -358,17 +358,7 @@ const badgeClass = (cat) => {
 
 // 5. Imágenes - Backend devuelve imagen_url como /storage/productos/...
 const hasImage = (p) => !!(p.imagen_url || p.imagen)
-const resolveImage = (p) => {
-  const path = p.imagen_url || p.imagen
-  if (!path) return ''
-  
-  // Si ya es URL completa o data URI, devolverla tal cual
-  if (path.startsWith('http') || path.startsWith('data:')) return path
-  
-  // Si empieza con /storage/, le quitamos eso porque STORAGE_URL ya lo incluye
-  const cleanPath = path.replace(/^\/storage\//, '')
-  return `${STORAGE_URL}${cleanPath}`
-}
+const resolveImage = (p) => resolveImageUrl(p.imagen_url || p.imagen) || ''
 const onImageError = (e) => { e.target.style.display = 'none' }
 
 // ✅ Recargar datos cuando cambian los productos

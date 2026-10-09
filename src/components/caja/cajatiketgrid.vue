@@ -137,9 +137,9 @@
               <p class="text-[9px] text-slate-400 font-bold">¿En cuántas partes deseas dividir?</p>
             </div>
             <div class="flex items-center gap-2 bg-white rounded-xl border border-slate-200 p-1">
-              <button type="button" @click="numComensales = Math.max(2, numComensales - 1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg font-black transition">−</button>
-              <span class="text-sm font-black w-8 text-center text-slate-800">{{ numComensales }}</span>
-              <button type="button" @click="numComensales = Math.min(10, numComensales + 1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg font-black transition">+</button>
+              <button type="button" @click="quitarComensal" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg font-black transition">−</button>
+              <span class="text-sm font-black w-8 text-center text-slate-800">{{ comensalesManual.length }}</span>
+              <button type="button" @click="agregarComensal" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg font-black transition">+</button>
             </div>
           </div>
         </div>
@@ -576,6 +576,10 @@ import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, nextTick } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
+import { useThermalPrinter } from '@/composables/useThermalPrinter'
+
+// ── Impresora Térmica (Web Serial) ──
+const { isConnected: thermalConnected, printTicket: thermalPrintTicket, printComanda: thermalPrintComanda, printDivided: thermalPrintDivided } = useThermalPrinter()
 
 const parseUTCDate = (dateStr) => {
   if (!dateStr) return null;
@@ -690,6 +694,7 @@ const metodos = [
   { key: 'efectivo',      label: 'Efectivo',      icon: '💵' },
   { key: 'tarjeta',       label: 'Tarjeta',        icon: '💳' },
   { key: 'transferencia', label: 'Transferencia',  icon: '📲' },
+  { key: 'terminal',      label: 'Terminal Point', icon: '📟' },
 ]
 
 const propinaCalculada = computed(() => {
@@ -818,7 +823,39 @@ const abrirCobrar = (order) => {
   syncIdentity()
 }
 
-const imprimirTicket = () => {
+const imprimirTicket = async () => {
+  // ── Intentar impresión térmica directa ──
+  if (thermalConnected.value && ordenCobrar.value) {
+    const items = (ordenCobrar.value.detalles || []).map(d => ({
+      id: d.id,
+      cantidad: d.cantidad || 0,
+      nombre: d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto',
+      subtotal: d.subtotal || 0,
+      notas: d.notas || '',
+      cancelado: !!d.cancelado,
+      motivo_cancelacion: d.motivo_cancelacion || '',
+      nom_comensal: d.nom_comensal || d.comensal || d.nombre_comensal,
+    }))
+    const ok = await thermalPrintTicket({
+      folio: ordenCobrar.value.folio || `ORD-${ordenCobrar.value.id}`,
+      mesa: ordenCobrar.value.mesa,
+      atendio: userName.value,
+      metodo_pago: metodoPago.value,
+      referencia: folio.value?.trim() || '',
+      propina: propinaCalculada.value,
+      total: Number(ordenCobrar.value.total || 0),
+      items,
+      sucursal: { nombre: nombreSucursal.value, direccion: datosSucursal.value.direccion, telefono: datosSucursal.value.telefono },
+      uniqueIdentifier: uniqueIdentifier.value,
+      fecha: formatLocalDateTime(new Date()),
+      montoRecibido: montoRecibido.value,
+      cambio: cambio.value,
+    })
+    if (ok) return // Éxito con impresora térmica
+    // Si falló, caer al método HTML tradicional
+  }
+
+  // ── Fallback: impresión HTML por diálogo del navegador ──
   const el = document.getElementById('ticket-printable')
   if (!el) return
   const win = window.open('', '_blank', 'width=400,height=600')
@@ -978,7 +1015,26 @@ const marcarEntregada = async (order) => {
   }
 }
 
-const imprimirComanda = (order) => {
+const imprimirComanda = async (order) => {
+  // ── Intentar impresión térmica directa ──
+  if (thermalConnected.value) {
+    const comandaItems = (order.detalles || []).filter(d => !d.cancelado).map(d => ({
+      cantidad: d.cantidad || 1,
+      nombre: d.producto_nombre || d.producto?.nombre || 'Producto',
+      notas: d.notas || '',
+      nom_comensal: d.nom_comensal || d.comensal,
+      tamano_nombre: d.tamano_nombre || '',
+    }))
+    const ok = await thermalPrintComanda({
+      folio: order.folio || `ORD-${order.id}`,
+      mesa: order.mesa,
+      tipo_orden: order.tipo_orden,
+      items: comandaItems,
+    })
+    if (ok) return // Éxito
+  }
+
+  // ── Fallback: impresión HTML ──
   const win = window.open('', '_blank', 'width=400,height=600')
   const dateStr = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })
   const folio = order.folio || `ORD-${order.id}`
@@ -1119,11 +1175,42 @@ const reimprimirTicket = async (order) => {
   }, 500)
 }
 
-const imprimirTicketMultiple = (cuentas, folioOriginal, ordenesIds = []) => {
-  const win = window.open('', '_blank', 'width=400,height=800')
+const imprimirTicketMultiple = async (cuentas, folioOriginal, ordenesIds = []) => {
   const pId = datosSucursal.value.propietario_id || user.propietario_id || ''
   const rId = restauranteId.value || ''
   const dateStr = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })
+
+  // ── Intentar impresión térmica directa ──
+  if (thermalConnected.value) {
+    const dividedData = {
+      sucursal: { nombre: nombreSucursal.value, direccion: datosSucursal.value.direccion, telefono: datosSucursal.value.telefono },
+      mesa: ordenCobrar.value?.mesa,
+      atendio: userName.value,
+      fecha: dateStr,
+      cuentas: cuentas.map((c, idx) => ({
+        index: idx + 1,
+        totalCuentas: cuentas.length,
+        folio: ordenesIds[idx] ? `${pId}${rId}${ordenesIds[idx]}` : String(folioOriginal),
+        nombres_comensales: c.nombres_comensales || '',
+        monto: Number(c.monto || 0),
+        pago_metodo: c.pago_metodo,
+        pago_referencia: c.pago_referencia,
+        pago_recibido: c.pago_recibido ? Number(c.pago_recibido) : undefined,
+        pago_propina: c.pago_propina ? Number(c.pago_propina) : undefined,
+        pago_cambio: c.pago_cambio ? Number(c.pago_cambio) : undefined,
+        detalles: c.detalles?.map(d => ({
+          cantidad: d.cantidad,
+          producto_nombre: d.producto_nombre || 'Producto',
+          subtotal: Number(d.subtotal || 0),
+        })),
+      })),
+    }
+    const ok = await thermalPrintDivided(dividedData)
+    if (ok) return // Éxito
+  }
+
+  // ── Fallback: impresión HTML ──
+  const win = window.open('', '_blank', 'width=400,height=800')
   
   let html = `<html><head><title>Tickets</title></head><body style="margin:0; padding:0; background:#fff; font-family:'Courier New', Courier, monospace; color:#000;">`
   
@@ -1482,31 +1569,28 @@ const montoPorComensal = (n) => {
 }
 
 // ── Acciones de Modal Dividir ──────────────────────────────────────────────
-const abrirDividirCuenta = async () => {
+const abrirDividirCuenta = () => {
   if (!ordenCobrar.value) return
-  desglosando.value = true
-  errorCobro.value = ''
-  
-  try {
-    const res = await apiClient.post(`/ordenes/${ordenCobrar.value.id}/split-details`)
-    if (res.success && res.data) {
-      ordenCobrar.value = res.data
-      emit('refresh')
-    } else {
-      errorCobro.value = res.message || 'Error al desglosar productos de la orden'
-      desglosando.value = false
-      return
-    }
-  } catch (err) {
-    console.error('Error al desglosar productos:', err)
-    errorCobro.value = 'Error al desglosar productos de la orden en el servidor'
-    desglosando.value = false
-    return
-  } finally {
-    desglosando.value = false
-  }
 
-  modoDividir.value       = 'manual'
+  // Analizar comensales de los detalles para modo automático (excluyendo cancelados)
+  const detalles = (ordenCobrar.value.detalles || []).filter(d => !d.cancelado)
+  const grupos = {}
+  detalles.forEach(d => {
+    const nom = d.nom_comensal || d.comensal || d.nombre_comensal || 'General'
+    if (!grupos[nom]) grupos[nom] = { nombre: nom, detalles: [], subtotal: 0 }
+    grupos[nom].detalles.push(d)
+    grupos[nom].subtotal += parseFloat(d.subtotal || 0)
+  })
+
+  const arr = Object.values(grupos)
+  comensalesAuto.value = arr.map((g, i) => ({
+    nombre: g.nombre,
+    detalles: g.detalles,
+    subtotal: g.subtotal,
+    ticketId: i + 1
+  }))
+
+  modoDividir.value       = arr.length > 1 ? 'por_comensal' : 'equitativo'
   numComensales.value     = 2
   metodoPagoDividir.value = 'efectivo'
   errorDividir.value      = ''

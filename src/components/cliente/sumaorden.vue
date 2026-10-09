@@ -230,16 +230,8 @@
 <script setup>
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted } from 'vue'
-import { API_URL, STORAGE_URL } from '@/config/api'
+import { API_URL, STORAGE_URL, resolveImageUrl } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
-
-// ── Helper: Resolver URLs de imágenes ───────────────────────────────────────────
-const resolveImageUrl = (path) => {
-  if (!path) return null
-  if (path.startsWith('http') || path.startsWith('data:')) return path
-  if (path.startsWith('/storage/')) return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}`
-  return `${STORAGE_URL}${path}`
-}
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 const productos        = ref([])

@@ -15,15 +15,28 @@
         class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-full animate-pulse">
         ✅ {{ ordenesListas }} lista{{ ordenesListas > 1 ? 's' : '' }} p/ cobrar
       </div>
+      <button @click="showPoint = true"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full bg-sky-50 text-sky-700 hover:bg-sky-100 transition">
+        📟 Terminal Point
+      </button>
+      <PrinterStatus />
       <span class="px-3 py-1.5 text-xs font-bold rounded-full"
         :class="cajaAbierta ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
         {{ cajaAbierta ? '🟢 Caja abierta' : '🔴 Caja cerrada' }}
       </span>
     </div>
   </div>
+
+  <PointConfigModal v-if="showPoint" @close="showPoint = false" />
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import PrinterStatus from './PrinterStatus.vue'
+import PointConfigModal from './PointConfigModal.vue'
+
+const showPoint = ref(false)
+
 defineProps({
   cajaAbierta:         Boolean,
   wsConectado:         Boolean,

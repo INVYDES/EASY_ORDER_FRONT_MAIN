@@ -43,7 +43,7 @@
         <!-- Método de pago -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <button v-for="m in metodos" :key="m.value"
               @click="paymentMethod = m.value; amountReceived = 0"
               :class="['py-2.5 rounded-xl text-sm font-semibold border-2 transition flex flex-col items-center gap-1',
@@ -72,7 +72,7 @@
         </div>
 
         <!-- Folio/referencia (solo tarjeta y transferencia) -->
-        <div v-if="paymentMethod !== 'efectivo'">
+        <div v-if="paymentMethod === 'tarjeta' || paymentMethod === 'transferencia'">
           <label class="block text-sm font-medium text-gray-700 mb-1">
             {{ paymentMethod === 'tarjeta' ? 'Referencia del Voucher' : 'Referencia / Folio' }}
             <span class="text-red-500">*</span>
@@ -89,6 +89,25 @@
           <p v-else-if="paymentMethod === 'tarjeta'" class="text-xs text-gray-500 mt-1">
             Ingresa el número de referencia del voucher de la terminal bancaria
           </p>
+        </div>
+
+        <!-- Terminal Point (Mercado Pago) -->
+        <div v-if="paymentMethod === 'terminal'">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Terminal Point</label>
+          <div v-if="cargandoTerminales" class="text-xs text-gray-400 py-2">Cargando terminales…</div>
+          <template v-else-if="terminales.length">
+            <select v-model="terminalId"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option v-for="t in terminales" :key="t.id" :value="t.terminal_id">
+                {{ t.alias || t.terminal_id }}
+              </option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">El total se enviará a este terminal y la venta se cerrará sola al confirmarse el pago.</p>
+          </template>
+          <div v-else class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            No hay terminales configuradas. Conéctalas en "📟 Terminal Point" (arriba).
+          </div>
+          <p v-if="terminalError" class="text-xs text-red-500 mt-1">{{ terminalError }}</p>
         </div>
 
         <!-- Propina -->
@@ -128,13 +147,23 @@
         {{ errorMsg }}
       </div>
 
+      <!-- Espera de cobro en terminal Point -->
+      <div v-if="waitingTerminal" class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-200">
+        <div class="flex items-center gap-3">
+          <span class="inline-block w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></span>
+          <p class="text-sm font-medium text-indigo-700">{{ terminalMsg }}</p>
+        </div>
+        <p class="text-xs text-indigo-500 mt-2">Pide al cliente que pague en el terminal. La venta se cerrará sola al confirmarse.</p>
+        <button @click="cancelarTerminal" class="mt-3 text-xs font-semibold text-red-600 hover:text-red-700">Cancelar cobro</button>
+      </div>
+
       <!-- Botones -->
       <div class="flex gap-3 mt-6">
         <button @click="$emit('close')"
           class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
           Cancelar
         </button>
-        <button @click="processPayment" :disabled="!canPay || processing"
+        <button @click="processPayment" :disabled="!canPay || processing || waitingTerminal"
           class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
           <span v-if="processing">Procesando...</span>
           <span v-else>Confirmar pago{{ propina > 0 ? ` ($${formatMoney(totalConPropina)})` : '' }}</span>
@@ -224,14 +253,14 @@
 
 <script setup>
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { API_URL } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 
 const props = defineProps({
   ticket: { type: Object, required: true },
 })
-const emit = defineEmits(['close', 'payment-processed'])
+const emit = defineEmits(['close', 'payment-processed', 'terminal-confirmed'])
 
 const paymentMethod  = ref('efectivo')
 const amountReceived = ref(0)
@@ -240,6 +269,14 @@ const folio          = ref('')
 const errorMsg       = ref('')
 const fieldError     = ref('')
 const processing     = ref(false)
+const waitingTerminal = ref(false)
+const terminalMsg    = ref('')
+const terminalOrderId = ref(null)
+let pollTimer = null
+const terminales          = ref([])
+const terminalId          = ref(null)
+const cargandoTerminales  = ref(false)
+const terminalError       = ref('')
 const nombreSucursal = ref('RESTAURANTE E-ORDER')
 const detectedRestId = ref(null)
 const datosSucursal  = ref({ direccion: '', telefono: '', propietario_id: '' })
@@ -327,6 +364,7 @@ const metodos = [
   { value: 'efectivo',      label: 'Efectivo',      icon: '💵' },
   { value: 'tarjeta',       label: 'Tarjeta',       icon: '💳' },
   { value: 'transferencia', label: 'Transferencia', icon: '📲' },
+  { value: 'terminal',      label: 'Terminal',      icon: '📟' },
 ]
 
 const total           = computed(() => Number(props.ticket.total || 0))
@@ -357,6 +395,10 @@ const canPay = computed(() => {
   }
   if (['tarjeta', 'transferencia'].includes(paymentMethod.value)) {
     if (!folio.value || folio.value.trim() === '') return false
+  }
+  if (paymentMethod.value === 'terminal') {
+    if (!cargandoTerminales.value && terminales.value.length === 0) return false
+    if (terminales.value.length > 0 && !terminalId.value) return false
   }
   return true
 })
@@ -392,6 +434,13 @@ const imprimirTicket = () => {
 
 const processPayment = async () => {
   if (processing.value) return
+
+  // Cobro con terminal Mercado Pago Point: lo confirma el webhook del backend.
+  if (paymentMethod.value === 'terminal') {
+    cobrarConTerminal()
+    return
+  }
+
   errorMsg.value = ''
   
   if (paymentMethod.value === 'efectivo' && amountReceived.value < totalConPropina.value) {
@@ -420,6 +469,124 @@ const processPayment = async () => {
   
   processing.value = false
 }
+
+const stopPolling = () => {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+}
+
+const cobrarConTerminal = async () => {
+  errorMsg.value = ''
+
+  if (terminales.value.length > 0 && !terminalId.value) {
+    errorMsg.value = 'Selecciona una terminal.'
+    return
+  }
+
+  waitingTerminal.value = true
+  terminalMsg.value = 'Enviando cobro al terminal…'
+  terminalOrderId.value = null
+
+  try {
+    const res = await apiClient.post('/caja/mercadopago/point/crear', {
+      orden_id: props.ticket.id,
+      propina: Number(propina.value || 0),
+      terminal_id: terminalId.value || undefined,
+    })
+
+    if (!res?.success || !res?.data?.order_id) {
+      waitingTerminal.value = false
+      errorMsg.value = res?.message || 'No se pudo enviar el cobro al terminal.'
+      return
+    }
+
+    terminalOrderId.value = res.data.order_id
+    terminalMsg.value = `Esperando pago en el terminal por $${formatMoney(res.data.amount)}…`
+    startPolling()
+  } catch (e) {
+    waitingTerminal.value = false
+    errorMsg.value = e?.message || 'Error al conectar con el terminal.'
+  }
+}
+
+const startPolling = () => {
+  stopPolling()
+  let intentos = 0
+  const maxIntentos = 120 // ~5 min a 2.5s
+
+  pollTimer = setInterval(async () => {
+    intentos++
+    if (intentos > maxIntentos) {
+      stopPolling()
+      waitingTerminal.value = false
+      errorMsg.value = 'El cobro expiró sin confirmarse. Intenta de nuevo.'
+      return
+    }
+
+    try {
+      const res = await apiClient.get(`/caja/mercadopago/point/orden/${terminalOrderId.value}`)
+      const d = res?.data
+      if (!d) return
+
+      if (d.cerrada || d.orden_estado === 'CERRADA') {
+        stopPolling()
+        waitingTerminal.value = false
+        emit('terminal-confirmed', {
+          id: props.ticket.id,
+          metodo_pago: 'mercadopago',
+          propina: Number(propina.value || 0),
+          total: totalConPropina.value,
+          payment_id: d.payment_id || null,
+          folio: d.payment_id || null,
+        })
+        return
+      }
+
+      if (['canceled', 'expired', 'failed'].includes(d.status)) {
+        stopPolling()
+        waitingTerminal.value = false
+        errorMsg.value = 'El cobro no se completó (cancelado o expirado).'
+      }
+    } catch (e) {
+      // fallo de red transitorio: seguimos intentando
+    }
+  }, 2500)
+}
+
+const cancelarTerminal = async () => {
+  stopPolling()
+  try {
+    if (terminalOrderId.value) {
+      await apiClient.post(`/caja/mercadopago/point/orden/${terminalOrderId.value}/cancelar`, {})
+    }
+  } catch (e) { /* ignorar */ }
+  waitingTerminal.value = false
+  terminalOrderId.value = null
+  terminalMsg.value = ''
+}
+
+const cargarTerminales = async () => {
+  if (terminales.value.length) return
+  cargandoTerminales.value = true
+  terminalError.value = ''
+  try {
+    const res = await apiClient.get('/caja/mercadopago/oauth/estado')
+    const lista = res?.data?.terminales || []
+    terminales.value = lista.filter(t => t.is_active !== false)
+    if (terminales.value.length && !terminalId.value) {
+      terminalId.value = terminales.value[0].terminal_id
+    }
+  } catch (e) {
+    terminalError.value = 'No se pudieron cargar las terminales.'
+  } finally {
+    cargandoTerminales.value = false
+  }
+}
+
+watch(paymentMethod, (m) => {
+  if (m === 'terminal') cargarTerminales()
+})
+
+onUnmounted(stopPolling)
 
 onMounted(() => {
   syncIdentity()

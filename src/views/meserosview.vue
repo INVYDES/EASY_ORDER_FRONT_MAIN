@@ -958,7 +958,7 @@
 <script setup>
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { API_URL, STORAGE_URL } from '@/config/api'
+import { API_URL, STORAGE_URL, resolveImageUrl } from '@/config/api'
 import { apiClient } from '@/utils/apiClient'
 import CajaTicketGrid from '../components/caja/cajatiketgrid.vue'
 import Marquesitawidget from '../components/Marquesitawidget.vue'
@@ -1895,7 +1895,6 @@ const entregarProductosSubOrden = async (sub) => {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-const resolveImageUrl  = (path) => { if (!path) return null; if (path.startsWith('http')) return path; return `${STORAGE_URL}${path.replace(/^\/?storage\//, '')}` }
 const getPrecioRango = (p) => {
   if (p.tamanos && p.tamanos.length > 0) {
     const precios = p.tamanos.map(t => Number(t.precio) || 0).filter(pr => pr > 0)

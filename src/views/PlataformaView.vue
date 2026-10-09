@@ -340,8 +340,6 @@
                 v-model="editLicenciaModal.estado"
                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               >
-                <option value="ACTIVA">Activa</option>
-                <option value="INACTIVA">Inactiva</option>
                 <option value="CANCELADA">Cancelada</option>
                 <option value="EXPIRADA">Expirada</option>
                 <option value="PENDIENTE">Pendiente</option>

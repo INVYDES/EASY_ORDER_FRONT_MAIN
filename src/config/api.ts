@@ -31,3 +31,15 @@ export const getHeaders = (customHeaders: Record<string, string> = {}) => {
         ...customHeaders
     };
 };
+
+export const resolveImageUrl = (path: string | null | undefined): string | null => {
+    if (!path) return null;
+    const p = String(path).trim();
+    if (!p) return null;
+    if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('data:')) {
+        return p;
+    }
+    const cleanPath = p.replace(/^\/?storage\//, '').replace(/^\/+/, '');
+    return `${STORAGE_URL}${cleanPath}`;
+};
+

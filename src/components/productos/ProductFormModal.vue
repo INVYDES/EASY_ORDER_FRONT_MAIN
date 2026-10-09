@@ -1136,9 +1136,10 @@ const resetForm = () => {
   errors.categoria_id  = ''
   errorMessage.value   = ''
 
-  if (p?.tamanos && Array.isArray(p.tamanos)) {
-    tamanos.value = p.tamanos.map((t: any) => ({
-      id: t.id,
+  const rawTamanos = p?.tamanos || p?.tamanos_personalizados
+  if (rawTamanos && Array.isArray(rawTamanos)) {
+    tamanos.value = rawTamanos.map((t: any) => ({
+      id: t.id || t.key,
       nombre: t.nombre,
       precio: parseFloat(t.precio || 0),
       stock: parseFloat(t.stock || 0),

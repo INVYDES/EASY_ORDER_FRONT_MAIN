@@ -73,7 +73,7 @@
 <script setup>
 import { computed } from 'vue'
 
-import { STORAGE_URL } from '@/config/api'
+import { resolveImageUrl } from '@/config/api'
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -84,15 +84,7 @@ const emit = defineEmits(['agregar'])
 const hasStock = computed(() => Number(props.product?.stock ?? 0) > 0)
 
 // Resolver URL de imagen completa
-const imagenUrl = computed(() => {
-  const path = props.product.imagen_url || props.product.imagen
-  if (!path) return null
-  if (path.startsWith('http') || path.startsWith('data:')) return path
-  
-  // Limpiamos el path si ya trae /storage/ para evitar duplicidad con STORAGE_URL
-  const cleanPath = path.replace(/^\/storage\//, '')
-  return `${STORAGE_URL}${cleanPath}`
-})
+const imagenUrl = computed(() => resolveImageUrl(props.product.imagen_url || props.product.imagen))
 
 const agregar = () => {
   if (!hasStock.value) return

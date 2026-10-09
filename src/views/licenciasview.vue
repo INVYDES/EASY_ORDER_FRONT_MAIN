@@ -86,15 +86,21 @@
       <div class="flex items-start justify-between flex-wrap gap-4">
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-red-500 text-white uppercase tracking-wider shadow-sm">
-              Licencia Inactiva
+            <span
+              class="px-2.5 py-0.5 rounded-full text-xs font-black text-white uppercase tracking-wider shadow-sm"
+              :class="pillEstadoClass"
+            >
+              Licencia {{ estadoLicencia }}
             </span>
           </div>
           <h3 class="text-2xl font-bold mt-1">{{ licenciaActiva.licencia?.nombre || licenciaActiva.nombre || 'Plan Suspendido' }}</h3>
-          <p class="text-red-100 text-sm mt-1">Tu licencia actual se encuentra inactiva o ha expirado. Por favor adquiere un plan a continuación para reactivar el servicio.</p>
+          <p class="text-red-100 text-sm mt-1">{{ mensajeEstado }}</p>
         </div>
-        <span class="bg-red-500/40 text-red-100 border border-red-400/40 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-          {{ licenciaActiva.estado || 'INACTIVA' }}
+        <span
+          class="text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider"
+          :class="badgeEstadoClass"
+        >
+          {{ estadoLicencia }}
         </span>
       </div>
 
@@ -113,7 +119,7 @@
         </div>
         <div class="bg-white/10 rounded-xl p-3">
           <p class="text-red-200 text-xs">Estado Actual</p>
-          <p class="text-sm font-bold text-red-300 mt-0.5 uppercase">{{ licenciaActiva.estado || 'INACTIVA' }}</p>
+          <p class="text-sm font-bold text-red-300 mt-0.5 uppercase">{{ estadoLicencia }}</p>
         </div>
       </div>
     </div>
@@ -562,15 +568,13 @@ const getEstadoLabel = (lic) => {
   if (st === 'inactiva') return 'Inactiva'
   if (st === 'pendiente') return 'Pendiente'
   if (st === 'expirada') return 'Vencida'
-  const hoyDate = new Date()
-  if (lic.fecha_expiracion) {
-    const exp = new Date(lic.fecha_expiracion)
-    if (!isNaN(exp.getTime()) && exp < hoyDate) return 'Vencida'
-  }
-  if (st === 'activa') {
-    // Aunque diga ACTIVA, si ya expiró se muestra como Vencida
-    return 'Activa'
-  }
+  // Aunque el registro diga ACTIVA, si ya venció (por días o por fecha) se muestra como Vencida
+  const dias = Number(lic.dias_restantes ?? NaN)
+  const vencidaPorDias = !isNaN(dias) && dias <= 0
+  const exp = lic.fecha_expiracion ? new Date(lic.fecha_expiracion) : null
+  const vencidaPorFecha = !!exp && !isNaN(exp.getTime()) && exp < new Date()
+  if (vencidaPorDias || vencidaPorFecha) return 'Vencida'
+  if (st === 'activa') return 'Activa'
   return st ? st.charAt(0).toUpperCase() + st.slice(1) : 'Inactiva'
 }
 
@@ -584,6 +588,36 @@ const getEstadoClass = (lic) => {
     'Pendiente': 'bg-amber-100 text-amber-700 font-bold',
   }[label] || 'bg-red-100 text-red-700 font-bold'
 }
+
+// ── Estado efectivo del banner de licencia no vigente ─────────────────────────
+const estadoLicencia = computed(() => getEstadoLabel(licenciaActiva.value))
+
+const MENSAJES_ESTADO = {
+  Inactiva: 'Tu licencia actual se encuentra inactiva. Por favor adquiere un plan a continuación para reactivar el servicio.',
+  Vencida: 'Tu licencia actual ha expirado. Por favor adquiere un plan a continuación para reactivar el servicio.',
+  Cancelada: 'Tu licencia actual fue cancelada. Por favor adquiere un plan a continuación para reactivar el servicio.',
+  Pendiente: 'Tu licencia actual está pendiente de confirmación. Por favor adquiere un plan a continuación para activar el servicio.',
+}
+
+const mensajeEstado = computed(() =>
+  MENSAJES_ESTADO[estadoLicencia.value] || MENSAJES_ESTADO.Inactiva
+)
+
+const ESTILO_PILL = {
+  Inactiva: 'bg-red-500',
+  Vencida: 'bg-amber-500',
+  Pendiente: 'bg-amber-500',
+  Cancelada: 'bg-gray-500',
+}
+const pillEstadoClass = computed(() => ESTILO_PILL[estadoLicencia.value] || ESTILO_PILL.Inactiva)
+
+const ESTILO_BADGE = {
+  Inactiva: 'bg-red-500/40 text-red-100 border border-red-400/40',
+  Vencida: 'bg-amber-500/40 text-amber-100 border border-amber-400/40',
+  Pendiente: 'bg-amber-500/40 text-amber-100 border border-amber-400/40',
+  Cancelada: 'bg-white/10 text-gray-200 border border-white/20',
+}
+const badgeEstadoClass = computed(() => ESTILO_BADGE[estadoLicencia.value] || ESTILO_BADGE.Inactiva)
 
 const obtenerDescripcionPlan = (plan) => {
   if (plan.tipo === 'PRUEBA') return 'Prueba gratuita por 30 días'

@@ -221,11 +221,11 @@ const isLicenseActive = computed(() => {
 })
 
 const licenseText = computed(() => {
-  if (props.user?.licencia_activa === false) return 'Inactiva'
+  if (props.user?.licencia_activa === false) return 'Sin Plan'
   if (props.maxRestaurants >= 5) return 'Empresarial'
   if (props.maxRestaurants >= 3) return 'Profesional'
   if (props.maxRestaurants >= 1) return 'Básico'
-  return 'Inactiva'
+  return 'Sin Plan'
 })
 
 
