@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, onMounted, reactive, computed, nextTick } from 'vue'
 import { apiClient } from '@/utils/apiClient'
 import Chart from 'chart.js/auto'
 

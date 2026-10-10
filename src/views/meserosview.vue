@@ -1149,10 +1149,9 @@ const tabs = [
 
 const tabsVisibles = computed(() => {
   if (isServicioRapido.value) {
-    // En modo rápido también se respeta el flujo de preparación: se muestra
-    // "Por preparar". Solo se oculta "Listas" porque en servicio rápido el
-    // mesero avanza directo de En preparación a Entregada.
-    return tabs.filter(t => !['LISTA'].includes(t.key))
+    // En modo rápido eliminamos "Por preparar" y "Listas"
+    // Flujo: Abierta → En preparación → Entregada
+    return tabs.filter(t => !['POR_PREPARAR', 'LISTA'].includes(t.key))
   }
   return tabs
 })
@@ -1427,16 +1426,17 @@ const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e)
 const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
 const siguienteEstado = (e) => {
   if (isServicioRapido.value) {
-    // En modo rápido el mesero recorre todo el flujo:
-    // Abierta → Por preparar → En preparación → Entregada
-    return { ABIERTA: 'POR_PREPARAR', POR_PREPARAR: 'EN_PREPARACION', EN_PREPARACION: 'ENTREGADA', LISTA: 'ENTREGADA' }[e] || null
+    // En modo rápido el mesero envía el pedido directo a preparación:
+    // Abierta → En preparación → Entregada
+    // (POR_PREPARAR queda como respaldo para órdenes enviadas en flujo normal)
+    return { ABIERTA: 'EN_PREPARACION', POR_PREPARAR: 'EN_PREPARACION', EN_PREPARACION: 'ENTREGADA', LISTA: 'ENTREGADA' }[e] || null
   }
   return { ABIERTA: 'POR_PREPARAR', LISTA: 'ENTREGADA' }[e] || null
 }
 
 const accionEstado = (e) => {
   if (isServicioRapido.value) {
-    return { ABIERTA: '▶ Enviar Pedido', POR_PREPARAR: '🔥 Enviar a Preparación', EN_PREPARACION: '✅ Marcar Entregada', LISTA: '🤝 Entregada' }[e] || ''
+    return { ABIERTA: '▶ Enviar a Cocina', POR_PREPARAR: '🔥 Iniciar Preparación', EN_PREPARACION: '✅ Marcar Entregada', LISTA: '🤝 Entregada' }[e] || ''
   }
   return { ABIERTA: '▶ Enviar Pedido', LISTA: '🤝 Entregada' }[e] || ''
 }
@@ -1785,9 +1785,15 @@ const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   cambiando.value = sub.uid
   try {
     let data
-    // En servicio rápido no hay estaciones visibles: el mesero mueve también el
-    // detalle para que la orden recorra Por preparar → En preparación → Entregada.
+    // En servicio rápido no hay estaciones visibles: el mesero recorre la orden
+    // sin tocar la cocina. El backend no permite pasar de ABIERTA a
+    // EN_PREPARACION en un solo salto, así que se usa el mismo camino interno:
+    // 1) PUT POR_PREPARAR mueve los detalles abiertos a PENDIENTE
+    // 2) actualizar-estado-estacion los pasa a EN_PREPARACION y promueve la orden
     if (isServicioRapido.value && ['EN_PREPARACION', 'ENTREGADA'].includes(nuevoEstado)) {
+      if (nuevoEstado === 'EN_PREPARACION' && (sub.estado || '').toUpperCase() === 'ABIERTA') {
+        await apiClient.put(`/ordenes/${sub.id}`, { estado: 'POR_PREPARAR' })
+      }
       const detalleEstado = nuevoEstado === 'EN_PREPARACION' ? 'EN_PREPARACION' : 'ENTREGADO'
       let actualizadas = 0
       for (const estacion of ['cocina', 'barra', 'postres']) {
