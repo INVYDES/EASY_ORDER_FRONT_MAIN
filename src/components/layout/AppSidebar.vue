@@ -16,7 +16,7 @@
 
     <!-- Logo / Título -->
     <div class="h-16 flex items-center justify-between px-4 border-b border-gray-100">
-      <div class="flex items-center gap-2 overflow-hidden cursor-pointer" @click="$router.push('/panel/panelinicial')">
+      <div class="flex items-center gap-2 overflow-hidden select-none" title="Easy Order">
         <img 
           src="@/assets/imaguenes/Logo.jpg" 
           class="w-10 h-10 object-contain rounded-lg" 

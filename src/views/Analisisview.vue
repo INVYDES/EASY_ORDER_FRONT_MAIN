@@ -170,7 +170,7 @@
 
 <script setup>
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import SucursalBadge        from '../components/SucursalBadge.vue'
 import DashboardKpis        from '../components/administraccion/DashboardKpis.vue'
 import VentasPorHoraChart   from '../components/administraccion/Ventasxhorachart.vue'
@@ -230,8 +230,9 @@ const financialData = reactive({
   gastosOperativos:    0,
   gananciaNeta:        0,
   puntoEquilibrio:     0,
-  roiGeneral:          0,
-  roiProducto:         0,
+  roiGeneral:          null,
+  roiProducto:         null,
+  roiSemaforo:         null,
   margenContribucion:  0,
   porcentajeUtilidad:  0,
   kpiEmpleados:        0
@@ -345,69 +346,59 @@ const getHeaders = () => {
 const loadData = async () => {
   loading.value = true
   try {
-  // Helper to get server date
-  const fetchServerDate = async () => {
+    // Fecha del servidor (una sola llamada, el resto de queries dependen de ella)
+    let today = new Date().toLocaleDateString('en-CA')
     try {
       const res = await apiClient.get('/server-time');
       const timeStr = res.current_time || res.data?.current_time;
-      if (res.success && timeStr) {
-        // current_time format: 'YYYY-MM-DD HH:MM:SS'
-        return timeStr.split(' ')[0];
-      }
+      if (res.success && timeStr) today = timeStr.split(' ')[0];
     } catch (e) {
       console.error('Error fetching server time', e);
     }
-    // Fallback to client local date if server fails (avoiding UTC next-day shift)
-    return new Date().toLocaleDateString('en-CA');
-  };
+    serverDate.value = today;
+    fechaDesde.value = today
+    fechaHasta.value = today
 
-  const today = await fetchServerDate();
-  serverDate.value = today;
-
-    const [uData, rData, dData, cData] = await Promise.all([
-      apiClient.get('/me'),
-      apiClient.get('/restaurantes'),
-      apiClient.get('/reportes/dashboard'),
-      apiClient.get(`/ordenes?estado=CERRADA,ENTREGADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`),
+    // Todas las consultas independientes se lanzan en paralelo (antes eran
+    // ~7 peticiones secuenciales, lo que hacía la carga muy lenta).
+    const [uData, rData, dData, cData, utilData, canalData, roiData, pData, eData] = await Promise.all([
+      apiClient.get('/me').catch(() => null),
+      apiClient.get('/restaurantes').catch(() => null),
+      apiClient.get('/reportes/dashboard').catch(() => null),
+      apiClient.get(`/ordenes?estado=CERRADA,ENTREGADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`).catch(() => null),
+      apiClient.get('/reportes/utilidad-dia').catch(() => null),
+      apiClient.get(`/reportes/ventas-por-canal-tipo?fecha_inicio=${today}&fecha_fin=${today}`).catch(() => null),
+      apiClient.get('/reportes/roi').catch(() => null),
+      apiClient.get('/productos').catch(() => null),
+      apiClient.get('/empleados').catch(() => null),
     ])
 
-    if (rData.success)  restaurantes.value       = rData.data?.restaurantes || []
-    if (cData.success)  ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
+    if (rData?.success)  restaurantes.value       = rData.data?.restaurantes || []
+    if (cData?.success)  ordenesCerradasHoy.value = Array.isArray(cData.data) ? cData.data : []
 
-    if (dData.success) {
+    if (dData?.success) {
       dashData.ventas_hoy         = dData.data?.ventas_hoy         || 0
       dashData.ordenes_por_estado = dData.data?.ordenes_por_estado || []
       dashData.ordenes_hoy        = dData.data?.ordenes_hoy
         ?? dashData.ordenes_por_estado.reduce((s, x) => s + Number(x.total || 0), 0)
-
-      // Utilidad del día
-      try {
-        const uData2 = await apiClient.get('/reportes/utilidad-dia')
-        dashData.utilidad_bruta_hoy = uData2.success ? (uData2.data?.utilidad_bruta_dia ?? 0) : 0
-        dashData.utilidad_hoy = uData2.success
-          ? (uData2.data?.utilidad_neta_dia ?? uData2.data?.utilidad_bruta_dia ?? 0)
-          : (dData.data?.utilidad_neta_hoy ?? 0)
-      } catch {
-        dashData.utilidad_bruta_hoy = 0
-        dashData.utilidad_hoy = dData.data?.utilidad_neta_hoy ?? 0
-      }
     }
 
-    // Inicializar filtro de fechas con hoy
-    fechaDesde.value = today
-    fechaHasta.value = today
+    // Utilidad del día
+    if (utilData?.success) {
+      dashData.utilidad_bruta_hoy = utilData.data?.utilidad_bruta_dia ?? 0
+      dashData.utilidad_hoy = utilData.data?.utilidad_neta_dia ?? utilData.data?.utilidad_bruta_dia ?? 0
+    } else {
+      dashData.utilidad_bruta_hoy = 0
+      dashData.utilidad_hoy = dData?.data?.utilidad_neta_hoy ?? 0
+    }
 
     // Canal de Ventas (Local, Pickup, Delivery)
-    try {
-      const cTipoRes = await apiClient.get(`/reportes/ventas-por-canal-tipo?fecha_inicio=${today}&fecha_fin=${today}`)
-      if (cTipoRes.success && cTipoRes.data) {
-        salesChannels.Local = cTipoRes.data.Local || 0
-        salesChannels.Pickup = cTipoRes.data.Pickup || 0
-        salesChannels.Delivery = cTipoRes.data.Delivery || 0
-      }
-    } catch (e) {
-      console.error('Error al cargar canales:', e)
+    if (canalData?.success && canalData.data) {
+      salesChannels.Local = canalData.data.Local || 0
+      salesChannels.Pickup = canalData.data.Pickup || 0
+      salesChannels.Delivery = canalData.data.Delivery || 0
     }
+
     // Sincronizar datos filtrados con los iniciales
     filteredDashData.ventas_hoy         = dashData.ventas_hoy
     filteredDashData.ordenes_hoy        = dashData.ordenes_hoy
@@ -421,60 +412,48 @@ const loadData = async () => {
     filteredSalesChannels.Delivery = salesChannels.Delivery
 
     // Datos financieros (ROI)
-    try {
-      const roiRes = await apiClient.get('/reportes/roi')
-      if (roiRes.success && roiRes.data) {
-        financialData.utilidadObjetivo = roiRes.data.kpis?.utilidad_objetivo || 0
-        financialData.utilidadReal = roiRes.data.kpis?.utilidad_real || 0
-        financialData.inversionInicial = roiRes.data.config?.inversion_inicial || 0
-        financialData.ventasMensuales = roiRes.data.financiero?.venta_mes || 0
-        financialData.gastosVariables = roiRes.data.financiero?.gastos_variables || 0
-        financialData.gastosOperativos = roiRes.data.financiero?.gastos_operativos || 0
-        financialData.gananciaNeta = roiRes.data.financiero?.ganancia_neta || 0
-        financialData.puntoEquilibrio = roiRes.data.kpis?.punto_equilibrio || 0
-        financialData.roiGeneral = roiRes.data.kpis?.roi_general || 0
-        financialData.roiProducto = roiRes.data.kpis?.roi_producto || 0
-        financialData.margenContribucion = roiRes.data.kpis?.margen_contribucion || 0
-        financialData.porcentajeUtilidad = roiRes.data.kpis?.pct_utilidad || 0
-        financialData.kpiEmpleados = roiRes.data.kpis?.kpi_empleados || 0
-      }
-    } catch (e) {
-      console.error('Error al cargar datos financieros:', e)
+    if (roiData?.success && roiData.data) {
+      financialData.utilidadObjetivo = roiData.data.kpis?.utilidad_objetivo || 0
+      financialData.utilidadReal = roiData.data.kpis?.utilidad_real || 0
+      financialData.inversionInicial = roiData.data.config?.inversion_inicial || 0
+      financialData.ventasMensuales = roiData.data.financiero?.venta_mes || 0
+      financialData.gastosVariables = roiData.data.financiero?.gastos_variables || 0
+      financialData.gastosOperativos = roiData.data.financiero?.gastos_operativos || 0
+      financialData.gananciaNeta = roiData.data.financiero?.ganancia_neta || 0
+      financialData.puntoEquilibrio = roiData.data.kpis?.punto_equilibrio || 0
+      // Se conserva null cuando no hay inversión inicial configurada (el panel
+      // muestra '—' en vez de un 0% en rojo).
+      financialData.roiGeneral = roiData.data.kpis?.roi_general ?? null
+      financialData.roiProducto = roiData.data.kpis?.roi_producto ?? 0
+      financialData.roiSemaforo = roiData.data.kpis?.semaforo ?? null
+      financialData.margenContribucion = roiData.data.kpis?.margen_contribucion || 0
+      financialData.porcentajeUtilidad = roiData.data.kpis?.pct_utilidad || 0
+      financialData.kpiEmpleados = roiData.data.kpis?.kpi_empleados || 0
     }
 
     // Productos
-    try {
-      const pData = await apiClient.get('/productos')
-      if (pData.success) {
-        allProducts.value       = pData.data || []
-        financialProducts.value = pData.data.map(p => ({
-          ...p,
-          margen: p.precio - (p.costo || 0),
-          ventas: p.ventas_totales || 0
-        }))
-      }
-    } catch (e) {
-      console.error('Error al cargar productos:', e)
+    if (pData?.success) {
+      allProducts.value       = pData.data || []
+      financialProducts.value = (pData.data || []).map(p => ({
+        ...p,
+        margen: p.precio - (p.costo || 0),
+        ventas: p.ventas_totales || 0
+      }))
     }
 
     // Empleados para gráficas (desde /empleados que tiene estructura completa con roles)
-    try {
-      const eData = await apiClient.get('/empleados')
-      if (eData.success) {
-        const raw = eData.data
-        empleados.value = Array.isArray(raw) ? raw : (raw?.data || [])
-      }
-    } catch (e) {
-      console.error('Error al cargar empleados:', e)
+    if (eData?.success) {
+      const raw = eData.data
+      empleados.value = Array.isArray(raw) ? raw : (raw?.data || [])
     }
 
-    // Datos del propietario
-    const user = uData.data || uData
+    // Datos del propietario (depende de /me)
+    const user = uData?.data || uData
     if (user?.propietario_id) {
       try {
-        const pData = await apiClient.get(`/propietarios/${user.propietario_id}`)
-        if (pData.success) {
-          Object.assign(propietarioData, pData.data || {})
+        const propData = await apiClient.get(`/propietarios/${user.propietario_id}`)
+        if (propData.success) {
+          Object.assign(propietarioData, propData.data || {})
         }
       } catch (e) {
         console.error('Error al cargar propietario:', e)
@@ -549,16 +528,10 @@ const resetFilter = () => {
   filteredSalesChannels.Delivery = salesChannels.Delivery
 }
 
-let metricsInterval = null;
-// ✅ onMounted para iniciar la carga
+// ✅ Solo se carga al entrar a la vista. Sin auto-refresh: los datos se
+// actualizan cuando el usuario entra o navega de nuevo, no cada minuto.
 onMounted(() => {
   loadData()
-  // Refresh metrics every minute to keep data up-to-date with server
-  metricsInterval = setInterval(loadData, 60_000) // 60 seconds
-})
-// Cleanup interval on component unmount
-onBeforeUnmount(() => {
-  if (metricsInterval) clearInterval(metricsInterval)
 })
 </script>
 

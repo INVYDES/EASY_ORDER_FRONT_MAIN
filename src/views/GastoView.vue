@@ -296,6 +296,18 @@ const resumenData = ref({
   periodo: { inicio: '', fin: '' },
 })
 
+// El backend (/gastos/resumen) devuelve ventas_periodo / utilidad_real / roi_periodo_pct.
+// Se normalizan aquí para que la tarjeta de ROI nunca muestre "NaN%".
+const normalizarResumen = (raw) => ({
+  ...raw,
+  ventas:          Number(raw?.ventas_periodo ?? raw?.ventas ?? 0),
+  total_gastos:    Number(raw?.total_gastos ?? 0),
+  utilidad_bruta:  Number(raw?.utilidad_real ?? raw?.utilidad_bruta ?? 0),
+  roi_pct:         raw?.roi_periodo_pct !== null && raw?.roi_periodo_pct !== undefined
+                     ? Number(raw.roi_periodo_pct)
+                     : (raw?.roi_pct !== null && raw?.roi_pct !== undefined ? Number(raw.roi_pct) : null),
+})
+
 const filtros = reactive({
   fecha_desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-CA'),
   fecha_hasta: new Date().toLocaleDateString('en-CA'),
@@ -382,7 +394,7 @@ const cargarGastos = async () => {
     // ✅ FIX: el backend devuelve { data: [...] }
     gastos.value = Array.isArray(gData.data) ? gData.data : []
 
-    if (rData.data) resumenData.value = rData.data
+    if (rData.data) resumenData.value = normalizarResumen(rData.data)
 
   } catch (e) {
     console.error('Error en cargarGastos:', e)
@@ -408,7 +420,7 @@ const cargarResumenPeriodo = async (periodo) => {
       params.fecha_fin    = hoy.toLocaleDateString('en-CA')
     }
     const data = await apiClient.get(`/gastos/resumen?${new URLSearchParams(params)}`)
-    if (data.data) { resumenData.value = data.data; modalResumenVisible.value = true }
+    if (data.data) { resumenData.value = normalizarResumen(data.data); modalResumenVisible.value = true }
   } catch { showToast('Error al cargar resumen', 'error') }
 }
 

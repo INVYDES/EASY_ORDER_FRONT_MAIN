@@ -51,6 +51,19 @@
           <p class="text-xs text-gray-400 mt-2 font-medium">Promedio desde solicitud a cierre</p>
         </div>
       </div>
+
+      <div class="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-8 group hover:shadow-lg transition-all md:col-span-2">
+        <div class="w-20 h-20 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-4xl shadow-inner">
+          <i class="fa-solid fa-fire"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Merma real (cancelado desde caja)</p>
+          <p class="text-5xl font-black text-rose-600 tracking-tighter">${{ fm(mermasCaja) }}</p>
+          <p class="text-xs text-gray-400 mt-2 font-medium">
+            Cancelaciones de mesero (sin pérdida): <span class="font-black text-slate-500">${{ fm(cancelacionesMesero) }}</span>
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Desglose por Cajero -->
@@ -104,6 +117,8 @@ const kpis = ref({
 })
 
 const listaCajeros = ref([])
+const mermasCaja = ref(0)
+const cancelacionesMesero = ref(0)
 
 const filtros = reactive({
   cajero_id: '',
@@ -140,6 +155,15 @@ const loadKpis = async () => {
     if (res.success) {
       kpis.value = res.data
       initBarChart()
+    }
+
+    // Merme real vs cancelaciones: misma fuente que KPIs Productos.
+    const devueltos = await apiClient.get('/reportes/platillos-devueltos', {
+      params: { fecha_inicio: filtros.fecha_desde, fecha_fin: filtros.fecha_hasta }
+    })
+    if (devueltos?.success) {
+      mermasCaja.value = devueltos.total_mermas || 0
+      cancelacionesMesero.value = devueltos.total_cancelaciones_sin_merma || 0
     }
   } catch (e) {
     console.error(e)

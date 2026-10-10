@@ -72,14 +72,33 @@ const toBoolServicioRapido = (v) => {
   const s = String(v).trim().toLowerCase()
   return s === '1' || s === 'true'
 }
-const isServicioRapido = computed(() => {
-  if (restauranteObjeto.value?.servicio_rapido !== undefined) {
-    return toBoolServicioRapido(restauranteObjeto.value.servicio_rapido)
+const getInitialServicioRapido = () => {
+  const cached = sessionGet('servicio_rapido')
+  if (cached !== null && cached !== undefined) {
+    return toBoolServicioRapido(cached)
   }
-  if (user?.restaurante_activo && typeof user.restaurante_activo === 'object' && user.restaurante_activo.servicio_rapido !== undefined) {
-    return toBoolServicioRapido(user.restaurante_activo.servicio_rapido)
-  }
+  const uRaw = sessionGet('user') ?? '{}'
+  try {
+    const u = JSON.parse(uRaw)
+    if (u?.restaurante_activo && typeof u.restaurante_activo === 'object' && u.restaurante_activo.servicio_rapido !== undefined) {
+      return toBoolServicioRapido(u.restaurante_activo.servicio_rapido)
+    }
+  } catch {}
   return false
+}
+const servicioRapidoPersistido = ref(getInitialServicioRapido())
+
+const isServicioRapido = computed(() => {
+  let val = false
+  if (restauranteObjeto.value?.servicio_rapido !== undefined) {
+    val = toBoolServicioRapido(restauranteObjeto.value.servicio_rapido)
+  } else if (user?.restaurante_activo && typeof user.restaurante_activo === 'object' && user.restaurante_activo.servicio_rapido !== undefined) {
+    val = toBoolServicioRapido(user.restaurante_activo.servicio_rapido)
+  } else {
+    val = servicioRapidoPersistido.value
+  }
+  sessionSet('servicio_rapido', val ? '1' : '0')
+  return val
 })
 
 // ── Propinas (Oficiales de API) ──
@@ -117,7 +136,7 @@ const openOrders = computed(() => {
 const closedOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    return s === 'CERRADA' || s === 'CANCELADA' || (o.detalles || []).some(d => !!d.cancelado)
+    return s === 'CERRADA' || s === 'CANCELADA' || s === 'PAGADA' || (o.detalles || []).some(d => !!d.cancelado)
   })
 })
 const ordenesListas = computed(() => openOrders.value.length)
@@ -355,11 +374,11 @@ const actualizarTotalesCaja = async () => {
 const loadOrders = async () => {
   try {
     const today = new Date().toLocaleDateString('en-CA')
-    let closedOrdersQuery = `/ordenes?estado=CERRADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    let closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
-      closedOrdersQuery = `/ordenes?estado=CERRADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+      closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
       cancelledOrdersQuery = `/ordenes?estado=CANCELADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
     } else if (!cajaAbierta.value) {
       closedOrdersQuery = null;

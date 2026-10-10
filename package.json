@@ -13,8 +13,8 @@
     "og:image": "node scripts/generar-og-png.mjs",
     "check:ui": "node scripts/ui-audit.mjs",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy",
-    "deploy:wrangler": "wrangler deploy"
+    "deploy": "npm run build && wrangler deploy -c wrangler.toml",
+    "deploy:wrangler": "wrangler deploy -c wrangler.toml"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",

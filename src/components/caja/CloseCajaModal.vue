@@ -85,6 +85,28 @@
         {{ errorMessage }}
       </div>
 
+      <!-- Cuentas activas que impiden el cierre -->
+      <div v-if="cuentasActivas.length" class="mb-4 border border-amber-200 bg-amber-50 rounded-xl p-3">
+        <p class="text-xs font-bold uppercase tracking-widest text-amber-700 mb-2">
+          Cuentas activas ({{ cuentasActivas.length }})
+        </p>
+        <ul class="space-y-1 max-h-40 overflow-y-auto">
+          <li
+            v-for="cuenta in cuentasActivas"
+            :key="cuenta.id"
+            class="flex items-center justify-between gap-2 text-xs text-amber-800 bg-white/70 rounded-lg px-2.5 py-1.5"
+          >
+            <span class="font-semibold truncate">
+              {{ cuenta.folio }}<span v-if="cuenta.mesa"> · Mesa {{ cuenta.mesa }}</span>
+            </span>
+            <span class="flex items-center gap-2 shrink-0">
+              <span class="px-1.5 py-0.5 rounded bg-amber-100 text-[10px] font-bold">{{ cuenta.estado }}</span>
+              <span class="font-bold">${{ formatMoney(cuenta.total) }}</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+
       <!-- Botones -->
       <div class="flex gap-3">
         <button
@@ -126,6 +148,7 @@ const observations = ref('')
 const errorMessage = ref('')
 const fieldError   = ref('')
 const loading      = ref(false)
+const cuentasActivas = ref([])
 
 const expectedCash = computed(() => props.cash)
 
@@ -153,8 +176,9 @@ const getHeaders = () => {
 }
 
 const closeCaja = async () => {
-  fieldError.value   = ''
-  errorMessage.value = ''
+  fieldError.value     = ''
+  errorMessage.value   = ''
+  cuentasActivas.value = []
 
   if (!isValid.value) {
     fieldError.value = 'Ingresa el efectivo real en caja'
@@ -179,11 +203,16 @@ const closeCaja = async () => {
       })
       emit('close')
     } else {
-      errorMessage.value = data.message || 'Error al cerrar caja'
+      errorMessage.value   = data?.message || 'Error al cerrar caja'
+      cuentasActivas.value = data?.data?.cuentas_activas || []
     }
   } catch (e) {
     console.error('Error CloseCaja:', e)
-    errorMessage.value = 'Error al conectar con el servidor'
+    // El backend responde 409 con { message, data: { cuentas_activas } };
+    // apiClient lanza Error con la respuesta en e.response, hay que leerla de ahí.
+    const payload = e?.response?.data
+    errorMessage.value   = payload?.message || e?.message || 'Error al conectar con el servidor'
+    cuentasActivas.value = payload?.data?.cuentas_activas || []
   } finally {
     loading.value = false
   }

@@ -786,7 +786,9 @@ const fetchGastos = async () => {
       const gData = data.data || data
       gastoResumen.value = {
         ...gData,
-        roi_pct: gData.roi_pct !== null ? Math.round(gData.roi_pct) : null
+        roi_pct: gData.roi_periodo_pct !== null && gData.roi_periodo_pct !== undefined
+          ? Math.round(gData.roi_periodo_pct)
+          : (gData.roi_pct !== null && gData.roi_pct !== undefined ? Math.round(gData.roi_pct) : null)
       }
     }
   } catch (error) {
@@ -797,6 +799,11 @@ const fetchGastos = async () => {
 const fetchComparacion = async () => {
   try {
     // Período actual
+    const responseA = await fetch(
+      `${props.apiUrl}/reportes/ventas?fecha_inicio=${fechaInicio.value}&fecha_fin=${fechaFin.value}&grupo=dia`,
+      { headers: safeGetHeaders() }
+    )
+    const dataA = await responseA.json()
     if (dataA.success) {
       ventasActual.value = dataA.data?.totales || { total_ventas: 0, total_ordenes: 0, promedio_por_orden: 0 }
     }

@@ -289,10 +289,10 @@ const fetchAll = async () => {
 
     if (dGastos.success && dGastos.data) {
       gastoResumen.value = {
-        ventas: Number(dGastos.data.ventas || 0),
+        ventas: Number(dGastos.data.ventas_periodo ?? dGastos.data.ventas ?? 0),
         total_gastos: Number(dGastos.data.total_gastos || 0),
-        utilidad_bruta: Number(dGastos.data.utilidad_bruta || 0),
-        roi_pct: Number(dGastos.data.roi_pct || 0),
+        utilidad_bruta: Number(dGastos.data.utilidad_real ?? dGastos.data.utilidad_bruta ?? 0),
+        roi_pct: Number(dGastos.data.roi_periodo_pct ?? dGastos.data.roi_pct ?? 0),
         por_categoria: dGastos.data.por_categoria || {}
       }
     }

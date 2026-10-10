@@ -1102,9 +1102,10 @@ const toBoolServicioRapido = (v) => {
   const s = String(v).trim().toLowerCase()
   return s === '1' || s === 'true'
 }
-const isServicioRapido = computed(() => {
-  if (restauranteObjeto.value?.servicio_rapido !== undefined) {
-    return toBoolServicioRapido(restauranteObjeto.value.servicio_rapido)
+const getInitialServicioRapido = () => {
+  const cached = sessionGet('servicio_rapido')
+  if (cached !== null && cached !== undefined) {
+    return toBoolServicioRapido(cached)
   }
   try {
     const u = JSON.parse(sessionGet('user') || '{}')
@@ -1113,6 +1114,27 @@ const isServicioRapido = computed(() => {
     }
   } catch {}
   return false
+}
+const servicioRapidoPersistido = ref(getInitialServicioRapido())
+
+const isServicioRapido = computed(() => {
+  let val = false
+  if (restauranteObjeto.value?.servicio_rapido !== undefined) {
+    val = toBoolServicioRapido(restauranteObjeto.value.servicio_rapido)
+  } else {
+    try {
+      const u = JSON.parse(sessionGet('user') || '{}')
+      if (u?.restaurante_activo && typeof u.restaurante_activo === 'object') {
+        val = toBoolServicioRapido(u.restaurante_activo.servicio_rapido)
+      } else {
+        val = servicioRapidoPersistido.value
+      }
+    } catch {
+      val = servicioRapidoPersistido.value
+    }
+  }
+  sessionSet('servicio_rapido', val ? '1' : '0')
+  return val
 })
 
 const tabs = [
@@ -1127,7 +1149,10 @@ const tabs = [
 
 const tabsVisibles = computed(() => {
   if (isServicioRapido.value) {
-    return tabs.filter(t => !['POR_PREPARAR', 'LISTA'].includes(t.key))
+    // En modo rápido también se respeta el flujo de preparación: se muestra
+    // "Por preparar". Solo se oculta "Listas" porque en servicio rápido el
+    // mesero avanza directo de En preparación a Entregada.
+    return tabs.filter(t => !['LISTA'].includes(t.key))
   }
   return tabs
 })
@@ -1172,7 +1197,7 @@ const tiempoCocinaActual = computed(() => {
     (o.detalles || []).forEach(d => {
       if (d.cancelado) return
       const estado = d.estado_preparacion || d.estado
-      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
+      if (estado === 'ABIERTA' || estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
         if (esCocina(d)) {
           total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
         }
@@ -1189,7 +1214,7 @@ const tiempoBarraActual = computed(() => {
     (o.detalles || []).forEach(d => {
       if (d.cancelado) return
       const estado = d.estado_preparacion || d.estado
-      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
+      if (estado === 'ABIERTA' || estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
         if (esBebida(d)) {
           total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
         }
@@ -1206,7 +1231,7 @@ const tiempoPostresActual = computed(() => {
     (o.detalles || []).forEach(d => {
       if (d.cancelado) return
       const estado = d.estado_preparacion || d.estado
-      if (estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
+      if (estado === 'ABIERTA' || estado === 'PENDIENTE' || estado === 'EN_PREPARACION') {
         if (esPostre(d) && !esBebida(d)) {
           total += (Number(d.cantidad) || 0) * (Number(d.minutos_produccion) || 0)
         }
@@ -1280,7 +1305,7 @@ const subOrdenesFiltradas = computed(() => {
 
   if (tabActivo.value === 'ABIERTA') {
     return ordenes.value
-      .filter(o => o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA'))
+      .filter(o => !['CERRADA', 'PAGADA', 'CANCELADA'].includes((o.estado || '').toUpperCase()) && (o.estado === 'ABIERTA' || (o.detalles || []).some(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')))
       .map(o => {
         const detallesAbiertos = (o.detalles || []).filter(d => !d.cancelado && d.estado_preparacion === 'ABIERTA')
         return {
@@ -1294,28 +1319,27 @@ const subOrdenesFiltradas = computed(() => {
   }
 
   if (tabActivo.value === 'todas') {
-    return ordenes.value.map(o => ({
-      ...o,
-      uid: `${o.id}-JOINT`,
-      estado_estacion: o.estado,
-      detalles_estacion: o.detalles || []
-    }))
+    return ordenes.value
+      .filter(o => !['CERRADA', 'PAGADA', 'CANCELADA'].includes((o.estado || '').toUpperCase()))
+      .map(o => ({
+        ...o,
+        uid: `${o.id}-JOINT`,
+        estado_estacion: o.estado,
+        detalles_estacion: o.detalles || []
+      }))
   }
 
   // Para POR_PREPARAR, EN_PREPARACION, LISTA y ENTREGADA:
-  // Cada tarjeta ya contiene solo productos del mismo estado, filtrar directamente.
   return subOrdenes.value.filter(s => s.estado_estacion === tabActivo.value)
 })
 
 const ordenesParaCobrar = computed(() => {
-  if (isServicioRapido.value) {
-    return ordenes.value.filter(o => !['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado))
-  }
-  return ordenes.value.filter(o => 
-    o.estado === 'ENTREGADA' ||
-    (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(o.estado) && 
-      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
-  )
+  return ordenes.value.filter(o => {
+    const s = (o.estado || '').toUpperCase()
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)) return false
+    return s === 'ENTREGADA' || s === 'ENTREGADO' ||
+      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO')
+  })
 })
 
 const contarOrdenes = (key) => {
@@ -1403,21 +1427,23 @@ const iconEstado  = (e) => ['POR_PREPARAR','EN_PREPARACION','LISTA'].includes(e)
 const labelEstado = (e) => ({ ABIERTA:'Abierta', POR_PREPARAR:'Esperando', EN_PREPARACION:'En Preparación', LISTA:'Lista', ENTREGADA:'Entregada', CERRADA:'Cobrada', CANCELADA:'Cancelada' }[e] || e)
 const siguienteEstado = (e) => {
   if (isServicioRapido.value) {
-    return { ABIERTA: 'EN_PREPARACION', EN_PREPARACION: 'ENTREGADA', LISTA: 'ENTREGADA' }[e] || null
+    // En modo rápido el mesero recorre todo el flujo:
+    // Abierta → Por preparar → En preparación → Entregada
+    return { ABIERTA: 'POR_PREPARAR', POR_PREPARAR: 'EN_PREPARACION', EN_PREPARACION: 'ENTREGADA', LISTA: 'ENTREGADA' }[e] || null
   }
   return { ABIERTA: 'POR_PREPARAR', LISTA: 'ENTREGADA' }[e] || null
 }
 
 const accionEstado = (e) => {
   if (isServicioRapido.value) {
-    return { ABIERTA: '🔥 Enviar a Preparación', EN_PREPARACION: '✅ Marcar Entregada', LISTA: '🤝 Entregada' }[e] || ''
+    return { ABIERTA: '▶ Enviar Pedido', POR_PREPARAR: '🔥 Enviar a Preparación', EN_PREPARACION: '✅ Marcar Entregada', LISTA: '🤝 Entregada' }[e] || ''
   }
   return { ABIERTA: '▶ Enviar Pedido', LISTA: '🤝 Entregada' }[e] || ''
 }
 
 const btnEstado = (e) => {
   if (isServicioRapido.value) {
-    return { ABIERTA: 'bg-orange-500 hover:bg-orange-600 text-white', EN_PREPARACION: 'bg-indigo-600 hover:bg-indigo-700 text-white', LISTA: 'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400'
+    return { ABIERTA: 'bg-amber-500 hover:bg-amber-600 text-white', POR_PREPARAR: 'bg-orange-500 hover:bg-orange-600 text-white', EN_PREPARACION: 'bg-indigo-600 hover:bg-indigo-700 text-white', LISTA: 'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400'
   }
   return { ABIERTA: 'bg-amber-500 hover:bg-amber-600 text-white', LISTA: 'bg-emerald-500 hover:bg-emerald-600 text-white' }[e] || 'bg-slate-100 text-slate-400'
 }
@@ -1758,7 +1784,29 @@ const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   if (!nuevoEstado) return
   cambiando.value = sub.uid
   try {
-    const data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
+    let data
+    // En servicio rápido no hay estaciones visibles: el mesero mueve también el
+    // detalle para que la orden recorra Por preparar → En preparación → Entregada.
+    if (isServicioRapido.value && ['EN_PREPARACION', 'ENTREGADA'].includes(nuevoEstado)) {
+      const detalleEstado = nuevoEstado === 'EN_PREPARACION' ? 'EN_PREPARACION' : 'ENTREGADO'
+      let actualizadas = 0
+      for (const estacion of ['cocina', 'barra', 'postres']) {
+        try {
+          await apiClient.post(`/ordenes/${sub.id}/actualizar-estado-estacion`, { estacion, estado: detalleEstado })
+          actualizadas++
+        } catch { /* esa estación puede no tener productos */ }
+      }
+      // Al entregar, el estado global lo confirma el endpoint de la orden (así la
+      // orden queda ENTREGADA aunque parte de los productos no sean de estación).
+      // Si ninguna estación actualizó nada, también se usa como respaldo.
+      if (nuevoEstado === 'ENTREGADA' || actualizadas === 0) {
+        data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
+      } else {
+        data = { success: true }
+      }
+    } else {
+      data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
+    }
     if (data.success || data.data) { 
       await cargarOrdenes()
       showToast('Estado actualizado', 'success') 

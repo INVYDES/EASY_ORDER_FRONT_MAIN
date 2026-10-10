@@ -131,7 +131,7 @@
             :class="roiStatus === 'rojo' ? 'bg-red-500 shadow-md shadow-red-300' : 'bg-red-100'"></div>
         </div>
         <div>
-          <span class="text-2xl font-bold" :class="roiColorClass">{{ metrics.roiGeneral || 0 }}%</span>
+          <span class="text-2xl font-bold" :class="roiColorClass">{{ roiText }}</span>
           <p class="text-[10px] text-gray-400">General</p>
         </div>
         <div class="ml-auto text-right">
@@ -164,7 +164,7 @@
         <MetricInfoTip titulo="% Utilidad" paraQue="Rentabilidad del negocio sobre cada peso vendido."
           comoSeMide="(Ganancia neta ÷ ventas) × 100. Menos de 8% se considera riesgo." />
       </div>
-      <span class="text-2xl font-bold" :class="Number(metrics.porcentajeUtilidad || 0) < 8 ? 'text-red-600' : 'text-indigo-600'">{{ metrics.porcentajeUtilidad || 0 }}%</span>
+      <span class="text-2xl font-bold" :class="pctUtilidadClass">{{ pctUtilidad }}%</span>
     </div>
 
   </div>
@@ -179,18 +179,44 @@ const props = defineProps({
 })
 
 // Semáforo ROI
+// Con inversión inicial 0 el backend devuelve roi_general = null (semaforo
+// 'sin_datos'): no hay ROI que calcular, así que se muestra '—' en gris en
+// lugar de un 0% en rojo que parecería una pérdida real.
+const sinDatosRoi = computed(() =>
+  props.metrics.roiGeneral === null || props.metrics.roiGeneral === undefined ||
+  props.metrics.roiSemaforo === 'sin_datos'
+)
+
 const roiStatus = computed(() => {
+  if (sinDatosRoi.value) return null
   const roi = Number(props.metrics.roiGeneral || 0)
   if (roi > 15) return 'verde'
   if (roi >= 5) return 'amarillo'
   return 'rojo'
 })
 
-const roiColorClass = computed(() => ({
-  verde: 'text-emerald-600',
-  amarillo: 'text-amber-500',
-  rojo: 'text-red-600'
-}[roiStatus.value]))
+const roiText = computed(() =>
+  sinDatosRoi.value ? '—' : `${Number(props.metrics.roiGeneral || 0)}%`
+)
+
+const roiColorClass = computed(() => {
+  if (sinDatosRoi.value) return 'text-gray-400'
+  return {
+    verde: 'text-emerald-600',
+    amarillo: 'text-amber-500',
+    rojo: 'text-red-600'
+  }[roiStatus.value]
+})
+
+// % Utilidad: solo es crítico (rojo) cuando hay pérdida real (negativo).
+// Entre 0 y 8% se muestra en ámbar (advertencia) y de 8% en adelante en índigo.
+const pctUtilidad = computed(() => Number(props.metrics.porcentajeUtilidad ?? 0))
+const pctUtilidadClass = computed(() => {
+  const v = pctUtilidad.value
+  if (v < 0) return 'text-red-600'
+  if (v < 8) return 'text-amber-500'
+  return 'text-indigo-600'
+})
 
 // % Cumplimiento Punto de Equilibrio
 const cumplimientoPE = computed(() => {

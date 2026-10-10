@@ -162,7 +162,7 @@ export class EscPosBuilder {
    * Para líneas tipo "2x  Hamburguesa         $200.00"
    */
   threeColumns(col1: string, col2: string, col3: string, widths?: [number, number, number]): this {
-    const [w1, w2, w3] = widths || [5, this.lineWidth - 15, 10]
+    const [w1, , w3] = widths || [5, this.lineWidth - 15, 10]
     const c1 = col1.substring(0, w1).padEnd(w1)
     const c3 = col3.substring(0, w3).padStart(w3)
     const remaining = this.lineWidth - w1 - w3
