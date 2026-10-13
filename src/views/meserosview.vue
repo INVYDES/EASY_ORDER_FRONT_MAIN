@@ -81,7 +81,7 @@
         <Marquesitawidget 
           :apiUrl="API_URL" 
           :getHeaders="() => ({})" 
-          tipo="interno" 
+          tipo="cliente" 
           :variant="marquesinaVariant" 
         />
       </div>
@@ -1335,9 +1335,7 @@ const subOrdenesFiltradas = computed(() => {
 const ordenesParaCobrar = computed(() => {
   return ordenes.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)) return false
-    return s === 'ENTREGADA' || s === 'ENTREGADO' ||
-      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO')
+    return s === 'ENTREGADA' || s === 'ENTREGADO'
   })
 })
 
@@ -1467,7 +1465,12 @@ const cargarOrdenes = async (silent = true) => {
         items.forEach(o => map.set(o.id, o))
       }
     })
-    ordenes.value = [...map.values()].sort((a, b) => b.id - a.id)
+    const lista = [...map.values()].sort((a, b) => b.id - a.id)
+    // Con servicio rápido (modo kiosko) las órdenes del kiosko no pasan por mesero:
+    // se cobran/entregan desde Caja. Sin servicio rápido siguen el flujo normal.
+    ordenes.value = isServicioRapido.value
+      ? lista.filter(o => String(o.tipo_orden || '').toLowerCase() !== 'kiosko')
+      : lista
   } catch (err) { console.error('Error órdenes:', err) }
   finally { if (!silent) loading.value = false }
 }
@@ -1785,44 +1788,41 @@ const cambiarEstadoSubOrden = async (sub, nuevoEstado) => {
   cambiando.value = sub.uid
   try {
     let data
-    // En servicio rápido no hay estaciones visibles: el mesero recorre la orden
-    // sin tocar la cocina. El backend no permite pasar de ABIERTA a
-    // EN_PREPARACION en un solo salto, así que se usa el mismo camino interno:
-    // 1) PUT POR_PREPARAR mueve los detalles abiertos a PENDIENTE
-    // 2) actualizar-estado-estacion los pasa a EN_PREPARACION y promueve la orden
+
     if (isServicioRapido.value && ['EN_PREPARACION', 'ENTREGADA'].includes(nuevoEstado)) {
       if (nuevoEstado === 'EN_PREPARACION' && (sub.estado || '').toUpperCase() === 'ABIERTA') {
         await apiClient.put(`/ordenes/${sub.id}`, { estado: 'POR_PREPARAR' })
       }
+
       const detalleEstado = nuevoEstado === 'EN_PREPARACION' ? 'EN_PREPARACION' : 'ENTREGADO'
-      let actualizadas = 0
-      for (const estacion of ['cocina', 'barra', 'postres']) {
-        try {
-          await apiClient.post(`/ordenes/${sub.id}/actualizar-estado-estacion`, { estacion, estado: detalleEstado })
-          actualizadas++
-        } catch { /* esa estación puede no tener productos */ }
-      }
-      // Al entregar, el estado global lo confirma el endpoint de la orden (así la
-      // orden queda ENTREGADA aunque parte de los productos no sean de estación).
-      // Si ninguna estación actualizó nada, también se usa como respaldo.
-      if (nuevoEstado === 'ENTREGADA' || actualizadas === 0) {
-        data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
+
+      if (sub._estacion) {
+        // Tarjeta de estación: solo SU estación; el backend calcula el estado global
+        data = await apiClient.post(`/ordenes/${sub.id}/actualizar-estado-estacion`, {
+          estacion: sub._estacion.toLowerCase(),
+          estado: detalleEstado,
+        })
       } else {
+        // Tarjeta global (pestaña Nuevas): recorrer estaciones
+        for (const estacion of ['cocina', 'barra', 'postres']) {
+          try {
+            await apiClient.post(`/ordenes/${sub.id}/actualizar-estado-estacion`, { estacion, estado: detalleEstado })
+          } catch { /* estación sin productos */ }
+        }
         data = { success: true }
       }
+      // Ya NO se hace PUT /ordenes/{id} con ENTREGADA
     } else {
       data = await apiClient.put(`/ordenes/${sub.id}`, { estado: nuevoEstado })
     }
-    if (data.success || data.data) { 
+
+    if (data.success || data.data) {
       await cargarOrdenes()
-      showToast('Estado actualizado', 'success') 
+      showToast('Estado actualizado', 'success')
+    } else if (data.message && data.message.includes('No se puede cambiar de')) {
+      await cargarOrdenes()
     } else {
-      // Si el error es por estado redundante, lo tratamos como éxito silencioso
-      if (data.message && data.message.includes('No se puede cambiar de')) {
-        await cargarOrdenes()
-      } else {
-        showToast(data.message || 'Error al actualizar', 'error')
-      }
+      showToast(data.message || 'Error al actualizar', 'error')
     }
   } catch (err) {
     showToast('Error de conexión', 'error')
@@ -1934,18 +1934,32 @@ const actualizarCantidadItem = async (detalle, ordenId, delta) => {
 }
 
 const entregarProductosSubOrden = async (sub) => {
-  const ids = sub.detalles_estacion.filter(d => (d.estado_preparacion || d.estado) === 'LISTO' && !d.cancelado).map(d => d.id)
+  // Tomar todos los productos no cancelados y aún no entregados de esta estación
+  const ids = (sub.detalles_estacion || [])
+    .filter(d => !d.cancelado && (d.estado_preparacion || d.estado) !== 'ENTREGADO')
+    .map(d => d.id)
   
-  if (!ids.length) {
-    // Si no hay productos "LISTOS" (por ej. fueron cancelados), forzamos avanzar la orden a ENTREGADA
-    return cambiarEstadoSubOrden(sub, 'ENTREGADA');
-  }
-
   cambiando.value = sub.uid
   try {
-    const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, { detalles: ids, estado_preparacion: 'ENTREGADO' })
-    if (data.success || data.data) { await cargarOrdenes(); showToast('Pedido entregado ✨', 'success') }
-  } finally { cambiando.value = null }
+    if (ids.length > 0) {
+      const data = await apiClient.put(`/ordenes/${sub.id}/station-status`, { detalles: ids, estado_preparacion: 'ENTREGADO' })
+      if (data.success || data.data) { 
+        await cargarOrdenes()
+        showToast('Pedido entregado ✨', 'success') 
+      }
+    } else {
+      await cargarOrdenes()
+    }
+  } catch (err) {
+    const msg = err?.response?.data?.message || err?.message || ''
+    if (msg.includes('No se puede cambiar de') || msg.includes('ENTREGADA')) {
+      await cargarOrdenes()
+    } else {
+      showToast(msg || 'Error al entregar', 'error')
+    }
+  } finally { 
+    cambiando.value = null 
+  }
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

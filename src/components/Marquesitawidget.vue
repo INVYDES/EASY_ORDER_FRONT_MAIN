@@ -19,9 +19,9 @@
             :key="i"
             class="inline-flex items-center shrink-0"
           >
-            <!-- IMAGEN DEL PRODUCTO / COMBO O EMOJI -->
-            <div v-if="(a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
-              <img :src="resolveImageUrl((a.producto || a.paquete).imagen)" :alt="(a.producto || a.paquete).nombre || 'Imagen de la promoción'" class="w-full h-full object-cover" @error="onImageError" />
+            <!-- IMAGEN DEL ANUNCIO, PRODUCTO / COMBO O EMOJI -->
+            <div v-if="a.imagen_url || a.imagen || (a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
+              <img :src="resolveImageUrl(a.imagen_url || a.imagen || (a.producto || a.paquete).imagen)" :alt="a.titulo || (a.producto || a.paquete)?.nombre || 'Imagen de la promoción'" class="w-full h-full object-cover" @error="onImageError" />
             </div>
             <span v-else class="text-4xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
 
@@ -59,6 +59,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { apiClient } from '@/utils/apiClient'
+import { sessionGet, getSessionUser } from '@/utils/session'
 
 const props = defineProps({
   apiUrl:        { type: String,   required: true },
@@ -71,6 +72,71 @@ const props = defineProps({
 const anuncios = ref([])
 const track    = ref(null)
 const offsetPx = ref(0)
+
+// ── RESTAURANTE ACTIVO (resolución automática) ─────────────
+// Si la vista no pasa `restauranteId`, lo tomamos siempre de la sesión
+// (el restaurante en el que estamos) y, como último recurso, de GET /me.
+const restauranteIdProp = computed(() => {
+  const v = props.restauranteId
+  if (v === null || v === undefined) return null
+  const s = String(v).trim()
+  return s && s !== 'null' && s !== 'undefined' ? s : null
+})
+
+const extraerId = (origen) => {
+  if (!origen) return null
+  if (typeof origen === 'object') return origen.id ?? null
+  const s = String(origen).trim()
+  if (!s || s === 'null' || s === 'undefined') return null
+  if (s.startsWith('{')) {
+    try { return JSON.parse(s)?.id ?? null } catch { return null }
+  }
+  return s
+}
+
+const restauranteIdDeSesion = () => {
+  // En la vista de cliente mandamos su última elección; en las internas, el restaurante activo.
+  const claves = props.tipo === 'cliente'
+    ? ['cliente_restaurante_id', 'restaurante_id_activo', 'restaurante_id', 'restaurante_activo']
+    : ['restaurante_id_activo', 'restaurante_id', 'restaurante_activo', 'cliente_restaurante_id']
+
+  for (const clave of claves) {
+    const id = extraerId(sessionGet(clave))
+    if (id) return id
+  }
+
+  const user = getSessionUser()
+  return extraerId(user?.restaurante?.id ?? user?.restaurante_activo ?? user?.restaurante_id)
+}
+
+let restauranteIdRemoto = null
+
+const resolverRestaurante = async () => {
+  if (restauranteIdProp.value) return restauranteIdProp.value
+
+  const deSesion = restauranteIdDeSesion()
+  if (deSesion) return deSesion
+
+  if (restauranteIdRemoto) return restauranteIdRemoto
+  if (!sessionGet('token')) return null
+
+  try {
+    const data = await apiClient.get('/me')
+    const user = data?.data || data
+    const id = extraerId(
+      user?.restaurante?.id ??
+      user?.restaurante_activo ??
+      user?.restaurantes?.[0]?.id ??
+      user?.data?.restaurantes?.[0]?.id
+    )
+    if (id) {
+      restauranteIdRemoto = id
+      return id
+    }
+  } catch { /* sin sesión: la marquesina se oculta */ }
+
+  return null
+}
 
 let animFrame       = null
 let refreshInterval = null
@@ -179,15 +245,19 @@ const startAnimation = () => {
 // ── FETCH ──────────────────────────────────────────────────
 const fetchAnuncios = async () => {
   try {
-    const params = {}
+    const restauranteId = await resolverRestaurante()
+
+    if (!restauranteId) {
+      // Sin restaurante identificado no hay anuncios que mostrar.
+      anuncios.value = []
+      return
+    }
+
+    const params = { restaurante_id: restauranteId }
     if (props.tipo === 'cliente') {
       params.mostrar_cliente = 1
     } else {
       params.mostrar_interno = 1
-    }
-
-    if (props.restauranteId) {
-      params.restaurante_id = props.restauranteId
     }
 
     const response = await apiClient.get('/anuncios', { params })

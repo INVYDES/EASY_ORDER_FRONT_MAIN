@@ -217,8 +217,8 @@
                       <p v-if="p.bajo_stock && !p.agotado" class="font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase transition-all"
                          :class="sidebarAbierta ? 'text-[8px]' : 'text-sm'">Últimas {{ p.stock }}</p>
                       <div v-if="p.tamanos && p.tamanos.length > 0" class="flex gap-1 ml-auto">
-                        <span v-for="t in p.tamanos" :key="t.id" class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase shadow-xs">
-                          {{ (t.nombre || '').charAt(0) }}
+                        <span v-for="t in p.tamanos" :key="t.id" class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-black uppercase shadow-xs">
+                          {{ t.nombre }}
                         </span>
                       </div>
                     </div>
@@ -1051,6 +1051,9 @@ const handleCheckout = async (checkoutData) => {
         notas: i.notas,
         nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General'
       })),
+      // Autoservicio: se marca como kiosko para que no entre al flujo de mesero
+      // cuando el restaurante tiene servicio rápido activo.
+      tipo_orden: 'kiosko',
       metodo_pago: 'efectivo', tipo_entrega: 'comer_aqui',
       notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
       estado: 'ABIERTA', mesa: checkoutData.numero_mesa, usuario_id: empleadoId,

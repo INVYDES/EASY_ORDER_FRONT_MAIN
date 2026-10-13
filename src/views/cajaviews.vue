@@ -1,6 +1,7 @@
 <script setup>
 import { sessionGet, sessionSet, sessionRemove } from '@/utils/session'
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import Chart from 'chart.js/auto'
 import { useRouter, useRoute } from 'vue-router'
 
 // Layout
@@ -247,25 +248,25 @@ const reproducirSonido = () => {
 }
 
 // ── Chart ─────────────────────────────────────────────────────────────────────
-const loadChartJS = () => new Promise(resolve => {
-  if (window.Chart) {
-    resolve()
+const destroyChart = () => {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+}
+
+const renderChart = async () => {
+  if (!cajaAbierta.value) {
+    destroyChart()
     return
   }
-  const s = document.createElement('script')
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
-  s.onload = resolve
-  document.head.appendChild(s)
-})
+  await nextTick()
+  const canvas = chartVentas.value
+  if (!canvas) return
 
-const initChart = async () => {
-  await loadChartJS()
-  if (!chartVentas.value) return
-  if (chartInstance) chartInstance.destroy()
-  
   const hours = Array.from({ length: 16 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`)
   const totals = Array(16).fill(0)
-  
+
   closedOrders.value.forEach(o => {
     if (!o.created_at) return
     const parsed = parseUTCDate(o.created_at)
@@ -275,14 +276,24 @@ const initChart = async () => {
       totals[h - 8] += Number(o.total || 0)
     }
   })
-  
-  chartInstance = new window.Chart(chartVentas.value, {
+
+  const colors = totals.map(v => v > 0 ? 'rgba(99,102,241,0.85)' : 'rgba(229,231,235,0.5)')
+
+  if (chartInstance) {
+    chartInstance.data.labels = hours
+    chartInstance.data.datasets[0].data = totals
+    chartInstance.data.datasets[0].backgroundColor = colors
+    chartInstance.update()
+    return
+  }
+
+  chartInstance = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: hours,
       datasets: [{
         data: totals,
-        backgroundColor: totals.map(v => v > 0 ? 'rgba(99,102,241,0.85)' : 'rgba(229,231,235,0.5)'),
+        backgroundColor: colors,
         borderRadius: 5,
         borderSkipped: false
       }]
@@ -298,6 +309,20 @@ const initChart = async () => {
     }
   })
 }
+
+// Coalesce: muchas fuentes (mount, poll 15s, WS, cobro) disparan repintados;
+// en modo rápido llegan ráfagas, así que solo se agenda uno por tick.
+let chartScheduled = false
+const initChart = () => {
+  if (chartScheduled) return
+  chartScheduled = true
+  nextTick(() => {
+    chartScheduled = false
+    renderChart()
+  })
+}
+
+watch([cajaAbierta, closedOrders], initChart, { flush: 'post' })
 
 // ── Exportar ──────────────────────────────────────────────────────────────────
 const exportarCorte = () => {
@@ -513,7 +538,7 @@ const onCajaWS = async (evento) => {
   }
   if (evento.accion === 'cerrada') {
     cajaAbierta.value = false
-    if (chartInstance) chartInstance.destroy()
+    destroyChart()
     await loadHistorial()
     showToast('La caja fue cerrada', 'warning')
   }
@@ -548,7 +573,7 @@ const handleOpenCaja = async (amount) => {
 const handleCloseCaja = async () => {
   cajaAbierta.value = false
   showCloseModal.value = false
-  if (chartInstance) chartInstance.destroy()
+  destroyChart()
   await loadAllData(false)
   await loadHistorial()
   showToast('Caja cerrada. Historial actualizado.', 'success')
@@ -623,6 +648,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer) clearTimeout(pollTimer)
+  destroyChart()
   window.removeEventListener('restaurante:actualizado', onRestauranteActualizado)
 })
 </script>

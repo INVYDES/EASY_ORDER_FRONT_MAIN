@@ -243,7 +243,7 @@
             <div class="flex items-center gap-2 mb-2">
               <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">2</span>
               <h3 class="font-bold text-gray-800">Receta e Insumos</h3>
-              <span v-if="!product && !productoCreado" class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 ml-auto">⚠️ Crea el producto primero</span>
+              <span v-if="!product && !productoCreado" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 ml-auto">✓ Se guarda al crear el producto</span>
             </div>
 
             <!-- Pestañas de Selección de Tamaño para Receta -->
@@ -265,15 +265,6 @@
               <div class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
               <p class="text-sm text-gray-500 font-medium">Analizando ingredientes...</p>
             </div>
-
-            <template v-else-if="!product && !productoCreado">
-              <!-- Sección deshabilitada hasta crear producto -->
-              <div class="py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                <p class="text-3xl mb-3">🔒</p>
-                <p class="text-sm font-bold text-gray-500">Primero crea el producto</p>
-                <p class="text-xs text-gray-400 mt-1">Después podrás asignar ingredientes a la receta</p>
-              </div>
-            </template>
 
             <template v-else>
               <!-- ── PANEL DE COSTOS Y MÁRGENES ── -->
@@ -745,7 +736,8 @@ const initReceta = async () => {
   if (props.product?.id) {
     await cargarReceta()
   } else {
-    await loadTodosIngredientes()
+    // Producto nuevo: el catálogo se necesita para armar la receta desde el inicio
+    await Promise.all([loadTodosIngredientes(), cargarNominaReal()])
   }
 }
 
@@ -948,7 +940,9 @@ const cargarReceta = async () => {
       await Promise.all(tamanos.value.map(async (tam) => {
         if (tam.id) {
           try {
-            const resTam = await apiClient.get(`/ingredientes/producto/${props.product.id}?tamano_id=${tam.id}`)
+            // El backend identifica el tamaño por su key (los tamaños creados
+            // desde el modal usan su nombre como key).
+            const resTam = await apiClient.get(`/ingredientes/producto/${props.product.id}?tamano=${encodeURIComponent(tam.id)}`)
             const arrTam = resTam.data || resTam
             if ((resTam.success || arrTam) && Array.isArray(arrTam)) {
               tam.ingredientes = arrTam.map((i: any) => ({
@@ -1054,7 +1048,7 @@ const guardarReceta = async () => {
       })),
     }
     if (activeTam && activeTam.id) {
-      payload.tamano_id = activeTam.id
+      payload.tamano = activeTam.id
     }
 
     if (tamanos.value.length > 0) {

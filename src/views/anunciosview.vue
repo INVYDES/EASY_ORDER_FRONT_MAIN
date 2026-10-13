@@ -112,6 +112,8 @@
         </div>
         
         <div class="p-5">
+          <img v-if="a.imagen_url" :src="resolveImageUrl(a.imagen_url)" :alt="a.titulo"
+            class="w-full h-32 object-cover rounded-2xl mb-3 border border-gray-100" />
           <h4 class="font-black text-gray-900 text-lg leading-tight mb-1">{{ a.titulo }}</h4>
           <p v-if="a.contenido" class="text-sm text-gray-500 line-clamp-2 font-medium">{{ a.contenido }}</p>
           
@@ -199,6 +201,27 @@
               <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Contenido (Opcional)</label>
               <textarea v-model="form.contenido" rows="2" placeholder="Describe brevemente la oferta..."
                 class="w-full px-5 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-sm font-medium text-gray-600 resize-none"></textarea>
+            </section>
+
+            <section>
+              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Imagen (Opcional)</label>
+              <div class="flex items-center gap-4">
+                <div class="w-24 h-24 rounded-2xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center shrink-0">
+                  <img v-if="imagenPreview" :src="imagenPreview" alt="Vista previa" class="w-full h-full object-cover" />
+                  <span v-else class="text-3xl opacity-40">🖼️</span>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label class="px-4 py-2.5 text-xs font-black text-indigo-600 bg-indigo-50 rounded-xl cursor-pointer hover:bg-indigo-100 transition text-center">
+                    {{ imagenPreview ? 'Cambiar imagen' : 'Subir imagen' }}
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" @change="onImagenChange" />
+                  </label>
+                  <button v-if="imagenPreview" type="button" @click="quitarImagen"
+                    class="px-4 py-2 text-xs font-black text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition">
+                    Quitar imagen
+                  </button>
+                  <p class="text-[10px] text-gray-400 font-bold">JPG, PNG o WebP · máx. 2 MB</p>
+                </div>
+              </div>
             </section>
             
             <section class="flex flex-wrap items-center justify-between gap-6">
@@ -357,6 +380,54 @@ const dropdownOpen = ref(false)
 const searchTerm = ref('')
 const previewVariant = ref(localStorage.getItem('marquesina_variant') || 'dark')
 const previewTipo = ref('interno')
+
+const imagenFile    = ref(null)
+const imagenPreview = ref('')
+const eliminarImagen = ref(false)
+
+const onImagenChange = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) {
+    formError.value = 'La imagen no debe pesar más de 2 MB'
+    return
+  }
+  formError.value = ''
+  imagenFile.value = file
+  eliminarImagen.value = false
+  imagenPreview.value = URL.createObjectURL(file)
+}
+
+const quitarImagen = () => {
+  imagenFile.value = null
+  imagenPreview.value = ''
+  eliminarImagen.value = true
+}
+
+// Si hay imagen nueva o se quitó la actual, se manda FormData; si no, JSON como hasta ahora
+const buildPayload = () => {
+  if (!imagenFile.value && !eliminarImagen.value) return form.value
+
+  const fd = new FormData()
+  const nulables = ['producto_id', 'paquete_id', 'precio_promo', 'fecha_inicio', 'fecha_fin']
+  Object.entries(form.value).forEach(([k, v]) => {
+    if (['imagen', 'imagen_url', 'producto', 'paquete'].includes(k)) return
+    if (v === null || v === undefined) {
+      if (nulables.includes(k)) fd.append(k, '')   // Laravel lo convierte en null
+      return
+    }
+    if (Array.isArray(v)) {
+      if (v.length === 0) fd.append(`${k}[]`, '')  // Vaciar array
+      else v.forEach(x => fd.append(`${k}[]`, x))
+    }
+    else if (typeof v === 'object') return
+    else if (typeof v === 'boolean') fd.append(k, v ? 1 : 0)
+    else fd.append(k, v)
+  })
+  if (imagenFile.value) fd.append('imagen', imagenFile.value)
+  if (eliminarImagen.value) fd.append('eliminar_imagen', 1)
+  return fd
+}
 
 watch(previewVariant, (newVal) => {
   localStorage.setItem('marquesina_variant', newVal)
@@ -543,6 +614,10 @@ const abrirModal = (a = null) => {
   formError.value = ''
   dropdownOpen.value = false
   searchTerm.value = ''
+
+  imagenFile.value = null
+  eliminarImagen.value = false
+  imagenPreview.value = a?.imagen_url ? resolveImageUrl(a.imagen_url) : ''
   
   if (a) {
     form.value = { ...defaultForm(), ...a }
@@ -568,12 +643,12 @@ const guardar = async () => {
   
   guardando.value = true
   try {
-    const url = editando.value ? `/admin/anuncios/${editando.value.id}` : '/admin/anuncios'
-    const method = editando.value ? 'PUT' : 'POST'
-    
+    const payload = buildPayload()
     const data = editando.value
-      ? await apiClient.put(url, form.value)
-      : await apiClient.post('/admin/anuncios', form.value)
+      ? (payload instanceof FormData
+          ? (payload.append('_method', 'PUT'), await apiClient.post(`/admin/anuncios/${editando.value.id}`, payload))
+          : await apiClient.put(`/admin/anuncios/${editando.value.id}`, payload))
+      : await apiClient.post('/admin/anuncios', payload)
     
     if (data.success) {
       showToast(editando.value ? '¡Anuncio actualizado!' : '¡Anuncio publicado correctamente!', 'success')

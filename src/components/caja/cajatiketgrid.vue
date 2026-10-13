@@ -691,11 +691,12 @@ const filteredOrders = computed(() => {
 
 const estaEntregada = (order) => {
   const s = (order?.estado || '').toUpperCase()
-  if (s === 'ENTREGADA' || s === 'ENTREGADO') return true
-  return (order?.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO')
+  return s === 'ENTREGADA' || s === 'ENTREGADO'
 }
-// Las órdenes abiertas en Caja se pueden cobrar directamente
-const puedeCobrarOrden = (order) => true
+// Flujo normal: las órdenes abiertas en Caja se pueden cobrar directamente.
+// Servicio rápido (kiosko): el cobro queda bloqueado hasta que la orden se entregue,
+// ya sea desde Caja (botón "Entregada") o desde mesero.
+const puedeCobrarOrden = (order) => (props.servicioRapido ? estaEntregada(order) : true)
 
 const agruparDetallesPorComensal = (detalles) => {
   const grupos = {}
@@ -1663,38 +1664,23 @@ const cobrarDividido = async () => {
   try {
     if (modoDividir.value === 'manual') {
       // ── Modo Manual: construir datos localmente y llamar solo a cerrar ──
-      // Asignar detail IDs originales a comensales (regla de mayoría para splits)
-      const detailOwnership = {} // originalId → { comensalIdx → count }
-      comensalesManual.value.forEach((c, idx) => {
-        itemsDeComensalDesglosado(idx).forEach(d => {
-          if (!detailOwnership[d.originalId]) detailOwnership[d.originalId] = {}
-          detailOwnership[d.originalId][idx] = (detailOwnership[d.originalId][idx] || 0) + 1
-        })
-      })
-
-      const detailToComensalMap = {} // originalId → bestComensalIdx
-      Object.entries(detailOwnership).forEach(([detId, counts]) => {
-        const bestIdx = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-        detailToComensalMap[detId] = parseInt(bestIdx)
-      })
-
       const detallePagos = comensalesManual.value.map((c, idx) => {
         const items = itemsDeComensalDesglosado(idx)
         if (items.length === 0) return null
         const total = items.reduce((sum, d) => sum + d.precioUnitario, 0)
         const p = getPagoTicket(c.id)
-        const detailIds = [...new Set(
-          Object.entries(detailToComensalMap)
-            .filter(([, cIdx]) => cIdx === idx)
-            .map(([detId]) => parseInt(detId))
-        )]
+
+        // Cantidad de unidades por detalle original
+        const porDetalle = {}
+        items.forEach(d => { porDetalle[d.originalId] = (porDetalle[d.originalId] || 0) + 1 })
+
         return {
           monto: total,
           metodo: p.metodo,
           propina: Math.max(0, parseFloat(p.propina) || 0),
           referencia: p.referencia || '',
           comensal: `Comensal ${c.id}`,
-          detalles: detailIds
+          items: Object.entries(porDetalle).map(([id, cantidad]) => ({ id: parseInt(id), cantidad }))
         }
       }).filter(Boolean)
 
