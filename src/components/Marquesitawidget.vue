@@ -21,9 +21,9 @@
           >
             <!-- IMAGEN DEL ANUNCIO, PRODUCTO / COMBO O EMOJI -->
             <div v-if="a.imagen_url || a.imagen || (a.producto || a.paquete)?.imagen" class="w-14 h-14 ml-6 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0 bg-white/10 backdrop-blur-sm">
-              <img :src="resolveImageUrl(a.imagen_url || a.imagen || (a.producto || a.paquete).imagen)" :alt="a.titulo || (a.producto || a.paquete)?.nombre || 'Imagen de la promoción'" class="w-full h-full object-cover" @error="onImageError" />
+              <img :src="resolveImageUrl(a.imagen_url || a.imagen || (a.producto || a.paquete)?.imagen)" :alt="a.titulo || (a.producto || a.paquete)?.nombre || 'Promoción'" class="w-full h-full object-cover" @error="onImageError" />
             </div>
-            <span v-else class="text-4xl ml-6 drop-shadow-md">{{ a.emoji || '📢' }}</span>
+            <span v-else class="text-4xl ml-6 drop-shadow-md">{{ (a.emoji && a.emoji !== '??') ? a.emoji : '📢' }}</span>
 
             <div class="flex flex-col justify-center ml-4">
               <div class="flex items-center gap-2">

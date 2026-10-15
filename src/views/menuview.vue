@@ -713,7 +713,21 @@ const getPrecioRango = (p) => {
 const normalizar = (p) => {
   if (!p) return null;
   try {
-    const tamanosList = Array.isArray(p.tamanos) ? p.tamanos : [];
+    const rawTamanos = (Array.isArray(p.tamanos) && p.tamanos.length > 0)
+      ? p.tamanos
+      : ((Array.isArray(p.tamanos_disponibles) && p.tamanos_disponibles.length > 0)
+          ? p.tamanos_disponibles
+          : (Array.isArray(p.tamanos_personalizados) ? p.tamanos_personalizados : []));
+
+    const tamanosList = rawTamanos.map((t, idx) => ({
+      ...t,
+      id: t.id ?? t.key ?? t.nombre ?? `tam-${idx}`,
+      key: t.key ?? t.id ?? t.nombre ?? `tam-${idx}`,
+      nombre: t.nombre ?? t.key ?? `Tamaño ${idx + 1}`,
+      precio: parseFloat(t.precio || 0),
+      stock: (t.stock !== undefined && t.stock !== null) ? Number(t.stock) : (p.stock ?? 0)
+    }));
+
     const tieneTamanos = tamanosList.length > 0;
     const rawStock = parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0);
     const estaAgotado = tieneTamanos 
