@@ -220,21 +220,18 @@ const parseUTCDate = (dateStr) => {
   try {
     let d;
     if (typeof dateStr === 'string') {
-      if (dateStr.includes('T')) {
-        if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
-          d = new Date(dateStr);
-        } else {
-          d = new Date(dateStr + 'Z');
-        }
-      } else if (dateStr.includes('/')) {
-        const parts = dateStr.trim().split(' ');
+      const s = dateStr.trim();
+      if (s.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(s)) {
+        d = new Date(s);
+      } else if (s.includes('/')) {
+        const parts = s.split(' ');
         const fecha = parts[0];
         const hora = parts[1] || '00:00:00';
         const [dia, mes, anio] = fecha.split('/');
-        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
+        d = new Date(`${anio}-${mes}-${dia}T${hora}Z`);
       } else {
-        const cleanStr = dateStr.replace(' ', 'T');
-        d = new Date(cleanStr);
+        const cleanStr = s.replace(' ', 'T');
+        d = new Date(cleanStr.includes('T') ? cleanStr + 'Z' : `${cleanStr}T00:00:00Z`);
       }
     } else {
       d = new Date(dateStr);
@@ -420,15 +417,10 @@ const actualizarTotalesCaja = async () => {
 
 const loadOrders = async () => {
   try {
-    const today = new Date().toLocaleDateString('en-CA')
-    let closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${today}&per_page=100`
-    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&per_page=100`
+    let closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&caja_actual=1&per_page=100`
+    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&caja_actual=1&per_page=100`
     
-    if (cajaAbierta.value && cajaOpenedAt.value) {
-      const fechaApertura = String(cajaOpenedAt.value).substring(0, 10)
-      closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${fechaApertura || today}&per_page=100`
-      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${fechaApertura || today}&per_page=100`
-    } else if (!cajaAbierta.value) {
+    if (!cajaAbierta.value) {
       closedOrdersQuery = null;
       cancelledOrdersQuery = null;
     }
@@ -513,6 +505,7 @@ const handleOrderPaid = async (paymentData) => {
       estado: 'CERRADA',
       metodo_pago: paymentData.metodo_pago,
       propina: paymentData.propina || 0,
+      updated_at: new Date().toISOString(),
     }
   }
   selectedTab.value = 'closed'
