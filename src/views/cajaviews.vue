@@ -139,9 +139,18 @@ const openOrders = computed(() => {
     const s = (o.estado || '').toUpperCase()
     if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)) return false
 
-    if (isServicioRapido.value || isKioskoOrder(o)) {
+    // Órdenes de kiosko/autoservicio pasan directo a caja
+    if (isKioskoOrder(o)) {
       return true
     }
+
+    // Órdenes tomadas por mesero:
+    // En modo rápido, solo deben aparecer en caja una vez que el mesero le dé "Enviar a cocina"
+    // (es decir, cuando ya no esté en ABIERTA).
+    if (isServicioRapido.value) {
+      return s !== 'ABIERTA'
+    }
+
     return s === 'ENTREGADA' || s === 'ENTREGADO' ||
       (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO')
   })
@@ -280,8 +289,9 @@ const renderChart = async () => {
   const totals = Array(16).fill(0)
 
   closedOrders.value.forEach(o => {
-    if (!o.created_at) return
-    const parsed = parseUTCDate(o.created_at)
+    const dateStr = o.updated_at || o.created_at
+    if (!dateStr) return
+    const parsed = parseUTCDate(dateStr)
     if (!parsed) return
     const h = parsed.getHours()
     if (h >= 8 && h <= 23) {
@@ -411,13 +421,13 @@ const actualizarTotalesCaja = async () => {
 const loadOrders = async () => {
   try {
     const today = new Date().toLocaleDateString('en-CA')
-    let closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
-    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
+    let closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${today}&per_page=100`
+    let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
       const fechaApertura = String(cajaOpenedAt.value).substring(0, 10)
-      closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${fechaApertura || today}&fecha_hasta=${today}&per_page=100`
-      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${fechaApertura || today}&fecha_hasta=${today}&per_page=100`
+      closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${fechaApertura || today}&per_page=100`
+      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${fechaApertura || today}&per_page=100`
     } else if (!cajaAbierta.value) {
       closedOrdersQuery = null;
       cancelledOrdersQuery = null;
