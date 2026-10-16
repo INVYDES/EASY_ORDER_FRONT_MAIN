@@ -534,6 +534,7 @@
       v-if="showCheckout"
       :pedido="pedido"
       :restaurante-nombre="restauranteSeleccionado?.nombre || ''"
+      :total-mesas="Number(restauranteSeleccionado?.total_mesas || 0)"
       ref="checkoutRef"
       @close="showCheckout = false"
       @confirmar="handleCheckout"
@@ -1054,6 +1055,10 @@ const vaciarPedido = () => { if (confirm('¿Vaciar todo el pedido?')) pedido.val
 
 const handleCheckout = async (checkoutData) => {
   try {
+    const isParaLlevar = checkoutData.tipo_entrega === 'para_llevar'
+    const mesaValor = isParaLlevar ? null : checkoutData.numero_mesa
+    const notaFinal = checkoutData.notas || (isParaLlevar ? 'Para llevar' : (mesaValor ? `Mesa ${mesaValor}` : ''))
+
     const body = {
       restaurante_id: restauranteSeleccionado.value.id,
       productos: pedido.value.map(i => ({ 
@@ -1065,12 +1070,13 @@ const handleCheckout = async (checkoutData) => {
         notas: i.notas,
         nom_comensal: comensalesNombres.value[i.comensalIndex] || 'General'
       })),
-      // Autoservicio: se marca como kiosko para que no entre al flujo de mesero
-      // cuando el restaurante tiene servicio rápido activo.
       tipo_orden: 'kiosko',
-      metodo_pago: 'efectivo', tipo_entrega: 'comer_aqui',
-      notas: checkoutData.notas || `Mesa ${checkoutData.numero_mesa}`,
-      estado: 'ABIERTA', mesa: checkoutData.numero_mesa, usuario_id: empleadoId,
+      metodo_pago: 'efectivo',
+      tipo_entrega: isParaLlevar ? 'para_llevar' : 'comer_aqui',
+      notas: notaFinal,
+      estado: 'ABIERTA',
+      mesa: mesaValor,
+      usuario_id: empleadoId,
     }
     const data = await apiClient.post('/ordenes', body)
     if (data?.success) { 

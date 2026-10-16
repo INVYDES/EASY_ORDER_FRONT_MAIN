@@ -424,18 +424,22 @@
             </div>
           </div>
           <div v-if="type === 'open'" class="space-y-2">
-            <!-- Acciones de Servicio Rápido: comanda / entrega si la orden no se ha entregado aún -->
-            <div v-if="servicioRapido && ['EN_PREPARACION', 'POR_PREPARAR', 'ABIERTA'].includes((order.estado || '').toUpperCase())" class="flex gap-2">
+            <!-- Acciones de Servicio Rápido y Kiosko: comanda / entrega si la orden no se ha entregado aún -->
+            <div v-if="(servicioRapido || isKioskoOrder(order)) && !estaEntregada(order)" class="flex gap-2">
               <button v-if="!esMesero" @click="imprimirComanda(order)" type="button"
                 class="flex-1 py-2 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm">
                 🖨️ Comanda
               </button>
-              <button @click="marcarEntregada(order)" type="button" :disabled="marcandoEntregadaId === order.id"
-                class="flex-1 py-2 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm disabled:opacity-50">
-                {{ marcandoEntregadaId === order.id ? 'Cambiando...' : '✅ Entregada' }}
+              <button @click="marcarEntregada(order)" type="button"
+                :disabled="marcandoEntregadaId === order.id || !puedeEntregarKiosko(order)"
+                :class="['flex-1 py-2 text-xs font-black rounded-xl transition flex items-center justify-center gap-1 shadow-sm',
+                  !puedeEntregarKiosko(order)
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                    : 'text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:opacity-50']">
+                {{ marcandoEntregadaId === order.id ? 'Cambiando...' : (!puedeEntregarKiosko(order) ? '⏳ En Cocina' : '✅ Entregada') }}
               </button>
             </div>
-            <button v-else-if="servicioRapido && !esMesero" @click="imprimirComanda(order)" type="button"
+            <button v-else-if="(servicioRapido || isKioskoOrder(order)) && !esMesero" @click="imprimirComanda(order)" type="button"
               class="w-full py-2 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 active:scale-95 transition flex items-center justify-center gap-1 shadow-sm mb-1">
               🖨️ Re-imprimir Comanda Cocina
             </button>
@@ -661,8 +665,9 @@ const filteredOrders = computed(() => {
   return props.orders.map(o => {
     if (props.type !== 'open') return o
     
-    // En servicio rápido, o si la orden ya está ENTREGADA/ABIERTA/EN_PREPARACION, no filtramos detalles
-    if (props.servicioRapido || (o.estado || '').toUpperCase() === 'EN_PREPARACION') {
+    const isKiosko = String(o.tipo_orden || '').toLowerCase() === 'kiosko'
+    // En servicio rápido, para órdenes de kiosko, o si la orden está EN_PREPARACION, no filtramos detalles
+    if (props.servicioRapido || isKiosko || (o.estado || '').toUpperCase() === 'EN_PREPARACION') {
       const subtotal = (o.detalles || []).reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
       const total = subtotal + parseFloat(o.propina || 0)
       return {
@@ -693,10 +698,28 @@ const estaEntregada = (order) => {
   const s = (order?.estado || '').toUpperCase()
   return s === 'ENTREGADA' || s === 'ENTREGADO'
 }
-// Flujo normal: las órdenes abiertas en Caja se pueden cobrar directamente.
-// Servicio rápido (kiosko): el cobro queda bloqueado hasta que la orden se entregue,
-// ya sea desde Caja (botón "Entregada") o desde mesero.
-const puedeCobrarOrden = (order) => (props.servicioRapido ? estaEntregada(order) : true)
+
+const isKioskoOrder = (order) => String(order?.tipo_orden || '').toLowerCase() === 'kiosko'
+
+const puedeEntregarKiosko = (order) => {
+  if (props.servicioRapido) return true
+  const s = (order?.estado || '').toUpperCase()
+  if (s === 'LISTA' || s === 'LISTO') return true
+  const dets = (order?.detalles || []).filter(d => !d.cancelado)
+  if (dets.length === 0) return true
+  return dets.every(d => {
+    const st = (d.estado_preparacion || d.estado || '').toUpperCase()
+    return st === 'LISTO' || st === 'ENTREGADO'
+  })
+}
+
+// Para órdenes de Kiosko se puede cobrar de inmediato en ambos modos.
+// Para mesero en modo rápido, se requiere que la orden esté entregada.
+const puedeCobrarOrden = (order) => {
+  if (isKioskoOrder(order)) return true
+  if (props.servicioRapido) return estaEntregada(order)
+  return true
+}
 
 const agruparDetallesPorComensal = (detalles) => {
   const grupos = {}

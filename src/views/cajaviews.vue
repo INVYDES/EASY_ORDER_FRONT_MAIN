@@ -126,12 +126,14 @@ const loading = reactive({
 const openOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    if (isServicioRapido.value) {
-      return !['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)
+    if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)) return false
+
+    const isKiosko = String(o.tipo_orden || '').toLowerCase() === 'kiosko'
+    if (isServicioRapido.value || isKiosko) {
+      return true
     }
     return s === 'ENTREGADA' || s === 'ENTREGADO' ||
-      (!['CERRADA', 'CANCELADA', 'PAGADA'].includes(s) && 
-       (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO'))
+      (o.detalles || []).some(d => d.estado_preparacion === 'ENTREGADO' || d.estado === 'ENTREGADO')
   })
 })
 const closedOrders = computed(() => {

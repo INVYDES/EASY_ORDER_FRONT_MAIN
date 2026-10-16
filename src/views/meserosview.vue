@@ -1466,11 +1466,9 @@ const cargarOrdenes = async (silent = true) => {
       }
     })
     const lista = [...map.values()].sort((a, b) => b.id - a.id)
-    // Con servicio rápido (modo kiosko) las órdenes del kiosko no pasan por mesero:
-    // se cobran/entregan desde Caja. Sin servicio rápido siguen el flujo normal.
-    ordenes.value = isServicioRapido.value
-      ? lista.filter(o => String(o.tipo_orden || '').toLowerCase() !== 'kiosko')
-      : lista
+    // Las órdenes de autoservicio (kiosko) no pasan por mesero:
+    // se preparan en cocina/barra y se entregan/cobran desde Caja.
+    ordenes.value = lista.filter(o => String(o.tipo_orden || '').toLowerCase() !== 'kiosko')
   } catch (err) { console.error('Error órdenes:', err) }
   finally { if (!silent) loading.value = false }
 }
@@ -1480,6 +1478,11 @@ const onOrdenWS = async (evento) => {
   const { accion, orden } = evento
   console.log('📡 WS Waiter:', accion, orden.id)
   ultimaActualizacion.value = new Date().toLocaleTimeString()
+
+  // Ignorar órdenes de kiosko en la vista de mesero
+  if (String(orden?.tipo_orden || '').toLowerCase() === 'kiosko') {
+    return
+  }
 
   if (accion === 'creada' || accion === 'actualizada' || accion === 'estado_cambiado') {
     const idx = ordenes.value.findIndex(o => o.id === orden.id)
