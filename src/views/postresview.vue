@@ -380,21 +380,26 @@ const abrirModalIngredientes = async (orden, nuevoEstado, estadoFiltro = '') => 
 
     modalIngredientes.value.items = resultados
       .filter(r => r.ingredientes.length > 0)
-      .map(({ detalle, ingredientes }) => ({
-        producto_id:     detalle.producto_id,
-        producto_nombre: detalle.producto_nombre ?? (detalle.tamano_nombre ? `${detalle.producto?.nombre || 'Postre'} (${detalle.tamano_nombre})` : (detalle.producto?.nombre ?? `Producto #${detalle.producto_id}`)),
-        cantidad:        detalle.cantidad,
-        ingredientes:    ingredientes.map(ing => {
-          const cantidadTotal = ing.cantidad_receta * detalle.cantidad
-          return {
-            ...ing,
-            cantidad_receta_total: Number(cantidadTotal.toFixed(3)),
-            sin_stock:    ing.stock_actual <= 0,
-            insuficiente: ing.stock_actual < cantidadTotal && ing.stock_actual > 0,
-            incluir:      true,
-          }
-        }),
-      }))
+      .map(({ detalle, ingredientes }) => {
+        const base = detalle.producto_nombre || detalle.producto?.nombre || `Producto #${detalle.producto_id}`
+        const tam = detalle.tamano_nombre || detalle.tamano || ''
+        const pNombre = (tam && !base.toLowerCase().includes(tam.toLowerCase())) ? `${base} (${tam})` : base
+        return {
+          producto_id:     detalle.producto_id,
+          producto_nombre: pNombre,
+          cantidad:        detalle.cantidad,
+          ingredientes:    ingredientes.map(ing => {
+            const cantidadTotal = ing.cantidad_receta * detalle.cantidad
+            return {
+              ...ing,
+              cantidad_receta_total: Number(cantidadTotal.toFixed(3)),
+              sin_stock:    ing.stock_actual <= 0,
+              insuficiente: ing.stock_actual < cantidadTotal && ing.stock_actual > 0,
+              incluir:      true,
+            }
+          }),
+        }
+      })
   } catch (e) {
     console.error('Error cargando ingredientes postres:', e)
   } finally {

@@ -153,7 +153,7 @@
                 <div class="flex-1">
                   <p class="text-sm font-black text-slate-800">{{ c.nombre }}</p>
                   <p class="text-[10px] font-bold text-slate-400">
-                    {{ c.detalles.map(d => `${Number(d.cantidad)}x ${d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'}`).join(', ') }}
+                    {{ c.detalles.map(d => `${Number(d.cantidad)}x ${getNombreProductoConTamano(d)}`).join(', ') }}
                     - ${{ c.subtotal.toFixed(2) }}
                   </p>
                 </div>
@@ -372,7 +372,7 @@
                   class="flex justify-between items-center text-xs font-bold gap-2"
                   :class="d.cancelado ? 'text-red-400 line-through' : 'text-slate-600'">
                   <span class="truncate flex-1">
-                    {{ d.cantidad }}× {{ d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto' }}
+                    {{ d.cantidad }}× {{ getNombreProductoConTamano(d) }}
                     <span v-if="d.cancelado" class="text-[8px] no-underline inline-block bg-red-100 text-red-600 px-1 rounded ml-1">CANCELADO</span>
                     <p v-else-if="d.notas" class="text-[9px] text-amber-600 italic leading-none mt-0.5">{{ d.notas }}</p>
                   </span>
@@ -665,7 +665,7 @@ const filteredOrders = computed(() => {
   return props.orders.map(o => {
     if (props.type !== 'open') return o
     
-    const isKiosko = String(o.tipo_orden || '').toLowerCase() === 'kiosko'
+    const isKiosko = isKioskoOrder(o)
     // En servicio rápido, para órdenes de kiosko, o si la orden está EN_PREPARACION, no filtramos detalles
     if (props.servicioRapido || isKiosko || (o.estado || '').toUpperCase() === 'EN_PREPARACION') {
       const subtotal = (o.detalles || []).reduce((sum, d) => sum + (d.cancelado ? 0 : parseFloat(d.subtotal || 0)), 0)
@@ -699,7 +699,36 @@ const estaEntregada = (order) => {
   return s === 'ENTREGADA' || s === 'ENTREGADO'
 }
 
-const isKioskoOrder = (order) => String(order?.tipo_orden || '').toLowerCase() === 'kiosko'
+const isKioskoOrder = (order) => {
+  if (!order) return false
+  const tipo = String(order?.tipo_orden || '').toLowerCase()
+  if (tipo === 'kiosko') return true
+  
+  const notas = String(order?.notas || '').toLowerCase()
+  if (notas.includes('kiosko') || notas.includes('autoservicio')) {
+    return true
+  }
+  
+  const mesero = String(order?.mesero || order?.user?.name || '').toLowerCase().trim()
+  if (!order?.mesero || mesero === 'n/a' || mesero === 'sin mesero' || mesero.includes('kiosko')) {
+    return true
+  }
+  
+  return false
+}
+
+const getNombreProductoConTamano = (d) => {
+  if (!d) return 'Producto'
+  const baseName = d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'
+  const tam = d.tamano_nombre || d.tamano || (typeof d.producto === 'object' ? (d.producto?.tamano_nombre || d.producto?.tamano) : '') || ''
+  if (tam && typeof tam === 'string' && tam.trim() !== '') {
+    const tamClean = tam.trim()
+    if (!baseName.toLowerCase().includes(`(${tamClean.toLowerCase()})`) && !baseName.toLowerCase().endsWith(` ${tamClean.toLowerCase()}`)) {
+      return `${baseName} (${tamClean})`
+    }
+  }
+  return baseName
+}
 
 const puedeEntregarKiosko = (order) => {
   if (props.servicioRapido) return true
@@ -831,7 +860,7 @@ const itemsByComensal = computed(() => {
     grouped[comensal].push({
       id: item.id,
       cantidad: item.cantidad || 0,
-      nombre: item.producto_nombre || item.nombre || (typeof item.producto === 'string' ? item.producto : item.producto?.nombre) || 'Producto',
+      nombre: getNombreProductoConTamano(item),
       subtotal: item.subtotal || 0,
       notas: item.notas || '',
       cancelado: !!item.cancelado,
@@ -883,7 +912,7 @@ const imprimirTicket = async () => {
     const items = (ordenCobrar.value.detalles || []).map(d => ({
       id: d.id,
       cantidad: d.cantidad || 0,
-      nombre: d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto',
+      nombre: getNombreProductoConTamano(d),
       subtotal: d.subtotal || 0,
       notas: d.notas || '',
       cancelado: !!d.cancelado,
@@ -947,7 +976,7 @@ const generarTicketHTML = (order) => {
     if (!grouped[comensal]) grouped[comensal] = []
     grouped[comensal].push({
       cantidad: item.cantidad || 0,
-      nombre: item.producto_nombre || item.nombre || (typeof item.producto === 'string' ? item.producto : item.producto?.nombre) || 'Producto',
+      nombre: getNombreProductoConTamano(item),
       subtotal: item.subtotal || 0,
       notas: item.notas || '',
       cancelado: !!item.cancelado,
@@ -1077,7 +1106,7 @@ const imprimirComanda = async (order) => {
       nombre: d.producto_nombre || d.producto?.nombre || 'Producto',
       notas: d.notas || '',
       nom_comensal: d.nom_comensal || d.comensal,
-      tamano_nombre: d.tamano_nombre || '',
+      tamano_nombre: d.tamano_nombre || d.tamano || '',
     }))
     const ok = await thermalPrintComanda({
       folio: order.folio || `ORD-${order.id}`,
@@ -1097,14 +1126,13 @@ const imprimirComanda = async (order) => {
   let itemsHtml = ''
   ;(order.detalles || []).forEach(d => {
     if (d.cancelado) return
-    const nombre = d.producto_nombre || d.producto?.nombre || 'Producto'
-    const tamano = (d.tamano_nombre && !nombre.includes(`(${d.tamano_nombre})`)) ? ` (${d.tamano_nombre})` : ''
+    const nombreCompleto = getNombreProductoConTamano(d)
     const notas = d.notas ? `<br/><small style="font-size:11px; font-weight:bold; color:#333;">* NOTAS: ${d.notas}</small>` : ''
     const comensal = (d.nom_comensal || d.comensal) ? `<br/><small style="font-size:10px; color:#555;">[${d.nom_comensal || d.comensal}]</small>` : ''
     itemsHtml += `
       <tr style="border-bottom: 1px dashed #ccc;">
         <td style="padding:6px 0; vertical-align:top; font-weight:bold; font-size:14px; width:22%;">${d.cantidad}x</td>
-        <td style="padding:6px 0; font-size:13px; font-weight:bold; text-transform:uppercase; width:78%;">${nombre}${tamano}${comensal}${notas}</td>
+        <td style="padding:6px 0; font-size:13px; font-weight:bold; text-transform:uppercase; width:78%;">${nombreCompleto}${comensal}${notas}</td>
       </tr>
     `
   })
@@ -1254,7 +1282,7 @@ const imprimirTicketMultiple = async (cuentas, folioOriginal, ordenesIds = []) =
         pago_cambio: c.pago_cambio ? Number(c.pago_cambio) : undefined,
         detalles: c.detalles?.map(d => ({
           cantidad: d.cantidad,
-          producto_nombre: d.producto_nombre || 'Producto',
+          producto_nombre: getNombreProductoConTamano(d),
           subtotal: Number(d.subtotal || 0),
         })),
       })),
@@ -1493,7 +1521,7 @@ const detallesDesglosados = computed(() => {
     .forEach(d => {
       const qty = Math.max(1, Math.round(Number(d.cantidad) || 1))
       const unitPrice = Math.round((Number(d.subtotal || 0) / qty) * 100) / 100
-      const nombre = d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'
+      const nombre = getNombreProductoConTamano(d)
       for (let i = 0; i < qty; i++) {
         items.push({
           virtualId: `${d.id}_${i}`,

@@ -404,9 +404,14 @@ const quitarImagen = () => {
   eliminarImagen.value = true
 }
 
-// Si hay imagen nueva o se quitó la actual, se manda FormData; si no, JSON como hasta ahora
+// Si hay imagen nueva o se quitó la actual, se manda FormData; si no, JSON sin campo imagen
 const buildPayload = () => {
-  if (!imagenFile.value && !eliminarImagen.value) return form.value
+  if (!imagenFile.value && !eliminarImagen.value) {
+    const data = { ...form.value }
+    delete data.imagen
+    delete data.imagen_url
+    return data
+  }
 
   const fd = new FormData()
   const nulables = ['producto_id', 'paquete_id', 'precio_promo', 'fecha_inicio', 'fecha_fin']

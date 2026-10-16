@@ -993,9 +993,12 @@ const POLL_INTERVAL = 15000 // Fluidez total (15s) + WS
 const getNombreDetalleConTamano = (d) => {
   if (!d) return 'Producto'
   const baseName = d.producto_nombre || d.nombre || (typeof d.producto === 'string' ? d.producto : d.producto?.nombre) || 'Producto'
-  const tamName = d.tamano_nombre || (typeof d.producto === 'object' ? d.producto?.tamano_nombre : '')
-  if (tamName && !baseName.toLowerCase().includes(tamName.toLowerCase())) {
-    return `${baseName} (${tamName})`
+  const tamName = d.tamano_nombre || d.tamano || (typeof d.producto === 'object' ? (d.producto?.tamano_nombre || d.producto?.tamano) : '') || ''
+  if (tamName && typeof tamName === 'string' && tamName.trim() !== '') {
+    const tamClean = tamName.trim()
+    if (!baseName.toLowerCase().includes(`(${tamClean.toLowerCase()})`) && !baseName.toLowerCase().endsWith(` ${tamClean.toLowerCase()}`)) {
+      return `${baseName} (${tamClean})`
+    }
   }
   return baseName
 }

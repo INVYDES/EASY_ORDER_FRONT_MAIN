@@ -123,13 +123,23 @@ const loading = reactive({
 })
 
 // ── Computed ──────────────────────────────────────────────────────────────────
+const isKioskoOrder = (o) => {
+  if (!o) return false
+  const tipo = String(o?.tipo_orden || '').toLowerCase()
+  if (tipo === 'kiosko') return true
+  const notas = String(o?.notas || '').toLowerCase()
+  if (notas.includes('kiosko') || notas.includes('autoservicio')) return true
+  const mesero = String(o?.mesero || o?.user?.name || '').toLowerCase().trim()
+  if (!o?.mesero || mesero === 'n/a' || mesero === 'sin mesero' || mesero.includes('kiosko')) return true
+  return false
+}
+
 const openOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
     if (['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)) return false
 
-    const isKiosko = String(o.tipo_orden || '').toLowerCase() === 'kiosko'
-    if (isServicioRapido.value || isKiosko) {
+    if (isServicioRapido.value || isKioskoOrder(o)) {
       return true
     }
     return s === 'ENTREGADA' || s === 'ENTREGADO' ||
@@ -139,7 +149,7 @@ const openOrders = computed(() => {
 const closedOrders = computed(() => {
   return orders.value.filter(o => {
     const s = (o.estado || '').toUpperCase()
-    return s === 'CERRADA' || s === 'CANCELADA' || s === 'PAGADA' || (o.detalles || []).some(d => !!d.cancelado)
+    return ['CERRADA', 'CANCELADA', 'PAGADA'].includes(s)
   })
 })
 const ordenesListas = computed(() => openOrders.value.length)
@@ -405,8 +415,9 @@ const loadOrders = async () => {
     let cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${today}&fecha_hasta=${today}&per_page=100`
     
     if (cajaAbierta.value && cajaOpenedAt.value) {
-      closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
-      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&updated_at_desde=${encodeURIComponent(cajaOpenedAt.value)}&per_page=100`
+      const fechaApertura = String(cajaOpenedAt.value).substring(0, 10)
+      closedOrdersQuery = `/ordenes?estado=CERRADA,PAGADA&fecha_desde=${fechaApertura || today}&fecha_hasta=${today}&per_page=100`
+      cancelledOrdersQuery = `/ordenes?estado=CANCELADA&fecha_desde=${fechaApertura || today}&fecha_hasta=${today}&per_page=100`
     } else if (!cajaAbierta.value) {
       closedOrdersQuery = null;
       cancelledOrdersQuery = null;

@@ -108,9 +108,12 @@ const esBarra = (detalle) => {
 const getNombreProducto = (detalle) => {
   const prodRaw = detalle.producto
   const baseName = detalle.producto_nombre || (typeof prodRaw === 'string' ? prodRaw : prodRaw?.nombre) || 'Producto'
-  const tamName = detalle.tamano_nombre || (typeof prodRaw === 'object' ? prodRaw?.tamano_nombre : '')
-  if (tamName && !baseName.toLowerCase().includes(tamName.toLowerCase())) {
-    return `${baseName} (${tamName})`
+  const tamName = detalle.tamano_nombre || detalle.tamano || (typeof prodRaw === 'object' ? (prodRaw?.tamano_nombre || prodRaw?.tamano) : '') || ''
+  if (tamName && typeof tamName === 'string' && tamName.trim() !== '') {
+    const tamClean = tamName.trim()
+    if (!baseName.toLowerCase().includes(`(${tamClean.toLowerCase()})`) && !baseName.toLowerCase().endsWith(` ${tamClean.toLowerCase()}`)) {
+      return `${baseName} (${tamClean})`
+    }
   }
   return baseName
 }
