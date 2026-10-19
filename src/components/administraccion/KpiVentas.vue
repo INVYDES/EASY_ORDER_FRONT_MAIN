@@ -66,21 +66,21 @@
         <span class="absolute right-3 top-2 text-4xl opacity-10">📦</span>
         <div class="flex items-center gap-1.5">
           <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
-          <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de lo que se vende en el día."
-            comoSeMide="Costo de insumos + mano de obra usados para producir lo vendido." />
+          <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de materias primas e insumos vendidos."
+            comoSeMide="Suma de recetas/insumos de los platillos vendidos en el período (Food Cost)." />
         </div>
         <p class="text-2xl font-black text-red-600 mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
-        <p class="text-xs text-gray-400 mt-1">costo de insumos + MO</p>
+        <p class="text-xs text-gray-400 mt-1">costo de insumos / materia prima</p>
       </div>
       <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
         <div class="flex items-center gap-1.5">
           <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Utilidad Total del Día</p>
-          <MetricInfoTip titulo="Utilidad Total del Día" paraQue="Ganancia real generada en el día."
-            comoSeMide="Ventas del día - inversión en producto y mano de obra. No descuenta salidas de efectivo del día." />
+          <MetricInfoTip titulo="Utilidad Total del Día" paraQue="Ganancia neta operativa del período."
+            comoSeMide="Ventas netas - Inversión en insumos - Nómina/Mano de obra. No descuenta salidas de efectivo de caja." />
         </div>
         <p class="text-2xl font-black text-emerald-700 mt-1">${{ fm(finanzasDia.utilidadTotal) }}</p>
-        <p class="text-xs text-emerald-500 mt-1">Utilidad bruta del dia no se consideran salidad de efectivo del dia</p>
+        <p class="text-xs text-emerald-500 mt-1">Ventas - Insumos - Mano de Obra</p>
       </div>
       <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>

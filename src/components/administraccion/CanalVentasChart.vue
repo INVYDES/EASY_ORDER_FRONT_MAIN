@@ -41,7 +41,7 @@
     </div>
 
     <!-- Detalle por canal -->
-    <div class="mt-4 grid grid-cols-3 gap-3 text-center">
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
       <div v-for="canal in legend" :key="canal.label" class="rounded-xl p-2" :style="{ backgroundColor: canal.color + '15' }">
         <p class="text-xs font-bold" :style="{ color: canal.color }">{{ canal.label }}</p>
         <p class="text-lg font-black text-gray-800">{{ localData[canal.label] || 0 }}</p>
@@ -70,13 +70,15 @@ const periodoActivo = ref(1)
 const localData = reactive({
   Local: 0,
   Pickup: 0,
-  Delivery: 0
+  Delivery: 0,
+  Kiosko: 0
 })
 
 const legend = [
   { label: 'Local',    color: '#4f46e5' },
   { label: 'Pickup',   color: '#f59e0b' },
   { label: 'Delivery', color: '#10b981' },
+  { label: 'Kiosko',   color: '#8b5cf6' },
 ]
 
 const periodos = [
@@ -87,7 +89,7 @@ const periodos = [
 ]
 
 const totalPedidos = computed(() =>
-  (localData.Local || 0) + (localData.Pickup || 0) + (localData.Delivery || 0)
+  (localData.Local || 0) + (localData.Pickup || 0) + (localData.Delivery || 0) + (localData.Kiosko || 0)
 )
 
 const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
@@ -124,6 +126,7 @@ const fetchYDraw = async (dias) => {
       localData.Local = data.data.Local || 0
       localData.Pickup = data.data.Pickup || 0
       localData.Delivery = data.data.Delivery || 0
+      localData.Kiosko = data.data.Kiosko || 0
     }
     await initChart()
   } catch (e) {
@@ -148,7 +151,7 @@ const initChart = async () => {
     data: {
       labels: legend.map(l => l.label),
       datasets: [{
-        data: [localData.Local || 0, localData.Pickup || 0, localData.Delivery || 0],
+        data: [localData.Local || 0, localData.Pickup || 0, localData.Delivery || 0, localData.Kiosko || 0],
         backgroundColor: legend.map(l => l.color),
         borderWidth: 0,
         hoverOffset: 10
