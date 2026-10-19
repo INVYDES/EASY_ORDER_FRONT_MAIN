@@ -1,134 +1,223 @@
 <template>
   <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
-    @click.self="!procesando && $emit('close')">
+    @click.self="!procesando && cerrar()">
     <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden animate-slide-up">
 
-      <!-- Header -->
-      <div class="bg-white z-10 px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-black text-gray-900 tracking-tight">Finalizar pedido</h2>
-            <p class="text-xs text-indigo-600 font-bold mt-0.5">{{ restauranteNombre || 'Kiosko de Menú' }}</p>
-          </div>
-          <button @click="$emit('close')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition font-bold">✕</button>
-        </div>
-        <!-- Resumen rápido -->
-        <div class="mt-3 flex items-center justify-between bg-indigo-50/80 border border-indigo-100 rounded-2xl px-4 py-2.5">
-          <div class="flex items-center gap-2 text-xs font-black text-indigo-700 uppercase tracking-wider">
-            <span>🛒</span>
-            <span>{{ totalItems }} producto{{ totalItems !== 1 ? 's' : '' }}</span>
-          </div>
-          <span class="text-lg font-black text-indigo-700 leading-none">${{ totalPedido.toFixed(2) }}</span>
-        </div>
-      </div>
-
-      <div class="px-6 py-5 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
-
-        <!-- ── 1. TIPO DE ENTREGA (Comer aquí vs Para llevar) ── -->
-        <div>
-          <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2.5">¿Dónde disfrutarás tu comida?</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              @click="seleccionarTipoEntrega('comer_aqui')"
-              :class="['p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all text-center',
-                tipoEntrega === 'comer_aqui'
-                  ? 'border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-md shadow-indigo-100 scale-[1.02]'
-                  : 'border-slate-100 bg-slate-50/60 text-slate-600 hover:border-slate-200']">
-              <span class="text-2xl">🍽️</span>
-              <span class="text-xs font-black uppercase tracking-tight">Comer aquí</span>
-            </button>
-
-            <button
-              type="button"
-              @click="seleccionarTipoEntrega('para_llevar')"
-              :class="['p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all text-center',
-                tipoEntrega === 'para_llevar'
-                  ? 'border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-md shadow-indigo-100 scale-[1.02]'
-                  : 'border-slate-100 bg-slate-50/60 text-slate-600 hover:border-slate-200']">
-              <span class="text-2xl">🛍️</span>
-              <span class="text-xs font-black uppercase tracking-tight">Para llevar</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- ── 2. SELECCIÓN DE MESA (Solo si es 'comer_aqui') ── -->
-        <div v-if="tipoEntrega === 'comer_aqui'" class="space-y-3">
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- VISTA 1: FORMULARIO DE CHECKOUT                                   -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <template v-if="paso === 'checkout'">
+        <!-- Header Checkout -->
+        <div class="bg-white z-10 px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-black text-gray-700 uppercase tracking-widest">
-              Selecciona tu mesa <span class="text-red-500">*</span>
+            <div>
+              <h2 class="text-xl font-black text-gray-900 tracking-tight">Finalizar pedido</h2>
+              <p class="text-xs text-indigo-600 font-bold mt-0.5">{{ restauranteNombre || 'Kiosko de Menú' }}</p>
+            </div>
+            <button @click="cerrar" :disabled="procesando" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition font-bold disabled:opacity-30">✕</button>
+          </div>
+          <!-- Resumen rápido -->
+          <div class="mt-3 flex items-center justify-between bg-indigo-50/80 border border-indigo-100 rounded-2xl px-4 py-2.5">
+            <div class="flex items-center gap-2 text-xs font-black text-indigo-700 uppercase tracking-wider">
+              <span>🛒</span>
+              <span>{{ totalItems }} producto{{ totalItems !== 1 ? 's' : '' }}</span>
+            </div>
+            <span class="text-lg font-black text-indigo-700 leading-none">${{ totalPedido.toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <div class="px-6 py-5 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+
+          <!-- ── 1. TIPO DE ENTREGA (Comer aquí vs Para llevar) ── -->
+          <div>
+            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2.5">¿Dónde disfrutarás tu comida?</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                @click="seleccionarTipoEntrega('comer_aqui')"
+                :class="['p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all text-center',
+                  tipoEntrega === 'comer_aqui'
+                    ? 'border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-md shadow-indigo-100 scale-[1.02]'
+                    : 'border-slate-100 bg-slate-50/60 text-slate-600 hover:border-slate-200']">
+                <span class="text-2xl">🍽️</span>
+                <span class="text-xs font-black uppercase tracking-tight">Comer aquí</span>
+              </button>
+
+              <button
+                type="button"
+                @click="seleccionarTipoEntrega('para_llevar')"
+                :class="['p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all text-center',
+                  tipoEntrega === 'para_llevar'
+                    ? 'border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-md shadow-indigo-100 scale-[1.02]'
+                    : 'border-slate-100 bg-slate-50/60 text-slate-600 hover:border-slate-200']">
+                <span class="text-2xl">🛍️</span>
+                <span class="text-xs font-black uppercase tracking-tight">Para llevar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── 2. SELECCIÓN DE MESA (Solo si es 'comer_aqui') ── -->
+          <div v-if="tipoEntrega === 'comer_aqui'" class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-black text-gray-700 uppercase tracking-widest">
+                Selecciona tu mesa <span class="text-red-500">*</span>
+              </label>
+              <span v-if="numeroMesa" class="text-xs font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                Mesa {{ numeroMesa }} seleccionada ✔
+              </span>
+            </div>
+
+            <!-- Selector táctil de botones de mesas -->
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1 border border-slate-100 rounded-2xl bg-slate-50/50 custom-scrollbar">
+              <button
+                v-for="m in listaMesas"
+                :key="m"
+                type="button"
+                @click="numeroMesa = m"
+                :class="['py-3 rounded-xl font-black text-sm transition-all flex flex-col items-center justify-center border',
+                  numeroMesa === m
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 z-10'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30']">
+                <span class="text-[9px] uppercase tracking-tighter opacity-70">Mesa</span>
+                <span class="text-base leading-none">{{ m }}</span>
+              </button>
+            </div>
+
+            <p v-if="!numeroMesa && intentoEnvio" class="text-xs font-bold text-red-500 mt-1 animate-pulse">
+              ⚠️ Por favor toca tu número de mesa para continuar
+            </p>
+          </div>
+
+          <!-- Mensaje cuando es 'para_llevar' -->
+          <div v-else class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl flex items-center gap-3">
+            <span class="text-2xl">📦</span>
+            <div class="text-left">
+              <p class="text-xs font-black text-emerald-800 uppercase tracking-tight">Pedido para llevar</p>
+              <p class="text-[11px] font-bold text-emerald-600 mt-0.5">Se te llamará por tu número de ticket en mostrador.</p>
+            </div>
+          </div>
+
+          <!-- ── 3. NOTAS ADICIONALES ── -->
+          <div>
+            <label class="block text-xs font-black text-gray-700 uppercase tracking-widest mb-2">
+              Nota para el restaurante <span class="text-gray-400 font-normal lowercase">(opcional)</span>
             </label>
-            <span v-if="numeroMesa" class="text-xs font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
-              Mesa {{ numeroMesa }} seleccionada ✔
-            </span>
+            <textarea
+              v-model="nota"
+              rows="2"
+              placeholder="Alergias, sin salsa, servilletas extras..."
+              class="w-full px-4 py-3 border border-gray-200 rounded-2xl text-xs font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 resize-none"></textarea>
           </div>
 
-          <!-- Selector táctil de botones de mesas -->
-          <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1 border border-slate-100 rounded-2xl bg-slate-50/50 custom-scrollbar">
-            <button
-              v-for="m in listaMesas"
-              :key="m"
-              type="button"
-              @click="numeroMesa = m"
-              :class="['py-3 rounded-xl font-black text-sm transition-all flex flex-col items-center justify-center border',
-                numeroMesa === m
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 z-10'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30']">
-              <span class="text-[9px] uppercase tracking-tighter opacity-70">Mesa</span>
-              <span class="text-base leading-none">{{ m }}</span>
-            </button>
+          <!-- Error -->
+          <div v-if="error" class="p-3.5 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-2xl flex items-center gap-2">
+            <span>❌</span><span>{{ error }}</span>
           </div>
 
-          <p v-if="!numeroMesa && intentoEnvio" class="text-xs font-bold text-red-500 mt-1 animate-pulse">
-            ⚠️ Por favor toca tu número de mesa para continuar
+        </div>
+
+        <!-- ── BOTÓN CONFIRMAR ── -->
+        <div class="p-5 border-t border-slate-100 bg-white shrink-0">
+          <button
+            @click="confirmar"
+            :disabled="procesando"
+            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-black rounded-2xl transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 disabled:opacity-50">
+            <div v-if="procesando" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+            <span v-else>Confirmar Pedido · ${{ totalPedido.toFixed(2) }} ✨</span>
+          </button>
+        </div>
+      </template>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- VISTA 2: NÚMERO DE TICKET GENERADO (ÉXITO KIOSKO)                  -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <template v-else-if="paso === 'ticket'">
+        <!-- Header Éxito -->
+        <div class="bg-white z-10 px-6 pt-5 pb-3 border-b border-gray-100 shrink-0 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+            <span class="text-xs font-black text-emerald-600 uppercase tracking-widest">Pedido Generado con Éxito</span>
+          </div>
+          <button @click="cerrar" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition font-bold text-sm">✕</button>
+        </div>
+
+        <div class="px-6 py-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar text-center">
+
+          <!-- Checkmark animado -->
+          <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-inner ring-8 ring-emerald-50">
+            ✓
+          </div>
+
+          <!-- TARJETA TICKET DE ATENCIÓN DESTACADO -->
+          <div class="bg-gradient-to-b from-indigo-50/90 via-indigo-50/40 to-white border-2 border-indigo-200 rounded-3xl p-6 shadow-md relative overflow-hidden">
+            <!-- Pestaña superior decorativa -->
+            <div class="inline-flex items-center gap-1.5 bg-indigo-600 text-white text-[10px] font-black tracking-widest uppercase px-3.5 py-1 rounded-full shadow-sm mb-3">
+              <span>🎟️</span>
+              <span>TU NÚMERO DE TICKET</span>
+            </div>
+
+            <!-- NÚMERO GIGANTE DEL TICKET -->
+            <div class="text-6xl sm:text-7xl font-black text-indigo-700 tracking-tight my-2 drop-shadow-sm select-all">
+              #{{ ordenExitosa?.id }}
+            </div>
+
+            <p v-if="ordenExitosa?.folio" class="text-[11px] font-mono font-bold text-indigo-400 mt-1">
+              Folio: {{ ordenExitosa?.folio }}
+            </p>
+
+            <div class="mt-4 pt-4 border-t border-indigo-100/80 flex items-center justify-between text-xs font-bold text-slate-500">
+              <span class="uppercase tracking-wider">Total Orden</span>
+              <span class="text-base font-black text-slate-900">${{ Number(ordenExitosa?.total || 0).toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- INSTRUCCIÓN CLARA SEGÚN TIPO DE ENTREGA -->
+          <div v-if="ordenExitosa?.tipo_entrega === 'para_llevar'" 
+               class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3.5 text-left">
+            <span class="text-3xl shrink-0">🛍️</span>
+            <div>
+              <p class="text-xs font-black text-emerald-900 uppercase tracking-wider">PEDIDO PARA LLEVAR</p>
+              <p class="text-xs font-bold text-emerald-800 mt-1 leading-relaxed">
+                Por favor toma asiento cerca del mostrador. Te llamaremos con tu ticket <span class="font-black underline text-emerald-950">#{{ ordenExitosa?.id }}</span> cuando tu pedido esté listo para recoger.
+              </p>
+            </div>
+          </div>
+
+          <div v-else 
+               class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-start gap-3.5 text-left">
+            <span class="text-3xl shrink-0">🍽️</span>
+            <div>
+              <p class="text-xs font-black text-indigo-900 uppercase tracking-wider">
+                COMER AQUÍ · MESA {{ ordenExitosa?.mesa || 'ASIGNADA' }}
+              </p>
+              <p class="text-xs font-bold text-indigo-800 mt-1 leading-relaxed">
+                Tu pedido ha sido recibido en cocina. Toma asiento en la <span class="font-black text-indigo-950">Mesa {{ ordenExitosa?.mesa }}</span>.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Barra regresiva visual y botón de finalizar -->
+        <div class="p-5 border-t border-slate-100 bg-white shrink-0 space-y-2.5">
+          <button
+            @click="cerrar"
+            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-black rounded-2xl transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 flex items-center justify-center gap-2">
+            <span>Aceptar y Finalizar ({{ cuentaRegresiva }}s)</span>
+            <span class="text-sm">➔</span>
+          </button>
+          <p class="text-[10px] text-center font-bold text-slate-400">
+            La pantalla se reiniciará automáticamente para el siguiente cliente
           </p>
         </div>
-
-        <!-- Mensaje cuando es 'para_llevar' -->
-        <div v-else class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl flex items-center gap-3">
-          <span class="text-2xl">📦</span>
-          <div class="text-left">
-            <p class="text-xs font-black text-emerald-800 uppercase tracking-tight">Pedido para llevar</p>
-            <p class="text-[11px] font-bold text-emerald-600 mt-0.5">Se te llamará por tu número de ticket en mostrador.</p>
-          </div>
-        </div>
-
-        <!-- ── 3. NOTAS ADICIONALES ── -->
-        <div>
-          <label class="block text-xs font-black text-gray-700 uppercase tracking-widest mb-2">
-            Nota para el restaurante <span class="text-gray-400 font-normal lowercase">(opcional)</span>
-          </label>
-          <textarea
-            v-model="nota"
-            rows="2"
-            placeholder="Alergias, sin salsa, servilletas extras..."
-            class="w-full px-4 py-3 border border-gray-200 rounded-2xl text-xs font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 resize-none"></textarea>
-        </div>
-
-        <!-- Error -->
-        <div v-if="error" class="p-3.5 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-2xl flex items-center gap-2">
-          <span>❌</span><span>{{ error }}</span>
-        </div>
-
-      </div>
-
-      <!-- ── BOTÓN CONFIRMAR ── -->
-      <div class="p-5 border-t border-slate-100 bg-white shrink-0">
-        <button
-          @click="confirmar"
-          :disabled="procesando"
-          class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-black rounded-2xl transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 disabled:opacity-50">
-          <div v-if="procesando" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
-          <span v-else>Confirmar Pedido · ${{ totalPedido.toFixed(2) }} ✨</span>
-        </button>
-      </div>
+      </template>
 
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 
 const props = defineProps({
   pedido:            { type: Array,  required: true },
@@ -139,12 +228,17 @@ const props = defineProps({
 const emit = defineEmits(['close', 'confirmar'])
 
 // ── Estado ─────────────────────────────────────────────────
-const tipoEntrega  = ref('comer_aqui') // 'comer_aqui' | 'para_llevar'
-const numeroMesa   = ref(null)
-const nota         = ref(props.notaInicial)
-const procesando   = ref(false)
-const error        = ref('')
-const intentoEnvio = ref(false)
+const paso           = ref('checkout') // 'checkout' | 'ticket'
+const ordenExitosa   = ref(null)
+const cuentaRegresiva= ref(12)
+let timerInterval    = null
+
+const tipoEntrega    = ref('comer_aqui') // 'comer_aqui' | 'para_llevar'
+const numeroMesa     = ref(null)
+const nota           = ref(props.notaInicial)
+const procesando     = ref(false)
+const error          = ref('')
+const intentoEnvio   = ref(false)
 
 // ── Lista de mesas disponibles ─────────────────────────────
 const listaMesas = computed(() => {
@@ -193,10 +287,43 @@ const confirmar = async () => {
   })
 }
 
-// Expuesto para que el padre maneje errores del backend
+// ── Timers y Cierre ────────────────────────────────────────
+const limpiarTimer = () => {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+}
+
+const cerrar = () => {
+  limpiarTimer()
+  emit('close')
+}
+
+// ── Transición al paso de Ticket Exitoso ──────────────────
+const mostrarExitoTicket = (datos) => {
+  ordenExitosa.value = datos
+  paso.value = 'ticket'
+  procesando.value = false
+  cuentaRegresiva.value = 12
+  limpiarTimer()
+  timerInterval = setInterval(() => {
+    cuentaRegresiva.value--
+    if (cuentaRegresiva.value <= 0) {
+      cerrar()
+    }
+  }, 1000)
+}
+
+onUnmounted(() => {
+  limpiarTimer()
+})
+
+// Expuesto para que el padre maneje errores o transiciones
 const setError = (msg) => { error.value = msg; procesando.value = false; }
 const reset    = () => { procesando.value = false; }
-defineExpose({ setError, reset })
+
+defineExpose({ setError, reset, mostrarExitoTicket })
 </script>
 
 <style scoped>

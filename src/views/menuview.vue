@@ -1082,19 +1082,35 @@ const handleCheckout = async (checkoutData) => {
     }
     const data = await apiClient.post('/ordenes', body)
     if (data?.success) { 
-      showCheckout.value = false; 
-      pedido.value = []; 
-      numeroComensales.value = 1;
-      comensalesNombres.value = ['General'];
-      comensalActivoIndex.value = 0;
-      mostrarExito() 
-      // Recargar productos de inmediato de forma silenciosa para actualizar stock
+      const ordenData = data.data || {}
+      const ticketInfo = {
+        id: ordenData.id,
+        folio: ordenData.folio,
+        mesa: ordenData.mesa || mesaValor,
+        tipo_entrega: checkoutData.tipo_entrega,
+        total: ordenData.total ?? totalPedido.value,
+        total_formateado: ordenData.total_formateado,
+      }
+
+      // 1. Mostrar ticket de forma destacada en el modal de checkout
+      checkoutRef.value?.mostrarExitoTicket(ticketInfo)
+
+      // 2. Limpiar carrito de fondo para el siguiente comensal
+      pedido.value = []
+      numeroComensales.value = 1
+      comensalesNombres.value = ['General']
+      comensalActivoIndex.value = 0
+
+      // 4. Recargar productos silenciosamente para actualizar stock disponible
       if (restauranteSeleccionado.value?.id) {
         cargarProductos(restauranteSeleccionado.value.id, true)
       }
     } 
-    else { checkoutRef.value?.setError(data.message || 'Error al enviar') }
-  } catch { checkoutRef.value?.setError('Error de conexión') }
+    else { checkoutRef.value?.setError(data?.message || 'Error al enviar pedido') }
+  } catch (err) { 
+    console.error('Error en checkout kiosko:', err)
+    checkoutRef.value?.setError('Error de conexión al enviar el pedido') 
+  }
 }
 
 onMounted(async () => {
