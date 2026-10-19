@@ -294,7 +294,8 @@ const renderChart = async () => {
     if (!parsed) return
     const h = parsed.getHours()
     if (h >= 8 && h <= 23) {
-      totals[h - 8] += Number(o.total || 0)
+      const ventaSinPropina = Math.max(0, Number(o.total || 0) - Number(o.propina || 0))
+      totals[h - 8] += ventaSinPropina
     }
   })
 
