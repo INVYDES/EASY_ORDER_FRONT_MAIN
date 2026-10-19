@@ -488,8 +488,8 @@ const loadFilteredData = async () => {
       try {
         const uRes = await apiClient.get(`/reportes/inversion-utilidad?fecha_inicio=${fechaDesde.value}&fecha_fin=${fechaHasta.value}`)
         if (uRes.success && uRes.data) {
-          filteredDashData.utilidad_bruta_hoy = uRes.data.utilidad_bruta || 0
-          filteredDashData.utilidad_hoy       = uRes.data.utilidad_neta || uRes.data.utilidad_bruta || 0
+          filteredDashData.utilidad_bruta_hoy = uRes.data.utilidad_operativa || uRes.data.utilidad_bruta || 0
+          filteredDashData.utilidad_hoy       = uRes.data.utilidad_operativa || uRes.data.utilidad_neta || uRes.data.utilidad_bruta || 0
         }
       } catch (e) {
         console.error('Error al cargar utilidad filtrada:', e)

@@ -76,11 +76,11 @@
         <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
         <div class="flex items-center gap-1.5">
           <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Utilidad Total del Día</p>
-          <MetricInfoTip titulo="Utilidad Total del Día" paraQue="Ganancia neta operativa del período."
-            comoSeMide="Ventas netas - Inversión en insumos - Nómina/Mano de obra. No descuenta salidas de efectivo de caja." />
+          <MetricInfoTip titulo="Utilidad Total del Día" paraQue="Ganancia real generada en el día."
+            comoSeMide="Ventas del día - costo de producción de lo vendido (insumos y tiempo de preparación). Coincide con Resumen General." />
         </div>
         <p class="text-2xl font-black text-emerald-700 mt-1">${{ fm(finanzasDia.utilidadTotal) }}</p>
-        <p class="text-xs text-emerald-500 mt-1">Ventas - Insumos - Mano de Obra</p>
+        <p class="text-xs text-emerald-500 mt-1">Utilidad del día (Ventas - Costo Producción)</p>
       </div>
       <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
@@ -431,7 +431,7 @@ const loadKpis = async () => {
       if (fData.success && fData.data) {
         finanzasDia.value.inversionProducto = fData.data.inversion_producto || 0
         finanzasDia.value.inversionManoObra = fData.data.inversion_mano_obra || 0
-        finanzasDia.value.utilidadTotal     = fData.data.utilidad_neta ?? fData.data.utilidad_bruta ?? 0
+        finanzasDia.value.utilidadTotal     = fData.data.utilidad_operativa ?? fData.data.utilidad_neta ?? fData.data.utilidad_bruta ?? 0
       }
     } catch { /* fallback */ }
 

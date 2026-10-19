@@ -36,6 +36,8 @@ let   chartInst   = null
 
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '0.00'
 
+const getVentaNeta = (o) => Math.max(0, (Number(o.total) || 0) - (Number(o.propina) || 0))
+
 // Agrupar órdenes cerradas por hora
 const datosPorHora = computed(() => {
   const hours  = Array.from({length:16}, (_, i) => `${String(i+8).padStart(2,'0')}:00`)
@@ -43,13 +45,13 @@ const datosPorHora = computed(() => {
   props.ordenesCerradas.forEach(o => {
     if (!o.created_at) return
     const h = new Date(o.created_at).getHours()
-    if (h >= 8 && h <= 23) totals[h - 8] += Number(o.total || 0)
+    if (h >= 8 && h <= 23) totals[h - 8] += getVentaNeta(o)
   })
   return { hours, totals }
 })
 
 const totalHoy = computed(() =>
-  props.ordenesCerradas.reduce((s, o) => s + Number(o.total || 0), 0)
+  props.ordenesCerradas.reduce((s, o) => s + getVentaNeta(o), 0)
 )
 
 const loadChartJS = () => new Promise(resolve => {

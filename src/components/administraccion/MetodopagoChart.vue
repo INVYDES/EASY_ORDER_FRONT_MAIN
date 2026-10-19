@@ -70,8 +70,10 @@ const agrupar = (metodo) => {
   return 'otro'
 }
 
+const getVentaNeta = (o) => Math.max(0, (Number(o.total) || 0) - (Number(o.propina) || 0))
+
 const total = computed(() =>
-  props.ordenesCerradas.reduce((s, o) => s + Number(o.total || 0), 0)
+  props.ordenesCerradas.reduce((s, o) => s + getVentaNeta(o), 0)
 )
 
 const sinDatos = computed(() => total.value === 0)
@@ -80,7 +82,7 @@ const breakdown = computed(() => {
   const map = { efectivo: 0, tarjeta: 0, transferencia: 0, otro: 0 }
   props.ordenesCerradas.forEach(o => {
     const g = agrupar(o.metodo_pago)
-    map[g] += Number(o.total || 0)
+    map[g] += getVentaNeta(o)
   })
   const t = total.value || 1
   return [

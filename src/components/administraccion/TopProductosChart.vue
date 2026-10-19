@@ -33,11 +33,6 @@
           {{ i + 1 }}
         </div>
 
-        <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
-          <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre || 'Producto'" class="w-full h-full object-cover" />
-          <i v-else class="fa-solid fa-image text-slate-300"></i>
-        </div>
-
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-end mb-1.5">
             <span class="font-bold text-slate-700 text-sm truncate pr-2">{{ p.nombre }}</span>
