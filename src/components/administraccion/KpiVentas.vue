@@ -1,6 +1,85 @@
 <template>
   <div class="space-y-6">
 
+    <!-- ══ FILTROS (AL INICIO) ══ -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="flex-1">
+          <h3 class="text-lg font-bold text-gray-800">Reporte de Ventas Detallado</h3>
+          <p class="text-sm text-gray-500 mt-1">
+            Visualiza el flujo de ingresos de tu restaurante. Puedes comparar periodos y filtrar por meseros específicos.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Rango de Fechas -->
+          <div class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+            <div class="flex flex-col gap-0.5 px-2">
+              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Inicio</span>
+              <input v-model="kpiFechaInicio" type="date" @change="kpiPeriodo = 'custom'"
+                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
+            </div>
+            <div class="w-px h-8 bg-gray-200"></div>
+            <div class="flex flex-col gap-0.5 px-2">
+              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Fin</span>
+              <input v-model="kpiFechaFin" type="date" @change="kpiPeriodo = 'custom'"
+                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Selector de Empleado -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Ventas de:</span>
+            <select v-model="kpiMeseroId" @change="loadKpis"
+              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              <option value="">Todo el equipo</option>
+              <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
+                {{ emp.nombre || emp.name || emp.username }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Botón Actualizar -->
+          <button @click="loadKpis" :disabled="loading"
+            class="h-[42px] px-6 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 disabled:opacity-50">
+            <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
+            {{ loading ? 'Actualizando...' : 'Ver Reporte' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-gray-50 pt-4">
+        <!-- Atajos de Periodo -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-gray-400 uppercase">Período rápido:</span>
+          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+            <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
+              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
+                kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']">
+              {{ p.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Agrupación -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-gray-400 uppercase">Ver por:</span>
+          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+            <button v-for="g in grupos" :key="g.value" @click="kpiGrupo = g.value; loadKpis()"
+              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
+                kpiGrupo === g.value ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700']">
+              {{ g.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Comparación -->
+        <label class="flex items-center gap-3 text-sm font-medium text-gray-600 cursor-pointer ml-auto bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+          <input type="checkbox" v-model="mostrarComparacion" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" @change="loadKpis" />
+          Comparar vs período anterior
+        </label>
+      </div>
+    </div>
 
     <!-- ══ TIEMPOS DE PREPARACIÓN ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -91,86 +170,6 @@
         </div>
         <p class="text-2xl font-black text-violet-700 mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
         <p class="text-xs text-gray-400 mt-1">Efectivo + Terminal + Transferencia</p>
-      </div>
-    </div>
-
-    <!-- ══ FILTROS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-800">Reporte de Ventas Detallado</h3>
-          <p class="text-sm text-gray-500 mt-1">
-            Visualiza el flujo de ingresos de tu restaurante. Puedes comparar periodos y filtrar por meseros específicos.
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-4">
-          <!-- Rango de Fechas -->
-          <div class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
-            <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Inicio</span>
-              <input v-model="kpiFechaInicio" type="date" @change="kpiPeriodo = 'custom'"
-                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
-            </div>
-            <div class="w-px h-8 bg-gray-200"></div>
-            <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Fin</span>
-              <input v-model="kpiFechaFin" type="date" @change="kpiPeriodo = 'custom'"
-                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
-            </div>
-          </div>
-
-          <!-- Selector de Empleado -->
-          <div class="flex flex-col gap-1">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Ventas de:</span>
-            <select v-model="kpiMeseroId" @change="loadKpis"
-              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
-              <option value="">Todo el equipo</option>
-              <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
-                {{ emp.nombre || emp.name || emp.username }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Botón Actualizar -->
-          <button @click="loadKpis" :disabled="loading"
-            class="h-[42px] px-6 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 disabled:opacity-50">
-            <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
-            {{ loading ? 'Actualizando...' : 'Ver Reporte' }}
-          </button>
-        </div>
-      </div>
-
-      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-gray-50 pt-4">
-        <!-- Atajos de Periodo -->
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-gray-400 uppercase">Período rápido:</span>
-          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
-            <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
-              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']">
-              {{ p.label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Agrupación -->
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-gray-400 uppercase">Ver por:</span>
-          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
-            <button v-for="g in grupos" :key="g.value" @click="kpiGrupo = g.value; loadKpis()"
-              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiGrupo === g.value ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700']">
-              {{ g.label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Comparación -->
-        <label class="flex items-center gap-3 text-sm font-medium text-gray-600 cursor-pointer ml-auto bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-          <input type="checkbox" v-model="mostrarComparacion" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" @change="loadKpis" />
-          Comparar vs período anterior
-        </label>
       </div>
     </div>
 

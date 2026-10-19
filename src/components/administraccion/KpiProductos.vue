@@ -67,12 +67,6 @@
             <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0" :class="rankClass(i)">
               {{ i + 1 }}
             </div>
-
-            <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
-              <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre || 'Producto'" class="w-full h-full object-cover" />
-              <i v-else class="fa-solid fa-image text-slate-300"></i>
-            </div>
-
             <div class="flex-1 min-w-0">
               <div class="flex justify-between mb-1">
                 <p class="text-sm font-bold text-slate-700 truncate">{{ p.nombre }}</p>
