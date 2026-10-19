@@ -720,14 +720,16 @@ const normalizar = (p) => {
           ? p.tamanos_disponibles
           : (Array.isArray(p.tamanos_personalizados) ? p.tamanos_personalizados : []));
 
-    const tamanosList = rawTamanos.map((t, idx) => ({
-      ...t,
-      id: t.id ?? t.key ?? t.nombre ?? `tam-${idx}`,
-      key: t.key ?? t.id ?? t.nombre ?? `tam-${idx}`,
-      nombre: t.nombre ?? t.key ?? `Tamaño ${idx + 1}`,
-      precio: parseFloat(t.precio || 0),
-      stock: (t.stock !== undefined && t.stock !== null) ? Number(t.stock) : (p.stock ?? 0)
-    }));
+    const tamanosList = rawTamanos
+      .filter(t => t && t.id !== 'unico' && t.key !== 'unico' && String(t.nombre || '').trim().toLowerCase() !== 'único' && String(t.nombre || '').trim().toLowerCase() !== 'unico')
+      .map((t, idx) => ({
+        ...t,
+        id: t.id ?? t.key ?? t.nombre ?? `tam-${idx}`,
+        key: t.key ?? t.id ?? t.nombre ?? `tam-${idx}`,
+        nombre: t.nombre ?? t.key ?? `Tamaño ${idx + 1}`,
+        precio: parseFloat(t.precio || 0),
+        stock: (t.stock !== undefined && t.stock !== null) ? Number(t.stock) : (p.stock ?? 0)
+      }));
 
     const tieneTamanos = tamanosList.length > 0;
     const rawStock = parseFloat(p.stock_restante ?? p.stock_disponible ?? p.stock ?? 0);

@@ -228,10 +228,10 @@ const parseUTCDate = (dateStr) => {
         const fecha = parts[0];
         const hora = parts[1] || '00:00:00';
         const [dia, mes, anio] = fecha.split('/');
-        d = new Date(`${anio}-${mes}-${dia}T${hora}Z`);
+        d = new Date(`${anio}-${mes}-${dia}T${hora}`);
       } else {
         const cleanStr = s.replace(' ', 'T');
-        d = new Date(cleanStr.includes('T') ? cleanStr + 'Z' : `${cleanStr}T00:00:00Z`);
+        d = new Date(cleanStr);
       }
     } else {
       d = new Date(dateStr);
@@ -286,6 +286,8 @@ const renderChart = async () => {
   const totals = Array(16).fill(0)
 
   closedOrders.value.forEach(o => {
+    const s = (o.estado || '').toUpperCase()
+    if (s === 'CANCELADA') return
     const dateStr = o.updated_at || o.created_at
     if (!dateStr) return
     const parsed = parseUTCDate(dateStr)

@@ -556,8 +556,8 @@
                           <p class="font-black text-slate-800 text-sm leading-tight uppercase line-clamp-2">{{ p.nombre }}</p>
                           <div class="flex items-center justify-between mt-1">
                             <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">{{ p.categoria?.nombre || 'General' }}</p>
-                            <div v-if="p.tamanos && p.tamanos.length > 0" class="flex gap-1">
-                              <span v-for="t in p.tamanos" :key="t.id" class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase">
+                            <div v-if="p.tamanos && p.tamanos.filter(t => t.id !== 'unico' && t.key !== 'unico').length > 0" class="flex gap-1">
+                              <span v-for="t in p.tamanos.filter(t => t.id !== 'unico' && t.key !== 'unico')" :key="t.id" class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase">
                                 {{ (t.nombre || '').charAt(0) }}
                               </span>
                             </div>
@@ -1730,7 +1730,7 @@ const confirmarAgregarTamanoAlCarrito = () => {
 }
 
 const agregarAlCarrito = (item, tipo) => {
-  if (tipo === 'producto' && item.tamanos && item.tamanos.length > 0) {
+  if (tipo === 'producto' && item.tamanos && item.tamanos.filter(t => t.id !== 'unico' && t.key !== 'unico').length > 0) {
     abrirModalTamanos(item)
     return
   }
