@@ -11,7 +11,7 @@
             <i class="fa-solid fa-circle-question"></i>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-[#202723] leading-tight">Dudas y Ayuda</h3>
+            <h3 class="text-base font-semibold text-[#202723] leading-tight">Dudas y Ayuda</h3>
             <p class="text-xs text-[#68736C] mt-0.5">
               Estás en: <span class="text-[#202723] font-semibold">{{ titulo }}</span> · lectura rápida 1–2 min
             </p>
@@ -23,20 +23,21 @@
       </div>
 
       <!-- Body -->
-      <div class="p-6 space-y-4 overflow-y-auto">
+      <div class="p-6 space-y-3.5 overflow-y-auto">
         <div
           v-for="(sec, i) in secciones"
           :key="i"
           class="rounded-xl border border-[#DDE3DE] bg-[#F6F7F5] p-5 space-y-2.5"
         >
           <div class="flex items-center gap-2.5">
-            <span class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-sm font-bold shrink-0">
-              {{ sec.icon || 'i' }}
+            <span class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-sm font-semibold shrink-0">
+              <i v-if="sec.iconClass" :class="sec.iconClass"></i>
+              <span v-else>{{ sec.icon || 'i' }}</span>
             </span>
-            <p class="text-sm font-bold text-[#202723]">{{ sec.titulo }}</p>
+            <p class="text-sm font-semibold text-[#202723]">{{ sec.titulo }}</p>
           </div>
 
-          <p class="text-sm leading-relaxed text-[#202723]">{{ sec.texto }}</p>
+          <p class="text-xs leading-relaxed text-[#202723]">{{ sec.texto }}</p>
 
           <ul v-if="sec.lista && sec.lista.length" class="space-y-1.5 pt-1">
             <li v-for="(item, j) in sec.lista" :key="j"
@@ -46,7 +47,7 @@
             </li>
           </ul>
 
-          <div v-if="sec.formula" class="inline-block bg-white border border-[#DDE3DE] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#245C4F]">
+          <div v-if="sec.formula" class="inline-block bg-white border border-[#DDE3DE] rounded-lg px-3 py-1.5 text-xs font-mono font-semibold text-[#245C4F]">
             {{ sec.formula }}
           </div>
 
