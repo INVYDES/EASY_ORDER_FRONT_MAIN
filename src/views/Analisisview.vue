@@ -3,28 +3,30 @@
 
     <SucursalBadge />
 
-    <!-- Tabs de navegación -->
-    <div class="flex flex-wrap items-center gap-2 bg-gray-100 rounded-2xl p-1.5 w-fit">
-      <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
-        :class="['px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2',
-          activeTab === t.key ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-gray-500 hover:bg-gray-200']">
-        <i :class="[
-          t.key === 'resumen' ? 'fa-solid fa-house' : '',
-          t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
-          t.key === 'kpis' ? 'fa-solid fa-chart-bar' : '',
-          t.key === 'productos' ? 'fa-solid fa-box' : '',
-          t.key === 'meseros' ? 'fa-solid fa-users' : ''
-        ]"></i>
-        {{ t.label }}
-      </button>
+    <!-- Fila de Navegación y Botón de Dudas -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <!-- Tabs de navegación -->
+      <div class="flex flex-wrap items-center gap-2 bg-gray-100 rounded-2xl p-1.5 w-fit">
+        <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
+          :class="['px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2',
+            activeTab === t.key ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-gray-500 hover:bg-gray-200']">
+          <i :class="[
+            t.key === 'resumen' ? 'fa-solid fa-house' : '',
+            t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
+            t.key === 'kpis' ? 'fa-solid fa-chart-bar' : '',
+            t.key === 'productos' ? 'fa-solid fa-box' : '',
+            t.key === 'meseros' ? 'fa-solid fa-users' : ''
+          ]"></i>
+          {{ t.label }}
+        </button>
+      </div>
+
+      <!-- Botón de Dudas alineado horizontalmente con las pestañas -->
+      <BotonDudas @click="abrirAyuda(activeTab)" />
     </div>
 
     <!-- ══ TAB RESUMEN ══ -->
     <template v-if="activeTab === 'resumen'">
-      <div class="flex justify-end">
-        <BotonDudas @click="abrirAyuda('resumen')" />
-      </div>
-
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p class="text-gray-400">Cargando métricas...</p>
@@ -62,43 +64,27 @@
 
     <!-- ══ TAB ANÁLISIS FINANCIERO ══ -->
     <template v-if="activeTab === 'financiero'">
-      <div class="flex justify-end">
-        <BotonDudas @click="abrirAyuda('financiero')" />
-      </div>
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
         <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p class="text-gray-400">Cargando datos financieros...</p>
       </div>
       <div v-else class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />
-
-
-
       </div>
     </template>
 
     <!-- ══ TAB KPIs VENTAS ══ -->
     <template v-if="activeTab === 'kpis'">
-      <div class="flex justify-end">
-        <BotonDudas @click="abrirAyuda('kpis')" />
-      </div>
       <KpiVentas :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" :refresh-key="refreshCounter" :server-date="serverDate" />
     </template>
 
     <!-- ══ TAB KPIs PRODUCTOS ══ -->
     <template v-if="activeTab === 'productos'">
-      <div class="flex justify-end">
-        <BotonDudas @click="abrirAyuda('productos')" />
-      </div>
       <KpiProductos :api-url="API_URL" :get-headers="getHeaders" :empleados="empleados" />
     </template>
 
-
     <!-- ══ TAB KPIs EMPLEADOS ══ -->
     <template v-if="activeTab === 'meseros'">
-      <div class="flex justify-end">
-        <BotonDudas @click="abrirAyuda('meseros')" />
-      </div>
       <div class="space-y-6">
         <!-- Distribución de Equipo (Fuerza Operativa) -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
