@@ -178,6 +178,9 @@
           <div class="flex items-center gap-2">
             <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
               🔥 Merma Real: ${{ fm(totalMermas) }}
+              <span v-if="costoRealMermas > 0" class="block text-[10px] text-red-400 font-bold lowercase">
+                (costo insumos: ${{ fm(costoRealMermas) }})
+              </span>
             </div>
             <div v-if="totalCancelacionesSinMerma > 0" class="px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest border border-slate-200">
               ↩️ Cancelaciones: ${{ fm(totalCancelacionesSinMerma) }}
@@ -289,6 +292,7 @@ const di = (a, b) => Number(a||0) >= Number(b||0) ? '↑' : '↓'
 const dp = (a, b) => { const bVal = Number(b||0); if(!bVal) return '0'; return Math.abs(((Number(a||0)-bVal)/bVal)*100).toFixed(1) }
 
 const totalMermas = ref(0)
+const costoRealMermas = ref(0)
 const totalCancelacionesSinMerma = ref(0)
 
 const getImageUrl = (path) => {
@@ -466,6 +470,7 @@ const loadDevueltos = async () => {
     if (res.success) {
       productosDevueltos.value = res.data || []
       totalMermas.value = res.total_mermas || 0
+      costoRealMermas.value = res.costo_real_mermas || 0
       totalCancelacionesSinMerma.value = res.total_cancelaciones_sin_merma || 0
     }
   } catch (e) {

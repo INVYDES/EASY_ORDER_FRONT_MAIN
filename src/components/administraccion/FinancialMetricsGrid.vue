@@ -52,11 +52,16 @@
       <div class="flex items-center gap-1.5 mb-3">
         <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">Gastos Variables</p>
         <MetricInfoTip titulo="Gastos Variables (Food Cost)"
-          paraQue="Costo de los insumos y materias primas necesarios para preparar los platillos vendidos."
-          comoSeMide="Suma del costo de receta e ingredientes de cada producto vendido. Si vendes más sube; si vendes menos baja." />
+          paraQue="Costo de los insumos y materias primas necesarios para preparar los platillos vendidos, incluyendo la merma real de comida desperdiciada."
+          comoSeMide="Suma del costo de receta e ingredientes de los productos vendidos más el costo de insumos de los platillos preparados y cancelados (merma real)." />
       </div>
       <span class="text-2xl font-semibold tracking-tight text-[#B93838] tabular-nums">{{ formatMoney(metrics.gastosVariables) }}</span>
-      <p class="text-xs text-[#68736C] mt-1">Insumos y materia prima (Food Cost)</p>
+      <p class="text-xs text-[#68736C] mt-1">
+        Insumos y materia prima (Food Cost)
+        <span v-if="Number(metrics.costoMerma || 0) > 0" class="block text-[10px] text-[#B93838] font-medium mt-0.5">
+          Incluye ${{ formatMoney(metrics.costoMerma) }} de merma real
+        </span>
+      </p>
     </div>
 
     <!-- 5. Gastos Operativos -->

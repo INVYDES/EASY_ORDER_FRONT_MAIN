@@ -197,7 +197,8 @@ const financialData = reactive({
   roiSemaforo:         null,
   margenContribucion:  0,
   porcentajeUtilidad:  0,
-  kpiEmpleados:        0
+  kpiEmpleados:        0,
+  costoMerma:          0
 })
 
 const salesChannels = reactive({
@@ -380,6 +381,7 @@ const loadData = async () => {
       financialData.inversionInicial = roiData.data.config?.inversion_inicial || 0
       financialData.ventasMensuales = roiData.data.financiero?.venta_mes || 0
       financialData.gastosVariables = roiData.data.financiero?.gastos_variables || 0
+      financialData.costoMerma = roiData.data.financiero?.costo_merma || 0
       financialData.gastosOperativos = roiData.data.financiero?.gastos_operativos || 0
       financialData.gananciaNeta = roiData.data.financiero?.ganancia_neta || 0
       financialData.puntoEquilibrio = roiData.data.kpis?.punto_equilibrio || 0
