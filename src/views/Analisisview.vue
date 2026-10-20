@@ -65,8 +65,8 @@
     <!-- ══ TAB ANÁLISIS FINANCIERO ══ -->
     <template v-if="activeTab === 'financiero'">
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400">Cargando datos financieros...</p>
+        <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin"></div>
+        <p class="text-[#68736C] text-sm">Cargando datos financieros...</p>
       </div>
       <div v-else class="space-y-8">
         <FinancialMetricsGrid :metrics="financialData" />

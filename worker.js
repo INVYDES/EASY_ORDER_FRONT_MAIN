@@ -17,6 +17,29 @@ export default {
       return withSecurityHeaders(response, pathname);
     }
 
+    // 1.1 Si la URL solicita un asset (contiene /assets/ o termina en .js, .css, etc.) pero viene con prefijo
+    //     relativo (ej. /panel/assets/... o /panel/vue-xxx.js), intentar resolverlo directamente desde /assets/
+    if (pathname.includes('/assets/')) {
+      const assetPath = pathname.substring(pathname.indexOf('/assets/'));
+      const assetReq = new Request(new URL(assetPath, url), request);
+      response = await env.ASSETS.fetch(assetReq);
+      if (response.status !== 404) {
+        return withSecurityHeaders(response, assetPath);
+      }
+    } else if (/\.(js|mjs|css|map|json|png|jpg|jpeg|svg|ico|webp|woff2?|ttf)$/i.test(pathname)) {
+      const filename = pathname.split('/').pop();
+      const assetReq = new Request(new URL('/assets/' + filename, url), request);
+      response = await env.ASSETS.fetch(assetReq);
+      if (response.status !== 404) {
+        return withSecurityHeaders(response, '/assets/' + filename);
+      }
+      // NUNCA devolver HTML si un archivo estático (.js, .css) no existe: devolver 404 estricto
+      return new Response('Asset Not Found', {
+        status: 404,
+        headers: { 'Content-Type': 'text/plain' }
+      });
+    }
+
     // 2. Si es una ruta SPA sin archivo estático (ej. /panel/Gestion, /panel/mesero) -> fallback a /
     //    Esto permite que Vue Router tome el control en el cliente y aplique SEO dinámico via useSeo
     const fallbackRequest = new Request(new URL('/', url), request);
