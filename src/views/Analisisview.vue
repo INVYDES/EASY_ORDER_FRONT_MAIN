@@ -1,28 +1,31 @@
 <template>
   <div class="space-y-6">
 
-    <SucursalBadge />
+    <!-- ══ HEADER FIJO DE MÉTRICAS (Sticky Top) ══ -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] space-y-3 shadow-xs">
+      <SucursalBadge />
 
-    <!-- Fila de Navegación y Botón de Dudas -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <!-- Tabs de navegación -->
-      <div class="flex flex-wrap items-center gap-1.5 bg-[#F0F2EF] border border-[#DDE3DE] rounded-xl p-1 w-fit">
-        <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
-          :class="['px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2',
-            activeTab === t.key ? 'bg-white shadow-xs text-[#245C4F] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60 border border-transparent']">
-          <i :class="[
-            t.key === 'resumen' ? 'fa-solid fa-house' : '',
-            t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
-            t.key === 'kpis' ? 'fa-solid fa-chart-bar' : '',
-            t.key === 'productos' ? 'fa-solid fa-box' : '',
-            t.key === 'meseros' ? 'fa-solid fa-users' : ''
-          ]"></i>
-          {{ t.label }}
-        </button>
+      <!-- Fila de Navegación y Botón de Dudas -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Tabs de navegación -->
+        <div class="flex flex-wrap items-center gap-1.5 bg-[#F0F2EF] border border-[#DDE3DE] rounded-xl p-1 w-fit shadow-xs">
+          <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
+            :class="['px-4 sm:px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer',
+              activeTab === t.key ? 'bg-white shadow-xs text-[#245C4F] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60 border border-transparent']">
+            <i :class="[
+              t.key === 'resumen' ? 'fa-solid fa-house' : '',
+              t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
+              t.key === 'kpis' ? 'fa-solid fa-chart-bar' : '',
+              t.key === 'productos' ? 'fa-solid fa-box' : '',
+              t.key === 'meseros' ? 'fa-solid fa-users' : ''
+            ]"></i>
+            {{ t.label }}
+          </button>
+        </div>
+
+        <!-- Botón de Dudas alineado horizontalmente con las pestañas -->
+        <BotonDudas @click="abrirAyuda(activeTab)" />
       </div>
-
-      <!-- Botón de Dudas alineado horizontalmente con las pestañas -->
-      <BotonDudas @click="abrirAyuda(activeTab)" />
     </div>
 
     <!-- ══ TAB RESUMEN ══ -->

@@ -135,7 +135,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="h-screen bg-gray-50 flex overflow-hidden">
 
     <!-- SIDEBAR NUEVO (Con datos conectados) -->
     <AppSidebar 
@@ -148,7 +148,7 @@ onUnmounted(() => {
     />
 
     <!-- CONTENIDO PRINCIPAL -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
       
       <!-- Navbar superior móvil -->
       <header class="lg:hidden h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0 z-20">
@@ -160,7 +160,7 @@ onUnmounted(() => {
         </div>
       </header>
 
-      <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8">
+      <main class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 lg:p-8 custom-scrollbar">
         <router-view v-slot="{ Component }">
           <transition
             mode="out-in"

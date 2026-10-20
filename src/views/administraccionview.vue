@@ -1,8 +1,6 @@
 <template>
   <div class="space-y-6">
 
-    <SucursalBadge />
-
     <!-- TOASTS -->
     <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
       <div v-for="toast in toasts" :key="toast.id"
@@ -22,6 +20,67 @@
       </div>
     </div>
 
+    <!-- ══ HEADER FIJO DE GESTIÓN (Sticky Top) ══ -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] space-y-3 shadow-xs">
+      <SucursalBadge />
+
+      <!-- Encabezado y Botones de Acción -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-semibold text-[#202723]">Administración</h2>
+          <p class="text-xs text-[#68736C] mt-0.5">Panel de control y gestión operativa del restaurante</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button 
+            @click="puedeCrearMasEmpleados ? abrirModalEmpleado() : null"
+            :class="[
+              'flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition shadow-xs',
+              puedeCrearMasEmpleados 
+                ? 'bg-[#245C4F] text-white hover:bg-[#19483D] cursor-pointer' 
+                : 'bg-[#F0F2EF] text-[#68736C] border border-[#DDE3DE] cursor-not-allowed opacity-60'
+            ]"
+            :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nuevo empleado'"
+          >
+            <i class="fa-solid fa-user-plus text-xs"></i> <span>Nuevo Empleado</span>
+          </button>
+          <button 
+            @click="puedeCrearMasEmpleados ? abrirModalCuentaMenu() : null"
+            :class="[
+              'flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition shadow-xs border',
+              puedeCrearMasEmpleados 
+                ? 'bg-white border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] cursor-pointer' 
+                : 'bg-[#F0F2EF] text-[#68736C] border-[#DDE3DE] cursor-not-allowed opacity-60'
+            ]"
+            :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nueva cuenta de menú'"
+          >
+            <i class="fa-solid fa-tablet-screen-button text-xs text-[#245C4F]"></i> <span>Nueva Cuenta de Menú</span>
+          </button>
+          <button 
+            @click="puedeCrearMasRestaurantes ? abrirModalRestaurante() : null"
+            :class="[
+              'flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition shadow-xs border',
+              puedeCrearMasRestaurantes 
+                ? 'bg-white border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] cursor-pointer' 
+                : 'bg-[#F0F2EF] text-[#68736C] border-[#DDE3DE] cursor-not-allowed opacity-60'
+            ]"
+            :title="!puedeCrearMasRestaurantes ? 'Has alcanzado el límite de restaurantes permitidos en tu plan de licencia.' : 'Registrar nueva sucursal'"
+          >
+            <i class="fa-solid fa-store text-xs text-[#245C4F]"></i> <span>Nuevo Restaurante</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs Principales -->
+      <div class="flex flex-wrap items-center gap-1.5 bg-[#F0F2EF] border border-[#DDE3DE] rounded-xl p-1 w-fit shadow-xs">
+        <button v-for="t in mainTabs" :key="t.key" @click="mainTab = t.key"
+          :class="['px-4 sm:px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer',
+            mainTab === t.key ? 'bg-white shadow-xs text-[#245C4F] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60 border border-transparent']">
+          <i v-if="t.icon" :class="t.icon"></i>
+          {{ t.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Banner Licencia Inactiva -->
     <div v-if="currentUser?.licencia_activa === false || (licenciaActiva && licenciaActiva.estado === 'INACTIVA')" class="bg-[#FEF2F2] border border-[#B93838]/30 p-4 rounded-xl flex items-center justify-between shadow-xs">
       <div class="flex items-center gap-3">
@@ -36,62 +95,6 @@
       <RouterLink to="/panel/licencias" class="px-3.5 py-1.5 bg-[#B93838] hover:bg-[#962D2D] text-white font-semibold text-xs rounded-lg transition shrink-0 shadow-xs">
         Renovar Licencia
       </RouterLink>
-    </div>
-
-    <!-- Encabezado -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-semibold text-[#202723]">Administración</h2>
-        <p class="text-xs text-[#68736C] mt-0.5">Panel de control y gestión operativa del restaurante</p>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button 
-          @click="puedeCrearMasEmpleados ? abrirModalEmpleado() : null"
-          :class="[
-            'flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition shadow-xs',
-            puedeCrearMasEmpleados 
-              ? 'bg-[#245C4F] text-white hover:bg-[#19483D] cursor-pointer' 
-              : 'bg-[#F0F2EF] text-[#68736C] border border-[#DDE3DE] cursor-not-allowed opacity-60'
-          ]"
-          :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nuevo empleado'"
-        >
-          <i class="fa-solid fa-user-plus text-xs"></i> Nuevo Empleado
-        </button>
-        <button 
-          @click="puedeCrearMasEmpleados ? abrirModalCuentaMenu() : null"
-          :class="[
-            'flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition shadow-xs border',
-            puedeCrearMasEmpleados 
-              ? 'bg-white border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] cursor-pointer' 
-              : 'bg-[#F0F2EF] text-[#68736C] border-[#DDE3DE] cursor-not-allowed opacity-60'
-          ]"
-          :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nueva cuenta de menú'"
-        >
-          <i class="fa-solid fa-tablet-screen-button text-xs text-[#245C4F]"></i> Nueva Cuenta de Menú
-        </button>
-        <button 
-          @click="puedeCrearMasRestaurantes ? abrirModalRestaurante() : null"
-          :class="[
-            'flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition shadow-xs border',
-            puedeCrearMasRestaurantes 
-              ? 'bg-white border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] cursor-pointer' 
-              : 'bg-[#F0F2EF] text-[#68736C] border-[#DDE3DE] cursor-not-allowed opacity-60'
-          ]"
-          :title="!puedeCrearMasRestaurantes ? 'Has alcanzado el límite de restaurantes permitidos en tu plan de licencia.' : 'Registrar nueva sucursal'"
-        >
-          <i class="fa-solid fa-store text-xs text-[#245C4F]"></i> Nuevo Restaurante
-        </button>
-      </div>
-    </div>
-
-    <!-- Tabs Principales -->
-    <div class="flex flex-wrap items-center gap-1.5 bg-[#F0F2EF] border border-[#DDE3DE] rounded-xl p-1 w-fit">
-      <button v-for="t in mainTabs" :key="t.key" @click="mainTab = t.key"
-        :class="['px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2',
-          mainTab === t.key ? 'bg-white shadow-xs text-[#245C4F] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60 border border-transparent']">
-        <i v-if="t.icon" :class="t.icon"></i>
-        {{ t.label }}
-      </button>
     </div>
 
     <!-- ══ TAB RESUMEN (Personal y Sucursales) ══ -->
