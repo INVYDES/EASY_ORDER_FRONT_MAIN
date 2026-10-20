@@ -1,61 +1,64 @@
 <template>
-  <div class="bg-white p-6 rounded-lg">
+  <div class="bg-white p-6 rounded-xl">
 
-    <div class="mb-4">
-      <h2 class="text-xl font-semibold text-gray-800">
+    <div class="mb-4 border-b border-[#DDE3DE] pb-3">
+      <h2 class="text-base font-semibold text-[#202723]">
         {{ modoEdicion ? 'Editar Trabajador' : 'Registrar Nuevo Trabajador' }}
       </h2>
-      <p v-if="!modoEdicion" class="text-xs text-gray-400 mt-1">El usuario y correo se generarán automáticamente.</p>
+      <p v-if="!modoEdicion" class="text-xs text-[#68736C] mt-0.5">El usuario y correo se generarán automáticamente.</p>
     </div>
 
-    <!-- ✅ Cadena de acceso -->
-    <div v-if="cadenaAcceso" class="mb-5 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
-      <p class="text-sm font-medium text-indigo-800 mb-1">✅ Empleado registrado correctamente</p>
-      <p class="text-xs text-indigo-600 mb-2">
+    <!-- Cadena de acceso -->
+    <div v-if="cadenaAcceso" class="mb-4 p-3.5 bg-[#E8F1ED] border border-[#245C4F]/30 rounded-lg">
+      <div class="flex items-center gap-2 text-xs font-semibold text-[#202723] mb-1">
+        <i class="fa-solid fa-circle-check text-[#26734D]"></i>
+        <span>Empleado registrado correctamente</span>
+      </div>
+      <p class="text-[11px] text-[#68736C] mb-2.5">
         Comparte esta cadena al empleado — la usará para iniciar sesión:
       </p>
       <div class="flex items-center gap-2">
-        <span class="flex-1 font-mono text-lg font-bold tracking-widest text-indigo-900 bg-white border border-indigo-300 rounded px-3 py-2 text-center">
+        <span class="flex-1 font-mono text-sm font-semibold tracking-wider text-[#245C4F] bg-white border border-[#DDE3DE] rounded-md px-3 py-1.5 text-center">
           {{ cadenaAcceso }}
         </span>
         <button type="button" @click="copiarCadena"
-          class="px-3 py-2 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition whitespace-nowrap">
+          class="px-3 py-1.5 text-xs font-semibold bg-[#245C4F] text-white rounded-md hover:bg-[#19483D] transition whitespace-nowrap cursor-pointer">
           {{ copiado ? '¡Copiado!' : 'Copiar' }}
         </button>
       </div>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="space-y-5">
+    <form @submit.prevent="handleSubmit" class="space-y-4">
 
       <!-- Nombre y Apellidos -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nombre *</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Nombre *</label>
           <input v-model="form.nombre" type="text" required maxlength="100"
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+            class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none text-xs" />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Apellidos *</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Apellidos *</label>
           <input v-model="form.apellidos" type="text" required maxlength="120"
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+            class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none text-xs" />
         </div>
       </div>
 
       <!-- Password -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+        <label class="block text-xs font-semibold text-[#202723] mb-1">
           {{ modoEdicion ? 'Nueva contraseña (vacío para no cambiar)' : 'Establecer Contraseña *' }}
         </label>
         <input v-model="form.password" type="password" :required="!modoEdicion" minlength="6"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm shadow-sm" />
+          class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none text-xs" />
       </div>
 
       <!-- Rol y Sucursal -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Rol *</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Rol *</label>
           <select v-model="form.rol_id" required
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
+            class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none bg-white text-xs">
             <option value="">Seleccionar rol</option>
             <option value="2">Administrador</option>
             <option value="3">Mesero</option>
@@ -65,9 +68,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sucursal *</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Sucursal *</label>
            <select v-model="form.restaurante_id" required
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-sm shadow-sm">
+            class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none bg-white text-xs">
             <option :value="null">Elegir sucursal</option>
             <option v-for="r in restaurantes" :key="r.id" :value="r.id">
               {{ r.nombre }}{{ r.es_activo || r.id === restauranteActivoId ? ' (Activo)' : '' }}
@@ -77,26 +80,26 @@
       </div>
 
       <!-- Estado Activo -->
-      <div v-if="modoEdicion" class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
-        <input v-model="form.es_activo" type="checkbox" id="emp-activo" class="w-4 h-4 accent-indigo-600 rounded" />
-        <label for="emp-activo" class="text-sm font-semibold text-gray-700 cursor-pointer">Empleado Activo</label>
-        <p class="text-[10px] text-gray-400 ml-auto">(Influye en cálculos de nómina)</p>
+      <div v-if="modoEdicion" class="flex items-center gap-2 bg-[#F6F7F5] p-2.5 rounded-lg border border-[#DDE3DE]">
+        <input v-model="form.es_activo" type="checkbox" id="emp-activo" class="w-4 h-4 accent-[#245C4F] rounded cursor-pointer" />
+        <label for="emp-activo" class="text-xs font-semibold text-[#202723] cursor-pointer">Empleado Activo</label>
+        <p class="text-[10px] text-[#68736C] ml-auto">(Influye en cálculos de nómina)</p>
       </div>
 
       <!-- Error -->
-      <div v-if="errorMessage" class="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex items-center gap-2">
-        <span>⚠️</span>
-        {{ errorMessage }}
+      <div v-if="errorMessage" class="text-xs text-[#B93838] bg-[#FEF2F2] border border-[#B93838]/20 rounded-lg px-3 py-2 flex items-center gap-2">
+        <i class="fa-solid fa-circle-exclamation text-xs"></i>
+        <span>{{ errorMessage }}</span>
       </div>
 
       <!-- Botones -->
-      <div class="flex justify-end gap-3 pt-6">
+      <div class="flex justify-end gap-2.5 pt-4 border-t border-[#DDE3DE]">
         <button type="button" @click="cancelar"
-          class="flex-1 py-3 bg-gray-50 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition text-sm">
+          class="flex-1 py-2 bg-[#F0F2EF] text-[#202723] font-semibold rounded-lg hover:bg-[#DDE3DE] transition text-xs cursor-pointer">
           {{ modoEdicion ? 'Cerrar' : 'Cancelar' }}
         </button>
         <button type="submit" :disabled="loading || passwordsMismatch"
-          class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition text-sm shadow-md shadow-indigo-100">
+          class="flex-1 py-2 bg-[#245C4F] text-white font-semibold rounded-lg hover:bg-[#19483D] disabled:opacity-50 transition text-xs shadow-xs cursor-pointer">
           {{ loading ? 'Procesando...' : (modoEdicion ? 'Guardar Cambios' : 'Registrar Empleado') }}
         </button>
       </div>

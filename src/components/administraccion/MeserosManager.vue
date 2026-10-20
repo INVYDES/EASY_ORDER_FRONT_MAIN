@@ -1,31 +1,31 @@
 <template>
   <div class="space-y-6">
     <!-- Configuración Global de Mesas -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-2xl">
-          🪑
+    <div class="bg-white p-5 rounded-xl shadow-xs border border-[#DDE3DE] flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 bg-[#E8F1ED] text-[#245C4F] rounded-lg flex items-center justify-center text-base shrink-0">
+          <i class="fa-solid fa-chair"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold text-gray-900">Capacidad del Restaurante</h3>
-          <p class="text-sm text-gray-500">Define cuántas mesas físicas tiene este establecimiento</p>
+          <h3 class="text-sm font-semibold text-[#202723]">Capacidad del Restaurante</h3>
+          <p class="text-xs text-[#68736C] mt-0.5">Define cuántas mesas físicas tiene este establecimiento</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
         <div class="relative">
           <input 
             v-model.number="totalMesas" 
             type="number" 
             min="0" 
             max="500"
-            class="w-32 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-28 px-3 py-1.5 bg-[#F6F7F5] border border-[#DDE3DE] rounded-lg text-center text-xs font-semibold text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none"
           />
-          <span class="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">MESAS</span>
+          <span class="absolute -top-2 -right-2 bg-[#245C4F] text-white text-[9px] px-1.5 py-0.2 rounded font-semibold">MESAS</span>
         </div>
         <button 
           @click="saveTotalMesas"
           :disabled="loading.savingConfig"
-          class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50"
+          class="px-4 py-1.5 bg-[#245C4F] text-white text-xs font-semibold rounded-lg hover:bg-[#19483D] transition disabled:opacity-50 shadow-xs cursor-pointer"
         >
           {{ loading.savingConfig ? 'Guardando...' : 'Actualizar' }}
         </button>
@@ -33,70 +33,70 @@
     </div>
 
     <!-- Tabla de Meseros -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-        <h3 class="font-bold text-gray-900 text-lg">Asignación de Meseros</h3>
-        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase tracking-wider">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] overflow-hidden">
+      <div class="px-5 py-3.5 border-b border-[#DDE3DE] bg-[#F6F7F5] flex items-center justify-between">
+        <h3 class="font-semibold text-[#202723] text-sm">Asignación de Meseros</h3>
+        <span class="px-2.5 py-0.5 bg-[#E8F1ED] text-[#245C4F] text-xs font-medium rounded-full">
           {{ meseros.length }} Meseros registrados
         </span>
       </div>
 
-      <div v-if="loading.meseros" class="py-20 text-center">
-        <div class="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-gray-400 font-medium">Obteniendo personal...</p>
+      <div v-if="loading.meseros" class="py-16 text-center">
+        <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin mx-auto mb-3"></div>
+        <p class="text-[#68736C] text-xs font-medium">Obteniendo personal...</p>
       </div>
 
       <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-100">
-          <thead class="bg-gray-50/50">
+        <table class="min-w-full divide-y divide-[#DDE3DE]">
+          <thead class="bg-[#F0F2EF]">
             <tr>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Mesero</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Mesas Asignadas</th>
-              <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Mesero</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Estado</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Mesas Asignadas</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-[#68736C] uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="mesero in meseros" :key="mesero.id" class="hover:bg-gray-50/80 transition">
-              <td class="px-6 py-4 whitespace-nowrap">
+          <tbody class="divide-y divide-[#DDE3DE]">
+            <tr v-for="mesero in meseros" :key="mesero.id" class="hover:bg-[#F6F7F5] transition-colors">
+              <td class="px-5 py-3.5 whitespace-nowrap">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <div class="w-8 h-8 rounded-full bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center font-semibold text-xs shrink-0">
                     {{ getInitials(mesero.name) }}
                   </div>
                   <div>
-                    <p class="text-sm font-bold text-gray-900">{{ mesero.name }}</p>
-                    <p class="text-xs text-gray-500">@{{ mesero.username }}</p>
+                    <p class="text-xs font-semibold text-[#202723]">{{ mesero.name }}</p>
+                    <p class="text-[11px] text-[#68736C]">@{{ mesero.username }}</p>
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4">
+              <td class="px-5 py-3.5">
                 <div class="flex items-center gap-2">
                   <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" :checked="mesero.es_activo !== false" @change="toggleEstadoEmpleado(mesero)" class="sr-only peer">
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    <div class="w-9 h-5 bg-[#DDE3DE] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#DDE3DE] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#26734D]"></div>
                   </label>
-                  <span :class="['text-[10px] font-bold uppercase w-12', mesero.es_activo !== false ? 'text-emerald-600' : 'text-rose-500']">
+                  <span :class="['text-[11px] font-semibold uppercase w-12', mesero.es_activo !== false ? 'text-[#26734D]' : 'text-[#B93838]']">
                     {{ mesero.es_activo !== false ? 'Activo' : 'Inactivo' }}
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4">
+              <td class="px-5 py-3.5">
                 <div class="flex flex-wrap gap-1.5">
                   <template v-if="mesero.mesas && mesero.mesas.length">
                     <span v-for="mesa in mesero.mesas" :key="mesa" 
-                      class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-xs font-bold shadow-sm">
+                      class="px-2 py-0.5 bg-[#E8F1ED] text-[#245C4F] border border-[#245C4F]/20 rounded text-xs font-medium">
                       Mesa {{ mesa }}
                     </span>
                   </template>
-                  <span v-else class="text-xs text-gray-400 italic">Sin mesas asignadas</span>
+                  <span v-else class="text-xs text-[#68736C] italic">Sin mesas asignadas</span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-right">
+              <td class="px-5 py-3.5 text-right">
                 <button 
                   @click="openAssignModal(mesero)"
-                  class="px-4 py-2 bg-white border border-gray-200 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition shadow-sm"
+                  class="px-2.5 py-1 bg-[#E8F1ED] text-[#245C4F] text-xs font-semibold rounded-md hover:bg-[#245C4F] hover:text-white transition-colors shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  ⚙️ Gestionar Mesas
+                  <i class="fa-solid fa-pen-to-square text-[11px]"></i> Asignar Mesas
                 </button>
               </td>
             </tr>
@@ -106,52 +106,55 @@
     </div>
 
     <!-- Modal de Asignación -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-modal-in">
-        <div class="p-6 bg-gradient-to-r from-indigo-600 to-purple-700 text-white flex items-center justify-between">
+    <div v-if="showModal" class="fixed inset-0 bg-[#202723]/50 z-[60] flex items-center justify-center p-4"
+      @click.self="showModal = false">
+      <div class="bg-white rounded-xl shadow-xl border border-[#DDE3DE] w-full max-w-xl overflow-hidden">
+        <div class="p-5 bg-[#F6F7F5] border-b border-[#DDE3DE] flex items-center justify-between">
           <div>
-            <h3 class="text-xl font-bold">Asignar Mesas</h3>
-            <p class="text-indigo-100 text-sm">Mesero: {{ selectedMesero?.name }}</p>
+            <h3 class="text-base font-semibold text-[#202723]">Asignar Mesas</h3>
+            <p class="text-xs text-[#68736C] mt-0.5">Mesero: <strong class="text-[#202723]">{{ selectedMesero?.name }}</strong></p>
           </div>
-          <button @click="showModal = false" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">✕</button>
+          <button @click="showModal = false" class="w-7 h-7 rounded-lg text-[#68736C] hover:text-[#202723] hover:bg-[#F0F2EF] flex items-center justify-center text-sm transition cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
         
-        <div class="p-8">
-          <div class="mb-6 flex items-center justify-between bg-amber-50 p-4 rounded-2xl border border-amber-100">
-            <div class="flex items-center gap-3 text-amber-800 text-sm">
-              <span>⚠️</span>
+        <div class="p-6">
+          <div class="mb-4 flex items-center justify-between bg-[#FEF7EC] p-3 rounded-lg border border-[#A96517]/20">
+            <div class="flex items-center gap-2 text-[#A96517] text-xs">
+              <i class="fa-solid fa-triangle-exclamation"></i>
               <p>Puedes seleccionar hasta la mesa <strong>{{ totalMesas }}</strong></p>
             </div>
-            <button @click="clearSelections" class="text-xs font-bold text-amber-700 hover:underline">Limpiar todo</button>
+            <button @click="clearSelections" class="text-xs font-semibold text-[#A96517] hover:underline cursor-pointer">Limpiar todo</button>
           </div>
 
-          <div class="grid grid-cols-5 sm:grid-cols-8 gap-3 max-h-80 overflow-y-auto p-2 custom-scroll">
+          <div class="grid grid-cols-5 sm:grid-cols-8 gap-2 max-h-72 overflow-y-auto p-1 custom-scroll">
             <button 
               v-for="n in totalMesas" 
               :key="n"
               @click="toggleMesa(n)"
               :class="[
-                'aspect-square rounded-2xl flex items-center justify-center text-sm font-bold transition-all transform active:scale-95',
+                'aspect-square rounded-lg flex items-center justify-center text-xs font-semibold transition cursor-pointer',
                 selectedMesas.includes(n) 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
-                  : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 border border-gray-100'
+                  ? 'bg-[#245C4F] text-white shadow-xs' 
+                  : 'bg-white text-[#68736C] hover:bg-[#F6F7F5] border border-[#DDE3DE]'
               ]"
             >
               {{ n }}
             </button>
           </div>
 
-          <div v-if="totalMesas === 0" class="py-10 text-center text-gray-400 italic">
+          <div v-if="totalMesas === 0" class="py-8 text-center text-[#68736C] text-xs italic">
             Primero define el número total de mesas en la parte superior.
           </div>
         </div>
 
-        <div class="p-6 bg-gray-50 flex gap-3">
-          <button @click="showModal = false" class="flex-1 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-100 transition">Cancelar</button>
+        <div class="p-4 bg-[#F6F7F5] border-t border-[#DDE3DE] flex gap-2.5">
+          <button @click="showModal = false" class="flex-1 py-2 bg-[#F0F2EF] border border-[#DDE3DE] text-[#202723] font-semibold text-xs rounded-lg hover:bg-[#DDE3DE] transition cursor-pointer">Cancelar</button>
           <button 
             @click="saveAssignments" 
             :disabled="loading.saving"
-            class="flex-[2] py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 disabled:opacity-50"
+            class="flex-[2] py-2 bg-[#245C4F] text-white font-semibold text-xs rounded-lg hover:bg-[#19483D] transition shadow-xs disabled:opacity-50 cursor-pointer"
           >
             {{ loading.saving ? 'Guardando cambios...' : 'Confirmar Asignación' }}
           </button>
@@ -160,9 +163,9 @@
     </div>
 
     <!-- Notificación Toast Simple -->
-    <div v-if="toast.show" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-gray-900 text-white rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up">
-      <span>{{ toast.type === 'success' ? '✅' : '❌' }}</span>
-      <p class="text-sm font-medium">{{ toast.msg }}</p>
+    <div v-if="toast.show" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 bg-white border border-[#DDE3DE] text-[#202723] rounded-lg shadow-lg flex items-center gap-2.5">
+      <i :class="toast.type === 'success' ? 'fa-solid fa-circle-check text-[#26734D]' : 'fa-solid fa-circle-xmark text-[#B93838]'"></i>
+      <p class="text-xs font-medium">{{ toast.msg }}</p>
     </div>
   </div>
 </template>

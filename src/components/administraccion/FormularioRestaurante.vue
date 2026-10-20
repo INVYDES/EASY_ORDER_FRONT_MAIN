@@ -107,7 +107,7 @@
 </template>
 
 <script setup>
-// ✅ FIX 1: Se agregó `computed` que faltaba en el import
+// FIX 1: Se agregó `computed` que faltaba en el import
 import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
@@ -121,7 +121,7 @@ const emit = defineEmits(['guardar', 'cancelar'])
 const loading      = ref(false)
 const errorMessage = ref('')
 
-// ✅ FIX 1: computed ya importado, ahora funciona correctamente
+// FIX 1: computed ya importado, ahora funciona correctamente
 const modoEdicion = computed(() => !!props.restaurante)
 
 const getInitialForm = () => ({
@@ -136,8 +136,8 @@ const getInitialForm = () => ({
 
 const form = ref(getInitialForm())
 
-// ✅ FIX 2: immediate:true garantiza que los datos se carguen
-//           al abrir el modal de edición sin esperar un cambio
+// FIX 2: immediate:true garantiza que los datos se carguen
+// al abrir el modal de edición sin esperar un cambio
 watch(
   () => props.restaurante,
   (newVal) => {
@@ -175,11 +175,11 @@ const handleSubmit = () => {
 
   emit('guardar', {
     ...form.value,
-    id: props.restaurante?.id ?? null   // ✅ FIX 3: null explícito si es creación
+    id: props.restaurante?.id ?? null   // FIX 3: null explícito si es creación
   })
 
-  // ✅ FIX 4: loading se apaga y form se limpia SOLO si es creación
-  //           En edición el padre cierra el modal, no hace falta limpiar aquí
+  // FIX 4: loading se apaga y form se limpia SOLO si es creación
+  // En edición el padre cierra el modal, no hace falta limpiar aquí
   if (!modoEdicion.value) {
     form.value = getInitialForm()
   }

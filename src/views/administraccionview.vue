@@ -6,174 +6,181 @@
     <!-- TOASTS -->
     <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
       <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-72 animate-slide-in pointer-events-auto',
-          toast.type==='success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' :
-          toast.type==='error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800' :
-          'bg-blue-50 border-l-4 border-blue-500 text-blue-800']">
-        <span>{{ toast.type==='success' ? '✅' : toast.type==='error' ? '❌' : 'ℹ️' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600">×</button>
+        :class="['px-4 py-3 rounded-lg shadow-md flex items-center gap-3 min-w-72 animate-slide-in pointer-events-auto border',
+          toast.type==='success' ? 'bg-[#E8F1ED] border-[#26734D]/30 text-[#202723]' :
+          toast.type==='error'   ? 'bg-[#FEF2F2] border-[#B93838]/30 text-[#202723]' :
+          'bg-[#F0F2EF] border-[#DDE3DE] text-[#202723]']">
+        <i :class="[
+          toast.type==='success' ? 'fa-solid fa-circle-check text-[#26734D]' :
+          toast.type==='error'   ? 'fa-solid fa-circle-xmark text-[#B93838]' :
+          'fa-solid fa-circle-info text-[#315F8C]'
+        ]"></i>
+        <span class="text-xs font-medium flex-1">{{ toast.message }}</span>
+        <button @click="removeToast(toast.id)" class="text-[#68736C] hover:text-[#202723]">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
       </div>
     </div>
 
     <!-- Banner Licencia Inactiva -->
-    <div v-if="currentUser?.licencia_activa === false || (licenciaActiva && licenciaActiva.estado === 'INACTIVA')" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-red-100">
+    <div v-if="currentUser?.licencia_activa === false || (licenciaActiva && licenciaActiva.estado === 'INACTIVA')" class="bg-[#FEF2F2] border border-[#B93838]/30 p-4 rounded-xl flex items-center justify-between shadow-xs">
       <div class="flex items-center gap-3">
-        <span class="text-2xl">⚠️</span>
+        <div class="w-9 h-9 rounded-lg bg-[#B93838]/10 text-[#B93838] flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-triangle-exclamation text-base"></i>
+        </div>
         <div>
-          <h4 class="font-bold text-red-800 text-sm">Licencia Inactiva</h4>
-          <p class="text-xs text-red-600 mt-0.5">Tu suscripción actual se encuentra inactiva. Algunas funciones y creación de usuarios o sucursales podrían estar restringidas.</p>
+          <h4 class="font-semibold text-[#B93838] text-sm">Licencia Inactiva</h4>
+          <p class="text-xs text-[#68736C] mt-0.5">Tu suscripción actual se encuentra inactiva. Algunas funciones y creación de usuarios o sucursales podrían estar restringidas.</p>
         </div>
       </div>
-      <RouterLink to="/panel/licencias" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shrink-0 shadow-sm">
+      <RouterLink to="/panel/licencias" class="px-3.5 py-1.5 bg-[#B93838] hover:bg-[#962D2D] text-white font-semibold text-xs rounded-lg transition shrink-0 shadow-xs">
         Renovar Licencia
       </RouterLink>
     </div>
 
     <!-- Encabezado -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Administración</h2>
-        <p class="text-gray-500 text-sm mt-1">Panel de control del restaurante</p>
+        <h2 class="text-2xl font-semibold text-[#202723]">Administración</h2>
+        <p class="text-xs text-[#68736C] mt-0.5">Panel de control y gestión operativa del restaurante</p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <button 
           @click="puedeCrearMasEmpleados ? abrirModalEmpleado() : null"
           :class="[
-            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
+            'flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition shadow-xs',
             puedeCrearMasEmpleados 
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer shadow-indigo-100' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              ? 'bg-[#245C4F] text-white hover:bg-[#19483D] cursor-pointer' 
+              : 'bg-[#F0F2EF] text-[#68736C] border border-[#DDE3DE] cursor-not-allowed opacity-60'
           ]"
           :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nuevo empleado'"
         >
-          <span>👤</span> Nuevo Empleado
+          <i class="fa-solid fa-user-plus text-xs"></i> Nuevo Empleado
         </button>
         <button 
           @click="puedeCrearMasEmpleados ? abrirModalCuentaMenu() : null"
           :class="[
-            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
+            'flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition shadow-xs border',
             puedeCrearMasEmpleados 
-              ? 'bg-amber-500 text-white hover:bg-amber-600 cursor-pointer shadow-amber-100' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              ? 'bg-white border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] cursor-pointer' 
+              : 'bg-[#F0F2EF] text-[#68736C] border-[#DDE3DE] cursor-not-allowed opacity-60'
           ]"
           :title="!puedeCrearMasEmpleados ? 'Has alcanzado el límite de usuarios permitidos en tu plan de licencia.' : 'Registrar nueva cuenta de menú'"
         >
-          <span>🛒</span> Nueva Cuenta de Menú
+          <i class="fa-solid fa-tablet-screen-button text-xs text-[#245C4F]"></i> Nueva Cuenta de Menú
         </button>
         <button 
           @click="puedeCrearMasRestaurantes ? abrirModalRestaurante() : null"
           :class="[
-            'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition shadow-sm',
+            'flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition shadow-xs border',
             puedeCrearMasRestaurantes 
-              ? 'bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer shadow-emerald-100' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              ? 'bg-white border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] cursor-pointer' 
+              : 'bg-[#F0F2EF] text-[#68736C] border-[#DDE3DE] cursor-not-allowed opacity-60'
           ]"
           :title="!puedeCrearMasRestaurantes ? 'Has alcanzado el límite de restaurantes permitidos en tu plan de licencia.' : 'Registrar nueva sucursal'"
         >
-          <span>🏪</span> Nuevo Restaurante
+          <i class="fa-solid fa-store text-xs text-[#245C4F]"></i> Nuevo Restaurante
         </button>
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+    <!-- Tabs Principales -->
+    <div class="flex flex-wrap items-center gap-1.5 bg-[#F0F2EF] border border-[#DDE3DE] rounded-xl p-1 w-fit">
       <button v-for="t in mainTabs" :key="t.key" @click="mainTab = t.key"
-        :class="['px-5 py-2 text-sm font-medium rounded-lg transition',
-          mainTab === t.key ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200']">
+        :class="['px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2',
+          mainTab === t.key ? 'bg-white shadow-xs text-[#245C4F] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60 border border-transparent']">
+        <i v-if="t.icon" :class="t.icon"></i>
         {{ t.label }}
       </button>
     </div>
 
-    <!-- ══ TAB RESUMEN (Limpiado: KPIs y Gráficas movidos a Métricas) ══ -->
+    <!-- ══ TAB RESUMEN (Personal y Sucursales) ══ -->
     <template v-if="mainTab === 'resumen'">
       <div v-if="loading.general" class="flex items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400">Cargando...</p>
+        <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin"></div>
+        <p class="text-xs text-[#68736C] font-medium">Cargando...</p>
       </div>
 
       <template v-else>
         <!-- Título de sección operativa -->
-        <div class="mb-6">
-          <h3 class="text-lg font-bold text-gray-800">Control Operativo</h3>
-          <p class="text-xs text-gray-500">Gestión de personal y sucursales activas</p>
+        <div class="mb-4">
+          <h3 class="text-base font-semibold text-[#202723]">Control Operativo</h3>
+          <p class="text-xs text-[#68736C] mt-0.5">Gestión de personal de nómina, terminales de menú y sucursales activas</p>
         </div>
 
         <!-- Tabs CRUD -->
-        <div class="border-b border-gray-200 mb-6">
-          <nav class="-mb-px flex space-x-6">
+        <div class="border-b border-[#DDE3DE] mb-5">
+          <nav class="-mb-px flex flex-wrap gap-6">
             <button v-for="tab in crudTabs" :key="tab.key" @click="activeTab = tab.key"
-              :class="['py-4 px-1 border-b-2 font-medium text-sm transition',
-                activeTab===tab.key ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
+              :class="['py-3 px-1 border-b-2 text-xs font-semibold transition cursor-pointer flex items-center gap-2',
+                activeTab===tab.key ? 'border-[#245C4F] text-[#245C4F]' : 'border-transparent text-[#68736C] hover:text-[#202723]']">
               {{ tab.label }}
-              <span v-if="tab.key !== 'sesiones'" class="ml-1.5 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-semibold">{{ tab.count }}</span>
+              <span v-if="tab.key !== 'sesiones'" class="bg-[#E8F1ED] text-[#245C4F] rounded-full px-2 py-0.5 text-[11px] font-semibold">{{ tab.count }}</span>
             </button>
           </nav>
         </div>
 
         <!-- Tabla empleados -->
-        <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-          <!-- ... (Contenido de tabla empleados se mantiene igual) ... -->
-          <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando empleados...</div>
+        <div v-if="activeTab === 'empleados'" class="bg-white rounded-xl shadow-xs overflow-hidden border border-[#DDE3DE]">
+          <div v-if="loading.empleados" class="text-center py-12 text-[#68736C] text-xs">Cargando empleados...</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-[#DDE3DE]">
+              <thead class="bg-[#F0F2EF]">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Usuario</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Empleado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Rol</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Usuario</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-[#68736C] uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-[#DDE3DE]">
                 <tr v-if="personalNomina.length===0">
-                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay empleados registrados</td>
+                  <td colspan="6" class="px-5 py-10 text-center text-[#68736C] italic text-xs">No hay empleados registrados</td>
                 </tr>
-                <tr v-for="emp in personalNomina" :key="emp.id" class="hover:bg-gray-50">
-                  <td class="px-5 py-4">
+                <tr v-for="emp in personalNomina" :key="emp.id" class="hover:bg-[#F6F7F5] transition-colors">
+                  <td class="px-5 py-3.5">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      <div class="w-8 h-8 rounded-full bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs font-semibold shrink-0">
                         {{ getInitials(emp.name) }}
                       </div>
                       <div class="flex flex-col">
-                        <span class="font-bold text-gray-900 text-sm">{{ emp.name }}</span>
-                        <!-- <span class="text-[10px] text-gray-400">{{ emp.email }}</span> -->
+                        <span class="font-semibold text-[#202723] text-xs">{{ emp.name }}</span>
                       </div>
                     </div>
                   </td>
-                  <td class="px-5 py-4">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                  <td class="px-5 py-3.5">
+                    <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#E8F1ED] text-[#245C4F]">
                       {{ getRolNombre(emp) }}
                     </span>
                   </td>
-                  <td class="px-5 py-4">
-                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                  <td class="px-5 py-3.5">
+                    <span class="text-xs font-medium text-[#68736C] bg-[#F0F2EF] px-2 py-0.5 rounded-md border border-[#DDE3DE]">
                       {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
                     </span>
                   </td>
-                  <td class="px-5 py-4">
+                  <td class="px-5 py-3.5">
                     <div class="flex items-center gap-2">
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div class="w-9 h-5 bg-[#DDE3DE] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#DDE3DE] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#26734D]"></div>
                       </label>
-                      <span :class="['text-[10px] font-bold uppercase w-12', emp.activo !== false ? 'text-emerald-600' : 'text-rose-500']">
+                      <span :class="['text-[11px] font-semibold uppercase w-12', emp.activo !== false ? 'text-[#26734D]' : 'text-[#B93838]']">
                         {{ emp.activo !== false ? 'Activo' : 'Inactivo' }}
                       </span>
                     </div>
                   </td>
-                  <td class="px-5 py-4 text-sm text-gray-500">{{ emp.username }}</td>
-                  <td class="px-5 py-4 text-right">
-                    <div class="flex justify-end gap-2">
+                  <td class="px-5 py-3.5 text-xs text-[#68736C] font-mono">{{ emp.username }}</td>
+                  <td class="px-5 py-3.5 text-right">
+                    <div class="flex justify-end gap-1.5">
                       <button @click="editarEmpleado(emp)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
-                        ✏️ Editar
+                        class="text-xs text-[#245C4F] font-semibold bg-[#E8F1ED] hover:bg-[#245C4F] hover:text-white px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-pen-to-square text-[11px]"></i> Editar
                       </button>
                       <button @click="eliminarEmpleado(emp)"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
-                        🗑️ Eliminar
+                        class="text-xs text-[#B93838] font-semibold bg-[#B93838]/10 hover:bg-[#B93838] hover:text-white px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-trash-can text-[11px]"></i> Eliminar
                       </button>
                     </div>
                   </td>
@@ -184,55 +191,58 @@
         </div>
 
         <!-- Tabla Cuentas de Menú -->
-        <div v-if="activeTab === 'menu'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-          <div v-if="loading.empleados" class="text-center py-12 text-gray-400">Cargando cuentas...</div>
+        <div v-if="activeTab === 'menu'" class="bg-white rounded-xl shadow-xs overflow-hidden border border-[#DDE3DE]">
+          <div v-if="loading.empleados" class="text-center py-12 text-[#68736C] text-xs">Cargando cuentas...</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-[#DDE3DE]">
+              <thead class="bg-[#F0F2EF]">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nombre de Cuenta</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Cadena de Acceso</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Nombre de Cuenta</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Cadena de Acceso</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-[#68736C] uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-[#DDE3DE]">
                 <tr v-if="cuentasMenu.length===0">
-                  <td colspan="5" class="px-5 py-10 text-center text-gray-400 italic">No hay cuentas de menú creadas</td>
+                  <td colspan="5" class="px-5 py-10 text-center text-[#68736C] italic text-xs">No hay cuentas de menú creadas</td>
                 </tr>
-                <tr v-for="emp in cuentasMenu" :key="emp.id" class="hover:bg-gray-50">
-                  <td class="px-5 py-4">
+                <tr v-for="emp in cuentasMenu" :key="emp.id" class="hover:bg-[#F6F7F5] transition-colors">
+                  <td class="px-5 py-3.5">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
-                        🛒
+                      <div class="w-8 h-8 rounded-full bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs shrink-0">
+                        <i class="fa-solid fa-tablet-screen-button"></i>
                       </div>
-                      <span class="font-bold text-gray-900 text-sm">{{ emp.name }}</span>
+                      <span class="font-semibold text-[#202723] text-xs">{{ emp.name }}</span>
                     </div>
                   </td>
-                  <td class="px-5 py-4">
-                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                  <td class="px-5 py-3.5">
+                    <span class="text-xs font-medium text-[#68736C] bg-[#F0F2EF] px-2 py-0.5 rounded-md border border-[#DDE3DE]">
                       {{ emp.restaurante_activo?.nombre || emp.restaurante_activo_nombre || '—' }}
                     </span>
                   </td>
-                  <td class="px-5 py-4">
+                  <td class="px-5 py-3.5">
                     <div class="flex items-center gap-2">
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" :checked="emp.activo !== false" @change="toggleEstadoEmpleado(emp)" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div class="w-9 h-5 bg-[#DDE3DE] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#DDE3DE] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#26734D]"></div>
                       </label>
+                      <span :class="['text-[11px] font-semibold uppercase w-12', emp.activo !== false ? 'text-[#26734D]' : 'text-[#B93838]']">
+                        {{ emp.activo !== false ? 'Activo' : 'Inactivo' }}
+                      </span>
                     </div>
                   </td>
-                  <td class="px-5 py-4 text-sm font-mono text-indigo-600 font-bold">{{ emp.username }}</td>
-                  <td class="px-5 py-4 text-right">
-                    <div class="flex justify-end gap-2">
+                  <td class="px-5 py-3.5 text-xs font-mono text-[#245C4F] font-semibold">{{ emp.username }}</td>
+                  <td class="px-5 py-3.5 text-right">
+                    <div class="flex justify-end gap-1.5">
                       <button @click="editarCuentaMenu(emp)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
-                        ✏️ Editar
+                        class="text-xs text-[#245C4F] font-semibold bg-[#E8F1ED] hover:bg-[#245C4F] hover:text-white px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-pen-to-square text-[11px]"></i> Editar
                       </button>
                       <button @click="eliminarEmpleado(emp)"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
-                        🗑️ Eliminar
+                        class="text-xs text-[#B93838] font-semibold bg-[#B93838]/10 hover:bg-[#B93838] hover:text-white px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-trash-can text-[11px]"></i> Eliminar
                       </button>
                     </div>
                   </td>
@@ -243,102 +253,102 @@
         </div>
 
         <!-- Tabla Entradas y Salidas (Sesiones) -->
-        <div v-if="activeTab === 'sesiones'" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 animate-fade-in">
+        <div v-if="activeTab === 'sesiones'" class="bg-white rounded-xl shadow-xs overflow-hidden border border-[#DDE3DE]">
           <!-- Filtros de Sesiones y Botón Imprimir -->
-          <div class="flex flex-wrap items-center justify-between gap-4 bg-gray-50 p-4 border-b border-gray-100">
-            <div class="flex items-center gap-4 flex-wrap">
+          <div class="flex flex-wrap items-center justify-between gap-4 bg-[#F6F7F5] p-4 border-b border-[#DDE3DE]">
+            <div class="flex items-center gap-3 flex-wrap">
               <!-- Filtro por Rango de Fechas -->
               <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Filtrar por:</span>
+                <span class="text-xs font-semibold text-[#68736C]">Período:</span>
                 <div class="relative">
-                  <select v-model="filtroSesiones" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition">
-                    <option value="hoy">📅 Hoy</option>
-                    <option value="7d">📅 Últimos 7 días</option>
-                    <option value="14d">📅 Últimos 14 días</option>
-                    <option value="30d">📅 Últimos 30 días</option>
-                    <option value="todos">📅 Todos los registros</option>
+                  <select v-model="filtroSesiones" class="appearance-none bg-white border border-[#DDE3DE] rounded-lg px-3 py-1.5 pr-8 text-xs font-medium text-[#202723] focus:outline-none focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] cursor-pointer shadow-xs">
+                    <option value="hoy">Hoy</option>
+                    <option value="7d">Últimos 7 días</option>
+                    <option value="14d">Últimos 14 días</option>
+                    <option value="30d">Últimos 30 días</option>
+                    <option value="todos">Todos los registros</option>
                   </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                    ▼
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[#68736C]">
+                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
                   </div>
                 </div>
               </div>
 
               <!-- Filtro por Empleado -->
               <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Empleado:</span>
+                <span class="text-xs font-semibold text-[#68736C]">Empleado:</span>
                 <div class="relative">
-                  <select v-model="filtroEmpleadoId" class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-sm transition">
-                    <option value="todos">👥 Todos los empleados</option>
+                  <select v-model="filtroEmpleadoId" class="appearance-none bg-white border border-[#DDE3DE] rounded-lg px-3 py-1.5 pr-8 text-xs font-medium text-[#202723] focus:outline-none focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] cursor-pointer shadow-xs">
+                    <option value="todos">Todos los empleados</option>
                     <option v-for="emp in empleadosFiltrados" :key="emp.id" :value="emp.id">
-                      👤 {{ emp.name }}
+                      {{ emp.name }}
                     </option>
                   </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                    ▼
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[#68736C]">
+                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Botón Imprimir -->
-            <button @click="imprimirTablaSesiones" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition shadow-sm">
-              🖨️ Imprimir Reporte
+            <button @click="imprimirTablaSesiones" class="flex items-center gap-2 px-3.5 py-1.5 bg-white hover:bg-[#F6F7F5] border border-[#DDE3DE] text-[#202723] text-xs font-semibold rounded-lg transition shadow-xs cursor-pointer">
+              <i class="fa-solid fa-print text-xs text-[#245C4F]"></i> Imprimir Reporte
             </button>
           </div>
 
-          <div v-if="loading.general" class="text-center py-12 text-gray-400">
-            <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <div v-if="loading.general" class="text-center py-12 text-[#68736C] text-xs">
+            <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin mx-auto mb-3"></div>
             Cargando historial de entradas y salidas...
           </div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-[#DDE3DE]">
+              <thead class="bg-[#F0F2EF]">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Empleado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sucursal</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Hora Entrada</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Hora Salida / Estado</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Duración</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Empleado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Rol</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Sucursal</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Hora Entrada</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Hora Salida / Estado</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Duración</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-[#DDE3DE]">
                 <tr v-if="sesionesFiltradas.length===0">
-                  <td colspan="6" class="px-5 py-10 text-center text-gray-400 italic">No hay registros de entradas y salidas en esta sucursal</td>
+                  <td colspan="6" class="px-5 py-10 text-center text-[#68736C] italic text-xs">No hay registros de entradas y salidas en esta sucursal</td>
                 </tr>
-                <tr v-for="ses in sesionesFiltradas" :key="ses.id" class="hover:bg-gray-50">
-                  <td class="px-5 py-4">
+                <tr v-for="ses in sesionesFiltradas" :key="ses.id" class="hover:bg-[#F6F7F5] transition-colors">
+                  <td class="px-5 py-3.5">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      <div class="w-8 h-8 rounded-full bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs font-semibold shrink-0">
                         {{ getInitials(ses.user?.name) }}
                       </div>
-                      <span class="font-bold text-gray-900 text-sm">{{ ses.user?.name || 'Empleado Eliminado' }}</span>
+                      <span class="font-semibold text-[#202723] text-xs">{{ ses.user?.name || 'Empleado Eliminado' }}</span>
                     </div>
                   </td>
-                  <td class="px-5 py-4">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                  <td class="px-5 py-3.5">
+                    <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#E8F1ED] text-[#245C4F]">
                       {{ ses.user ? getRolNombre(ses.user) : '—' }}
                     </span>
                   </td>
-                  <td class="px-5 py-4">
-                    <span class="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                  <td class="px-5 py-3.5">
+                    <span class="text-xs font-medium text-[#68736C] bg-[#F0F2EF] px-2 py-0.5 rounded-md border border-[#DDE3DE]">
                       {{ ses.restaurante?.nombre || '—' }}
                     </span>
                   </td>
-                  <td class="px-5 py-4 text-sm text-gray-600 font-medium">
+                  <td class="px-5 py-3.5 text-xs text-[#202723] font-medium">
                     {{ formatDateTime(ses.hora_entrada) }}
                   </td>
-                  <td class="px-5 py-4">
-                    <span v-if="!ses.hora_salida" class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1.5 animate-pulse">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <td class="px-5 py-3.5">
+                    <span v-if="!ses.hora_salida" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[#E8F1ED] text-[#26734D] border border-[#26734D]/20 inline-flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#26734D]"></span>
                       En línea / Activo
                     </span>
-                    <span v-else class="text-sm text-gray-600 font-medium">
+                    <span v-else class="text-xs text-[#68736C] font-medium">
                       {{ formatDateTime(ses.hora_salida) }}
                     </span>
                   </td>
-                  <td class="px-5 py-4 text-sm font-semibold text-indigo-600">
+                  <td class="px-5 py-3.5 text-xs font-semibold text-[#202723]">
                     {{ calcularDuracion(ses.hora_entrada, ses.hora_salida) }}
                   </td>
                 </tr>
@@ -348,45 +358,45 @@
         </div>
 
         <!-- Tabla restaurantes -->
-        <div v-if="activeTab === 'restaurantes'" class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div v-if="loading.restaurantes" class="text-center py-12 text-gray-400">Cargando restaurantes...</div>
+        <div v-if="activeTab === 'restaurantes'" class="bg-white rounded-xl shadow-xs overflow-hidden border border-[#DDE3DE]">
+          <div v-if="loading.restaurantes" class="text-center py-12 text-[#68736C] text-xs">Cargando restaurantes...</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-[#DDE3DE]">
+              <thead class="bg-[#F0F2EF]">
                 <tr>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nombre</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Dirección</th>
-                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                  <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Nombre</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Dirección</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Estado</th>
+                  <th class="px-5 py-3 text-right text-xs font-semibold text-[#68736C] uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
+              <tbody class="divide-y divide-[#DDE3DE]">
                 <tr v-if="restaurantes.length===0">
-                  <td colspan="4" class="px-5 py-10 text-center text-gray-400 italic">No hay restaurantes</td>
+                  <td colspan="4" class="px-5 py-10 text-center text-[#68736C] italic text-xs">No hay restaurantes registrados</td>
                 </tr>
-                <tr v-for="rest in restaurantes" :key="rest.id" class="hover:bg-gray-50">
-                  <td class="px-5 py-4">
-                    <p class="text-sm font-medium text-gray-900">{{ rest.nombre }}</p>
-                    <p class="text-xs text-gray-500">{{ rest.telefono || 'Sin teléfono' }}</p>
+                <tr v-for="rest in restaurantes" :key="rest.id" class="hover:bg-[#F6F7F5] transition-colors">
+                  <td class="px-5 py-3.5">
+                    <p class="text-xs font-semibold text-[#202723]">{{ rest.nombre }}</p>
+                    <p class="text-[11px] text-[#68736C] mt-0.5">{{ rest.telefono || 'Sin teléfono' }}</p>
                   </td>
-                  <td class="px-5 py-4 text-sm text-gray-600">
+                  <td class="px-5 py-3.5 text-xs text-[#68736C]">
                     {{ [rest.calle, rest.ciudad, rest.estado].filter(Boolean).join(', ') || '—' }}
                   </td>
-                  <td class="px-5 py-4">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                      :class="rest.es_activo!==false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
+                  <td class="px-5 py-3.5">
+                    <span class="px-2.5 py-0.5 text-xs font-medium rounded-full"
+                      :class="rest.es_activo!==false ? 'bg-[#E8F1ED] text-[#26734D]' : 'bg-[#F0F2EF] text-[#68736C]'">
                       {{ rest.es_activo!==false ? 'Activo' : 'Inactivo' }}
                     </span>
                   </td>
-                  <td class="px-5 py-4 text-right">
-                    <div class="flex justify-end gap-2">
+                  <td class="px-5 py-3.5 text-right">
+                    <div class="flex justify-end gap-1.5">
                       <button @click="editarRestaurante(rest)"
-                        class="text-sm text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition">
-                        ✏️ Editar
+                        class="text-xs text-[#245C4F] font-semibold bg-[#E8F1ED] hover:bg-[#245C4F] hover:text-white px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-pen-to-square text-[11px]"></i> Editar
                       </button>
                       <button @click="eliminarRestaurante(rest.id)"
-                        class="text-sm text-red-600 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition">
-                        🗑️ Eliminar
+                        class="text-xs text-[#B93838] font-semibold bg-[#B93838]/10 hover:bg-[#B93838] hover:text-white px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-trash-can text-[11px]"></i> Eliminar
                       </button>
                     </div>
                   </td>
@@ -422,10 +432,13 @@
     </template>
 
     <!-- ══ MODAL EMPLEADO (Componente Nuevo) ══ -->
-    <div v-if="showModalEmpleado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+    <div v-if="showModalEmpleado" class="fixed inset-0 bg-[#202723]/50 z-50 flex items-center justify-center px-4"
+      @click.self="cerrarModalEmpleado">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden relative border border-[#DDE3DE]">
         <!-- Botón cerrar X -->
-        <button @click="cerrarModalEmpleado" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl z-10">✕</button>
+        <button @click="cerrarModalEmpleado" class="absolute top-3.5 right-3.5 text-[#68736C] hover:text-[#202723] w-7 h-7 rounded-lg hover:bg-[#F0F2EF] flex items-center justify-center text-sm transition z-10 cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
         
         <FormularioTrabajador 
           ref="formEmpleadoRef"
@@ -440,118 +453,120 @@
     </div>
 
     <!-- ══ MODAL RESTAURANTE ══ -->
-    <div v-if="showModalRestaurante" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+    <div v-if="showModalRestaurante" class="fixed inset-0 bg-[#202723]/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModalRestaurante">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-lg font-semibold text-gray-800">{{ restauranteEditando ? 'Editar Restaurante' : 'Nuevo Restaurante' }}</h3>
-          <button @click="cerrarModalRestaurante" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+      <div class="bg-white rounded-xl shadow-xl border border-[#DDE3DE] w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4 border-b border-[#DDE3DE] pb-3">
+          <h3 class="text-base font-semibold text-[#202723]">{{ restauranteEditando ? 'Editar Restaurante' : 'Nuevo Restaurante' }}</h3>
+          <button @click="cerrarModalRestaurante" class="text-[#68736C] hover:text-[#202723] w-7 h-7 rounded-lg hover:bg-[#F0F2EF] flex items-center justify-center text-sm transition cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
-        <div v-if="formError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{{ formError }}</div>
-        <div class="space-y-4">
+        <div v-if="formError" class="mb-4 p-3 text-xs text-[#B93838] bg-[#FEF2F2] border border-[#B93838]/20 rounded-lg">{{ formError }}</div>
+        <div class="space-y-3.5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+            <label class="block text-xs font-semibold text-[#202723] mb-1">Nombre *</label>
             <input v-model="restForm.nombre" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <label class="block text-xs font-semibold text-[#202723] mb-1">Teléfono</label>
             <input v-model="restForm.telefono" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Calle y número</label>
+            <label class="block text-xs font-semibold text-[#202723] mb-1">Calle y número</label>
             <input v-model="restForm.calle" type="text"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Ciudad</label>
               <input v-model="restForm.ciudad" type="text"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Estado</label>
               <input v-model="restForm.estado" type="text"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
             </div>
           </div>
-          <div class="space-y-3 pt-2">
-            <label class="block text-sm font-medium text-gray-700">Logo o Foto del Restaurante</label>
-            <div class="flex items-center gap-4">
-              <div class="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+          <div class="space-y-2 pt-1">
+            <label class="block text-xs font-semibold text-[#202723]">Logo o Foto del Restaurante</label>
+            <div class="flex items-center gap-3">
+              <div class="w-16 h-16 rounded-lg bg-[#F6F7F5] border border-dashed border-[#DDE3DE] flex items-center justify-center overflow-hidden shrink-0">
                 <img v-if="imgPreview || restForm.imagen_url" :src="imgPreview || getImageUrl(restForm.imagen_url)" alt="Imagen del restaurante" class="w-full h-full object-cover" />
-                <span v-else class="text-gray-300 text-2xl">📸</span>
+                <i v-else class="fa-solid fa-image text-xl text-[#68736C]"></i>
               </div>
               <div class="flex-1">
                 <input type="file" @change="onFileChange" accept="image/*" class="hidden" ref="fileInput" />
                 <div class="flex flex-wrap gap-2">
                   <button @click="$refs.fileInput.click()" type="button"
-                    class="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition uppercase tracking-wider">
+                    class="px-3 py-1.5 bg-[#E8F1ED] text-[#245C4F] text-xs font-semibold rounded-lg hover:bg-[#245C4F] hover:text-white transition cursor-pointer">
                     {{ (imgPreview || restForm.imagen_url) ? 'Cambiar imagen' : 'Seleccionar imagen' }}
                   </button>
                   <button v-if="imgPreview || restForm.imagen_url" @click="quitarImagen" type="button"
-                    class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition uppercase tracking-wider">
+                    class="px-3 py-1.5 bg-[#FEF2F2] text-[#B93838] text-xs font-semibold rounded-lg hover:bg-[#B93838] hover:text-white transition cursor-pointer">
                     Quitar
                   </button>
                 </div>
-                <div v-if="errorMsg" class="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-shake">
-                  <i class="fa-solid fa-circle-exclamation text-red-400"></i>
+                <div v-if="errorMsg" class="mt-2 p-2 text-xs text-[#B93838] bg-[#FEF2F2] border border-[#B93838]/20 rounded-lg flex items-center gap-2">
+                  <i class="fa-solid fa-circle-exclamation text-xs"></i>
                   <span class="font-medium">{{ typeof errorMsg === 'object' ? Object.values(errorMsg)[0][0] : errorMsg }}</span>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-2">JPG, PNG o WebP. Máx 5MB.</p>
+                <p class="text-[10px] text-[#68736C] mt-1">JPG, PNG o WebP. Máx 5MB.</p>
               </div>
             </div>
           </div>
-          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1 mt-2">
+          <div class="p-3 bg-[#FEF7EC] border border-[#A96517]/20 rounded-lg space-y-1">
             <div class="flex items-center gap-2">
-              <input v-model="restForm.servicio_rapido" type="checkbox" id="servicio-rapido-check" class="accent-amber-600 w-4 h-4 cursor-pointer" />
-              <label for="servicio-rapido-check" class="text-xs font-black text-amber-900 cursor-pointer uppercase tracking-wide">⚡ Modo Servicio Rápido (Comida Rápida)</label>
+              <input v-model="restForm.servicio_rapido" type="checkbox" id="servicio-rapido-check" class="accent-[#245C4F] w-4 h-4 cursor-pointer" />
+              <label for="servicio-rapido-check" class="text-xs font-semibold text-[#202723] cursor-pointer flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt text-[#A96517] text-xs"></i> Modo Servicio Rápido (Comida Rápida)
+              </label>
             </div>
-            <p class="text-[10px] text-amber-700 font-medium pl-6 leading-tight">
-              Elimina la vista de estaciones de producción y centraliza la impresión de comandas y el flujo directo de entrega en la Caja.
+            <p class="text-[11px] text-[#68736C] pl-6 leading-tight">
+              Elimina la vista de estaciones de producción y centraliza la impresión de comandas y entrega directa en Caja.
             </p>
           </div>
           <div v-if="restauranteEditando" class="flex items-center gap-2 pt-1">
-            <input v-model="restForm.activo" type="checkbox" id="activo-check" class="accent-indigo-600 w-4 h-4" />
-            <label for="activo-check" class="text-sm text-gray-700 cursor-pointer">Restaurante activo</label>
+            <input v-model="restForm.activo" type="checkbox" id="activo-check" class="accent-[#245C4F] w-4 h-4" />
+            <label for="activo-check" class="text-xs font-medium text-[#202723] cursor-pointer">Restaurante activo</label>
           </div>
         </div>
-        <div class="flex gap-3 mt-6">
+        <div class="flex gap-2.5 mt-5">
           <button @click="cerrarModalRestaurante"
-            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancelar</button>
+            class="flex-1 py-2 text-xs font-semibold text-[#202723] bg-[#F0F2EF] hover:bg-[#DDE3DE] rounded-lg transition cursor-pointer">Cancelar</button>
           <button @click="guardarRestaurante" :disabled="loading.guardando"
-            class="flex-1 py-2.5 text-sm font-semibold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition disabled:opacity-50">
+            class="flex-1 py-2 text-xs font-semibold text-white bg-[#245C4F] hover:bg-[#19483D] rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs">
             {{ loading.guardando ? 'Guardando...' : (restauranteEditando ? 'Guardar cambios' : 'Crear restaurante') }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- ══ MODAL CONFIRMACIÓN ELIMINAR (Nuevo Estético) ══ -->
-    <div v-if="showConfirmDelete" class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm animate-fade-in"
+    <!-- ══ MODAL CONFIRMACIÓN ELIMINAR ══ -->
+    <div v-if="showConfirmDelete" class="fixed inset-0 bg-[#202723]/50 z-[60] flex items-center justify-center px-4"
       @click.self="cancelarEliminacion">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up">
-        <div class="p-8 text-center">
-          <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce-subtle">
-            <i class="fa-solid fa-user-slash"></i>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">¿Eliminar usuario?</h3>
-          <p class="text-gray-500 text-sm leading-relaxed mb-6">
-            Estás a punto de eliminar permanentemente a <span class="font-bold text-gray-800">{{ nameToDelete }}</span>. 
-            Esta acción es definitiva y no se puede deshacer.
-          </p>
-          
-          <div class="flex flex-col gap-3">
-            <button @click="handleConfirmDelete" :disabled="loading.guardando"
-              class="w-full py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition shadow-lg shadow-red-200 disabled:opacity-50">
-              {{ loading.guardando ? 'Eliminando...' : 'Sí, Eliminar' }}
-            </button>
-            <button @click="cancelarEliminacion"
-              class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-2xl hover:bg-gray-100 transition">
-              No, Mantener
-            </button>
-          </div>
+      <div class="bg-white rounded-xl shadow-xl border border-[#DDE3DE] w-full max-w-sm overflow-hidden p-6 text-center">
+        <div class="w-12 h-12 bg-[#FEF2F2] text-[#B93838] rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+          <i class="fa-solid fa-user-slash"></i>
+        </div>
+        <h3 class="text-base font-semibold text-[#202723] mb-1.5">¿Eliminar usuario?</h3>
+        <p class="text-[#68736C] text-xs leading-relaxed mb-5">
+          Estás a punto de eliminar a <span class="font-semibold text-[#202723]">{{ nameToDelete }}</span>. 
+          Esta acción no se puede deshacer.
+        </p>
+        
+        <div class="flex gap-2.5">
+          <button @click="cancelarEliminacion"
+            class="flex-1 py-2 text-xs font-semibold text-[#202723] bg-[#F0F2EF] hover:bg-[#DDE3DE] rounded-lg transition cursor-pointer">
+            Cancelar
+          </button>
+          <button @click="handleConfirmDelete" :disabled="loading.guardando"
+            class="flex-1 py-2 text-xs font-semibold text-white bg-[#B93838] hover:bg-[#962D2D] rounded-lg transition shadow-xs disabled:opacity-50 cursor-pointer">
+            {{ loading.guardando ? 'Eliminando...' : 'Eliminar' }}
+          </button>
         </div>
       </div>
     </div>
@@ -688,11 +703,11 @@ const sucursalesDueno = ref([])
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
 const mainTabs = [
-  { key:'resumen',  label:'🏢 Sucursales y Personal' },
-  { key:'meseros',  label:'👥 Meseros'               },
-  { key:'nomina',   label:'💸 Nóminas'               },
-  { key:'gastos',   label:'🧾 Gastos'                },
-  { key:'financiero', label:'💰 Financiero'           },
+  { key:'resumen',    label:'Personal y Sucursales', icon:'fa-solid fa-building-user' },
+  { key:'meseros',    label:'Meseros',               icon:'fa-solid fa-user-group' },
+  { key:'nomina',     label:'Nóminas',               icon:'fa-solid fa-money-check-dollar' },
+  { key:'gastos',     label:'Gastos',                icon:'fa-solid fa-receipt' },
+  { key:'financiero', label:'Configuración Financiera', icon:'fa-solid fa-sliders' },
 ]
 
 const crudTabs = computed(() => [

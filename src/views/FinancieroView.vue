@@ -4,25 +4,27 @@
     <!-- TOASTS -->
     <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
       <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-72 pointer-events-auto animate-slide-in',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800'
-                                   : 'bg-red-50 border-l-4 border-red-500 text-red-800']">
-        <span>{{ toast.type === 'success' ? '✅' : '❌' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+        :class="['px-4 py-3 rounded-lg shadow-md flex items-center gap-3 min-w-72 pointer-events-auto border animate-slide-in',
+          toast.type === 'success' ? 'bg-[#E8F1ED] border-[#26734D]/30 text-[#202723]'
+                                   : 'bg-[#FEF2F2] border-[#B93838]/30 text-[#202723]']">
+        <i :class="toast.type === 'success' ? 'fa-solid fa-circle-check text-[#26734D]' : 'fa-solid fa-circle-xmark text-[#B93838]'"></i>
+        <span class="text-xs font-medium flex-1">{{ toast.message }}</span>
+        <button @click="removeToast(toast.id)" class="text-[#68736C] hover:text-[#202723]">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
       </div>
     </div>
 
     <!-- Encabezado -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">💰 Configuración Financiera</h2>
-        <p class="text-sm text-gray-500 mt-1">Define los datos base para el cálculo de métricas financieras</p>
+        <h2 class="text-xl md:text-2xl font-bold tracking-tight text-[#202723]">Configuración Financiera</h2>
+        <p class="text-xs md:text-sm text-[#68736C] mt-1">Define los datos base para el cálculo de métricas financieras</p>
       </div>
       <button @click="guardar"
         :disabled="cargando"
-        class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition shadow-sm disabled:opacity-50">
-        <i class="fa-solid fa-floppy-disk"></i> {{ cargando ? 'Guardando...' : 'Guardar Configuración' }}
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[#245C4F] text-white text-xs font-semibold rounded-lg hover:bg-[#19483D] transition shadow-xs disabled:opacity-50 cursor-pointer">
+        <i class="fa-solid fa-floppy-disk text-xs"></i> {{ cargando ? 'Guardando...' : 'Guardar Configuración' }}
       </button>
     </div>
 
@@ -33,81 +35,85 @@
       <div class="xl:col-span-2 space-y-6">
 
         <!-- Configuración Inicial -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
           <div class="flex items-center gap-3 mb-5">
-            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-lg">🏗️</div>
+            <div class="w-10 h-10 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-base">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
             <div>
-              <h3 class="text-lg font-bold text-gray-800">Configuración Inicial</h3>
-              <p class="text-xs text-gray-400">Datos de inversión y metas del negocio</p>
+              <h3 class="text-base font-semibold text-[#202723]">Configuración Inicial</h3>
+              <p class="text-xs text-[#68736C]">Datos de inversión y metas del negocio</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Inversión Inicial</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1.5">Inversión Inicial</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] font-semibold text-xs">$</span>
                 <input v-model.number="form.inversion_inicial" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-7 pr-3.5 py-2 border border-[#DDE3DE] rounded-lg text-xs text-[#202723] bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                   placeholder="0.00" />
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Monto total invertido para abrir el restaurante</p>
+              <p class="text-[11px] text-[#68736C] mt-1">Monto total invertido para abrir el restaurante</p>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Utilidad Objetivo (Mensual)</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1.5">Utilidad Objetivo (Mensual)</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] font-semibold text-xs">$</span>
                 <input v-model.number="form.utilidad_objetivo" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-7 pr-3.5 py-2 border border-[#DDE3DE] rounded-lg text-xs text-[#202723] bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                   placeholder="0.00" />
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Ganancia neta que esperas obtener cada mes</p>
+              <p class="text-[11px] text-[#68736C] mt-1">Ganancia neta que esperas obtener cada mes</p>
             </div>
           </div>
         </div>
 
         <!-- Gastos Fijos Mensuales -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
           <div class="flex items-center gap-3 mb-5">
-            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-lg">📉</div>
+            <div class="w-10 h-10 rounded-lg bg-[#FEF7EC] text-[#A96517] flex items-center justify-center text-base">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
             <div>
-              <h3 class="text-lg font-bold text-gray-800">Gastos Fijos Mensuales</h3>
-              <p class="text-xs text-gray-400">Costos recurrentes para operar el negocio</p>
+              <h3 class="text-base font-semibold text-[#202723]">Gastos Fijos Mensuales</h3>
+              <p class="text-xs text-[#68736C]">Costos recurrentes para operar el negocio</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Renta</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1.5">Renta</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] font-semibold text-xs">$</span>
                 <input v-model.number="form.gasto_renta" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-7 pr-3.5 py-2 border border-[#DDE3DE] rounded-lg text-xs text-[#202723] bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                   placeholder="0.00" />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Servicios (agua, luz, internet)</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1.5">Servicios (agua, luz, internet)</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] font-semibold text-xs">$</span>
                 <input v-model.number="form.gasto_servicios" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-7 pr-3.5 py-2 border border-[#DDE3DE] rounded-lg text-xs text-[#202723] bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                   placeholder="0.00" />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Software / Apps</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1.5">Software / Apps</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] font-semibold text-xs">$</span>
                 <input v-model.number="form.gasto_software" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-7 pr-3.5 py-2 border border-[#DDE3DE] rounded-lg text-xs text-[#202723] bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                   placeholder="0.00" />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Marketing / Publicidad</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1.5">Marketing / Publicidad</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] font-semibold text-xs">$</span>
                 <input v-model.number="form.gasto_marketing" type="number" min="0" step="0.01"
-                  class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full pl-7 pr-3.5 py-2 border border-[#DDE3DE] rounded-lg text-xs text-[#202723] bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                   placeholder="0.00" />
               </div>
             </div>
@@ -118,38 +124,38 @@
 
       <!-- Vista previa de métricas -->
       <div class="xl:col-span-1">
-        <div class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl border border-indigo-100 shadow-sm p-5 sticky top-6">
-          <div class="flex items-center gap-2 mb-4">
-            <i class="fa-solid fa-chart-line text-indigo-600"></i>
-            <h4 class="text-sm font-bold text-indigo-800 uppercase tracking-wider">Vista Previa</h4>
+        <div class="bg-[#F6F7F5] rounded-xl border border-[#DDE3DE] shadow-xs p-5 sticky top-6">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-chart-line text-[#245C4F] text-sm"></i>
+            <h4 class="text-xs font-bold text-[#202723] uppercase tracking-wider">Vista Previa</h4>
           </div>
-          <p class="text-[10px] text-indigo-400 mb-4">Así se reflejarán estos datos en Análisis Financiero</p>
+          <p class="text-xs text-[#68736C] mb-4">Así se reflejarán estos datos en Análisis Financiero</p>
 
           <div class="space-y-3">
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Inversión Inicial</p>
-              <p class="text-lg font-bold text-gray-800">${{ fm(form.inversion_inicial) }}</p>
+            <div class="bg-white rounded-lg p-3.5 border border-[#DDE3DE] shadow-xs">
+              <p class="text-[10px] text-[#68736C] uppercase tracking-wider font-semibold">Inversión Inicial</p>
+              <p class="text-lg font-bold text-[#202723] mt-0.5">${{ fm(form.inversion_inicial) }}</p>
             </div>
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Costo Operativo Mensual</p>
-              <p class="text-lg font-bold text-red-600">${{ fm(totalGastosMensuales) }}</p>
-              <p class="text-[9px] text-gray-400 mt-0.5">Variables + Operativos</p>
+            <div class="bg-white rounded-lg p-3.5 border border-[#DDE3DE] shadow-xs">
+              <p class="text-[10px] text-[#68736C] uppercase tracking-wider font-semibold">Costo Operativo Mensual</p>
+              <p class="text-lg font-bold text-[#B93838] mt-0.5">${{ fm(totalGastosMensuales) }}</p>
+              <p class="text-[10px] text-[#68736C] mt-0.5">Variables + Operativos</p>
             </div>
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Utilidad Objetivo</p>
-              <p class="text-lg font-bold text-emerald-600">${{ fm(form.utilidad_objetivo) }}</p>
+            <div class="bg-white rounded-lg p-3.5 border border-[#DDE3DE] shadow-xs">
+              <p class="text-[10px] text-[#68736C] uppercase tracking-wider font-semibold">Utilidad Objetivo</p>
+              <p class="text-lg font-bold text-[#26734D] mt-0.5">${{ fm(form.utilidad_objetivo) }}</p>
             </div>
-            <div class="bg-white rounded-xl p-3 border border-indigo-50">
-              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Punto de Equilibrio</p>
-              <p class="text-lg font-bold text-indigo-600">${{ fm(puntoEquilibrio) }}</p>
-              <p class="text-[9px] text-gray-400 mt-0.5">Ventas necesarias para cubrir gastos</p>
+            <div class="bg-white rounded-lg p-3.5 border border-[#DDE3DE] shadow-xs">
+              <p class="text-[10px] text-[#68736C] uppercase tracking-wider font-semibold">Punto de Equilibrio</p>
+              <p class="text-lg font-bold text-[#245C4F] mt-0.5">${{ fm(puntoEquilibrio) }}</p>
+              <p class="text-[10px] text-[#68736C] mt-0.5">Ventas necesarias para cubrir gastos</p>
             </div>
           </div>
 
-          <div class="mt-4 pt-4 border-t border-indigo-100">
-            <p class="text-[9px] text-indigo-400 leading-relaxed">
-              <i class="fa-solid fa-info-circle mr-1"></i>
-              Los campos de Ventas, ROI y % Utilidad se calculan automáticamente según las ventas reales del periodo.
+          <div class="mt-4 pt-3.5 border-t border-[#DDE3DE]">
+            <p class="text-[11px] text-[#68736C] leading-relaxed flex items-start gap-1.5">
+              <i class="fa-solid fa-circle-info text-[#245C4F] mt-0.5 shrink-0"></i>
+              <span>Los campos de Ventas, ROI y % Utilidad se calculan automáticamente según las ventas reales del periodo.</span>
             </p>
           </div>
         </div>

@@ -4,54 +4,60 @@
     <!-- TOASTS -->
     <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
       <div v-for="toast in toasts" :key="toast.id"
-        :class="['px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-72 pointer-events-auto animate-slide-in',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800'
-                                   : 'bg-red-50 border-l-4 border-red-500 text-red-800']">
-        <span>{{ toast.type === 'success' ? '✅' : '❌' }}</span>
-        <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
-        <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+        :class="['px-4 py-3 rounded-lg shadow-md flex items-center gap-3 min-w-72 pointer-events-auto animate-slide-in border',
+          toast.type === 'success' ? 'bg-[#E8F1ED] border-[#26734D]/30 text-[#202723]'
+                                   : 'bg-[#FEF2F2] border-[#B93838]/30 text-[#202723]']">
+        <i :class="toast.type === 'success' ? 'fa-solid fa-circle-check text-[#26734D]' : 'fa-solid fa-circle-xmark text-[#B93838]'"></i>
+        <span class="text-xs font-medium flex-1">{{ toast.message }}</span>
+        <button @click="removeToast(toast.id)" class="text-[#68736C] hover:text-[#202723] cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
       </div>
     </div>
 
     <!-- Encabezado -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">💰 Gestión de Gastos</h2>
-        <p class="text-sm text-gray-500 mt-1">Controla y analiza todos los gastos del restaurante</p>
+        <h2 class="text-2xl font-semibold text-[#202723]">Gestión de Gastos</h2>
+        <p class="text-xs text-[#68736C] mt-0.5">Control y análisis de gastos operativos del restaurante</p>
       </div>
-      <button @click="abrirModalCrear"
-        class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm">
-        <span class="text-base leading-none">＋</span> Nuevo Gasto
-      </button>
+      <div class="flex gap-2">
+        <button @click="abrirResumenCompleto"
+          class="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-[#DDE3DE] text-[#202723] hover:bg-[#F6F7F5] text-xs font-semibold rounded-lg transition shadow-xs cursor-pointer">
+          <i class="fa-solid fa-chart-pie text-xs text-[#245C4F]"></i> Análisis de Gastos
+        </button>
+        <button @click="abrirModalCrear"
+          class="inline-flex items-center gap-2 px-3.5 py-2 bg-[#245C4F] text-white text-xs font-semibold rounded-lg hover:bg-[#19483D] transition shadow-xs cursor-pointer">
+          <i class="fa-solid fa-plus text-xs"></i> Nuevo Gasto
+        </button>
+      </div>
     </div>
 
-
-
     <!-- Filtros -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Filtros</p>
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-4">
+      <p class="text-[11px] font-semibold text-[#68736C] uppercase tracking-wider mb-2.5">Filtros</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Desde</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Desde</label>
           <input type="date" v-model="filtros.fecha_desde" @change="cargarGastos"
-            class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            class="w-full px-3 py-1.5 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Hasta</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Hasta</label>
           <input type="date" v-model="filtros.fecha_hasta" @change="cargarGastos"
-            class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            class="w-full px-3 py-1.5 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+          <label class="block text-xs font-semibold text-[#202723] mb-1">Categoría</label>
           <select v-model="filtros.categoria" @change="cargarGastos"
-            class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+            class="w-full px-3 py-1.5 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none bg-white">
             <option value="">Todas</option>
             <option v-for="(label, value) in categorias" :key="value" :value="value">{{ label }}</option>
           </select>
         </div>
         <div class="flex items-end">
           <button @click="limpiarFiltros"
-            class="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition">
+            class="w-full px-3 py-1.5 bg-[#F0F2EF] text-[#202723] text-xs font-semibold rounded-lg hover:bg-[#DDE3DE] transition cursor-pointer">
             Limpiar
           </button>
         </div>
@@ -61,81 +67,86 @@
     <!-- Distribución por categoría -->
     <div v-if="Object.keys(totalesPorCategoria).length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div v-for="(monto, categoria) in totalesPorCategoria" :key="categoria"
-        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-        <span class="text-2xl block mb-1">{{ getCategoriaEmoji(categoria) }}</span>
-        <p class="text-xs text-gray-500 mb-1">{{ categorias[categoria] }}</p>
-        <p class="text-sm font-bold text-gray-900">${{ formatMoney(monto) }}</p>
-        <div class="mt-2 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-500"
-            :class="getCategoriaBarColor(categoria)"
+        class="bg-white rounded-xl border border-[#DDE3DE] shadow-xs p-3 text-center">
+        <div class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs mx-auto mb-1.5">
+          <i :class="getCategoriaIcon(categoria)"></i>
+        </div>
+        <p class="text-[11px] text-[#68736C] mb-0.5 truncate">{{ categorias[categoria] || categoria }}</p>
+        <p class="text-xs font-bold text-[#202723]">${{ formatMoney(monto) }}</p>
+        <div class="mt-2 h-1.5 rounded-full bg-[#E8F1ED] overflow-hidden">
+          <div class="h-full rounded-full bg-[#245C4F] transition-all duration-500"
             :style="{ width: `${Math.min((monto / totalGastos) * 100, 100)}%` }"></div>
         </div>
-        <p class="text-[10px] text-gray-400 mt-1">{{ totalGastos > 0 ? ((monto / totalGastos) * 100).toFixed(0) : 0 }}%</p>
+        <p class="text-[10px] text-[#68736C] mt-1">{{ totalGastos > 0 ? ((monto / totalGastos) * 100).toFixed(0) : 0 }}%</p>
       </div>
     </div>
 
     <!-- Tabla de gastos -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div v-if="loading.gastos" class="flex items-center justify-center gap-3 py-16 text-gray-400">
-        <div class="w-6 h-6 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] overflow-hidden">
+      <div v-if="loading.gastos" class="flex items-center justify-center gap-3 py-16 text-[#68736C] text-xs">
+        <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin"></div>
         Cargando gastos...
       </div>
       <div v-else-if="gastos.length === 0" class="text-center py-16">
-        <span class="text-5xl block mb-3">🧾</span>
-        <p class="text-gray-500 text-sm">Sin gastos registrados en este período</p>
+        <div class="w-12 h-12 bg-[#F0F2EF] text-[#68736C] rounded-full flex items-center justify-center mx-auto mb-2 text-lg">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+        <p class="text-[#68736C] text-xs">Sin gastos registrados en este período</p>
         <button @click="abrirModalCrear"
-          class="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
+          class="mt-3 px-3.5 py-1.5 bg-[#245C4F] text-white text-xs font-semibold rounded-lg hover:bg-[#19483D] transition cursor-pointer shadow-xs">
           Registrar el primero
         </button>
       </div>
       <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-100">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-[#DDE3DE]">
+          <thead class="bg-[#F0F2EF]">
             <tr>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Concepto</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Categoría</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha</th>
-              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Monto</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Notas</th>
-              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Concepto</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Categoría</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Fecha</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-[#68736C] uppercase tracking-wider">Monto</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-[#68736C] uppercase tracking-wider">Notas</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-[#68736C] uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
-            <tr v-for="gasto in gastos" :key="gasto.id" class="hover:bg-gray-50 transition">
-              <td class="px-5 py-4">
+          <tbody class="divide-y divide-[#DDE3DE]">
+            <tr v-for="gasto in gastos" :key="gasto.id" class="hover:bg-[#F6F7F5] transition-colors">
+              <td class="px-5 py-3.5">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
-                    :class="getCategoriaFondoSuave(gasto.categoria)">
-                    {{ getCategoriaEmoji(gasto.categoria) }}
+                  <div class="w-7 h-7 rounded-md bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs shrink-0">
+                    <i :class="getCategoriaIcon(gasto.categoria)"></i>
                   </div>
-                  <p class="text-sm font-medium text-gray-900">{{ gasto.concepto }}</p>
+                  <p class="text-xs font-medium text-[#202723]">{{ gasto.concepto }}</p>
                 </div>
               </td>
-              <td class="px-5 py-4">
-                <span class="px-2.5 py-1 text-xs font-semibold rounded-full capitalize"
-                  :class="getCategoriaColor(gasto.categoria)">
+              <td class="px-5 py-3.5">
+                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-[#F0F2EF] text-[#68736C] border border-[#DDE3DE] capitalize">
                   {{ gasto.categoria_formateada || categorias[gasto.categoria] || gasto.categoria }}
                 </span>
               </td>
-              <td class="px-5 py-4 text-sm text-gray-500">{{ formatFecha(gasto.fecha) }}</td>
-              <td class="px-5 py-4 text-right">
-                <span class="text-sm font-bold text-red-600">{{ gasto.monto_formateado || ('$' + formatMoney(gasto.monto)) }}</span>
+              <td class="px-5 py-3.5 text-xs text-[#68736C]">{{ formatFecha(gasto.fecha) }}</td>
+              <td class="px-5 py-3.5 text-right">
+                <span class="text-xs font-bold text-[#B93838]">{{ gasto.monto_formateado || ('$' + formatMoney(gasto.monto)) }}</span>
               </td>
-              <td class="px-5 py-4 text-sm text-gray-400 max-w-xs truncate">{{ gasto.notas || '—' }}</td>
-              <td class="px-5 py-4 text-right">
-                <div class="flex justify-end gap-1">
+              <td class="px-5 py-3.5 text-xs text-[#68736C] max-w-xs truncate">{{ gasto.notas || '—' }}</td>
+              <td class="px-5 py-3.5 text-right">
+                <div class="flex justify-end gap-1.5">
                   <button @click="abrirModalEditar(gasto)"
-                    class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition font-medium">✏️</button>
+                    class="text-xs px-2.5 py-1 rounded-md bg-[#E8F1ED] text-[#245C4F] hover:bg-[#245C4F] hover:text-white transition-colors font-semibold cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-pen-to-square text-[11px]"></i> Editar
+                  </button>
                   <button @click="eliminarGasto(gasto)"
-                    class="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">🗑️</button>
+                    class="text-xs px-2.5 py-1 rounded-md bg-[#B93838]/10 text-[#B93838] hover:bg-[#B93838] hover:text-white transition-colors font-semibold cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can text-[11px]"></i> Eliminar
+                  </button>
                 </div>
               </td>
             </tr>
           </tbody>
-          <tfoot class="bg-gray-50 border-t-2 border-gray-200">
+          <tfoot class="bg-[#F0F2EF] border-t border-[#DDE3DE]">
             <tr>
-              <td colspan="3" class="px-5 py-3 text-sm font-bold text-gray-700">Total del período</td>
-              <td class="px-5 py-3 text-right text-sm font-black text-red-600">${{ formatMoney(totalGastos) }}</td>
+              <td colspan="3" class="px-5 py-3 text-xs font-semibold text-[#202723]">Total del período</td>
+              <td class="px-5 py-3 text-right text-xs font-bold text-[#B93838]">${{ formatMoney(totalGastos) }}</td>
               <td colspan="2"></td>
             </tr>
           </tfoot>
@@ -144,54 +155,56 @@
     </div>
 
     <!-- ══ MODAL CREAR / EDITAR ══ -->
-    <div v-if="modalVisible" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+    <div v-if="modalVisible" class="fixed inset-0 bg-[#202723]/50 z-50 flex items-center justify-center px-4"
       @click.self="cerrarModal">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-lg font-semibold text-gray-800">{{ modoEdicion ? 'Editar gasto' : 'Registrar gasto' }}</h3>
-          <button @click="cerrarModal" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+      <div class="bg-white rounded-xl shadow-xl border border-[#DDE3DE] w-full max-w-md p-6">
+        <div class="flex items-center justify-between mb-4 border-b border-[#DDE3DE] pb-3">
+          <h3 class="text-base font-semibold text-[#202723]">{{ modoEdicion ? 'Editar gasto' : 'Registrar gasto' }}</h3>
+          <button @click="cerrarModal" class="text-[#68736C] hover:text-[#202723] w-7 h-7 rounded-lg hover:bg-[#F0F2EF] flex items-center justify-center text-sm transition cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
-        <div v-if="formError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{{ formError }}</div>
-        <div class="space-y-4">
+        <div v-if="formError" class="mb-4 p-3 text-xs text-[#B93838] bg-[#FEF2F2] border border-[#B93838]/20 rounded-lg">{{ formError }}</div>
+        <div class="space-y-3.5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Concepto *</label>
+            <label class="block text-xs font-semibold text-[#202723] mb-1">Concepto *</label>
             <input v-model="form.concepto" type="text" placeholder="Ej. Pago de renta" maxlength="200"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Categoría *</label>
               <select v-model="form.categoria"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none bg-white">
                 <option value="">Seleccionar</option>
                 <option v-for="(label, value) in categorias" :key="value" :value="value">{{ label }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Monto *</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Monto *</label>
               <div class="relative">
-                <span class="absolute left-3 top-2.5 text-gray-400 text-sm">$</span>
+                <span class="absolute left-3 top-2 text-[#68736C] text-xs font-semibold">$</span>
                 <input v-model="form.monto" type="number" min="0.01" step="0.01"
-                  class="w-full pl-7 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                  class="w-full pl-6 pr-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
               </div>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+            <label class="block text-xs font-semibold text-[#202723] mb-1">Fecha *</label>
             <input v-model="form.fecha" type="date"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notas <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <label class="block text-xs font-semibold text-[#202723] mb-1">Notas <span class="text-[#68736C] font-normal">(opcional)</span></label>
             <textarea v-model="form.notas" rows="2" placeholder="Detalles adicionales" maxlength="500"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-lg text-xs focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none resize-none"></textarea>
           </div>
         </div>
-        <div class="flex gap-3 mt-6">
+        <div class="flex gap-2.5 mt-5">
           <button @click="cerrarModal"
-            class="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancelar</button>
+            class="flex-1 py-2 text-xs font-semibold text-[#202723] bg-[#F0F2EF] hover:bg-[#DDE3DE] rounded-lg transition cursor-pointer">Cancelar</button>
           <button @click="guardarGasto" :disabled="guardando"
-            class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
+            class="flex-1 py-2 text-xs font-semibold text-white bg-[#245C4F] hover:bg-[#19483D] rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs">
             {{ guardando ? 'Guardando...' : (modoEdicion ? 'Guardar cambios' : 'Registrar gasto') }}
           </button>
         </div>
@@ -199,68 +212,74 @@
     </div>
 
     <!-- ══ MODAL ROI / RESUMEN ══ -->
-    <div v-if="modalResumenVisible" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    <div v-if="modalResumenVisible" class="fixed inset-0 bg-[#202723]/50 z-50 flex items-center justify-center p-4"
       @click.self="modalResumenVisible = false">
-      <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
-        <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800">📊 Análisis Financiero</h3>
-          <button @click="modalResumenVisible = false" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+      <div class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-xl border border-[#DDE3DE]">
+        <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-[#DDE3DE]">
+          <h3 class="text-base font-semibold text-[#202723] flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-[#245C4F]"></i> Análisis de Gastos y Rentabilidad
+          </h3>
+          <button @click="modalResumenVisible = false" class="text-[#68736C] hover:text-[#202723] w-7 h-7 rounded-lg hover:bg-[#F0F2EF] flex items-center justify-center text-sm transition cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
-        <div class="p-5 space-y-6">
-          <div class="flex items-center justify-between flex-wrap gap-3 bg-gray-50 rounded-xl p-4">
+        <div class="p-6 space-y-5">
+          <div class="flex items-center justify-between flex-wrap gap-3 bg-[#F6F7F5] border border-[#DDE3DE] rounded-lg p-3.5">
             <div>
-              <p class="text-xs text-gray-500">Período analizado</p>
-              <p class="font-semibold text-gray-900 text-sm">
+              <p class="text-[11px] text-[#68736C]">Período analizado</p>
+              <p class="font-semibold text-[#202723] text-xs mt-0.5">
                 {{ formatFecha(resumenData.periodo?.inicio) }} — {{ formatFecha(resumenData.periodo?.fin) }}
               </p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-1.5">
               <button @click="cargarResumenPeriodo('month')"
-                class="px-3 py-1.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition">Este Mes</button>
+                class="px-3 py-1 text-xs font-semibold bg-[#E8F1ED] text-[#245C4F] rounded-md hover:bg-[#245C4F] hover:text-white transition cursor-pointer">Este Mes</button>
               <button @click="cargarResumenPeriodo('last-month')"
-                class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Mes Anterior</button>
+                class="px-3 py-1 text-xs font-semibold bg-[#F0F2EF] text-[#202723] rounded-md hover:bg-[#DDE3DE] transition cursor-pointer">Mes Anterior</button>
               <button @click="cargarResumenPeriodo('year')"
-                class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Este Año</button>
+                class="px-3 py-1 text-xs font-semibold bg-[#F0F2EF] text-[#202723] rounded-md hover:bg-[#DDE3DE] transition cursor-pointer">Este Año</button>
             </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 text-white">
-              <p class="text-xs opacity-80 uppercase tracking-wide font-medium">Ventas Totales</p>
-              <p class="text-2xl font-bold mt-2">${{ formatMoney(resumenData.ventas) }}</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="bg-white border border-[#DDE3DE] rounded-xl p-4 shadow-xs">
+              <p class="text-xs text-[#68736C] uppercase font-semibold">Ventas Totales</p>
+              <p class="text-xl font-bold text-[#202723] mt-1">${{ formatMoney(resumenData.ventas) }}</p>
             </div>
-            <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-5 text-white">
-              <p class="text-xs opacity-80 uppercase tracking-wide font-medium">Total Gastos</p>
-              <p class="text-2xl font-bold mt-2">${{ formatMoney(resumenData.total_gastos) }}</p>
+            <div class="bg-white border border-[#DDE3DE] rounded-xl p-4 shadow-xs">
+              <p class="text-xs text-[#68736C] uppercase font-semibold">Total Gastos</p>
+              <p class="text-xl font-bold text-[#B93838] mt-1">${{ formatMoney(resumenData.total_gastos) }}</p>
             </div>
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white">
-              <p class="text-xs opacity-80 uppercase tracking-wide font-medium">Utilidad Bruta</p>
-              <p class="text-2xl font-bold mt-2">${{ formatMoney(resumenData.utilidad_bruta) }}</p>
+            <div class="bg-white border border-[#DDE3DE] rounded-xl p-4 shadow-xs">
+              <p class="text-xs text-[#68736C] uppercase font-semibold">Utilidad Bruta</p>
+              <p class="text-xl font-bold text-[#26734D] mt-1">${{ formatMoney(resumenData.utilidad_bruta) }}</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-              <p class="text-xs text-gray-500 uppercase tracking-wide font-medium">Retorno sobre Inversión</p>
-              <p class="text-5xl font-black mt-3"
-                :class="(resumenData.roi_pct || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+            <div class="bg-white border border-[#DDE3DE] rounded-xl p-5 flex flex-col items-center justify-center text-center shadow-xs">
+              <p class="text-xs text-[#68736C] uppercase font-semibold">Retorno sobre Inversión (ROI)</p>
+              <p class="text-4xl font-bold mt-2"
+                :class="(resumenData.roi_pct || 0) >= 0 ? 'text-[#26734D]' : 'text-[#B93838]'">
                 {{ resumenData.roi_pct !== null ? ((resumenData.roi_pct >= 0 ? '+' : '') + resumenData.roi_pct + '%') : '—' }}
               </p>
-              <p class="text-xs text-gray-400 mt-2">
-                {{ (resumenData.roi_pct || 0) >= 0 ? 'Operación rentable ✅' : 'Operación con pérdida ⚠️' }}
+              <p class="text-xs text-[#68736C] mt-2 flex items-center gap-1.5">
+                <i :class="(resumenData.roi_pct || 0) >= 0 ? 'fa-solid fa-circle-check text-[#26734D]' : 'fa-solid fa-circle-exclamation text-[#B93838]'"></i>
+                {{ (resumenData.roi_pct || 0) >= 0 ? 'Operación rentable' : 'Operación con pérdida' }}
               </p>
             </div>
-            <div class="bg-white border border-gray-200 rounded-2xl p-5">
-              <p class="text-xs text-gray-500 uppercase tracking-wide font-medium mb-3">Distribución de Gastos</p>
-              <div class="space-y-3 max-h-52 overflow-y-auto pr-1">
-                <div v-for="(monto, categoria) in resumenData.por_categoria" :key="categoria" class="flex items-center gap-3">
-                  <span class="text-base shrink-0">{{ getCategoriaEmoji(categoria) }}</span>
+            <div class="bg-white border border-[#DDE3DE] rounded-xl p-5 shadow-xs">
+              <p class="text-xs text-[#68736C] uppercase font-semibold mb-3">Distribución de Gastos</p>
+              <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                <div v-for="(monto, categoria) in resumenData.por_categoria" :key="categoria" class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs shrink-0">
+                    <i :class="getCategoriaIcon(categoria)"></i>
+                  </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex justify-between text-xs mb-1">
-                      <span class="text-gray-600 truncate">{{ categorias[categoria] || categoria }}</span>
-                      <span class="font-semibold text-gray-900 ml-2 shrink-0">${{ formatMoney(monto) }}</span>
+                      <span class="text-[#202723] truncate">{{ categorias[categoria] || categoria }}</span>
+                      <span class="font-semibold text-[#202723] ml-2 shrink-0">${{ formatMoney(monto) }}</span>
                     </div>
-                    <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-500"
-                        :class="getCategoriaBarColor(categoria)"
+                    <div class="h-1.5 bg-[#E8F1ED] rounded-full overflow-hidden">
+                      <div class="h-full rounded-full bg-[#245C4F] transition-all duration-500"
                         :style="{ width: `${resumenData.total_gastos ? (monto / resumenData.total_gastos) * 100 : 0}%` }"></div>
                     </div>
                   </div>
@@ -321,19 +340,24 @@ const form = ref({
 
 // ── CATÁLOGOS ──────────────────────────────────────────────
 const categorias = {
-  renta:         '🏢 Renta',
-  nomina:        '👥 Nómina',
-  servicios:     '💡 Servicios',
-  insumos:       '🥩 Insumos',
-  marketing:     '📢 Marketing',
-  mantenimiento: '🔧 Mantenimiento',
-  general:       '📦 General',
+  renta:         'Renta',
+  nomina:        'Nómina',
+  servicios:     'Servicios',
+  insumos:       'Insumos',
+  marketing:     'Marketing',
+  mantenimiento: 'Mantenimiento',
+  general:       'General',
 }
 
-const getCategoriaEmoji = (cat) => ({ renta:'🏢', nomina:'👥', servicios:'💡', insumos:'🥩', marketing:'📢', mantenimiento:'🔧', general:'📦' }[cat] || '📦')
-const getCategoriaColor = (cat) => ({ renta:'bg-purple-100 text-purple-700', nomina:'bg-blue-100 text-blue-700', servicios:'bg-cyan-100 text-cyan-700', insumos:'bg-orange-100 text-orange-700', marketing:'bg-pink-100 text-pink-700', mantenimiento:'bg-yellow-100 text-yellow-700', general:'bg-gray-100 text-gray-600' }[cat] || 'bg-gray-100 text-gray-600')
-const getCategoriaFondoSuave = (cat) => ({ renta:'bg-purple-50', nomina:'bg-blue-50', servicios:'bg-cyan-50', insumos:'bg-orange-50', marketing:'bg-pink-50', mantenimiento:'bg-yellow-50', general:'bg-gray-100' }[cat] || 'bg-gray-100')
-const getCategoriaBarColor = (cat) => ({ renta:'bg-purple-500', nomina:'bg-blue-500', servicios:'bg-cyan-500', insumos:'bg-orange-500', marketing:'bg-pink-500', mantenimiento:'bg-yellow-500', general:'bg-gray-400' }[cat] || 'bg-gray-400')
+const getCategoriaIcon = (cat) => ({
+  renta:         'fa-solid fa-building',
+  nomina:        'fa-solid fa-users',
+  servicios:     'fa-solid fa-bolt',
+  insumos:       'fa-solid fa-boxes-stacked',
+  marketing:     'fa-solid fa-bullhorn',
+  mantenimiento: 'fa-solid fa-wrench',
+  general:       'fa-solid fa-box',
+}[cat] || 'fa-solid fa-box')
 
 // ── HELPERS ────────────────────────────────────────────────
 const formatMoney = (value) => {
@@ -391,7 +415,7 @@ const cargarGastos = async () => {
       apiClient.get(`/gastos/resumen?fecha_inicio=${filtros.fecha_desde}&fecha_fin=${filtros.fecha_hasta}`),
     ])
 
-    // ✅ FIX: el backend devuelve { data: [...] }
+    // FIX: el backend devuelve { data: [...] }
     gastos.value = Array.isArray(gData.data) ? gData.data : []
 
     if (rData.data) resumenData.value = normalizarResumen(rData.data)
