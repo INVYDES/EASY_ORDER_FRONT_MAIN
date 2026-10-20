@@ -1,129 +1,139 @@
 <template>
-  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+  <div class="fixed inset-0 bg-[#202723]/50 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
     @click.self="!procesando && cerrar()">
-    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden animate-slide-up">
+    <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[92vh] flex flex-col overflow-hidden border border-[#DDE3DE] animate-slide-up">
 
       <!-- ══════════════════════════════════════════════════════════════════ -->
       <!-- VISTA 1: FORMULARIO DE CHECKOUT                                   -->
       <!-- ══════════════════════════════════════════════════════════════════ -->
       <template v-if="paso === 'checkout'">
         <!-- Header Checkout -->
-        <div class="bg-white z-10 px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
+        <div class="bg-white z-10 px-5 pt-4 pb-3 border-b border-[#DDE3DE] shrink-0">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-xl font-black text-gray-900 tracking-tight">Finalizar pedido</h2>
-              <p class="text-xs text-indigo-600 font-bold mt-0.5">{{ restauranteNombre || 'Kiosko de Menú' }}</p>
+              <h2 class="text-base font-bold text-[#202723] tracking-tight">Finalizar pedido</h2>
+              <p class="text-xs text-[#245C4F] font-semibold mt-0.5">{{ restauranteNombre || 'Kiosko de Menú' }}</p>
             </div>
-            <button @click="cerrar" :disabled="procesando" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition font-bold disabled:opacity-30">✕</button>
+            <button @click="cerrar" :disabled="procesando" class="w-8 h-8 rounded-lg bg-[#F0F2EF] flex items-center justify-center text-[#68736C] hover:bg-[#DDE3DE] hover:text-[#202723] transition font-bold disabled:opacity-30 cursor-pointer">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
           </div>
           <!-- Resumen rápido -->
-          <div class="mt-3 flex items-center justify-between bg-indigo-50/80 border border-indigo-100 rounded-2xl px-4 py-2.5">
-            <div class="flex items-center gap-2 text-xs font-black text-indigo-700 uppercase tracking-wider">
-              <span>🛒</span>
+          <div class="mt-3 flex items-center justify-between bg-[#F6F7F5] border border-[#DDE3DE] rounded-xl px-4 py-2.5">
+            <div class="flex items-center gap-2 text-xs font-semibold text-[#68736C] uppercase tracking-wider">
+              <i class="fa-solid fa-cart-shopping text-[#245C4F]"></i>
               <span>{{ totalItems }} producto{{ totalItems !== 1 ? 's' : '' }}</span>
             </div>
-            <span class="text-lg font-black text-indigo-700 leading-none">${{ totalPedido.toFixed(2) }}</span>
+            <span class="text-base font-bold text-[#245C4F] leading-none">${{ totalPedido.toFixed(2) }}</span>
           </div>
         </div>
 
-        <div class="px-6 py-5 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+        <div class="px-5 py-4 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
 
           <!-- ── 1. TIPO DE ENTREGA (Comer aquí vs Para llevar) ── -->
           <div>
-            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2.5">¿Dónde disfrutarás tu comida?</label>
-            <div class="grid grid-cols-2 gap-3">
+            <label class="block text-xs font-bold text-[#68736C] uppercase tracking-wider mb-2">¿Dónde disfrutarás tu comida?</label>
+            <div class="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 @click="seleccionarTipoEntrega('comer_aqui')"
-                :class="['p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all text-center',
+                :class="['p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer',
                   tipoEntrega === 'comer_aqui'
-                    ? 'border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-md shadow-indigo-100 scale-[1.02]'
-                    : 'border-slate-100 bg-slate-50/60 text-slate-600 hover:border-slate-200']">
-                <span class="text-2xl">🍽️</span>
-                <span class="text-xs font-black uppercase tracking-tight">Comer aquí</span>
+                    ? 'border-[#245C4F] bg-[#E8F1ED] text-[#245C4F] shadow-xs'
+                    : 'border-[#DDE3DE] bg-[#F6F7F5] text-[#68736C] hover:border-[#245C4F]/30 hover:text-[#202723]']">
+                <i class="fa-solid fa-utensils text-xl"></i>
+                <span class="text-xs font-bold uppercase tracking-wide">Comer aquí</span>
               </button>
 
               <button
                 type="button"
                 @click="seleccionarTipoEntrega('para_llevar')"
-                :class="['p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all text-center',
+                :class="['p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer',
                   tipoEntrega === 'para_llevar'
-                    ? 'border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-md shadow-indigo-100 scale-[1.02]'
-                    : 'border-slate-100 bg-slate-50/60 text-slate-600 hover:border-slate-200']">
-                <span class="text-2xl">🛍️</span>
-                <span class="text-xs font-black uppercase tracking-tight">Para llevar</span>
+                    ? 'border-[#245C4F] bg-[#E8F1ED] text-[#245C4F] shadow-xs'
+                    : 'border-[#DDE3DE] bg-[#F6F7F5] text-[#68736C] hover:border-[#245C4F]/30 hover:text-[#202723]']">
+                <i class="fa-solid fa-bag-shopping text-xl"></i>
+                <span class="text-xs font-bold uppercase tracking-wide">Para llevar</span>
               </button>
             </div>
           </div>
 
           <!-- ── 2. SELECCIÓN DE MESA (Solo si es 'comer_aqui') ── -->
-          <div v-if="tipoEntrega === 'comer_aqui'" class="space-y-3">
+          <div v-if="tipoEntrega === 'comer_aqui'" class="space-y-2.5">
             <div class="flex items-center justify-between">
-              <label class="block text-xs font-black text-gray-700 uppercase tracking-widest">
-                Selecciona tu mesa <span class="text-red-500">*</span>
+              <label class="block text-xs font-bold text-[#202723] uppercase tracking-wider">
+                Selecciona tu mesa <span class="text-[#B93838]">*</span>
               </label>
-              <span v-if="numeroMesa" class="text-xs font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
-                Mesa {{ numeroMesa }} seleccionada ✔
+              <span v-if="numeroMesa" class="text-xs font-semibold text-[#245C4F] bg-[#E8F1ED] px-2 py-0.5 rounded-lg flex items-center gap-1">
+                <span>Mesa {{ numeroMesa }}</span>
+                <i class="fa-solid fa-check text-[10px]"></i>
               </span>
             </div>
 
             <!-- Selector táctil de botones de mesas -->
-            <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1 border border-slate-100 rounded-2xl bg-slate-50/50 custom-scrollbar">
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-44 overflow-y-auto p-1.5 border border-[#DDE3DE] rounded-xl bg-[#F6F7F5] custom-scrollbar">
               <button
                 v-for="m in listaMesas"
                 :key="m"
                 type="button"
                 @click="numeroMesa = m"
-                :class="['py-3 rounded-xl font-black text-sm transition-all flex flex-col items-center justify-center border',
+                :class="['py-2.5 rounded-lg font-bold text-sm transition flex flex-col items-center justify-center border cursor-pointer',
                   numeroMesa === m
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 z-10'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30']">
-                <span class="text-[9px] uppercase tracking-tighter opacity-70">Mesa</span>
-                <span class="text-base leading-none">{{ m }}</span>
+                    ? 'bg-[#245C4F] text-white border-[#245C4F] shadow-xs'
+                    : 'bg-white text-[#202723] border-[#DDE3DE] hover:border-[#245C4F]/40 hover:bg-[#E8F1ED]/50']">
+                <span class="text-[9px] uppercase tracking-wider opacity-70">Mesa</span>
+                <span class="text-sm font-bold leading-none mt-0.5">{{ m }}</span>
               </button>
             </div>
 
-            <p v-if="!numeroMesa && intentoEnvio" class="text-xs font-bold text-red-500 mt-1 animate-pulse">
-              ⚠️ Por favor toca tu número de mesa para continuar
+            <p v-if="!numeroMesa && intentoEnvio" class="text-xs font-semibold text-[#B93838] flex items-center gap-1 mt-1">
+              <i class="fa-solid fa-circle-exclamation text-xs"></i>
+              <span>Por favor toca tu número de mesa para continuar</span>
             </p>
           </div>
 
           <!-- Mensaje cuando es 'para_llevar' -->
-          <div v-else class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl flex items-center gap-3">
-            <span class="text-2xl">📦</span>
+          <div v-else class="p-3.5 bg-[#E8F1ED] border border-[#245C4F]/20 rounded-xl flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-[#245C4F]/10 text-[#245C4F] flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-box text-base"></i>
+            </div>
             <div class="text-left">
-              <p class="text-xs font-black text-emerald-800 uppercase tracking-tight">Pedido para llevar</p>
-              <p class="text-[11px] font-bold text-emerald-600 mt-0.5">Se te llamará por tu número de ticket en mostrador.</p>
+              <p class="text-xs font-bold text-[#245C4F] uppercase tracking-wide">Pedido para llevar</p>
+              <p class="text-[11px] text-[#202723]/80 mt-0.5">Se te llamará por tu número de ticket en mostrador.</p>
             </div>
           </div>
 
           <!-- ── 3. NOTAS ADICIONALES ── -->
           <div>
-            <label class="block text-xs font-black text-gray-700 uppercase tracking-widest mb-2">
-              Nota para el restaurante <span class="text-gray-400 font-normal lowercase">(opcional)</span>
+            <label class="block text-xs font-bold text-[#202723] uppercase tracking-wider mb-1.5">
+              Nota para el restaurante <span class="text-[#68736C] font-normal lowercase">(opcional)</span>
             </label>
             <textarea
               v-model="nota"
               rows="2"
               placeholder="Alergias, sin salsa, servilletas extras..."
-              class="w-full px-4 py-3 border border-gray-200 rounded-2xl text-xs font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 resize-none"></textarea>
+              class="w-full px-3 py-2 border border-[#DDE3DE] rounded-xl text-xs font-medium bg-[#F6F7F5] focus:bg-white focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] outline-none transition placeholder:text-[#68736C]/60 resize-none"></textarea>
           </div>
 
           <!-- Error -->
-          <div v-if="error" class="p-3.5 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-2xl flex items-center gap-2">
-            <span>❌</span><span>{{ error }}</span>
+          <div v-if="error" class="p-3 bg-[#FEF2F2] border border-[#B93838]/30 text-[#B93838] text-xs font-semibold rounded-xl flex items-center gap-2">
+            <i class="fa-solid fa-circle-exclamation text-xs shrink-0"></i>
+            <span>{{ error }}</span>
           </div>
 
         </div>
 
         <!-- ── BOTÓN CONFIRMAR ── -->
-        <div class="p-5 border-t border-slate-100 bg-white shrink-0">
+        <div class="p-4 border-t border-[#DDE3DE] bg-[#F6F7F5] shrink-0">
           <button
             @click="confirmar"
             :disabled="procesando"
-            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-black rounded-2xl transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 disabled:opacity-50">
+            class="w-full py-3 bg-[#245C4F] hover:bg-[#19483D] active:scale-[0.99] text-white font-semibold rounded-xl transition text-xs uppercase tracking-wider shadow-xs flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer">
             <div v-if="procesando" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
-            <span v-else>Confirmar Pedido · ${{ totalPedido.toFixed(2) }} ✨</span>
+            <span v-else class="flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-xs"></i>
+              Confirmar Pedido · ${{ totalPedido.toFixed(2) }}
+            </span>
           </button>
         </div>
       </template>
@@ -133,65 +143,71 @@
       <!-- ══════════════════════════════════════════════════════════════════ -->
       <template v-else-if="paso === 'ticket'">
         <!-- Header Éxito -->
-        <div class="bg-white z-10 px-6 pt-5 pb-3 border-b border-gray-100 shrink-0 flex items-center justify-between">
+        <div class="bg-white z-10 px-5 pt-4 pb-3 border-b border-[#DDE3DE] shrink-0 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-            <span class="text-xs font-black text-emerald-600 uppercase tracking-widest">Pedido Generado con Éxito</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#26734D] animate-ping"></span>
+            <span class="text-xs font-bold text-[#26734D] uppercase tracking-wider">Pedido Generado con Éxito</span>
           </div>
-          <button @click="cerrar" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition font-bold text-sm">✕</button>
+          <button @click="cerrar" class="w-8 h-8 rounded-lg bg-[#F0F2EF] flex items-center justify-center text-[#68736C] hover:bg-[#DDE3DE] hover:text-[#202723] transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
         </div>
 
-        <div class="px-6 py-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar text-center">
+        <div class="px-5 py-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar text-center">
 
           <!-- Checkmark animado -->
-          <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-inner ring-8 ring-emerald-50">
-            ✓
+          <div class="w-14 h-14 rounded-full bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-2xl mx-auto ring-4 ring-[#E8F1ED]/60">
+            <i class="fa-solid fa-check"></i>
           </div>
 
           <!-- TARJETA TICKET DE ATENCIÓN DESTACADO -->
-          <div class="bg-gradient-to-b from-indigo-50/90 via-indigo-50/40 to-white border-2 border-indigo-200 rounded-3xl p-6 shadow-md relative overflow-hidden">
+          <div class="bg-white border-2 border-[#245C4F]/30 rounded-2xl p-5 shadow-xs relative overflow-hidden">
             <!-- Pestaña superior decorativa -->
-            <div class="inline-flex items-center gap-1.5 bg-indigo-600 text-white text-[10px] font-black tracking-widest uppercase px-3.5 py-1 rounded-full shadow-sm mb-3">
-              <span>🎟️</span>
-              <span>TU NÚMERO DE TICKET</span>
+            <div class="inline-flex items-center gap-1.5 bg-[#245C4F] text-white text-[10px] font-semibold tracking-wider uppercase px-3 py-0.5 rounded-full mb-2">
+              <i class="fa-solid fa-ticket text-xs"></i>
+              <span>Tu Número de Ticket</span>
             </div>
 
             <!-- NÚMERO GIGANTE DEL TICKET -->
-            <div class="text-6xl sm:text-7xl font-black text-indigo-700 tracking-tight my-2 drop-shadow-sm select-all">
+            <div class="text-5xl sm:text-6xl font-bold text-[#245C4F] tracking-tight my-2 select-all">
               #{{ ordenExitosa?.id }}
             </div>
 
-            <p v-if="ordenExitosa?.folio" class="text-[11px] font-mono font-bold text-indigo-400 mt-1">
+            <p v-if="ordenExitosa?.folio" class="text-xs font-mono font-medium text-[#68736C]">
               Folio: {{ ordenExitosa?.folio }}
             </p>
 
-            <div class="mt-4 pt-4 border-t border-indigo-100/80 flex items-center justify-between text-xs font-bold text-slate-500">
+            <div class="mt-3 pt-3 border-t border-[#DDE3DE] flex items-center justify-between text-xs font-semibold text-[#68736C]">
               <span class="uppercase tracking-wider">Total Orden</span>
-              <span class="text-base font-black text-slate-900">${{ Number(ordenExitosa?.total || 0).toFixed(2) }}</span>
+              <span class="text-base font-bold text-[#202723]">${{ Number(ordenExitosa?.total || 0).toFixed(2) }}</span>
             </div>
           </div>
 
           <!-- INSTRUCCIÓN CLARA SEGÚN TIPO DE ENTREGA -->
           <div v-if="ordenExitosa?.tipo_entrega === 'para_llevar'" 
-               class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3.5 text-left">
-            <span class="text-3xl shrink-0">🛍️</span>
+               class="p-3.5 bg-[#F6F7F5] border border-[#DDE3DE] rounded-xl flex items-start gap-3 text-left">
+            <div class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-bag-shopping text-sm"></i>
+            </div>
             <div>
-              <p class="text-xs font-black text-emerald-900 uppercase tracking-wider">PEDIDO PARA LLEVAR</p>
-              <p class="text-xs font-bold text-emerald-800 mt-1 leading-relaxed">
-                Por favor toma asiento cerca del mostrador. Te llamaremos con tu ticket <span class="font-black underline text-emerald-950">#{{ ordenExitosa?.id }}</span> cuando tu pedido esté listo para recoger.
+              <p class="text-xs font-bold text-[#202723] uppercase tracking-wider">Pedido Para Llevar</p>
+              <p class="text-xs text-[#68736C] mt-1 leading-relaxed">
+                Por favor toma asiento cerca del mostrador. Te llamaremos con tu ticket <span class="font-bold text-[#202723]">#{{ ordenExitosa?.id }}</span> cuando tu pedido esté listo para recoger.
               </p>
             </div>
           </div>
 
           <div v-else 
-               class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-start gap-3.5 text-left">
-            <span class="text-3xl shrink-0">🍽️</span>
+               class="p-3.5 bg-[#F6F7F5] border border-[#DDE3DE] rounded-xl flex items-start gap-3 text-left">
+            <div class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-utensils text-sm"></i>
+            </div>
             <div>
-              <p class="text-xs font-black text-indigo-900 uppercase tracking-wider">
-                COMER AQUÍ · MESA {{ ordenExitosa?.mesa || 'ASIGNADA' }}
+              <p class="text-xs font-bold text-[#202723] uppercase tracking-wider">
+                Comer Aquí · Mesa {{ ordenExitosa?.mesa || 'Asignada' }}
               </p>
-              <p class="text-xs font-bold text-indigo-800 mt-1 leading-relaxed">
-                Tu pedido ha sido recibido en cocina. Toma asiento en la <span class="font-black text-indigo-950">Mesa {{ ordenExitosa?.mesa }}</span>.
+              <p class="text-xs text-[#68736C] mt-1 leading-relaxed">
+                Tu pedido ha sido recibido en cocina. Toma asiento en la <span class="font-bold text-[#202723]">Mesa {{ ordenExitosa?.mesa }}</span>.
               </p>
             </div>
           </div>
@@ -199,14 +215,14 @@
         </div>
 
         <!-- Barra regresiva visual y botón de finalizar -->
-        <div class="p-5 border-t border-slate-100 bg-white shrink-0 space-y-2.5">
+        <div class="p-4 border-t border-[#DDE3DE] bg-[#F6F7F5] shrink-0 space-y-2">
           <button
             @click="cerrar"
-            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-black rounded-2xl transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 flex items-center justify-center gap-2">
+            class="w-full py-3 bg-[#245C4F] hover:bg-[#19483D] active:scale-[0.99] text-white font-semibold rounded-xl transition text-xs uppercase tracking-wider shadow-xs flex items-center justify-center gap-2 cursor-pointer">
             <span>Aceptar y Finalizar ({{ cuentaRegresiva }}s)</span>
-            <span class="text-sm">➔</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
           </button>
-          <p class="text-[10px] text-center font-bold text-slate-400">
+          <p class="text-[10px] text-center font-medium text-[#68736C]">
             La pantalla se reiniciará automáticamente para el siguiente cliente
           </p>
         </div>
@@ -272,8 +288,8 @@ const confirmar = async () => {
   procesando.value = true
 
   const infoLugar = tipoEntrega.value === 'para_llevar'
-    ? '🛍️ Para llevar'
-    : `🍽️ Mesa: ${numeroMesa.value}`
+    ? 'Para llevar'
+    : `Mesa: ${numeroMesa.value}`
 
   const notaCompleta = [
     nota.value,
@@ -328,13 +344,13 @@ defineExpose({ setError, reset, mostrarExitoTicket })
 
 <style scoped>
 @keyframes fade-in  { from{opacity:0} to{opacity:1} }
-@keyframes slide-up { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slide-up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes spin     { to{transform:rotate(360deg)} }
 
-.animate-fade-in  { animation: fade-in  0.2s ease-out; }
-.animate-slide-up { animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-fade-in  { animation: fade-in  0.15s ease-out; }
+.animate-slide-up { animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
 .animate-spin     { animation: spin 0.7s linear infinite; }
 
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #DDE3DE; border-radius: 8px; }
 </style>
