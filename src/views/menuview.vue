@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-[#F6F7F5] flex flex-col font-sans">
+  <div class="h-screen w-screen bg-[#F6F7F5] flex flex-col font-sans overflow-hidden">
 
     <!-- Header Menú Kiosko -->
-    <div class="bg-[#245C4F] shadow-sm border-b border-[#19483D]">
+    <div class="shrink-0 bg-[#245C4F] shadow-sm border-b border-[#19483D] z-20">
       <div class="px-6 py-3.5 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <!-- Logo del Restaurante -->
@@ -117,7 +117,7 @@
     </div>
 
     <!-- Layout Principal -->
-    <div class="flex flex-1 overflow-hidden h-full relative">
+    <div class="flex flex-1 min-h-0 overflow-hidden relative">
 
       <!-- Botón de Carrito (Toggle Sidebar) -->
       <button 
@@ -139,7 +139,7 @@
       </button>
 
       <!-- Contenedor de Scroll de Productos -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+      <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-8 custom-scrollbar">
         
         <div v-if="loading.productos" class="flex flex-col items-center justify-center py-20 gap-3">
           <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin"></div>
@@ -259,7 +259,7 @@
       </div>
 
       <!-- Carrito lateral (Escritorio) -->
-      <div v-show="sidebarAbierta" class="w-96 shrink-0 bg-white border-l border-[#DDE3DE] flex flex-col shadow-lg z-10 hidden sm:flex animate-slide-left">
+      <div v-show="sidebarAbierta" class="w-96 shrink-0 h-full bg-white border-l border-[#DDE3DE] flex flex-col shadow-lg z-10 hidden sm:flex animate-slide-left">
         <div class="px-5 py-4 border-b border-[#DDE3DE] bg-[#F6F7F5]">
           <div class="flex justify-between items-center mb-1">
             <h3 class="font-bold text-[#202723] text-base tracking-tight flex items-center gap-2">
@@ -270,7 +270,7 @@
           <p class="text-[11px] text-[#68736C] font-medium">Terminal Kiosko de Autoservicio</p>
         </div>
         
-        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-white custom-scrollbar">
+        <div class="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3 bg-white custom-scrollbar">
           <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center h-full text-center py-16">
             <div class="w-14 h-14 rounded-full bg-[#F0F2EF] text-[#68736C]/50 flex items-center justify-center text-2xl mb-3">
               <i class="fa-solid fa-basket-shopping"></i>
@@ -338,7 +338,7 @@
           </div>
         </div>
 
-        <div class="p-5 border-t border-[#DDE3DE] bg-[#F6F7F5] space-y-3">
+        <div class="p-5 border-t border-[#DDE3DE] bg-[#F6F7F5] space-y-3 shrink-0">
           <div v-if="pedido.length > 0" class="space-y-1.5">
             <div class="flex justify-between text-xs text-[#68736C]">
               <span>Subtotal</span>
