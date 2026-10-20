@@ -166,8 +166,13 @@ const handleSubmit = async () => {
 
       const destination = routesMap[rol.toUpperCase()] ?? '/panel/Gestion'
 
-
-      await router.push(destination)
+      try {
+        await router.push(destination)
+      } catch (navErr: any) {
+        console.warn('Fallo en router.push, redirigiendo directamente:', navErr)
+        window.location.href = destination
+        return
+      }
 
     } else {
       console.warn('⚠️ Condición if falló:', data)

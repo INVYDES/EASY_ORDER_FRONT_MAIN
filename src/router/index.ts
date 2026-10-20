@@ -351,4 +351,20 @@ router.afterEach((to) => {
   trackPageview(to.path, document.title)
 })
 
+// Auto-recuperación ante nuevos despliegues: si un chunk no carga en memoria por caché vieja, recargar la ruta limpia
+router.onError((error, to) => {
+  const msg = error?.message || '';
+  if (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Importing a module script failed') ||
+    msg.includes('error loading dynamically imported module')
+  ) {
+    if (to?.fullPath) {
+      window.location.href = to.fullPath;
+    } else {
+      window.location.reload();
+    }
+  }
+});
+
 export default router;
