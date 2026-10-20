@@ -1,97 +1,98 @@
 <template>
-  <div class="space-y-8 animate-in fade-in duration-500">
+  <div class="space-y-6">
     <!-- Header con Selector de Cajero -->
-    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-      <div class="flex items-center gap-6">
-        <div class="w-16 h-16 rounded-2xl bg-emerald-600 flex items-center justify-center text-white text-3xl shadow-lg shadow-emerald-100">
+    <div class="bg-white rounded-xl p-6 shadow-xs border border-[#DDE3DE] flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xl shrink-0">
           <i class="fa-solid fa-cash-register"></i>
         </div>
         <div>
-          <h2 class="text-2xl font-black text-gray-800">Rendimiento de Caja {{ filtros.cajero_id ? 'Particular' : 'General' }}</h2>
-          <p class="text-gray-400 font-medium">Seguimiento de tiempos de cobro y precisión en arqueos.</p>
+          <h2 class="text-base font-semibold text-[#202723]">Rendimiento de Caja {{ filtros.cajero_id ? 'Particular' : 'General' }}</h2>
+          <p class="text-xs text-[#68736C] mt-0.5">Seguimiento de tiempos de cobro y precisión en arqueos.</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+      <div class="flex items-center gap-3 bg-[#F6F7F5] p-1.5 rounded-lg border border-[#DDE3DE]">
         <select v-model="filtros.cajero_id" @change="loadKpis" 
-          class="bg-transparent border-none focus:ring-0 font-black text-gray-700 min-w-[200px] cursor-pointer">
-          <option value="">💵 Todos los Cajeros</option>
+          class="bg-transparent border-none focus:ring-0 text-xs font-semibold text-[#202723] min-w-[180px] cursor-pointer">
+          <option value="">Todos los Cajeros</option>
           <option v-for="c in listaCajeros" :key="c.id" :value="c.id">
             {{ c.name }}
           </option>
         </select>
-        <div class="w-px h-8 bg-gray-200"></div>
-        <input type="date" v-model="filtros.fecha_desde" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-500 w-28">
-        <input type="date" v-model="filtros.fecha_hasta" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-500 w-28">
+        <div class="w-px h-6 bg-[#DDE3DE]"></div>
+        <input type="date" v-model="filtros.fecha_desde" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-medium text-[#202723] cursor-pointer">
+        <input type="date" v-model="filtros.fecha_hasta" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-medium text-[#202723] cursor-pointer">
       </div>
     </div>
 
     <!-- Cards de Métricas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-8 group hover:shadow-lg transition-all">
-        <div class="w-20 h-20 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-4xl shadow-inner">
-          <i class="fa-solid fa-scale-balanced"></i>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-5 rounded-xl shadow-xs border border-[#DDE3DE]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold text-[#68736C] uppercase tracking-wider">Diferencia Acumulada</span>
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs"
+            :class="kpis.diferencia_acumulada < 0 ? 'bg-[#FBEBEB] text-[#B93838]' : 'bg-[#EBF5EE] text-[#26734D]'">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
         </div>
-        <div>
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Diferencia Acumulada</p>
-          <p class="text-5xl font-black tracking-tighter" :class="kpis.diferencia_acumulada < 0 ? 'text-rose-600' : 'text-emerald-600'">
-            ${{ fm(kpis.diferencia_acumulada) }}
-          </p>
-          <p class="text-xs text-gray-400 mt-2 font-medium">Balance total de cierres</p>
-        </div>
+        <p class="text-2xl font-bold font-mono tabular-nums mb-1" :class="kpis.diferencia_acumulada < 0 ? 'text-[#B93838]' : 'text-[#26734D]'">
+          {{ kpis.diferencia_acumulada < 0 ? '-$' + fm(Math.abs(kpis.diferencia_acumulada)) : '$' + fm(kpis.diferencia_acumulada) }}
+        </p>
+        <p class="text-xs text-[#68736C]">Balance total de cierres de caja</p>
       </div>
 
-      <div class="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-8 group hover:shadow-lg transition-all">
-        <div class="w-20 h-20 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-4xl shadow-inner">
-          <i class="fa-solid fa-clock"></i>
+      <div class="bg-white p-5 rounded-xl shadow-xs border border-[#DDE3DE]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold text-[#68736C] uppercase tracking-wider">Tiempo de Cobro</span>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-clock"></i>
+          </div>
         </div>
-        <div>
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Tiempo de Cobro</p>
-          <p class="text-5xl font-black text-indigo-600 tracking-tighter">{{ avgPaymentTime }} min</p>
-          <p class="text-xs text-gray-400 mt-2 font-medium">Promedio desde solicitud a cierre</p>
-        </div>
+        <p class="text-2xl font-bold font-mono tabular-nums text-[#202723] mb-1">{{ avgPaymentTime }} min</p>
+        <p class="text-xs text-[#68736C]">Promedio desde solicitud a cierre</p>
       </div>
 
-      <div class="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-8 group hover:shadow-lg transition-all md:col-span-2">
-        <div class="w-20 h-20 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-4xl shadow-inner">
-          <i class="fa-solid fa-fire"></i>
+      <div class="bg-white p-5 rounded-xl shadow-xs border border-[#DDE3DE]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold text-[#68736C] uppercase tracking-wider">Merma real en caja</span>
+          <div class="w-7 h-7 rounded-lg bg-[#FBEBEB] text-[#B93838] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-ban"></i>
+          </div>
         </div>
-        <div class="flex-1">
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Merma real (cancelado desde caja)</p>
-          <p class="text-5xl font-black text-rose-600 tracking-tighter">${{ fm(mermasCaja) }}</p>
-          <p class="text-xs text-gray-400 mt-2 font-medium">
-            <span v-if="costoProductosCaja > 0" class="mr-3">Costo productos: <span class="font-black text-slate-500">${{ fm(costoProductosCaja) }}</span></span>
-            Cancelaciones de mesero (sin pérdida): <span class="font-black text-slate-500">${{ fm(cancelacionesMesero) }}</span>
-          </p>
-        </div>
+        <p class="text-2xl font-bold font-mono tabular-nums text-[#B93838] mb-1">${{ fm(mermasCaja) }}</p>
+        <p class="text-xs text-[#68736C] flex flex-wrap gap-x-2">
+          <span v-if="costoProductosCaja > 0">Costo prod: <strong class="text-[#202723]">${{ fm(costoProductosCaja) }}</strong></span>
+          <span>Cancelado mesero: <strong class="text-[#202723]">${{ fm(cancelacionesMesero) }}</strong></span>
+        </p>
       </div>
     </div>
 
     <!-- Desglose por Cajero -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-      <div class="xl:col-span-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-        <h3 class="font-black text-gray-800 text-lg mb-6">Eficiencia Individual</h3>
-        <div class="space-y-4">
-          <div v-for="c in kpis.tiempos_cobro" :key="c.cajero" class="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex justify-between items-center hover:bg-white hover:shadow-md transition-all">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div class="xl:col-span-1 bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
+        <h3 class="font-semibold text-[#202723] text-base mb-4">Eficiencia Individual</h3>
+        <div class="space-y-2.5">
+          <div v-for="c in kpis.tiempos_cobro" :key="c.cajero" class="p-3 bg-[#F6F7F5] rounded-lg border border-[#DDE3DE] flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center font-bold text-xs shrink-0">
                 {{ c.cajero.charAt(0) }}
               </div>
               <div>
-                <p class="font-black text-gray-800">{{ c.cajero }}</p>
-                <p class="text-[10px] text-gray-400 uppercase font-black">{{ c.total_cobros }} tickets</p>
+                <p class="font-semibold text-[#202723] text-xs">{{ c.cajero }}</p>
+                <p class="text-[10px] text-[#68736C]">{{ c.total_cobros }} tickets procesados</p>
               </div>
             </div>
             <div class="text-right">
-              <p class="text-xl font-black text-gray-900">{{ Math.round(c.tiempo_avg_min * 10) / 10 }}'</p>
+              <p class="text-sm font-bold font-mono tabular-nums text-[#202723]">{{ Math.round(c.tiempo_avg_min * 10) / 10 }} min</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-        <h3 class="font-black text-gray-800 text-lg mb-8">Volumen de Operación</h3>
-        <div class="h-[350px]">
+      <div class="xl:col-span-2 bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
+        <h3 class="font-semibold text-[#202723] text-base mb-6">Volumen de Operación</h3>
+        <div class="h-[320px]">
           <canvas id="barCaja"></canvas>
         </div>
       </div>
@@ -188,14 +189,18 @@ const initBarChart = () => {
       datasets: [{
         label: 'Volumen de Cobros',
         data,
-        backgroundColor: '#3b82f6',
-        borderRadius: 8
+        backgroundColor: '#245C4F',
+        borderRadius: 4
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } }
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#F0F2EF' } },
+        x: { grid: { display: false } }
+      }
     }
   })
 }

@@ -6,10 +6,10 @@
     <!-- Fila de Navegación y Botón de Dudas -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <!-- Tabs de navegación -->
-      <div class="flex flex-wrap items-center gap-2 bg-gray-100 rounded-2xl p-1.5 w-fit">
+      <div class="flex flex-wrap items-center gap-1.5 bg-[#F0F2EF] border border-[#DDE3DE] rounded-xl p-1 w-fit">
         <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
-          :class="['px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2',
-            activeTab === t.key ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-gray-500 hover:bg-gray-200']">
+          :class="['px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2',
+            activeTab === t.key ? 'bg-white shadow-xs text-[#245C4F] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60 border border-transparent']">
           <i :class="[
             t.key === 'resumen' ? 'fa-solid fa-house' : '',
             t.key === 'financiero' ? 'fa-solid fa-money-bill-trend-up' : '',
@@ -28,8 +28,8 @@
     <!-- ══ TAB RESUMEN ══ -->
     <template v-if="activeTab === 'resumen'">
       <div v-if="loading" class="flex items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400">Cargando métricas...</p>
+        <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin"></div>
+        <p class="text-[#68736C] text-sm font-medium">Cargando métricas...</p>
       </div>
 
       <template v-else>
@@ -87,17 +87,14 @@
     <template v-if="activeTab === 'meseros'">
       <div class="space-y-6">
         <!-- Distribución de Equipo (Fuerza Operativa) -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Distribución de Fuerza Operativa</h3>
-           <EmpleadosRolChart :empleados="empleados" />
-        </div>
+        <EmpleadosRolChart :empleados="empleados" />
 
         <!-- Sub-tabs para Empleados -->
-        <div class="flex border-b border-gray-200">
+        <div class="flex border-b border-[#DDE3DE]">
           <button v-for="st in subTabs" :key="st.key"
             @click="activeSubTab = st.key"
-            :class="['px-6 py-3 text-sm font-bold transition-all border-b-2',
-              activeSubTab === st.key ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700']">
+            :class="['px-5 py-2.5 text-xs font-semibold transition-colors border-b-2',
+              activeSubTab === st.key ? 'border-[#245C4F] text-[#245C4F]' : 'border-transparent text-[#68736C] hover:text-[#202723]']">
             {{ st.label }}
           </button>
         </div>
@@ -143,7 +140,6 @@ import PedidosEstadoChart   from '../components/administraccion/PedidosEstadoCha
 import EmpleadosRolChart    from '../components/administraccion/EmpleadosRolChart.vue'
 import KpiVentas            from '../components/administraccion/KpiVentas.vue'
 import KpiProductos         from '../components/administraccion/KpiProductos.vue'
-import MetricasMeseros      from '../components/administraccion/MetricasMeseros.vue'
 import KpiMeserosModule    from '../components/administraccion/KpiMeserosModule.vue'
 import KpiCocinaModule     from '../components/administraccion/KpiCocinaModule.vue'
 import KpiCajaModule       from '../components/administraccion/KpiCajaModule.vue'
@@ -219,17 +215,17 @@ const filteredSalesChannels = reactive({
 const financialProducts = ref([])
 
 const tabs = [
-  { key: 'resumen',    label: '📋 Resumen General'     },
-  { key: 'financiero', label: '💰 Análisis Financiero'  },
-  { key: 'kpis',       label: '📊 KPIs Ventas'         },
-  { key: 'productos',  label: '📦 KPIs Productos'       },
-  { key: 'meseros',    label: '👥 KPIs Empleados'      },
+  { key: 'resumen',    label: 'Resumen General'     },
+  { key: 'financiero', label: 'Análisis Financiero'  },
+  { key: 'kpis',       label: 'KPIs Ventas'         },
+  { key: 'productos',  label: 'KPIs Productos'       },
+  { key: 'meseros',    label: 'KPIs Empleados'      },
 ]
 
 const subTabs = [
-  { key: 'meseros_sub', label: '🚶 Meseros' },
-  { key: 'cocina_sub',  label: '👨‍🍳 Cocina' },
-  { key: 'caja_sub',    label: '💵 Caja' },
+  { key: 'meseros_sub', label: 'Meseros' },
+  { key: 'cocina_sub',  label: 'Cocina' },
+  { key: 'caja_sub',    label: 'Caja' },
 ]
 
 // ── Botón de Dudas ────────────────────────────────────────────────────────────

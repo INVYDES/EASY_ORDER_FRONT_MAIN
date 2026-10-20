@@ -2,36 +2,36 @@
   <div class="space-y-6">
 
     <!-- ══ FILTROS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6 mb-6">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-slate-800">Análisis de Popularidad de Productos</h3>
-          <p class="text-sm text-slate-500 mt-1">
+          <h3 class="text-base font-semibold text-[#202723]">Análisis de Popularidad de Productos</h3>
+          <p class="text-xs text-[#68736C] mt-1">
             Descubre qué productos prefieren tus clientes. Filtra por periodo o por el mesero que tomó la orden.
           </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-4">
           <!-- Rango de Fechas -->
-          <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+          <div class="flex items-center gap-2 bg-[#F6F7F5] p-1.5 rounded-lg border border-[#DDE3DE]">
             <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inicio</span>
+              <span class="text-[10px] font-semibold text-[#68736C] uppercase tracking-wider">Inicio</span>
               <input v-model="kpiFechaInicio" type="date"
-                class="bg-transparent text-sm font-semibold text-slate-700 focus:outline-none" />
+                class="bg-transparent text-xs font-medium text-[#202723] focus:outline-none cursor-pointer" />
             </div>
-            <div class="w-px h-8 bg-slate-200"></div>
+            <div class="w-px h-7 bg-[#DDE3DE]"></div>
             <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Fin</span>
+              <span class="text-[10px] font-semibold text-[#68736C] uppercase tracking-wider">Fin</span>
               <input v-model="kpiFechaFin" type="date"
-                class="bg-transparent text-sm font-semibold text-slate-700 focus:outline-none" />
+                class="bg-transparent text-xs font-medium text-[#202723] focus:outline-none cursor-pointer" />
             </div>
           </div>
 
           <!-- Selector de Empleado -->
           <div class="flex flex-col gap-1">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Vendido por:</span>
+            <span class="text-[10px] font-semibold text-[#68736C] uppercase tracking-wider ml-1">Vendido por:</span>
             <select v-model="kpiMeseroId" @change="loadKpis"
-              class="px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              class="px-3 py-2 text-xs border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] outline-none bg-white cursor-pointer min-w-[160px] text-[#202723] transition-colors">
               <option value="">Todo el personal</option>
               <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
                 {{ emp.nombre || emp.name || emp.username }}
@@ -41,7 +41,7 @@
 
           <!-- Botón Actualizar -->
           <button @click="loadKpis" :disabled="loading"
-            class="h-[42px] px-6 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 disabled:opacity-50">
+            class="h-[38px] px-5 bg-[#245C4F] hover:bg-[#19483D] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer self-end">
             <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
             {{ loading ? 'Actualizando...' : 'Actualizar' }}
           </button>
@@ -50,185 +50,187 @@
     </div>
 
     <!-- TODOS LOS PRODUCTOS — Gráfica de barras filtrable -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            🏆 Todos los Productos del Menú
+          <h3 class="font-semibold text-[#202723] text-base flex items-center gap-2">
+            Todos los Productos del Menú
             <MetricInfoTip titulo="Popularidad de Productos" paraQue="Ranking de qué productos se venden más en tu menú."
               comoSeMide="Los productos se ordenan de mayor a menor según las unidades vendidas en el período seleccionado." />
           </h3>
-          <p class="text-xs text-slate-400 font-medium">Filtrado por período seleccionado · ordenado por unidades vendidas</p>
+          <p class="text-xs text-[#68736C]">Filtrado por período seleccionado · ordenado por unidades vendidas</p>
         </div>
       </div>
       <template v-if="topProductos.length">
         <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
           <div v-for="(p, i) in topProductos" :key="p.id" class="flex items-center gap-4">
-            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0" :class="rankClass(i)">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" :class="rankClass(i)">
               {{ i + 1 }}
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between mb-1">
-                <p class="text-sm font-bold text-slate-700 truncate">{{ p.nombre }}</p>
-                <span class="text-xs font-black text-slate-400">{{ Number(p.total_vendido) }} uds</span>
+                <p class="text-xs font-semibold text-[#202723] truncate">{{ p.nombre }}</p>
+                <span class="text-xs font-semibold text-[#68736C] font-mono tabular-nums">{{ Number(p.total_vendido) }} uds</span>
               </div>
-              <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                <div class="h-full rounded-full bg-indigo-500 transition-all duration-1000"
+              <div class="w-full bg-[#F0F2EF] rounded-full h-1.5 overflow-hidden">
+                <div class="h-full rounded-full bg-[#245C4F] transition-all duration-700"
                   :style="{ width: pct(p.total_vendido, topProductos[0]?.total_vendido) + '%' }"></div>
               </div>
             </div>
             <div class="text-right shrink-0 min-w-[80px]">
-              <p class="text-sm font-black text-slate-800">${{ fm(p.total_ventas) }}</p>
+              <p class="text-xs font-bold text-[#202723] font-mono tabular-nums">${{ fm(p.total_ventas) }}</p>
             </div>
           </div>
         </div>
       </template>
-      <div v-else class="h-40 flex flex-col items-center justify-center text-slate-300">
-        <p class="text-sm italic">Sin datos disponibles</p>
+      <div v-else class="h-40 flex flex-col items-center justify-center text-[#68736C]">
+        <p class="text-xs italic">Sin datos disponibles</p>
       </div>
     </div>
 
     <!-- RENTABILIDAD — Mayor a Menor -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            📊 Rentabilidad de Mayor a Menor
+          <h3 class="font-semibold text-[#202723] text-base flex items-center gap-2">
+            Rentabilidad de Mayor a Menor
             <MetricInfoTip titulo="Rentabilidad por Producto" paraQue="Compara el margen real de cada platillo para saber cuáles dejan más dinero."
               comoSeMide="(Precio de venta - costo de insumos, mano de obra e indirectos) ÷ precio × 100. A mayor %, más rentable." />
           </h3>
-          <p class="text-xs text-slate-400 font-medium">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
+          <p class="text-xs text-[#68736C]">Margen real por unidad (Precio - Costos de Insumos y MO)</p>
         </div>
       </div>
       <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
-        <div v-if="productosRentabilidad.length === 0" class="text-center py-8 text-slate-400 text-sm italic">Sin datos de rentabilidad</div>
+        <div v-if="productosRentabilidad.length === 0" class="text-center py-8 text-[#68736C] text-xs italic">Sin datos de rentabilidad</div>
         <div v-for="(p, i) in productosRentabilidad" :key="p.id || i"
-          class="flex items-center justify-between p-3.5 rounded-2xl border border-slate-100 bg-slate-50/30 transition-all hover:border-indigo-200 group">
+          class="flex items-center justify-between p-3 rounded-lg border border-[#DDE3DE] bg-[#F6F7F5] transition-colors hover:border-[#245C4F]/40 group">
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-sm bg-white text-slate-900 border border-slate-200">
+            <div class="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold bg-white text-[#202723] border border-[#DDE3DE]">
               {{ i + 1 }}
             </div>
-            <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{{ p.nombre }}</span>
+            <span class="text-xs font-semibold text-[#202723] group-hover:text-[#245C4F] transition-colors">{{ p.nombre }}</span>
           </div>
           <div class="text-right">
-            <p class="text-sm font-black" :class="(p.margen_real || 0) < 0 ? 'text-red-600' : 'text-emerald-600'">{{ (p.margen_real || 0).toFixed(1) }}%</p>
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Margen %</p>
+            <p class="text-xs font-bold font-mono tabular-nums" :class="(p.margen_real || 0) < 0 ? 'text-[#B93838]' : 'text-[#26734D]'">{{ (p.margen_real || 0).toFixed(1) }}%</p>
+            <p class="text-[9px] font-semibold text-[#68736C] uppercase tracking-wider">Margen %</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- PLATILLOS QUE REBASAN TIEMPO ESTIMADO -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-      <div class="flex items-center justify-between mb-4">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            🔴 Platillos con Retraso en Preparación
+          <h3 class="font-semibold text-[#202723] text-base flex items-center gap-2">
+            Platillos con Retraso en Preparación
             <MetricInfoTip titulo="Retrasos en Preparación" paraQue="Identifica los platillos que están tardando más de lo que deberían."
               comoSeMide="Se comparan los minutos de preparación a tiempo real contra el tiempo estimado de la receta: exceso = real - estimado." />
           </h3>
-          <p class="text-xs text-slate-400">Productos que superaron el tiempo estimado en receta</p>
+          <p class="text-xs text-[#68736C]">Productos que superaron el tiempo estimado en receta</p>
         </div>
-        <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+        <div class="flex gap-1 bg-[#F0F2EF] border border-[#DDE3DE] rounded-lg p-1">
           <button v-for="t in tiempoFiltros" :key="t.key" @click="tiempoPeriodo = t.key; loadTiemposRebase()"
-            :class="['px-3 py-1.5 text-xs font-bold rounded-lg transition',
-              tiempoPeriodo === t.key ? 'bg-white shadow-sm text-rose-600' : 'text-slate-500 hover:text-slate-700']">
+            :class="['px-3 py-1 text-xs font-medium rounded-md transition-colors',
+              tiempoPeriodo === t.key ? 'bg-white shadow-xs text-[#202723] font-semibold' : 'text-[#68736C] hover:text-[#202723]']">
             {{ t.label }}
           </button>
         </div>
       </div>
-      <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-        <div v-if="productosRebase.length === 0" class="text-center py-8 text-slate-300 text-sm italic">Sin incidencias en el período</div>
+      <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+        <div v-if="productosRebase.length === 0" class="text-center py-8 text-[#68736C] text-xs italic">Sin incidencias en el período</div>
         <div v-for="(p, i) in productosRebase" :key="i"
-          class="flex items-center justify-between p-4 rounded-xl bg-rose-50 border border-rose-200">
+          class="flex items-center justify-between p-3 rounded-lg bg-[#F6F7F5] border border-[#DDE3DE]">
           <div class="flex items-center gap-3">
-            <span class="text-lg">🔴</span>
+            <div class="w-7 h-7 rounded-lg bg-[#FBEBEB] text-[#B93838] flex items-center justify-center text-xs shrink-0">
+              <i class="fa-solid fa-clock"></i>
+            </div>
             <div>
-              <p class="text-sm font-bold text-slate-800">{{ p.nombre }}</p>
-              <p class="text-xs text-rose-500">Estimado: {{ p.tiempo_estimado }} min · Real: <strong>{{ p.tiempo_real }} min</strong></p>
+              <p class="text-xs font-semibold text-[#202723]">{{ p.nombre }}</p>
+              <p class="text-[11px] text-[#68736C]">Estimado: {{ p.tiempo_estimado }} min · Real: <strong class="text-[#202723] font-semibold">{{ p.tiempo_real }} min</strong></p>
             </div>
           </div>
           <div class="text-right">
-            <p class="text-base font-black text-rose-600">+{{ p.exceso }} min</p>
-            <p class="text-[10px] text-slate-400">{{ p.orden_id ? 'Orden #' + p.orden_id : p.veces + ' veces' }}</p>
+            <p class="text-xs font-bold text-[#B93838] font-mono tabular-nums">+{{ p.exceso }} min</p>
+            <p class="text-[10px] text-[#68736C]">{{ p.orden_id ? 'Orden #' + p.orden_id : p.veces + ' veces' }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ══ SECCIÓN: PLATILLOS DEVUELTOS / CANCELADOS ══ -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            📉 Platillos Devueltos / Cancelados
+          <h3 class="font-semibold text-[#202723] text-base flex items-center gap-2">
+            Platillos Devueltos y Cancelaciones
             <MetricInfoTip titulo="Devoluciones y Merma" paraQue="Muestra el dinero perdido por platillos que fueron eliminados del ticket."
               comoSeMide="Suma del subtotal de los items cancelados. Se clasifica como merma cuando el producto no puede reutilizarse." />
           </h3>
-          <p class="text-xs text-slate-400 font-medium">Historial de productos eliminados con motivo de cancelación</p>
+          <p class="text-xs text-[#68736C]">Historial de productos eliminados con motivo de cancelación</p>
         </div>
         <div class="flex flex-wrap items-center gap-3 ml-auto sm:ml-0">
-          <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+          <div class="flex gap-1 bg-[#F0F2EF] border border-[#DDE3DE] rounded-lg p-1">
             <button v-for="t in tiempoFiltros" :key="t.key" @click="devueltosPeriodo = t.key; loadDevueltos()"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-lg transition',
-                devueltosPeriodo === t.key ? 'bg-white shadow-sm text-rose-600' : 'text-slate-500 hover:text-slate-700']">
+              :class="['px-3 py-1 text-xs font-medium rounded-md transition-colors',
+                devueltosPeriodo === t.key ? 'bg-white shadow-xs text-[#202723] font-semibold' : 'text-[#68736C] hover:text-[#202723]']">
               {{ t.label }}
             </button>
           </div>
           <div class="flex items-center gap-2">
-            <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
-              🔥 Merma Real: ${{ fm(costoRealMermas || totalMermas) }}
-              <span v-if="totalMermas > 0" class="block text-[10px] text-red-400 font-bold lowercase">
+            <div class="px-3.5 py-1.5 bg-[#FBEBEB] text-[#B93838] rounded-lg text-xs font-bold border border-[#B93838]/20">
+              Merma Real: ${{ fm(costoRealMermas || totalMermas) }}
+              <span v-if="totalMermas > 0" class="block text-[10px] text-[#B93838]/80 font-normal">
                 (costo productos: ${{ fm(totalMermas) }})
               </span>
             </div>
-            <div v-if="totalCancelacionesSinMerma > 0" class="px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest border border-slate-200">
-              ↩️ Cancelaciones: ${{ fm(totalCancelacionesSinMerma) }}
+            <div v-if="totalCancelacionesSinMerma > 0" class="px-3.5 py-1.5 bg-[#F0F2EF] text-[#68736C] rounded-lg text-xs font-semibold border border-[#DDE3DE]">
+              Cancelaciones: ${{ fm(totalCancelacionesSinMerma) }}
             </div>
           </div>
         </div>
       </div>
       
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto border border-[#DDE3DE] rounded-lg">
         <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-              <th class="py-3 px-2">Fecha/Hora</th>
-              <th class="py-3 px-2">Producto</th>
-              <th class="py-3 px-2">Cant</th>
-              <th class="py-3 px-2">Subtotal</th>
-              <th class="py-3 px-2">Motivo</th>
-              <th class="py-3 px-2">Tipo</th>
-              <th class="py-3 px-2">Autorizó</th>
+          <thead class="bg-[#F0F2EF]">
+            <tr class="text-[11px] font-semibold text-[#68736C] uppercase tracking-wider border-b border-[#DDE3DE]">
+              <th class="py-2.5 px-3">Fecha/Hora</th>
+              <th class="py-2.5 px-3">Producto</th>
+              <th class="py-2.5 px-3">Cant</th>
+              <th class="py-2.5 px-3">Subtotal</th>
+              <th class="py-2.5 px-3">Motivo</th>
+              <th class="py-2.5 px-3">Tipo</th>
+              <th class="py-2.5 px-3">Autorizó</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-50">
+          <tbody class="divide-y divide-[#DDE3DE]">
             <tr v-if="productosDevueltos.length === 0">
-              <td colspan="7" class="py-10 text-center text-slate-300 italic text-sm">No hay devoluciones registradas en este periodo</td>
+              <td colspan="7" class="py-8 text-center text-[#68736C] italic text-xs">No hay devoluciones registradas en este periodo</td>
             </tr>
-            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-slate-50 transition-colors group"
-              :class="d.es_merma ? 'bg-red-50/30' : ''">
-              <td class="py-4 px-2 font-bold text-slate-500">
+            <tr v-for="d in productosDevueltos" :key="d.id" class="text-xs hover:bg-[#F6F7F5] transition-colors"
+              :class="d.es_merma ? 'bg-[#FBEBEB]/30' : ''">
+              <td class="py-3 px-3 font-medium text-[#68736C]">
                 {{ d.fecha ? new Date(d.fecha.replace(' ', 'T')).toLocaleString('es-MX', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: true }) : '—' }}
               </td>
-              <td class="py-4 px-2 font-black text-slate-800 uppercase tracking-tight">{{ d.producto || d.producto_nombre || d.nombre || 'Producto' }}</td>
-              <td class="py-4 px-2 font-black text-slate-600">{{ d.cantidad }}</td>
-              <td class="py-4 px-2 font-black" :class="d.es_merma ? 'text-red-600' : 'text-slate-400'">${{ fm(d.subtotal) }}</td>
-              <td class="py-4 px-2">
-                <span class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold border border-red-100 text-[10px]">
+              <td class="py-3 px-3 font-semibold text-[#202723]">{{ d.producto || d.producto_nombre || d.nombre || 'Producto' }}</td>
+              <td class="py-3 px-3 font-mono font-medium text-[#202723]">{{ d.cantidad }}</td>
+              <td class="py-3 px-3 font-mono font-bold" :class="d.es_merma ? 'text-[#B93838]' : 'text-[#68736C]'">${{ fm(d.subtotal) }}</td>
+              <td class="py-3 px-3">
+                <span class="px-2.5 py-0.5 bg-[#F6F7F5] text-[#202723] rounded border border-[#DDE3DE] text-[11px]">
                   {{ d.motivo || d.motivo_cancelacion || 'Sin motivo' }}
                 </span>
               </td>
-              <td class="py-4 px-2">
-                <span v-if="d.es_merma" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg font-black text-[9px] uppercase">🔥 Merma</span>
-                <span v-else class="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-black text-[9px] uppercase">↩️ Cancelado</span>
+              <td class="py-3 px-3">
+                <span v-if="d.es_merma" class="px-2 py-0.5 bg-[#FBEBEB] text-[#B93838] rounded font-semibold text-[10px] border border-[#B93838]/20 uppercase">Merma</span>
+                <span v-else class="px-2 py-0.5 bg-[#F0F2EF] text-[#68736C] rounded font-medium text-[10px] border border-[#DDE3DE] uppercase">Cancelado</span>
               </td>
-              <td class="py-4 px-2">
+              <td class="py-3 px-3">
                 <div class="flex items-center gap-2">
-                  <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
+                  <div class="w-5 h-5 rounded-full bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-[10px] font-bold uppercase">
                     {{ (d.usuario || 'U').substring(0,1) }}
                   </div>
-                  <span class="font-bold text-slate-600">{{ d.usuario || 'Sistema' }}</span>
+                  <span class="font-medium text-[#202723]">{{ d.usuario || 'Sistema' }}</span>
                 </div>
               </td>
             </tr>
@@ -302,12 +304,10 @@ const getImageUrl = (path) => {
 }
 
 const rankClass = (i) => [
-  'bg-amber-400 text-white shadow-md shadow-amber-100',
-  'bg-slate-300 text-slate-700',
-  'bg-orange-300 text-white',
-  'bg-indigo-50 text-indigo-500',
-  'bg-slate-50 text-slate-400'
-][i] || 'bg-slate-50 text-slate-400'
+  'bg-[#E8F1ED] text-[#245C4F] border border-[#245C4F]/20',
+  'bg-[#F0F2EF] text-[#202723] border border-[#DDE3DE]',
+  'bg-[#F0F2EF] text-[#202723] border border-[#DDE3DE]',
+][i] || 'bg-white text-[#68736C] border border-[#DDE3DE]'
 
 // Bundle estratégico — Top 10 excluido
 const bundle = computed(() => {

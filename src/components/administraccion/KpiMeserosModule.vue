@@ -1,90 +1,85 @@
 <template>
-  <div class="space-y-8 animate-in fade-in duration-500">
+  <div class="space-y-6">
     <!-- Header con Selector de Mesero -->
-    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-      <div class="flex items-center gap-6">
-        <div class="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-3xl shadow-lg shadow-indigo-100">
+    <div class="bg-white rounded-xl p-6 shadow-xs border border-[#DDE3DE] flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xl shrink-0">
           <i class="fa-solid fa-user-tie"></i>
         </div>
         <div>
-          <h2 class="text-2xl font-black text-gray-800">Perfil de Rendimiento {{ filtros.mesero_id ? 'Particular' : 'General' }}</h2>
-          <p class="text-gray-400 font-medium">Selecciona un mesero para ver su análisis detallado.</p>
+          <h2 class="text-base font-semibold text-[#202723]">Perfil de Rendimiento {{ filtros.mesero_id ? 'Particular' : 'General' }}</h2>
+          <p class="text-xs text-[#68736C] mt-0.5">Selecciona un mesero para ver su análisis detallado.</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+      <div class="flex items-center gap-3 bg-[#F6F7F5] p-1.5 rounded-lg border border-[#DDE3DE]">
         <select v-model="filtros.mesero_id" @change="loadKpis" 
-          class="bg-transparent border-none focus:ring-0 font-black text-gray-700 min-w-[200px] cursor-pointer">
-          <option value="">📊 Todo el Equipo</option>
+          class="bg-transparent border-none focus:ring-0 text-xs font-semibold text-[#202723] min-w-[180px] cursor-pointer">
+          <option value="">Todo el Equipo</option>
           <option v-for="m in listaEmpleados" :key="m.id" :value="m.id">
             {{ m.name }}
           </option>
         </select>
-        <div class="w-px h-8 bg-gray-200"></div>
-        <input type="date" v-model="filtros.fecha_desde" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-500">
-        <input type="date" v-model="filtros.fecha_hasta" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-500">
+        <div class="w-px h-6 bg-[#DDE3DE]"></div>
+        <input type="date" v-model="filtros.fecha_desde" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-medium text-[#202723] cursor-pointer">
+        <input type="date" v-model="filtros.fecha_hasta" @change="loadKpis" class="bg-transparent border-none focus:ring-0 text-xs font-medium text-[#202723] cursor-pointer">
       </div>
     </div>
 
-    <!-- Métricas Originales Premium -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <!-- Métricas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div v-for="card in metricCards" :key="card.label" 
-        class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-indigo-200 transition-all group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-20 h-20 bg-gray-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="relative z-10">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ card.label }}</span>
-            <span class="text-lg">{{ card.icon }}</span>
-          </div>
-          <p class="text-3xl font-black text-gray-900 mb-1">
-            {{ card.prefix }}{{ card.value }}{{ card.suffix }}
-          </p>
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Actualizado</span>
-            <span class="text-[10px] text-gray-400 font-medium">{{ card.sub }}</span>
+        class="bg-white p-5 rounded-xl shadow-xs border border-[#DDE3DE]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold text-[#68736C] uppercase tracking-wider">{{ card.label }}</span>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i :class="card.iconClass || 'fa-solid fa-chart-simple'"></i>
           </div>
         </div>
+        <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums mb-1">
+          {{ card.prefix }}{{ card.value }}{{ card.suffix }}
+        </p>
+        <p class="text-xs text-[#68736C]">{{ card.sub }}</p>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <!-- Tabla de Ranking / Equipo -->
-      <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-8 border-b border-gray-50 flex justify-between items-center">
-          <h3 class="font-black text-gray-800 text-lg">Ranking de Meseros</h3>
-          <div class="flex items-center gap-2 text-xs font-bold text-indigo-600">
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] overflow-hidden">
+        <div class="p-5 border-b border-[#DDE3DE] flex justify-between items-center">
+          <h3 class="font-semibold text-[#202723] text-base">Ranking de Meseros</h3>
+          <span class="text-xs font-semibold text-[#245C4F] flex items-center gap-1.5">
             <i class="fa-solid fa-trophy"></i> Top Desempeño
-          </div>
+          </span>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50/50">
-              <tr class="text-[10px] uppercase tracking-widest text-gray-400">
-                <th class="px-4 py-3 text-left font-black">Colaborador</th>
-                <th class="px-3 py-3 text-right font-black">Ventas</th>
-                <th class="px-3 py-3 text-right font-black">Propinas</th>
-                <th class="px-3 py-3 text-right font-black">Órdenes</th>
-                <th class="px-4 py-3 text-right font-black">Eficiencia</th>
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-[#F0F2EF]">
+              <tr class="text-[11px] uppercase tracking-wider font-semibold text-[#68736C] border-b border-[#DDE3DE]">
+                <th class="px-4 py-2.5">Colaborador</th>
+                <th class="px-3 py-2.5 text-right">Ventas</th>
+                <th class="px-3 py-2.5 text-right">Propinas</th>
+                <th class="px-3 py-2.5 text-right">Órdenes</th>
+                <th class="px-4 py-2.5 text-right">Eficiencia</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
-              <tr v-for="m in meseros" :key="m.id" class="hover:bg-indigo-50/30 transition-colors cursor-pointer" @click="filtros.mesero_id = m.id; loadKpis()">
-                <td class="px-4 py-3.5">
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0">
+            <tbody class="divide-y divide-[#DDE3DE]">
+              <tr v-for="m in meseros" :key="m.id" class="hover:bg-[#F6F7F5] transition-colors cursor-pointer text-xs" @click="filtros.mesero_id = m.id; loadKpis()">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center font-bold text-xs shrink-0">
                       {{ m.nombre.charAt(0) }}
                     </div>
-                    <span class="font-black text-gray-700 text-xs truncate max-w-[90px]" :title="m.nombre">{{ m.nombre }}</span>
+                    <span class="font-semibold text-[#202723] truncate max-w-[110px]" :title="m.nombre">{{ m.nombre }}</span>
                   </div>
                 </td>
-                <td class="px-3 py-3.5 text-right font-black text-gray-900 text-xs">${{ fm(m.ventas_totales) }}</td>
-                <td class="px-3 py-3.5 text-right font-black text-gray-900 text-xs">${{ fm(m.propinas) }}</td>
-                <td class="px-3 py-3.5 text-right font-bold text-gray-500 text-xs">{{ m.ordenes }}</td>
-                <td class="px-4 py-3.5 text-right">
-                  <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase shrink-0" :class="getSemaforo(m.ventas_totales)">
-                    <span class="w-1 h-1 rounded-full bg-current"></span>
+                <td class="px-3 py-3 text-right font-mono font-bold text-[#202723]">${{ fm(m.ventas_totales) }}</td>
+                <td class="px-3 py-3 text-right font-mono font-medium text-[#68736C]">${{ fm(m.propinas) }}</td>
+                <td class="px-3 py-3 text-right font-mono font-medium text-[#68736C]">{{ m.ordenes }}</td>
+                <td class="px-4 py-3 text-right">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase" :class="getSemaforo(m.ventas_totales)">
                     {{ getEficienciaLabel(m.ventas_totales) }}
-                  </div>
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -93,12 +88,12 @@
       </div>
 
       <!-- Tendencia de Ventas -->
-      <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-        <div class="flex justify-between items-center mb-8">
-          <h3 class="font-black text-gray-800 text-lg">Tendencia de Ventas</h3>
-          <span class="text-xs font-bold text-gray-400">Últimos días</span>
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-semibold text-[#202723] text-base">Tendencia de Ventas</h3>
+          <span class="text-xs text-[#68736C]">Últimos días</span>
         </div>
-        <div class="h-[350px]">
+        <div class="h-[320px]">
           <canvas id="lineTendencia"></canvas>
         </div>
       </div>
@@ -141,10 +136,10 @@ const filtros = reactive({
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2 }) : '0.00'
 
 const metricCards = computed(() => [
-  { label: 'Ventas Totales', value: fm(resumen.value.total_ventas), prefix: '$', sub: 'Subtotal sin propina', icon: '💰' },
-  { label: 'Ticket Promedio', value: fm(resumen.value.promedio_ticket), prefix: '$', sub: 'Gasto medio por orden', icon: '🎫' },
-  { label: 'Eficiencia de Items', value: resumen.value.items_por_ticket, suffix: ' uds', sub: 'Promedio de productos', icon: '📦' },
-  { label: 'Tiempo de Servicio', value: resumen.value.tiempo_servicio_avg, suffix: ' min', sub: 'Desde lista a entrega', icon: '⏱️' },
+  { label: 'Ventas Totales', value: fm(resumen.value.total_ventas), prefix: '$', sub: 'Subtotal sin propina', iconClass: 'fa-solid fa-dollar-sign' },
+  { label: 'Ticket Promedio', value: fm(resumen.value.promedio_ticket), prefix: '$', sub: 'Gasto medio por orden', iconClass: 'fa-solid fa-receipt' },
+  { label: 'Eficiencia de Items', value: resumen.value.items_por_ticket, suffix: ' uds', sub: 'Promedio de productos', iconClass: 'fa-solid fa-box' },
+  { label: 'Tiempo de Servicio', value: resumen.value.tiempo_servicio_avg, suffix: ' min', sub: 'Desde lista a entrega', iconClass: 'fa-solid fa-clock' },
 ])
 
 let trendChart = null
@@ -207,9 +202,9 @@ const loadKpis = async () => {
 }
 
 const getSemaforo = (ventas) => {
-  if (ventas > 5000) return 'text-emerald-600 bg-emerald-50'
-  if (ventas > 2000) return 'text-amber-600 bg-amber-50'
-  return 'text-rose-600 bg-rose-50'
+  if (ventas > 5000) return 'text-[#26734D] bg-[#EBF5EE] border border-[#26734D]/20'
+  if (ventas > 2000) return 'text-[#A96517] bg-[#FEF7EC] border border-[#A96517]/20'
+  return 'text-[#B93838] bg-[#FBEBEB] border border-[#B93838]/20'
 }
 
 const getEficienciaLabel = (ventas) => {
@@ -230,12 +225,12 @@ const initTrendChart = () => {
       datasets: [{
         label: 'Ventas Diarias',
         data: tendenciaData.value.map(t => t.total),
-        borderColor: '#6366f1',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderColor: '#245C4F',
+        backgroundColor: 'rgba(36, 92, 79, 0.08)',
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: '#6366f1'
+        pointBackgroundColor: '#245C4F'
       }]
     },
     options: {
@@ -243,7 +238,7 @@ const initTrendChart = () => {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: '#F0F2EF' } },
         x: { grid: { display: false } }
       }
     }

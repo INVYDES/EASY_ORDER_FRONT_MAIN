@@ -1,65 +1,65 @@
 <template>
   <div
-    class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+    class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#202723]/50"
     @click.self="close"
   >
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in duration-200 max-h-[92vh] flex flex-col">
+    <div class="bg-white rounded-xl shadow-xl border border-[#DDE3DE] w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
-      <div class="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-indigo-600 to-violet-700 text-white flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-3xl shrink-0">
+      <div class="px-6 py-5 border-b border-[#DDE3DE] bg-[#F6F7F5] flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-lg shrink-0">
             <i class="fa-solid fa-circle-question"></i>
           </div>
           <div>
-            <h3 class="text-2xl font-black leading-tight">Dudas y Ayuda</h3>
-            <p class="text-sm text-indigo-100 font-bold mt-1">
-              Estás en: <span class="text-white font-black">{{ titulo }}</span> · lectura rápida 1–2 min
+            <h3 class="text-lg font-bold text-[#202723] leading-tight">Dudas y Ayuda</h3>
+            <p class="text-xs text-[#68736C] mt-0.5">
+              Estás en: <span class="text-[#202723] font-semibold">{{ titulo }}</span> · lectura rápida 1–2 min
             </p>
           </div>
         </div>
-        <button @click="close" class="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl transition shrink-0 cursor-pointer">
+        <button @click="close" class="w-8 h-8 rounded-lg hover:bg-[#F0F2EF] text-[#68736C] hover:text-[#202723] flex items-center justify-center text-sm transition shrink-0 cursor-pointer">
           <i class="fa-solid fa-times"></i>
         </button>
       </div>
 
       <!-- Body -->
-      <div class="p-8 space-y-4 overflow-y-auto">
+      <div class="p-6 space-y-4 overflow-y-auto">
         <div
           v-for="(sec, i) in secciones"
           :key="i"
-          class="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-6 space-y-2.5 hover:border-indigo-300 transition"
+          class="rounded-xl border border-[#DDE3DE] bg-[#F6F7F5] p-5 space-y-2.5"
         >
-          <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xl shrink-0">
-              {{ sec.icon || '❓' }}
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-sm font-bold shrink-0">
+              {{ sec.icon || 'i' }}
             </span>
-            <p class="text-lg font-black text-gray-800">{{ sec.titulo }}</p>
+            <p class="text-sm font-bold text-[#202723]">{{ sec.titulo }}</p>
           </div>
 
-          <p class="text-base leading-relaxed text-gray-700">{{ sec.texto }}</p>
+          <p class="text-sm leading-relaxed text-[#202723]">{{ sec.texto }}</p>
 
-              <ul v-if="sec.lista && sec.lista.length" class="space-y-2">
-                <li v-for="(item, j) in sec.lista" :key="j"
-                  class="flex gap-2.5 bg-white/80 border border-indigo-100 rounded-xl px-4 py-2.5 text-base leading-relaxed text-gray-700">
-                  <span class="text-indigo-500 font-black shrink-0 mt-0.5">•</span>
-                  <span>{{ item }}</span>
-                </li>
-              </ul>
+          <ul v-if="sec.lista && sec.lista.length" class="space-y-1.5 pt-1">
+            <li v-for="(item, j) in sec.lista" :key="j"
+              class="flex gap-2 bg-white border border-[#DDE3DE] rounded-lg px-3.5 py-2 text-xs leading-relaxed text-[#202723]">
+              <span class="text-[#245C4F] font-bold shrink-0">•</span>
+              <span>{{ item }}</span>
+            </li>
+          </ul>
 
-              <div v-if="sec.formula" class="inline-block bg-white border-2 border-indigo-200 rounded-xl px-4 py-2 text-base font-bold text-indigo-700">
-                {{ sec.formula }}
-              </div>
+          <div v-if="sec.formula" class="inline-block bg-white border border-[#DDE3DE] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#245C4F]">
+            {{ sec.formula }}
+          </div>
 
-          <p v-if="sec.nota" class="text-base leading-relaxed text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
-            💡 {{ sec.nota }}
+          <p v-if="sec.nota" class="text-xs leading-relaxed text-[#A96517] bg-[#FEF7EC] border border-[#A96517]/20 rounded-lg px-3.5 py-2">
+            {{ sec.nota }}
           </p>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0">
-        <p class="text-sm text-gray-400 font-medium">{{ secciones.length }} conceptos clave</p>
-        <button @click="close" class="px-8 py-3 bg-indigo-600 text-white text-base font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition cursor-pointer">
+      <div class="px-6 py-4 bg-[#F6F7F5] border-t border-[#DDE3DE] flex items-center justify-between gap-3 shrink-0">
+        <p class="text-xs text-[#68736C] font-medium">{{ secciones.length }} conceptos clave</p>
+        <button @click="close" class="px-6 py-2 bg-[#245C4F] hover:bg-[#19483D] text-white text-xs font-semibold rounded-lg transition cursor-pointer">
           Entendido
         </button>
       </div>

@@ -1,13 +1,13 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-5">
+  <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-5">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-semibold text-gray-800">💳 Métodos de pago</h3>
-      <span class="text-xs text-gray-400">Órdenes cerradas hoy</span>
+      <h3 class="font-semibold text-[#202723] text-sm">Métodos de pago</h3>
+      <span class="text-xs text-[#68736C]">Órdenes cerradas hoy</span>
     </div>
 
-    <div v-if="sinDatos" class="flex flex-col items-center justify-center py-8 text-gray-400">
-      <span class="text-3xl mb-2">💳</span>
-      <span class="text-sm">Sin ventas registradas</span>
+    <div v-if="sinDatos" class="flex flex-col items-center justify-center py-8 text-[#68736C]">
+      <i class="fa-solid fa-credit-card text-xl mb-1 text-[#DDE3DE]"></i>
+      <span class="text-xs">Sin ventas registradas</span>
     </div>
 
     <div v-else class="flex items-center gap-6">
@@ -16,8 +16,8 @@
         <canvas ref="chartRef"></canvas>
         <!-- Total en centro -->
         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <p class="text-lg font-black text-gray-800">${{ fm(total) }}</p>
-          <p class="text-[10px] text-gray-400">total</p>
+          <p class="text-base font-bold font-mono tabular-nums text-[#202723]">${{ fm(total) }}</p>
+          <p class="text-[10px] text-[#68736C] uppercase font-semibold">total</p>
         </div>
       </div>
       <!-- Leyenda detallada -->
@@ -25,15 +25,15 @@
         <div v-for="item in breakdown" :key="item.label" class="space-y-1">
           <div class="flex justify-between text-xs">
             <div class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ background: item.color }"></span>
-              <span class="font-medium text-gray-700">{{ item.label }}</span>
+              <span class="w-2 h-2 rounded-full shrink-0" :style="{ background: item.color }"></span>
+              <span class="font-semibold text-[#202723]">{{ item.label }}</span>
             </div>
             <div class="flex gap-2 text-right">
-              <span class="font-bold text-gray-800">${{ fm(item.monto) }}</span>
-              <span class="text-gray-400 w-10 text-right">{{ item.pct }}%</span>
+              <span class="font-bold font-mono tabular-nums text-[#202723]">${{ fm(item.monto) }}</span>
+              <span class="text-[#68736C] w-10 text-right font-mono tabular-nums">{{ item.pct }}%</span>
             </div>
           </div>
-          <div class="w-full bg-gray-100 rounded-full h-1.5">
+          <div class="w-full bg-[#F0F2EF] rounded-full h-1.5">
             <div class="h-1.5 rounded-full transition-all" :style="{ width: item.pct + '%', background: item.color }"></div>
           </div>
         </div>
@@ -55,10 +55,10 @@ let chartInst  = null
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '0.00'
 
 const COLORS = {
-  efectivo:      '#10b981',
-  tarjeta:       '#6366f1',
-  transferencia: '#f59e0b',
-  otro:          '#94a3b8',
+  efectivo:      '#26734D',
+  tarjeta:       '#245C4F',
+  transferencia: '#A96517',
+  otro:          '#68736C',
 }
 
 const agrupar = (metodo) => {

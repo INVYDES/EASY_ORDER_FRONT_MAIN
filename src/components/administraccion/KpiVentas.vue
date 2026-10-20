@@ -2,36 +2,36 @@
   <div class="space-y-6">
 
     <!-- ══ FILTROS (AL INICIO) ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-800">Reporte de Ventas Detallado</h3>
-          <p class="text-sm text-gray-500 mt-1">
+          <h3 class="text-base font-semibold text-[#202723]">Reporte de Ventas Detallado</h3>
+          <p class="text-xs text-[#68736C] mt-1">
             Visualiza el flujo de ingresos de tu restaurante. Puedes comparar periodos y filtrar por meseros específicos.
           </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-4">
           <!-- Rango de Fechas -->
-          <div class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+          <div class="flex items-center gap-2 bg-[#F6F7F5] p-1.5 rounded-lg border border-[#DDE3DE]">
             <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Inicio</span>
+              <span class="text-[10px] font-semibold text-[#68736C] uppercase tracking-wider">Inicio</span>
               <input v-model="kpiFechaInicio" type="date" @change="kpiPeriodo = 'custom'"
-                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
+                class="bg-transparent text-xs font-medium text-[#202723] focus:outline-none cursor-pointer" />
             </div>
-            <div class="w-px h-8 bg-gray-200"></div>
+            <div class="w-px h-7 bg-[#DDE3DE]"></div>
             <div class="flex flex-col gap-0.5 px-2">
-              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Fin</span>
+              <span class="text-[10px] font-semibold text-[#68736C] uppercase tracking-wider">Fin</span>
               <input v-model="kpiFechaFin" type="date" @change="kpiPeriodo = 'custom'"
-                class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none" />
+                class="bg-transparent text-xs font-medium text-[#202723] focus:outline-none cursor-pointer" />
             </div>
           </div>
 
           <!-- Selector de Empleado -->
           <div class="flex flex-col gap-1">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Ventas de:</span>
+            <span class="text-[10px] font-semibold text-[#68736C] uppercase tracking-wider ml-1">Ventas de:</span>
             <select v-model="kpiMeseroId" @change="loadKpis"
-              class="px-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white cursor-pointer min-w-[160px] transition-all hover:border-indigo-300">
+              class="px-3 py-2 text-xs border border-[#DDE3DE] rounded-lg focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] outline-none bg-white cursor-pointer min-w-[160px] text-[#202723] transition-colors">
               <option value="">Todo el equipo</option>
               <option v-for="emp in empleados" :key="emp.id" :value="emp.id">
                 {{ emp.nombre || emp.name || emp.username }}
@@ -41,21 +41,21 @@
 
           <!-- Botón Actualizar -->
           <button @click="loadKpis" :disabled="loading"
-            class="h-[42px] px-6 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 disabled:opacity-50">
+            class="h-[38px] px-5 bg-[#245C4F] hover:bg-[#19483D] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer self-end">
             <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
             {{ loading ? 'Actualizando...' : 'Ver Reporte' }}
           </button>
         </div>
       </div>
 
-      <div class="mt-6 flex flex-wrap items-center gap-6 border-t border-gray-50 pt-4">
+      <div class="mt-5 flex flex-wrap items-center gap-4 border-t border-[#DDE3DE] pt-4">
         <!-- Atajos de Periodo -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-gray-400 uppercase">Período rápido:</span>
-          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <span class="text-xs font-semibold text-[#68736C]">Período:</span>
+          <div class="flex gap-1 bg-[#F0F2EF] border border-[#DDE3DE] rounded-lg p-1">
             <button v-for="p in kpiPeriodos" :key="p.key" @click="setKpiPeriodo(p.key)"
-              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiPeriodo === p.key ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700']">
+              :class="['px-3 py-1 text-xs font-medium rounded-md transition-colors',
+                kpiPeriodo === p.key ? 'bg-white shadow-xs text-[#245C4F] font-semibold' : 'text-[#68736C] hover:text-[#202723]']">
               {{ p.label }}
             </button>
           </div>
@@ -63,19 +63,19 @@
 
         <!-- Agrupación -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-gray-400 uppercase">Ver por:</span>
-          <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <span class="text-xs font-semibold text-[#68736C]">Agrupar:</span>
+          <div class="flex gap-1 bg-[#F0F2EF] border border-[#DDE3DE] rounded-lg p-1">
             <button v-for="g in grupos" :key="g.value" @click="kpiGrupo = g.value; loadKpis()"
-              :class="['px-3 py-1 text-xs font-bold rounded-lg transition-all',
-                kpiGrupo === g.value ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700']">
+              :class="['px-3 py-1 text-xs font-medium rounded-md transition-colors',
+                kpiGrupo === g.value ? 'bg-white shadow-xs text-[#202723] font-semibold' : 'text-[#68736C] hover:text-[#202723]']">
               {{ g.label }}
             </button>
           </div>
         </div>
 
         <!-- Comparación -->
-        <label class="flex items-center gap-3 text-sm font-medium text-gray-600 cursor-pointer ml-auto bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-          <input type="checkbox" v-model="mostrarComparacion" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" @change="loadKpis" />
+        <label class="flex items-center gap-2 text-xs font-medium text-[#68736C] cursor-pointer ml-auto bg-[#F6F7F5] px-3.5 py-1.5 rounded-lg border border-[#DDE3DE] hover:text-[#202723] transition-colors">
+          <input type="checkbox" v-model="mostrarComparacion" class="w-3.5 h-3.5 rounded text-[#245C4F] focus:ring-[#245C4F] cursor-pointer" @change="loadKpis" />
           Comparar vs período anterior
         </label>
       </div>
@@ -83,115 +83,143 @@
 
     <!-- ══ TIEMPOS DE PREPARACIÓN ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-5 relative">
-        <span class="absolute right-4 top-3 text-4xl opacity-15">🍳</span>
-        <div class="flex items-center gap-1.5 mb-1">
-          <p class="text-xs font-bold text-orange-500 uppercase tracking-wider">⏱ Cocina</p>
-          <MetricInfoTip titulo="Tiempo Cocina" paraQue="Rapidez con la que la cocina despacha cada pedido."
-            comoSeMide="Tiempo promedio en minutos desde que se envía la orden a cocina hasta que queda lista." />
+      <div class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">Tiempo Cocina</p>
+            <MetricInfoTip titulo="Tiempo Cocina" paraQue="Rapidez con la que la cocina despacha cada pedido."
+              comoSeMide="Tiempo promedio en minutos desde que se envía la orden a cocina hasta que queda lista." />
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-fire-burner"></i>
+          </div>
         </div>
-        <p class="text-3xl font-black text-orange-700">{{ tiempos.cocina ?? '—' }}</p>
-        <p class="text-xs text-orange-400 mt-1">min promedio hoy</p>
+        <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums">{{ tiempos.cocina ?? '—' }}</p>
+        <p class="text-xs text-[#68736C] mt-1">minutos promedio hoy</p>
       </div>
-      <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border border-blue-100 p-5 relative">
-        <span class="absolute right-4 top-3 text-4xl opacity-15">🍹</span>
-        <div class="flex items-center gap-1.5 mb-1">
-          <p class="text-xs font-bold text-blue-500 uppercase tracking-wider">⏱ Barra</p>
-          <MetricInfoTip titulo="Tiempo Barra" paraQue="Cuánto tarda en salir cada bebida."
-            comoSeMide="Tiempo promedio en minutos desde que se envía la orden a barra hasta que queda lista." />
+
+      <div class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">Tiempo Barra</p>
+            <MetricInfoTip titulo="Tiempo Barra" paraQue="Cuánto tarda en salir cada bebida."
+              comoSeMide="Tiempo promedio en minutos desde que se envía la orden a barra hasta que queda lista." />
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-wine-glass"></i>
+          </div>
         </div>
-        <p class="text-3xl font-black text-blue-700">{{ tiempos.barra ?? '—' }}</p>
-        <p class="text-xs text-blue-400 mt-1">min promedio hoy</p>
+        <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums">{{ tiempos.barra ?? '—' }}</p>
+        <p class="text-xs text-[#68736C] mt-1">minutos promedio hoy</p>
       </div>
-      <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl border border-pink-100 p-5 relative">
-        <span class="absolute right-4 top-3 text-4xl opacity-15">🍰</span>
-        <div class="flex items-center gap-1.5 mb-1">
-          <p class="text-xs font-bold text-pink-500 uppercase tracking-wider">⏱ Postres</p>
-          <MetricInfoTip titulo="Tiempo Postres" paraQue="Cuánto tarda la preparación de postres."
-            comoSeMide="Tiempo promedio en minutos desde que se envía la orden a postres hasta que queda lista." />
+
+      <div class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">Tiempo Postres</p>
+            <MetricInfoTip titulo="Tiempo Postres" paraQue="Cuánto tarda la preparación de postres."
+              comoSeMide="Tiempo promedio en minutos desde que se envía la orden a postres hasta que queda lista." />
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-cake-candles"></i>
+          </div>
         </div>
-        <p class="text-3xl font-black text-pink-700">{{ tiempos.postres ?? '—' }}</p>
-        <p class="text-xs text-pink-400 mt-1">min promedio hoy</p>
+        <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums">{{ tiempos.postres ?? '—' }}</p>
+        <p class="text-xs text-[#68736C] mt-1">minutos promedio hoy</p>
       </div>
     </div>
 
     <!-- ══ KPI CARDS ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div v-for="card in kpiCards" :key="card.label"
-        class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative">
+        class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-xs font-bold text-gray-400 uppercase flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider flex items-center gap-1.5">
               {{ card.label }}
               <MetricInfoTip :titulo="card.label" :paraQue="card.paraQue" :comoSeMide="card.comoSeMide" />
             </p>
-            <p class="text-2xl font-black text-gray-900 mt-1">{{ card.value }}</p>
+            <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums mt-1">{{ card.value }}</p>
           </div>
-          <div class="p-2 bg-indigo-50 rounded-lg text-xl">{{ card.icon }}</div>
+          <div class="w-8 h-8 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-sm shrink-0">
+            <i :class="card.iconClass || 'fa-solid fa-chart-simple'"></i>
+          </div>
         </div>
 
-        <div v-if="mostrarComparacion && card.rawAnterior" class="mt-3 flex items-center gap-1 text-xs">
-          <span :class="dc(card.raw, card.rawAnterior)" class="px-1.5 py-0.5 rounded-md flex items-center">
+        <div v-if="mostrarComparacion && card.rawAnterior" class="mt-3 flex items-center gap-1.5 text-xs">
+          <span :class="dc(card.raw, card.rawAnterior)" class="px-2 py-0.5 rounded font-mono font-medium flex items-center gap-1">
             {{ di(card.raw, card.rawAnterior) }} {{ dp(card.raw, card.rawAnterior) }}%
           </span>
-          <span class="text-gray-400">vs anterior</span>
+          <span class="text-[#68736C]">vs anterior</span>
         </div>
       </div>
     </div>
 
     <!-- ══ INVERSIÓN / UTILIDAD + PROPINAS ══ -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 relative">
-        <span class="absolute right-3 top-2 text-4xl opacity-10">📦</span>
-        <div class="flex items-center gap-1.5">
-          <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
-          <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de producción de los platillos vendidos (insumos + tiempo de preparación + indirectos)."
-            comoSeMide="Suma del costo integral de los platillos vendidos en el período (recetas + minutos de cocina + 5% indirectos)." />
+      <div class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">Inversión Producto</p>
+            <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de producción de los platillos vendidos (insumos + tiempo de preparación + indirectos)."
+              comoSeMide="Suma del costo integral de los platillos vendidos en el período (recetas + minutos de cocina + 5% indirectos)." />
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-box"></i>
+          </div>
         </div>
-        <p class="text-2xl font-black text-red-600 mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
-        <p class="text-xs text-gray-400 mt-1">costo de producción (insumos + tiempo)</p>
+        <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
+        <p class="text-xs text-[#68736C] mt-1">Costo de producción (insumos + tiempo)</p>
       </div>
-      <div :class="['rounded-2xl border shadow-sm p-5 relative overflow-hidden transition-all',
-        (finanzasDia.utilidadTotal || 0) < 0 
-          ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' 
-          : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200']">
-        <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
-        <div class="flex items-center gap-1.5">
-          <p :class="['text-xs font-bold uppercase tracking-wider', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-red-600' : 'text-emerald-600']">
-            Utilidad Neta del Día
-          </p>
-          <MetricInfoTip titulo="Utilidad Neta del Día" paraQue="Ganancia real generada tras cubrir insumos, nómina y costos operativos."
-            comoSeMide="Ventas - insumos de lo vendido - nómina activa diaria - costos fijos diarios - gastos/retiros. Coincide con Resumen General." />
+
+      <div class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">
+              Utilidad Neta del Día
+            </p>
+            <MetricInfoTip titulo="Utilidad Neta del Día" paraQue="Ganancia real generada tras cubrir insumos, nómina y costos operativos."
+              comoSeMide="Ventas - insumos de lo vendido - nómina activa diaria - costos fijos diarios - gastos/retiros. Coincide con Resumen General." />
+          </div>
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs"
+            :class="(finanzasDia.utilidadTotal || 0) < 0 ? 'bg-[#FBEBEB] text-[#B93838]' : 'bg-[#EBF5EE] text-[#26734D]'">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
         </div>
-        <p :class="['text-2xl font-black mt-1', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-red-700' : 'text-emerald-700']">
+        <p :class="['text-2xl font-bold font-mono tabular-nums mt-1', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-[#B93838]' : 'text-[#26734D]']">
           {{ (finanzasDia.utilidadTotal || 0) < 0 ? '-$' + fm(Math.abs(finanzasDia.utilidadTotal)) : '$' + fm(finanzasDia.utilidadTotal) }}
         </p>
-        <p :class="['text-xs mt-1 font-medium', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-red-500' : 'text-emerald-500']">
+        <p :class="['text-xs mt-1 font-medium', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-[#B93838]' : 'text-[#26734D]']">
           {{ (finanzasDia.utilidadTotal || 0) < 0 ? 'En recuperación (nómina y gastos operativos)' : 'Ganancia limpia del día' }}
         </p>
       </div>
-      <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
-        <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
-        <div class="flex items-center gap-1.5">
-          <p class="text-xs font-bold text-violet-500 uppercase tracking-wider">Propinas</p>
-          <MetricInfoTip titulo="Propinas" paraQue="Propinas que recibió el equipo en el período."
-            comoSeMide="Suma de propinas en efectivo + terminal + transferencia." />
+
+      <div class="bg-white rounded-xl border border-[#DDE3DE] p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs font-semibold text-[#68736C] uppercase tracking-wider">Propinas</p>
+            <MetricInfoTip titulo="Propinas" paraQue="Propinas que recibió el equipo en el período."
+              comoSeMide="Suma de propinas en efectivo + terminal + transferencia." />
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] flex items-center justify-center text-xs">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
         </div>
-        <p class="text-2xl font-black text-violet-700 mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
-        <p class="text-xs text-gray-400 mt-1">Efectivo + Terminal + Transferencia</p>
+        <p class="text-2xl font-bold text-[#202723] font-mono tabular-nums mt-1">${{ fm(finanzasDia.propinasDigitales) }}</p>
+        <p class="text-xs text-[#68736C] mt-1">Efectivo + Terminal + Transferencia</p>
       </div>
     </div>
 
     <!-- ══ GRÁFICA EVOLUCIÓN DE VENTAS ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h3 class="font-bold text-gray-800 text-lg">Evolución de Ventas</h3>
-          <p class="text-sm text-gray-400">Desglose por {{ kpiGrupoLabel }}</p>
+          <h3 class="font-semibold text-[#202723] text-base">Evolución de Ventas</h3>
+          <p class="text-xs text-[#68736C] mt-0.5">Desglose por {{ kpiGrupoLabel }}</p>
         </div>
         <div class="text-right">
-          <p class="text-xs text-gray-400 uppercase font-bold">Total del Período</p>
-          <p class="text-xl font-black text-indigo-600">${{ fm(kpiData.totales?.total_ventas) }}</p>
+          <p class="text-[10px] text-[#68736C] uppercase font-semibold tracking-wider">Total del Período</p>
+          <p class="text-lg font-bold text-[#245C4F] font-mono tabular-nums">${{ fm(kpiData.totales?.total_ventas) }}</p>
         </div>
       </div>
       <div class="relative h-80">
@@ -202,29 +230,28 @@
     <!-- ══ SEGUNDA FILA: CANAL DE VENTAS + MARGEN FUERA DE TOP 5 ══ -->
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-      <!-- DONUT Canal de Ventas (Con selectores de período independientes) -->
+      <!-- DONUT Canal de Ventas -->
       <CanalVentasChart :api-url="apiUrl" :get-headers="getHeaders" :refresh-key="refreshKey" :server-date="serverDate" />
 
       <!-- Productos mayor margen FUERA del Top 5 -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h3 class="font-bold text-gray-800 mb-1 flex items-center gap-2">
-          <span>💎</span> Mayor Margen (fuera del Top 5 ventas)
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
+        <h3 class="font-semibold text-[#202723] text-base mb-1">
+          Mayor Margen (fuera del Top 5 ventas)
         </h3>
-        <p class="text-xs text-gray-400 mb-4">Productos con alta utilidad y bajo volumen — oportunidad de impulso</p>
-        <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-          <div v-if="productosMargenFueraTop.length === 0" class="text-center py-8 text-gray-400 text-sm italic">
+        <p class="text-xs text-[#68736C] mb-4">Productos con alta utilidad y bajo volumen — oportunidad de impulso</p>
+        <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+          <div v-if="productosMargenFueraTop.length === 0" class="text-center py-8 text-[#68736C] text-xs italic">
             Sin datos disponibles
           </div>
           <div v-for="(p, i) in productosMargenFueraTop" :key="p.id || i"
-            class="flex items-center justify-between p-3 rounded-xl border"
-            :class="i === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-gray-400 w-4">{{ i+1 }}</span>
-              <span class="text-sm font-semibold text-gray-700">{{ p.nombre }}</span>
+            class="flex items-center justify-between p-3 rounded-lg border border-[#DDE3DE] bg-[#F6F7F5]">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-semibold text-[#68736C] w-4 text-center">{{ i+1 }}</span>
+              <span class="text-xs font-semibold text-[#202723]">{{ p.nombre }}</span>
             </div>
             <div class="text-right">
-              <p class="text-sm font-black text-emerald-600">{{ fm(p.margen_pct) }}%</p>
-              <p class="text-[10px] text-gray-400">{{ p.ventas }} uds</p>
+              <p class="text-xs font-bold text-[#26734D] font-mono tabular-nums">{{ fm(p.margen_pct) }}%</p>
+              <p class="text-[10px] text-[#68736C]">{{ p.ventas }} uds</p>
             </div>
           </div>
         </div>
@@ -232,11 +259,11 @@
     </div>
 
     <!-- ══ RENDIMIENTO VS ANTERIOR ══ -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h3 class="font-bold text-gray-800 mb-4">📈 Rendimiento vs Período Anterior</h3>
+    <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-6">
+      <h3 class="font-semibold text-[#202723] text-base mb-4">Rendimiento vs Período Anterior</h3>
       <div v-if="!mostrarComparacion" class="h-60 flex flex-col items-center justify-center text-center">
-        <p class="text-gray-400 text-sm mb-4">Activa la comparación para analizar el crecimiento</p>
-        <button @click="mostrarComparacion=true; loadKpis()" class="text-indigo-600 font-bold text-sm hover:underline">Activar ahora</button>
+        <p class="text-[#68736C] text-xs mb-3">Activa la comparación para analizar el crecimiento</p>
+        <button @click="mostrarComparacion=true; loadKpis()" class="text-[#245C4F] font-semibold text-xs hover:underline cursor-pointer">Activar ahora</button>
       </div>
       <div v-else class="h-60">
         <canvas ref="chartComparacion"></canvas>
@@ -302,7 +329,7 @@ const grupos = [{ label: 'Día', value: 'dia' }, { label: 'Semana', value: 'sema
 const fm = (v) => v ? Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
 const dp = (a, b) => b ? Math.abs(((a - b) / b) * 100).toFixed(1) : '0'
 const di = (a, b) => a >= b ? '↑' : '↓'
-const dc = (a, b) => a >= b ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+const dc = (a, b) => Number(a||0) >= Number(b||0) ? 'bg-[#EBF5EE] text-[#26734D]' : 'bg-[#FBEBEB] text-[#B93838]'
 const fmtDate = (d) => d.toLocaleDateString('en-CA')
 const getServerToday = () => props.serverDate || new Date().toLocaleDateString('en-CA')
 
@@ -313,9 +340,9 @@ const totalPedidosCanal = computed(() =>
 )
 
 const canalLeyenda = computed(() => [
-  { label: 'Local',    color: '#4f46e5', valor: canalVentas.value.Local || 0 },
-  { label: 'Pickup',   color: '#f59e0b', valor: canalVentas.value.Pickup || 0 },
-  { label: 'Delivery', color: '#10b981', valor: canalVentas.value.Delivery || 0 },
+  { label: 'Local',    color: '#245C4F', valor: canalVentas.value.Local || 0 },
+  { label: 'Pickup',   color: '#A96517', valor: canalVentas.value.Pickup || 0 },
+  { label: 'Delivery', color: '#26734D', valor: canalVentas.value.Delivery || 0 },
 ])
 
 // --- LÓGICA DE PERIODOS ---
@@ -339,13 +366,13 @@ const setKpiPeriodo = (key) => {
 
 // --- KPI CARDS ---
 const kpiCards = computed(() => [
-  { label: 'Ingresos', value: '$' + fm(kpiData.value.totales?.total_ventas), icon: '💰', raw: kpiData.value.totales?.total_ventas, rawAnterior: kpiAnterior.value.totales?.total_ventas,
+  { label: 'Ingresos', value: '$' + fm(kpiData.value.totales?.total_ventas), iconClass: 'fa-solid fa-dollar-sign', raw: kpiData.value.totales?.total_ventas, rawAnterior: kpiAnterior.value.totales?.total_ventas,
     paraQue: 'Total facturado en el período seleccionado.',
     comoSeMide: 'Suma del total de todas las ventas cerradas en el rango de fechas elegido.' },
-  { label: 'Órdenes', value: kpiData.value.totales?.total_ordenes || 0, icon: '🧾', raw: kpiData.value.totales?.total_ordenes, rawAnterior: kpiAnterior.value.totales?.total_ordenes,
+  { label: 'Órdenes', value: kpiData.value.totales?.total_ordenes || 0, iconClass: 'fa-solid fa-receipt', raw: kpiData.value.totales?.total_ordenes, rawAnterior: kpiAnterior.value.totales?.total_ordenes,
     paraQue: 'Número de órdenes cerradas durante el período.',
     comoSeMide: 'Conteo de todas las órdenes con estado cerrado en el rango de fechas.' },
-  { label: 'Ticket Prom.', value: '$' + fm(kpiData.value.totales?.promedio_por_orden), icon: '📈', raw: kpiData.value.totales?.promedio_por_orden, rawAnterior: kpiAnterior.value.totales?.promedio_por_orden,
+  { label: 'Ticket Prom.', value: '$' + fm(kpiData.value.totales?.promedio_por_orden), iconClass: 'fa-solid fa-chart-line', raw: kpiData.value.totales?.promedio_por_orden, rawAnterior: kpiAnterior.value.totales?.promedio_por_orden,
     paraQue: 'Cuánto gasta en promedio cada comanda.',
     comoSeMide: 'Ingresos del período ÷ número de órdenes del período.' },
 ])
@@ -509,7 +536,7 @@ const buildCharts = async () => {
         datasets: [{
           label: 'Ventas',
           data: kpiData.value.ventas.map(v => v.total_ventas),
-          backgroundColor: '#10b981',
+          backgroundColor: '#245C4F',
           borderRadius: 4
         }]
       },
@@ -544,7 +571,7 @@ const buildCharts = async () => {
         labels: ['Local', 'Pickup', 'Delivery'],
         datasets: [{
           data: vals,
-          backgroundColor: ['#4f46e5', '#f59e0b', '#10b981'],
+          backgroundColor: ['#245C4F', '#A96517', '#26734D'],
           borderWidth: 0,
           hoverOffset: 8
         }]
@@ -568,8 +595,8 @@ const buildCharts = async () => {
       data: {
         labels: ['Ventas', 'Ticket Prom.'],
         datasets: [
-          { label: 'Actual', data: [kpiData.value.totales?.total_ventas, kpiData.value.totales?.promedio_por_orden], backgroundColor: '#6366f1' },
-          { label: 'Anterior', data: [kpiAnterior.value.totales?.total_ventas, kpiAnterior.value.totales?.promedio_por_orden], backgroundColor: '#e2e8f0' }
+          { label: 'Actual', data: [kpiData.value.totales?.total_ventas, kpiData.value.totales?.promedio_por_orden], backgroundColor: '#245C4F', borderRadius: 4 },
+          { label: 'Anterior', data: [kpiAnterior.value.totales?.total_ventas, kpiAnterior.value.totales?.promedio_por_orden], backgroundColor: '#DDE3DE', borderRadius: 4 }
         ]
       },
       options: { responsive: true, maintainAspectRatio: false }
