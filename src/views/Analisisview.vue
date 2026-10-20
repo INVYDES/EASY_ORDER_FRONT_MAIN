@@ -3,31 +3,7 @@
 
     <SucursalBadge />
 
-    <div class="bg-gradient-to-r from-indigo-600 to-violet-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-100 mb-8 relative overflow-hidden">
-      <div class="relative z-10">
-        <h2 class="text-3xl font-black tracking-tight">Centro de Inteligencia</h2>
-        <p class="text-indigo-100 mt-2 max-w-xl text-lg leading-relaxed font-medium">
-          Bienvenido al panel de control. Aquí puedes ver cómo va tu negocio hoy, analizar tus productos más vendidos y revisar el desempeño de tu equipo.
-        </p>
-        <div class="flex gap-4 mt-6">
-          <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-            <span class="text-xs font-bold uppercase tracking-wider">Datos en vivo</span>
-          </div>
-          <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-            <i class="fa-solid fa-shield-check text-indigo-200"></i>
-            <span class="text-xs font-bold uppercase tracking-wider">Reporte Seguro</span>
-          </div>
-        </div>
-      </div>
-      <!-- Decoración fondo -->
-      <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-      <div class="absolute right-10 top-10 text-white/10 text-9xl">
-        <i class="fa-solid fa-chart-line"></i>
-      </div>
-    </div>
-
-    <!-- Tabs -->
+    <!-- Tabs de navegación -->
     <div class="flex flex-wrap items-center gap-2 bg-gray-100 rounded-2xl p-1.5 w-fit">
       <button v-for="t in tabs" :key="t.key" @click="activeTab = t.key"
         :class="['px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2',
