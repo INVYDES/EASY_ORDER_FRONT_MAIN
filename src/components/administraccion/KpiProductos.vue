@@ -177,9 +177,9 @@
           </div>
           <div class="flex items-center gap-2">
             <div class="px-4 py-2 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
-              🔥 Merma Real: ${{ fm(totalMermas) }}
-              <span v-if="costoRealMermas > 0" class="block text-[10px] text-red-400 font-bold lowercase">
-                (costo insumos: ${{ fm(costoRealMermas) }})
+              🔥 Merma Real: ${{ fm(costoRealMermas || totalMermas) }}
+              <span v-if="totalMermas > 0" class="block text-[10px] text-red-400 font-bold lowercase">
+                (costo productos: ${{ fm(totalMermas) }})
               </span>
             </div>
             <div v-if="totalCancelacionesSinMerma > 0" class="px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest border border-slate-200">

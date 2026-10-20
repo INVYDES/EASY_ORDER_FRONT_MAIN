@@ -60,6 +60,7 @@
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Merma real (cancelado desde caja)</p>
           <p class="text-5xl font-black text-rose-600 tracking-tighter">${{ fm(mermasCaja) }}</p>
           <p class="text-xs text-gray-400 mt-2 font-medium">
+            <span v-if="costoProductosCaja > 0" class="mr-3">Costo productos: <span class="font-black text-slate-500">${{ fm(costoProductosCaja) }}</span></span>
             Cancelaciones de mesero (sin pérdida): <span class="font-black text-slate-500">${{ fm(cancelacionesMesero) }}</span>
           </p>
         </div>
@@ -118,6 +119,7 @@ const kpis = ref({
 
 const listaCajeros = ref([])
 const mermasCaja = ref(0)
+const costoProductosCaja = ref(0)
 const cancelacionesMesero = ref(0)
 
 const filtros = reactive({
@@ -162,7 +164,8 @@ const loadKpis = async () => {
       params: { fecha_inicio: filtros.fecha_desde, fecha_fin: filtros.fecha_hasta }
     })
     if (devueltos?.success) {
-      mermasCaja.value = devueltos.total_mermas || 0
+      mermasCaja.value = devueltos.costo_real_mermas ?? devueltos.total_mermas ?? 0
+      costoProductosCaja.value = devueltos.total_mermas || 0
       cancelacionesMesero.value = devueltos.total_cancelaciones_sin_merma || 0
     }
   } catch (e) {
