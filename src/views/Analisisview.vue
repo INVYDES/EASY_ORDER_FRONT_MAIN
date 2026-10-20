@@ -282,8 +282,8 @@ const AYUDA = {
       { icon: '🗓️', titulo: '¿Dónde estoy?', texto: 'Resumen del negocio del día de hoy: cuánto vendiste y cuánto ganaste.', nota: 'Los números se actualizan solos cada minuto.' },
       { icon: '💰', titulo: 'Ventas hoy', texto: 'Todo lo que ingresó por órdenes cerradas de hoy.', formula: 'Suma de todas las órdenes cerradas del día', nota: 'Se llena solo cuando cierras órdenes en Caja.' },
       { icon: '📈', titulo: 'Ticket promedio', texto: 'Cuánto gasta cada comensal por orden.', formula: 'Ventas del día ÷ Órdenes del día' },
-      { icon: '⭐', titulo: 'Utilidad bruta', texto: 'Lo que ganaste antes de sacar dinero de caja.', formula: 'Ventas − Costo de producción (ingredientes + mano de obra)', nota: 'Para que sea exacto, registra ingredientes y tiempo de producción en tus productos.' },
-      { icon: '🏆', titulo: 'Utilidad neta', texto: 'Lo que de verdad te queda al final del día.', formula: 'Utilidad bruta − Retiros de caja' },
+      { icon: '⭐', titulo: 'Utilidad bruta', texto: 'Margen comercial generado por los alimentos y bebidas vendidos.', formula: 'Ventas − Costo de insumos (materia prima)', nota: 'Para que sea exacto, registra ingredientes y costos en tus productos.' },
+      { icon: '🏆', titulo: 'Utilidad neta', texto: 'Lo que realmente le queda al negocio tras cubrir el costo de abrir y operar.', formula: 'Utilidad bruta − Nómina activa diaria − Costo fijo diario − Gastos y retiros de caja', nota: 'Comienza en negativo al abrir el día y pasa a verde al superar el punto de equilibrio.' },
       { icon: '📊', titulo: 'Gráficas', texto: 'Ventas por hora, ventas de la semana, canal (Local/Pickup/Delivery), forma de pago y top productos.', nota: 'Toda la info proviene automático de las órdenes de caja.' },
     ],
   },
@@ -488,13 +488,13 @@ const loadFilteredData = async () => {
       try {
         const uRes = await apiClient.get(`/reportes/inversion-utilidad?fecha_inicio=${fechaDesde.value}&fecha_fin=${fechaHasta.value}`)
         if (uRes.success && uRes.data) {
-          filteredDashData.utilidad_bruta_hoy = uRes.data.utilidad_operativa || uRes.data.utilidad_bruta || 0
-          filteredDashData.utilidad_hoy       = uRes.data.utilidad_operativa || uRes.data.utilidad_neta || uRes.data.utilidad_bruta || 0
+          filteredDashData.utilidad_bruta_hoy = uRes.data.utilidad_bruta ?? uRes.data.utilidad_operativa ?? 0
+          filteredDashData.utilidad_hoy       = uRes.data.utilidad_neta ?? uRes.data.utilidad_operativa ?? uRes.data.utilidad_bruta ?? 0
         }
       } catch (e) {
         console.error('Error al cargar utilidad filtrada:', e)
-        filteredDashData.utilidad_bruta_hoy = 0
-        filteredDashData.utilidad_hoy       = dData.data.utilidad_neta_hoy || 0
+        filteredDashData.utilidad_bruta_hoy = dData.data?.utilidad_bruta_hoy ?? 0
+        filteredDashData.utilidad_hoy       = dData.data?.utilidad_neta_hoy ?? 0
       }
       
       filteredOrdenesPorEstado.value = dData.data.ordenes_por_estado || []

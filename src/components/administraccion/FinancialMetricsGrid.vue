@@ -56,11 +56,11 @@
     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
       <div class="flex items-center gap-1.5 mb-3">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gastos Operativos</p>
-        <MetricInfoTip titulo="Gastos Operativos" paraQue="Costos fijos necesarios para mantener el negocio operando."
-          comoSeMide="Renta, nómina, servicios, software y marketing del mes." />
+        <MetricInfoTip titulo="Gastos Operativos" paraQue="Costos fijos y gastos necesarios para mantener el negocio operando."
+          comoSeMide="Renta, servicios, software, marketing y gastos directos registrados del período." />
       </div>
       <span class="text-2xl font-bold text-red-500">${{ metrics.gastosOperativos || 0 }}</span>
-      <p class="text-[10px] text-gray-400 mt-1">Renta, nómina, servicios, soft, mkt</p>
+      <p class="text-[10px] text-gray-400 mt-1">Renta, servicios, soft, mkt y gastos</p>
     </div>
 
     <!-- 6. ⭐ Ganancia Neta Mensual — destacada -->

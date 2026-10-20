@@ -145,21 +145,30 @@
         <span class="absolute right-3 top-2 text-4xl opacity-10">📦</span>
         <div class="flex items-center gap-1.5">
           <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Inversión Producto</p>
-          <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de materias primas e insumos vendidos."
-            comoSeMide="Suma de recetas/insumos de los platillos vendidos en el período (Food Cost)." />
+          <MetricInfoTip titulo="Inversión Producto" paraQue="Costo de producción de los platillos vendidos (insumos + tiempo de preparación + indirectos)."
+            comoSeMide="Suma del costo integral de los platillos vendidos en el período (recetas + minutos de cocina + 5% indirectos)." />
         </div>
         <p class="text-2xl font-black text-red-600 mt-1">${{ fm(finanzasDia.inversionProducto) }}</p>
-        <p class="text-xs text-gray-400 mt-1">costo de insumos / materia prima</p>
+        <p class="text-xs text-gray-400 mt-1">costo de producción (insumos + tiempo)</p>
       </div>
-      <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 shadow-sm p-5 relative overflow-hidden">
+      <div :class="['rounded-2xl border shadow-sm p-5 relative overflow-hidden transition-all',
+        (finanzasDia.utilidadTotal || 0) < 0 
+          ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' 
+          : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200']">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💵</span>
         <div class="flex items-center gap-1.5">
-          <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Utilidad Total del Día</p>
-          <MetricInfoTip titulo="Utilidad Total del Día" paraQue="Ganancia real generada en el día."
-            comoSeMide="Ventas del día - costo de producción de lo vendido (insumos y tiempo de preparación). Coincide con Resumen General." />
+          <p :class="['text-xs font-bold uppercase tracking-wider', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-red-600' : 'text-emerald-600']">
+            Utilidad Neta del Día
+          </p>
+          <MetricInfoTip titulo="Utilidad Neta del Día" paraQue="Ganancia real generada tras cubrir insumos, nómina y costos operativos."
+            comoSeMide="Ventas - insumos de lo vendido - nómina activa diaria - costos fijos diarios - gastos/retiros. Coincide con Resumen General." />
         </div>
-        <p class="text-2xl font-black text-emerald-700 mt-1">${{ fm(finanzasDia.utilidadTotal) }}</p>
-        <p class="text-xs text-emerald-500 mt-1">Utilidad del día (Ventas - Costo Producción)</p>
+        <p :class="['text-2xl font-black mt-1', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-red-700' : 'text-emerald-700']">
+          {{ (finanzasDia.utilidadTotal || 0) < 0 ? '-$' + fm(Math.abs(finanzasDia.utilidadTotal)) : '$' + fm(finanzasDia.utilidadTotal) }}
+        </p>
+        <p :class="['text-xs mt-1 font-medium', (finanzasDia.utilidadTotal || 0) < 0 ? 'text-red-500' : 'text-emerald-500']">
+          {{ (finanzasDia.utilidadTotal || 0) < 0 ? 'En recuperación (nómina y gastos operativos)' : 'Ganancia limpia del día' }}
+        </p>
       </div>
       <div class="bg-white rounded-2xl border border-violet-100 shadow-sm p-5 relative overflow-hidden">
         <span class="absolute right-3 top-2 text-4xl opacity-10">💳</span>
@@ -430,7 +439,7 @@ const loadKpis = async () => {
       if (fData.success && fData.data) {
         finanzasDia.value.inversionProducto = fData.data.inversion_producto || 0
         finanzasDia.value.inversionManoObra = fData.data.inversion_mano_obra || 0
-        finanzasDia.value.utilidadTotal     = fData.data.utilidad_operativa ?? fData.data.utilidad_neta ?? fData.data.utilidad_bruta ?? 0
+        finanzasDia.value.utilidadTotal     = fData.data.utilidad_neta ?? fData.data.utilidad_operativa ?? fData.data.utilidad_bruta ?? 0
       }
     } catch { /* fallback */ }
 
@@ -449,11 +458,9 @@ const loadKpis = async () => {
     }
 
     // Fallback: calcular utilidad total desde ventas - costos
-    if (!finanzasDia.value.utilidadTotal && kpiData.value.totales?.total_ventas) {
+    if ((finanzasDia.value.utilidadTotal === undefined || finanzasDia.value.utilidadTotal === null) && kpiData.value.totales?.total_ventas) {
       const ventas = Number(kpiData.value.totales.total_ventas) || 0
-      finanzasDia.value.utilidadTotal = Math.max(0,
-        ventas - finanzasDia.value.inversionProducto - finanzasDia.value.inversionManoObra
-      )
+      finanzasDia.value.utilidadTotal = ventas - (finanzasDia.value.inversionProducto || 0) - (finanzasDia.value.inversionManoObra || 0)
     }
 
     // Cargar propinas
