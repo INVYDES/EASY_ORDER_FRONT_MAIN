@@ -672,8 +672,19 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div class="caja-layout">
-    <SucursalBadge />
+  <div class="caja-layout space-y-6">
+    <!-- ══ HEADER FIJO DE CAJA (Sticky Top) ══ -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] space-y-3 shadow-xs">
+      <SucursalBadge />
+
+      <CajaHeader
+        :caja-abierta="cajaAbierta"
+        :ws-conectado="wsConectado"
+        :ultima-actualizacion="ultimaActualizacion"
+        :ordenes-listas="ordenesListas"
+        :fecha-hoy="fechaHoy"
+      />
+    </div>
 
     <audio ref="audioNuevaOrden" preload="auto">
       <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbwZlgMC9bkMjUxJZkODuDuuLZu4pYNj2Ow+nfv4dRMC+AqNzZso5mUEBHlMzWyqeEaV5bi9Hc0bGUeGteaZHO3tW5lHhsaZPP4dvDo4JwbmuY1OTWv6GHdnBtnNfm3sKliH11cqHa6uTKq4t9eHem3e3ozK+Pf3l4rOP07tOykIF8e7Hm8fLYtoZ+fH+57vf23LiHgH2Fvu/68OC9i4J/i8Lw+vTjwI6Fg5LH8fz258OPh4eZy/L89+nFkImKn9D0/vrs" />
@@ -702,14 +713,6 @@ onUnmounted(() => {
       :cash-in-register="cashInRegister" :cortes-x-amount="cortesXAmount" :corte-fecha="corteFecha" />
 
     <div class="main-content">
-      
-      <CajaHeader
-        :caja-abierta="cajaAbierta"
-        :ws-conectado="wsConectado"
-        :ultima-actualizacion="ultimaActualizacion"
-        :ordenes-listas="ordenesListas"
-        :fecha-hoy="fechaHoy"
-      />
 
       <div v-if="loading.general" class="loading-wrapper">
         <div class="custom-spinner"></div>
@@ -719,7 +722,9 @@ onUnmounted(() => {
       <template v-else>
         <template v-if="!cajaAbierta">
           <div class="empty-state-card">
-            <div class="empty-state-icon">🔒</div>
+            <div class="empty-state-icon">
+              <i class="fa-solid fa-lock text-3xl text-[#68736C]"></i>
+            </div>
             <div class="empty-state-text">
               <h2>Caja cerrada</h2>
               <p>Inicia una nueva jornada para registrar ventas y movimientos.</p>
@@ -727,9 +732,10 @@ onUnmounted(() => {
             <button
               :disabled="esAdminOPropietario"
               @click="showOpenModal = true"
-              :class="['btn-primary-action', esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none hover:bg-slate-300 hover:transform-none' : '']"
+              :class="['btn-primary-action flex items-center justify-center gap-2', esAdminOPropietario ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none hover:bg-slate-300 hover:transform-none' : 'bg-[#245C4F] hover:bg-[#19483D] text-white shadow-xs']"
             >
-              {{ esAdminOPropietario ? '🚫 Apertura Bloqueada' : '🔓 Abrir Caja Ahora' }}
+              <i :class="esAdminOPropietario ? 'fa-solid fa-ban' : 'fa-solid fa-lock-open'"></i>
+              <span>{{ esAdminOPropietario ? 'Apertura Bloqueada' : 'Abrir Caja Ahora' }}</span>
             </button>
           </div>
 

@@ -41,7 +41,7 @@
               <label class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Contraseña</label>
               <router-link
                 to="/recuperar-contrasena"
-                class="text-xs text-indigo-600 font-bold hover:text-indigo-800 transition"
+                class="text-xs text-[#245C4F] font-bold hover:text-[#1D4A3F] transition"
               >
                 ¿Olvidaste tu contraseña?
               </router-link>
@@ -52,12 +52,12 @@
                 :type="showPassword ? 'text' : 'password'"
                 required
                 placeholder="••••••••"
-                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-all shadow-sm text-sm"
+                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:border-[#245C4F] focus:outline-none transition-all shadow-sm text-sm"
               />
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-3 px-2 py-1 text-[10px] font-bold text-gray-400 hover:text-indigo-600 transition uppercase tracking-widest"
+                class="absolute right-3 top-3 px-2 py-1 text-[10px] font-bold text-gray-400 hover:text-[#245C4F] transition uppercase tracking-widest cursor-pointer"
               >
                 {{ showPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
@@ -67,7 +67,7 @@
           <!-- Mantener sesión -->
           <div class="flex items-center justify-between py-1">
             <label class="flex items-center gap-2 cursor-pointer select-none group">
-              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 text-gray-800 focus:ring-0 cursor-pointer shadow-sm" />
+              <input type="checkbox" v-model="keepLoggedIn" class="w-4 h-4 rounded border-gray-300 text-[#245C4F] focus:ring-0 cursor-pointer shadow-sm accent-[#245C4F]" />
               <span class="text-xs text-gray-500 group-hover:text-gray-700 transition">Recordarme en este equipo</span>
             </label>
           </div>
@@ -75,7 +75,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-4 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 font-bold shadow-md flex items-center justify-center gap-2"
+            class="w-full py-4 text-white bg-[#245C4F] rounded-xl hover:bg-[#1D4A3F] active:scale-[0.98] transition-all disabled:opacity-50 font-bold shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
             <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ loading ? 'VERIFICANDO...' : 'ENTRAR AL SISTEMA' }}
@@ -85,10 +85,10 @@
         <div class="mt-12 pt-8 border-t border-gray-100 flex flex-col items-center gap-4">
           <p class="text-sm text-gray-500">
             ¿Eres dueño y no tienes cuenta?
-            <router-link to="/registro/dueno" class="text-indigo-600 font-bold hover:underline ml-1">Regístrate aquí</router-link>
+            <router-link to="/registro/dueno" class="text-[#245C4F] font-bold hover:underline ml-1">Regístrate aquí</router-link>
           </p>
           <div class="flex gap-4">
-            <router-link to="/registro/cliente" class="text-xs text-gray-400 hover:text-indigo-600 transition font-medium italic">Acceso Clientes</router-link>
+            <router-link to="/registro/cliente" class="text-xs text-gray-400 hover:text-[#245C4F] transition font-medium italic">Acceso Clientes</router-link>
           </div>
         </div>
 

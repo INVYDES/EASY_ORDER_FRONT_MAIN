@@ -15,8 +15,8 @@
       </div>
     </div>
 
-    <!-- Encabezado -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <!-- Encabezado (Sticky frosted header) -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] shadow-xs flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="text-xl md:text-2xl font-bold tracking-tight text-[#202723]">Configuración Financiera</h2>
         <p class="text-xs md:text-sm text-[#68736C] mt-1">Define los datos base para el cálculo de métricas financieras</p>

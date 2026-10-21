@@ -13,19 +13,19 @@
         </p>
 
         <!-- Token inválido / faltante -->
-        <div v-if="!token" class="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl mb-6">
+        <div v-if="!token" class="p-4 text-sm text-[#B93838] bg-red-50 border border-red-200 rounded-xl mb-6">
           <p class="font-semibold">Enlace inválido o expirado</p>
           <p class="mt-1">Solicita un nuevo enlace desde la pantalla de inicio de sesión.</p>
-          <router-link to="/login" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
+          <router-link to="/login" class="inline-block mt-3 text-[#245C4F] font-semibold hover:underline">
             Volver al inicio
           </router-link>
         </div>
 
         <!-- ÉXITO -->
-        <div v-else-if="successMessage" class="p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl mb-6">
-          <p class="font-semibold mb-1">✅ Contraseña restablecida</p>
+        <div v-else-if="successMessage" class="p-4 text-sm text-[#26734D] bg-[#E8F1ED] border border-[#26734D]/30 rounded-xl mb-6">
+          <p class="font-semibold mb-1 flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Contraseña restablecida</p>
           <p>{{ successMessage }}</p>
-          <router-link to="/login" class="inline-block mt-3 text-indigo-600 font-medium hover:underline">
+          <router-link to="/login" class="inline-block mt-3 text-[#245C4F] font-semibold hover:underline">
             Iniciar sesión
           </router-link>
         </div>
@@ -100,7 +100,7 @@
           <button
             type="submit"
             :disabled="loading || passwordMismatch"
-            class="w-full py-3 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 font-medium"
+            class="w-full py-3 text-white bg-[#245C4F] rounded-xl hover:bg-[#1D4A3F] transition disabled:opacity-50 font-semibold cursor-pointer shadow-xs"
           >
             {{ loading ? 'Restableciendo...' : 'Restablecer contraseña' }}
           </button>
@@ -111,11 +111,11 @@
     </div>
 
     <!-- DERECHA -->
-    <div class="hidden lg:flex w-1/2 bg-indigo-900 relative items-center justify-center">
+    <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-[#245C4F] via-[#1D4A3F] to-[#14332B] relative items-center justify-center">
       <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] [background-size:40px_40px]"></div>
       <div class="relative z-10 text-center text-white px-10">
         <h2 class="text-4xl font-bold mb-4">Easy Order</h2>
-        <p class="text-indigo-200">Sistema de gestión para restaurantes</p>
+        <p class="text-emerald-100">Sistema de gestión para restaurantes</p>
       </div>
     </div>
 

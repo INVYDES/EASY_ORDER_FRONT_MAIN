@@ -3,13 +3,13 @@
     <div class="w-full max-w-2xl text-center">
       <div class="flex items-center justify-between mb-10">
         <router-link to="/" class="inline-flex items-center gap-2 no-underline" aria-label="eOrder — Ir al inicio">
-          <span class="text-2xl font-black tracking-tighter text-gray-900 dark:text-slate-100"><i class="not-italic text-indigo-600 dark:text-indigo-400">e</i>Order</span>
+          <span class="text-2xl font-black tracking-tighter text-gray-900 dark:text-slate-100"><i class="not-italic text-[#245C4F]">e</i>Order</span>
           <small class="text-[10px] uppercase tracking-[0.3em] text-gray-400">Easy Order</small>
         </router-link>
         <PreferenciasControl />
       </div>
 
-      <p class="mt-10 text-[110px] sm:text-[150px] leading-none font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 animate-float">
+      <p class="mt-10 text-[110px] sm:text-[150px] leading-none font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#245C4F] via-[#1D4A3F] to-[#26734D] animate-float">
         404
       </p>
 
@@ -21,15 +21,15 @@
 
       <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
         <router-link to="/"
-          class="px-6 py-3 rounded-2xl bg-gray-900 dark:bg-indigo-600 text-white text-sm font-black hover:bg-gray-800 dark:hover:bg-indigo-500 hover:-translate-y-0.5 active:translate-y-0 transition shadow-lg shadow-gray-200 dark:shadow-none">
+          class="px-6 py-3 rounded-2xl bg-[#245C4F] text-white text-sm font-black hover:bg-[#1D4A3F] hover:-translate-y-0.5 active:translate-y-0 transition shadow-lg shadow-emerald-900/10 cursor-pointer">
           Volver al inicio
         </router-link>
         <router-link to="/planes"
-          class="px-6 py-3 rounded-2xl bg-white dark:bg-white/10 text-gray-700 dark:text-slate-200 text-sm font-bold border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/20 transition">
+          class="px-6 py-3 rounded-2xl bg-white dark:bg-white/10 text-gray-700 dark:text-slate-200 text-sm font-bold border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/20 transition cursor-pointer">
           Ver planes
         </router-link>
         <button type="button" @click="regresar"
-          class="px-6 py-3 rounded-2xl bg-white dark:bg-white/10 text-gray-700 dark:text-slate-200 text-sm font-bold border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/20 transition">
+          class="px-6 py-3 rounded-2xl bg-white dark:bg-white/10 text-gray-700 dark:text-slate-200 text-sm font-bold border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/20 transition cursor-pointer">
           Regresar
         </button>
       </div>
@@ -37,10 +37,10 @@
       <div class="mt-12 pt-8 border-t border-gray-100 dark:border-white/10">
         <p class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mb-3">Enlaces frecuentes</p>
         <nav class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
-          <router-link to="/login" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline">Iniciar sesión</router-link>
-          <router-link to="/registro/dueno" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline">Crear cuenta</router-link>
-          <router-link to="/terminos-y-condiciones" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline">Términos y condiciones</router-link>
-          <router-link to="/politica-de-seguridad" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline">Política de seguridad</router-link>
+          <router-link to="/login" class="text-[#245C4F] hover:text-[#1D4A3F] hover:underline font-semibold">Iniciar sesión</router-link>
+          <router-link to="/registro/dueno" class="text-[#245C4F] hover:text-[#1D4A3F] hover:underline font-semibold">Crear cuenta</router-link>
+          <router-link to="/terminos-y-condiciones" class="text-[#245C4F] hover:text-[#1D4A3F] hover:underline font-semibold">Términos y condiciones</router-link>
+          <router-link to="/politica-de-seguridad" class="text-[#245C4F] hover:text-[#1D4A3F] hover:underline font-semibold">Política de seguridad</router-link>
         </nav>
       </div>
     </div>

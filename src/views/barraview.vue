@@ -1,44 +1,48 @@
 <template>
-  <div class="min-h-screen bg-gray-950 p-4 sm:p-6" style="zoom: 1.25;">
+  <div class="min-h-full bg-gray-950 -m-4 lg:-m-8 p-4 lg:p-8" style="zoom: 1.25;">
 
-    <SucursalBadge />
+    <!-- ══ HEADER & STATS (STICKY) ══ -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-950/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-gray-800 space-y-3 shadow-md mb-4">
+      <SucursalBadge />
 
-    <!-- ══ HEADER ══ -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-white tracking-tight">🍹 Barra</h1>
-        <p class="text-gray-500 text-xs mt-0.5">{{ fechaHoy }}</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-xl">
-          <div :class="['w-2 h-2 rounded-full', wsConectado ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : (loading ? 'bg-amber-400 animate-pulse' : 'bg-red-400')]"></div>
-          <span class="text-xs font-medium text-gray-300">
-            {{ wsConectado ? 'En vivo' : (loading ? 'Conectando...' : 'Polling') }}
-          </span>
-          <span v-if="ultimaActualizacion" class="text-[10px] text-gray-600 border-l border-gray-800 pl-2 ml-1">
-            {{ ultimaActualizacion }}
-          </span>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            <i class="fa-solid fa-martini-glass-citrus text-cyan-400"></i> Barra
+          </h1>
+          <p class="text-gray-500 text-xs mt-0.5">{{ fechaHoy }}</p>
         </div>
-        <button @click="loadOrders" :disabled="loading"
-          class="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-400 text-xs rounded-xl transition disabled:opacity-50">
-          🔄
-        </button>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-xl">
+            <div :class="['w-2 h-2 rounded-full', wsConectado ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : (loading ? 'bg-amber-400 animate-pulse' : 'bg-red-400')]"></div>
+            <span class="text-xs font-medium text-gray-300">
+              {{ wsConectado ? 'En vivo' : (loading ? 'Conectando...' : 'Polling') }}
+            </span>
+            <span v-if="ultimaActualizacion" class="text-[10px] text-gray-600 border-l border-gray-800 pl-2 ml-1">
+              {{ ultimaActualizacion }}
+            </span>
+          </div>
+          <button @click="loadOrders" :disabled="loading"
+            class="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-400 hover:text-white text-xs rounded-xl transition disabled:opacity-50 flex items-center justify-center">
+            <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': loading }"></i>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <!-- ══ STATS ══ -->
-    <div class="grid grid-cols-3 gap-3 mb-6">
-      <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-yellow-400 leading-none">{{ pendingOrders.length }}</p>
-        <p class="text-xs text-yellow-400/60 mt-1.5 font-medium uppercase tracking-wider">Pendientes</p>
-      </div>
-      <div class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-blue-400 leading-none">{{ preparingOrders.length }}</p>
-        <p class="text-xs text-blue-400/60 mt-1.5 font-medium uppercase tracking-wider">Preparando</p>
-      </div>
-      <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-emerald-400 leading-none">{{ readyOrders.length }}</p>
-        <p class="text-xs text-emerald-400/60 mt-1.5 font-medium uppercase tracking-wider">Listas</p>
+      <!-- STATS -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-3 text-center">
+          <p class="text-2xl lg:text-3xl font-black text-yellow-400 leading-none">{{ pendingOrders.length }}</p>
+          <p class="text-[11px] text-yellow-400/70 mt-1 font-semibold uppercase tracking-wider">Pendientes</p>
+        </div>
+        <div class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 text-center">
+          <p class="text-2xl lg:text-3xl font-black text-blue-400 leading-none">{{ preparingOrders.length }}</p>
+          <p class="text-[11px] text-blue-400/70 mt-1 font-semibold uppercase tracking-wider">Preparando</p>
+        </div>
+        <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 text-center">
+          <p class="text-2xl lg:text-3xl font-black text-emerald-400 leading-none">{{ readyOrders.length }}</p>
+          <p class="text-[11px] text-emerald-400/70 mt-1 font-semibold uppercase tracking-wider">Listas</p>
+        </div>
       </div>
     </div>
 
@@ -49,7 +53,7 @@
           toast.type==='success' ? 'bg-emerald-900 border border-emerald-700 text-emerald-200' :
           toast.type==='error'   ? 'bg-red-900 border border-red-700 text-red-200' :
           'bg-gray-900 border border-gray-700 text-gray-200']">
-        <span class="text-lg shrink-0">{{ toast.type==='success'?'✅':toast.type==='error'?'❌':'🔔' }}</span>
+        <i :class="toast.type==='success' ? 'fa-solid fa-circle-check text-emerald-400' : toast.type==='error' ? 'fa-solid fa-circle-xmark text-red-400' : 'fa-solid fa-bell text-blue-400'" class="text-base shrink-0"></i>
         <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
         <button @click="removeToast(toast.id)" class="text-gray-500 hover:text-gray-300">×</button>
       </div>
@@ -62,7 +66,7 @@
       <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
         <div class="px-4 py-3 bg-yellow-500/10 border-b border-yellow-500/20 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span>🟡</span>
+            <i class="fa-solid fa-clock text-yellow-400 text-xs"></i>
             <h2 class="font-bold text-yellow-300 text-sm">Bebidas pendientes</h2>
           </div>
           <span class="text-xs font-bold bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full">
@@ -71,13 +75,14 @@
         </div>
         <div class="p-3 space-y-3 min-h-72 max-h-[calc(100vh-340px)] overflow-y-auto">
           <p v-if="pendingOrders.length === 0 && !loading"
-            class="text-center py-12 text-gray-700 text-sm italic">
-            Sin bebidas pendientes 🎉
+            class="text-center py-12 text-gray-500 text-sm italic flex items-center justify-center gap-2">
+            <span>Sin bebidas pendientes</span>
+            <i class="fa-solid fa-circle-check text-emerald-500"></i>
           </p>
           <OrdenCardBebida
             v-for="order in pendingOrders" :key="order.id"
             :order="order"
-            accion-label="🍹 Comenzar a preparar"
+            accion-label="Comenzar a preparar"
             accion-class="bg-blue-600 hover:bg-blue-500 text-white"
             :procesando="procesando === order.id"
             :es-admin-o-propietario="esAdminOPropietario"
@@ -92,7 +97,7 @@
       <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800/80">
         <div class="px-4 py-3 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span>🔵</span>
+            <i class="fa-solid fa-martini-glass-citrus text-blue-400 text-xs"></i>
             <h2 class="font-bold text-blue-300 text-sm">Preparando</h2>
           </div>
           <span class="text-xs font-bold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">
@@ -101,13 +106,13 @@
         </div>
         <div class="p-3 space-y-3 min-h-72 max-h-[calc(100vh-340px)] overflow-y-auto">
           <p v-if="preparingOrders.length === 0 && !loading"
-            class="text-center py-12 text-gray-700 text-sm italic">
+            class="text-center py-12 text-gray-500 text-sm italic">
             Sin bebidas preparándose
           </p>
           <OrdenCardBebida
             v-for="order in preparingOrders" :key="order.id"
             :order="order"
-            accion-label="✅ Lista para entregar"
+            accion-label="Lista para entregar"
             accion-class="bg-emerald-600 hover:bg-emerald-500 text-white"
             secondary-action-label="Ver ingredientes"
             :procesando="procesando === order.id"
@@ -130,7 +135,10 @@
         <!-- Header -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <div>
-            <h3 class="text-white font-bold text-xl">🍹 Confirmar ingredientes</h3>
+            <h3 class="text-white font-bold text-xl flex items-center gap-2">
+              <i class="fa-solid fa-martini-glass-citrus text-cyan-400"></i>
+              Confirmar ingredientes
+            </h3>
             <p class="text-gray-400 text-sm mt-0.5">
               Orden #{{ modalIngredientes.orden?.id }} ·
               {{ modalIngredientes.productosTotal }} bebida{{ modalIngredientes.productosTotal !== 1 ? 's' : '' }}
@@ -155,7 +163,7 @@
             class="bg-gray-800/60 rounded-xl overflow-hidden border border-gray-700/50">
 
             <div class="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700/50">
-              <span class="text-lg">🍹</span>
+              <i class="fa-solid fa-martini-glass-citrus text-gray-400 text-sm"></i>
               <div class="flex-1 min-w-0">
                 <p class="text-base font-bold text-white truncate">{{ item.producto_nombre }}</p>
                 <p class="text-sm text-gray-400">× {{ item.cantidad }} unidad{{ item.cantidad !== 1 ? 'es' : '' }}</p>
@@ -197,7 +205,7 @@
             @click="confirmarYCambiarEstado"
             :disabled="modalIngredientes.guardando"
             class="flex-1 py-3 text-base font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition disabled:opacity-50">
-            {{ modalIngredientes.guardando ? 'Iniciando...' : '🍹 Iniciar preparación' }}
+            {{ modalIngredientes.guardando ? 'Iniciando...' : 'Iniciar preparación' }}
           </button>
         </div>
       </div>
@@ -446,7 +454,7 @@ const cambiarEstado = async (id, nuevoEstadoDetalle, ingredientesExcluidos = [])
     
     if (data.success || data.data) {
       await loadOrders()
-      const labels = { EN_PREPARACION:'Preparando 🍹', LISTO:'Listas ✅' }
+      const labels = { EN_PREPARACION:'Preparando', LISTO:'Listas' }
       showToast(`Bebidas de Orden #${id} → ${labels[nuevoEstadoDetalle] || nuevoEstadoDetalle}`, 'success')
     } else {
       showToast(data.message || 'Error al actualizar', 'error')
@@ -463,7 +471,7 @@ const marcarEntregada = async (id) => {
   if (!hiddenOrders.value.includes(id)) {
     hiddenOrders.value.push(id)
   }
-  showToast(`Orden #${id} entregada al mesero 🫡`, 'success')
+  showToast(`Orden #${id} entregada al mesero`, 'success')
   procesando.value = null
 }
 

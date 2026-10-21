@@ -21,8 +21,8 @@
           <router-link to="/login" class="nav-link ghost">Ingresar</router-link>
         </div>
         <button class="menu-btn" @click="mobileOpen = !mobileOpen" aria-label="Abrir menú">
-          <span v-if="!mobileOpen">☰</span>
-          <span v-else>✕</span>
+          <i v-if="!mobileOpen" class="fa-solid fa-bars text-sm"></i>
+          <i v-else class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
       <div v-if="mobileOpen" class="mobile-menu">

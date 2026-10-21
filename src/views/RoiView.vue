@@ -1,63 +1,68 @@
 <template>
   <div class="space-y-5">
 
-    <!-- ── Selector de período ────────────────────────────────────────────── -->
-    <div class="bg-white rounded-xl shadow-sm p-4 flex flex-wrap items-center gap-3">
-      <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+    <!-- ── Selector de período (Header fijo con frosted glass) ─────────────── -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex gap-1 bg-[#E8F1ED] rounded-xl p-1 border border-[#DDE3DE]">
+          <button 
+            v-for="p in periodos" 
+            :key="p.value" 
+            @click="setPeriodo(p.value)"
+            :class="[
+              'px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer',
+              periodo === p.value 
+                ? 'bg-[#245C4F] text-white shadow-xs' 
+                : 'text-[#68736C] hover:text-[#202723] hover:bg-white/60'
+            ]"
+          >
+            {{ p.label }}
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-2 text-xs text-[#68736C]">
+          <input 
+            v-model="fechaInicio" 
+            type="date"
+            class="px-3 py-1.5 border border-[#DDE3DE] rounded-xl bg-white text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:outline-none" 
+          />
+          <span>→</span>
+          <input 
+            v-model="fechaFin" 
+            type="date"
+            class="px-3 py-1.5 border border-[#DDE3DE] rounded-xl bg-white text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:outline-none" 
+          />
+        </div>
+        
         <button 
-          v-for="p in periodos" 
-          :key="p.value" 
-          @click="setPeriodo(p.value)"
-          :class="[
-            'px-3 py-1.5 text-xs font-semibold rounded-lg transition',
-            periodo === p.value 
-              ? 'bg-white shadow-sm text-gray-800' 
-              : 'text-gray-500 hover:bg-gray-200'
-          ]"
+          @click="fetchAll" 
+          :disabled="loading"
+          class="px-4 py-1.5 bg-[#245C4F] text-white text-xs font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs disabled:opacity-50 cursor-pointer"
         >
-          {{ p.label }}
+          <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-1"></i>
+          {{ loading ? 'Calculando...' : 'Aplicar' }}
         </button>
       </div>
-      
-      <div class="flex items-center gap-2 text-xs text-gray-500">
-        <input 
-          v-model="fechaInicio" 
-          type="date"
-          class="px-3 py-1.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
-        />
-        <span>→</span>
-        <input 
-          v-model="fechaFin" 
-          type="date"
-          class="px-3 py-1.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
-        />
-      </div>
-      
-      <button 
-        @click="fetchAll" 
-        :disabled="loading"
-        class="px-4 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50"
-      >
-        <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-1"></i>
-        {{ loading ? 'Calculando...' : 'Aplicar' }}
-      </button>
       
       <ExportMenu :exporting="exporting" @export="exportarReporte" />
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-16 gap-3">
-      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      <p class="text-gray-400 text-sm">Calculando ROI...</p>
+      <div class="w-8 h-8 border-4 border-[#E8F1ED] border-t-[#245C4F] rounded-full animate-spin"></div>
+      <p class="text-[#68736C] text-sm font-medium">Calculando ROI...</p>
     </div>
 
     <template v-else>
 
       <!-- ── ROI 1: Ventas vs Costo Ingredientes ────────────────────────── -->
-      <div class="bg-white rounded-xl shadow-sm p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-5">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="font-semibold text-gray-800">📊 ROI por ingredientes</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Margen real = Ventas − Costo de recetas</p>
+            <h3 class="font-bold text-[#202723] flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-[#245C4F]"></i>
+              ROI por ingredientes
+            </h3>
+            <p class="text-xs text-[#68736C] mt-0.5">Margen real = Ventas − Costo de recetas</p>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs px-3 py-1 rounded-full font-bold" :class="roiIngredientes.pctClass">
@@ -65,7 +70,7 @@
             </span>
             <button 
               @click="verDetalleIngredientes" 
-              class="text-indigo-600 hover:text-indigo-700 text-xs font-semibold"
+              class="text-[#245C4F] hover:text-[#1D4A3F] text-xs font-semibold cursor-pointer"
             >
               <i class="fa-solid fa-chart-line mr-1"></i>
               Ver detalle
@@ -75,24 +80,25 @@
 
         <!-- KPIs fila -->
         <div class="grid grid-cols-3 gap-3 mb-5">
-          <div class="bg-indigo-50 rounded-xl p-4 text-center">
-            <p class="text-xs text-indigo-600 font-semibold uppercase">Ventas</p>
-            <p class="text-xl font-black text-indigo-700">${{ fm(roiIngredientes.ventas) }}</p>
-            <p class="text-[10px] text-indigo-500 mt-1">{{ productosRoi.length }} productos vendidos</p>
+          <div class="bg-[#E8F1ED] rounded-xl p-4 text-center border border-[#DDE3DE]">
+            <p class="text-xs text-[#245C4F] font-semibold uppercase">Ventas</p>
+            <p class="text-xl font-black text-[#202723]">${{ fm(roiIngredientes.ventas) }}</p>
+            <p class="text-[10px] text-[#68736C] mt-1">{{ productosRoi.length }} productos vendidos</p>
           </div>
-          <div class="bg-red-50 rounded-xl p-4 text-center">
+          <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100">
             <p class="text-xs text-red-600 font-semibold uppercase">Costo recetas</p>
             <p class="text-xl font-black text-red-700">${{ fm(roiIngredientes.costo) }}</p>
             <p v-if="!roiIngredientes.costo" class="text-[10px] text-gray-400 mt-1">Sin ingredientes asignados</p>
             <p v-else class="text-[10px] text-red-500 mt-1">{{ roiIngredientes.costoPorcentaje }}% del total</p>
           </div>
-          <div class="rounded-xl p-4 text-center" :class="roiIngredientes.margenClass">
+          <div class="rounded-xl p-4 text-center border" :class="roiIngredientes.margenClass">
             <p class="text-xs font-semibold uppercase" :class="roiIngredientes.margenTextClass">Ganancia</p>
             <p class="text-xl font-black" :class="roiIngredientes.margenTextClass">
               ${{ fm(roiIngredientes.margen) }}
             </p>
-            <p class="text-[10px mt-1" :class="roiIngredientes.margenTextClass">
-              {{ roiIngredientes.margen > 0 ? '✅ Rentable' : '⚠️ Pérdida' }}
+            <p class="text-[10px] mt-1 flex items-center justify-center gap-1" :class="roiIngredientes.margenTextClass">
+              <i :class="roiIngredientes.margen > 0 ? 'fa-solid fa-circle-check text-[#26734D]' : 'fa-solid fa-triangle-exclamation text-[#B93838]'"></i>
+              <span>{{ roiIngredientes.margen > 0 ? 'Rentable' : 'Pérdida' }}</span>
             </p>
           </div>
         </div>
@@ -100,7 +106,7 @@
         <!-- Gráfica barras venta vs costo por producto -->
         <div class="relative h-56">
           <div v-if="!productosRoi.length" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-            <span class="text-3xl mb-2">🧮</span>
+            <i class="fa-solid fa-calculator text-3xl mb-2 text-[#68736C]"></i>
             <span class="text-sm text-center">Asigna ingredientes a tus productos<br>para ver el margen por platillo</span>
           </div>
           <canvas ref="chartIngRef"></canvas>
@@ -126,52 +132,56 @@
       </div>
 
       <!-- ── ROI 2: Ventas vs Gastos manuales ───────────────────────────── -->
-      <div class="bg-white rounded-xl shadow-sm p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-5">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="font-semibold text-gray-800">💼 ROI operativo</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Ventas vs gastos registrados (renta, nómina, servicios...)</p>
+            <h3 class="font-bold text-[#202723] flex items-center gap-2">
+              <i class="fa-solid fa-briefcase text-[#245C4F]"></i>
+              ROI operativo
+            </h3>
+            <p class="text-xs text-[#68736C] mt-0.5">Ventas vs gastos registrados (renta, nómina, servicios...)</p>
           </div>
           <div class="flex items-center gap-2">
             <span v-if="gastoResumen.roi_pct !== null" class="text-xs px-3 py-1 rounded-full font-bold" :class="roiOperativoClass">
               ROI {{ gastoResumen.roi_pct }}%
             </span>
-            <button @click="showModalGasto = true" class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">
+            <button @click="showModalGasto = true" class="px-3 py-1.5 text-xs font-semibold bg-[#245C4F] text-white rounded-xl hover:bg-[#1D4A3F] transition shadow-xs cursor-pointer">
               <i class="fa-solid fa-plus mr-1"></i>
               Nuevo Gasto
             </button>
           </div>
         </div>
 
-        <div v-if="!gastoResumen.total_gastos" class="text-center py-8 text-gray-400 text-sm">
-          <span class="text-3xl block mb-2">📋</span>
+        <div v-if="!gastoResumen.total_gastos" class="text-center py-8 text-[#68736C] text-sm">
+          <i class="fa-solid fa-clipboard-list text-3xl block mb-2 text-[#68736C]"></i>
           Sin gastos registrados en este período.
-          <button @click="showModalGasto = true" class="block mx-auto mt-2 text-indigo-600 font-semibold hover:underline text-xs">
+          <button @click="showModalGasto = true" class="block mx-auto mt-2 text-[#245C4F] font-semibold hover:underline text-xs cursor-pointer">
             Registrar primer gasto
           </button>
         </div>
         
         <template v-else>
           <div class="grid grid-cols-3 gap-3 mb-4">
-            <div class="bg-indigo-50 rounded-xl p-4 text-center">
-              <p class="text-xs text-indigo-600 font-semibold uppercase">Ventas</p>
-              <p class="text-xl font-black text-indigo-700">${{ fm(gastoResumen.ventas) }}</p>
-              <p class="text-[10px] text-indigo-500 mt-1">Total período</p>
+            <div class="bg-[#E8F1ED] rounded-xl p-4 text-center border border-[#DDE3DE]">
+              <p class="text-xs text-[#245C4F] font-semibold uppercase">Ventas</p>
+              <p class="text-xl font-black text-[#202723]">${{ fm(gastoResumen.ventas) }}</p>
+              <p class="text-[10px] text-[#68736C] mt-1">Total período</p>
             </div>
-            <div class="bg-red-50 rounded-xl p-4 text-center">
+            <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100">
               <p class="text-xs text-red-600 font-semibold uppercase">Gastos</p>
               <p class="text-xl font-black text-red-700">${{ fm(gastoResumen.total_gastos) }}</p>
               <p class="text-[10px] text-red-500 mt-1">{{ gastoResumen.por_categoria ? Object.keys(gastoResumen.por_categoria).length : 0 }} categorías</p>
             </div>
-            <div class="rounded-xl p-4 text-center" :class="gastoResumen.utilidad_bruta >= 0 ? 'bg-emerald-50' : 'bg-rose-50'">
+            <div class="rounded-xl p-4 text-center border" :class="gastoResumen.utilidad_bruta >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'">
               <p class="text-xs font-semibold uppercase" :class="gastoResumen.utilidad_bruta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
                 Utilidad
               </p>
               <p class="text-xl font-black" :class="gastoResumen.utilidad_bruta >= 0 ? 'text-emerald-700' : 'text-rose-700'">
                 ${{ fm(gastoResumen.utilidad_bruta) }}
               </p>
-              <p class="text-[10px] mt-1" :class="gastoResumen.utilidad_bruta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-                {{ gastoResumen.utilidad_bruta >= 0 ? '✅ Utilidad positiva' : '⚠️ Pérdida operativa' }}
+              <p class="text-[10px] mt-1 flex items-center justify-center gap-1" :class="gastoResumen.utilidad_bruta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+                <i :class="gastoResumen.utilidad_bruta >= 0 ? 'fa-solid fa-circle-check text-[#26734D]' : 'fa-solid fa-triangle-exclamation text-[#B93838]'"></i>
+                <span>{{ gastoResumen.utilidad_bruta >= 0 ? 'Utilidad positiva' : 'Pérdida operativa' }}</span>
               </p>
             </div>
           </div>
@@ -200,33 +210,36 @@
       </div>
 
       <!-- ── ROI 3: Comparación períodos ────────────────────────────────── -->
-      <div class="bg-white rounded-xl shadow-sm p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] p-5">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="font-semibold text-gray-800">📅 Comparación vs período anterior</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Ventas, pedidos y ticket promedio</p>
+            <h3 class="font-bold text-[#202723] flex items-center gap-2">
+              <i class="fa-solid fa-calendar-days text-[#245C4F]"></i>
+              Comparación vs período anterior
+            </h3>
+            <p class="text-xs text-[#68736C] mt-0.5">Ventas, pedidos y ticket promedio</p>
           </div>
-          <div class="text-xs text-gray-400">
+          <div class="text-xs text-[#68736C]">
             {{ formatDateRange() }}
           </div>
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div v-for="item in comparacion" :key="item.label" class="bg-gray-50 rounded-xl p-4">
-            <p class="text-xs text-gray-500 font-semibold uppercase mb-2">{{ item.label }}</p>
-            <p class="text-xl font-black text-gray-900">{{ item.actual }}</p>
+          <div v-for="item in comparacion" :key="item.label" class="bg-[#F6F7F5] border border-[#DDE3DE] rounded-xl p-4">
+            <p class="text-xs text-[#68736C] font-semibold uppercase mb-2">{{ item.label }}</p>
+            <p class="text-xl font-black text-[#202723]">{{ item.actual }}</p>
             <div class="flex items-center gap-1.5 mt-1.5">
-              <span class="text-lg">{{ item.tendenciaIcon }}</span>
+              <i :class="['fa-solid text-xs', item.tendenciaIcon, item.tendenciaClass]"></i>
               <span class="text-xs font-semibold" :class="item.tendenciaClass">
                 {{ item.diff }}
               </span>
-              <span class="text-xs text-gray-400">vs anterior</span>
+              <span class="text-xs text-[#68736C]">vs anterior</span>
             </div>
-            <p class="text-[10px] text-gray-400 mt-1">Anterior: {{ item.anterior }}</p>
+            <p class="text-[10px] text-[#68736C] mt-1">Anterior: {{ item.anterior }}</p>
             <!-- Mini barra comparativa -->
             <div class="flex gap-1 h-2 mt-3">
-              <div class="bg-indigo-500 rounded-full transition-all" :style="{ width: item.pctActual + '%' }"></div>
-              <div class="bg-gray-200 rounded-full transition-all" :style="{ width: item.pctAnterior + '%' }"></div>
+              <div class="bg-[#245C4F] rounded-full transition-all" :style="{ width: item.pctActual + '%' }"></div>
+              <div class="bg-[#DDE3DE] rounded-full transition-all" :style="{ width: item.pctAnterior + '%' }"></div>
             </div>
           </div>
         </div>
@@ -254,39 +267,41 @@
 
     <!-- ── MODAL GASTO ────────────────────────────────────────────────────── -->
     <div v-if="showModalGasto" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 animate-fade-in" @click.self="showModalGasto = false">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-slide-up">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-slide-up border border-[#DDE3DE]">
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-lg font-semibold text-gray-800">
-            <i class="fa-solid fa-receipt text-indigo-600 mr-2"></i>
+          <h3 class="text-lg font-bold text-[#202723] flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-[#245C4F]"></i>
             Registrar gasto
           </h3>
-          <button @click="showModalGasto = false" class="text-gray-400 hover:text-gray-600 text-xl transition">✕</button>
+          <button @click="showModalGasto = false" class="text-[#68736C] hover:text-[#202723] text-xl transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
         </div>
         
-        <div v-if="gastoError" class="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-          <i class="fa-solid fa-exclamation-triangle text-red-500 mt-0.5"></i>
+        <div v-if="gastoError" class="mb-4 p-3 text-sm text-[#B93838] bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-[#B93838] mt-0.5"></i>
           <span>{{ gastoError }}</span>
         </div>
         
         <form @submit.prevent="guardarGasto">
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Concepto *</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Concepto *</label>
               <input 
                 v-model="gastoForm.concepto" 
                 type="text" 
                 placeholder="Ej. Pago de renta, Compra de insumos..."
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
+                class="w-full px-3 py-2 border border-[#DDE3DE] rounded-xl text-xs text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none transition"
                 required
               />
             </div>
             
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
+                <label class="block text-xs font-semibold text-[#202723] mb-1">Categoría *</label>
                 <select 
                   v-model="gastoForm.categoria"
-                  class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-white"
+                  class="w-full px-3 py-2 border border-[#DDE3DE] rounded-xl text-xs text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none bg-white"
                   required
                 >
                   <option v-for="c in categoriasGasto" :key="c" :value="c" class="capitalize">
@@ -295,16 +310,16 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Monto *</label>
+                <label class="block text-xs font-semibold text-[#202723] mb-1">Monto *</label>
                 <div class="relative">
-                  <span class="absolute left-3 top-3 text-gray-400 text-sm">$</span>
+                  <span class="absolute left-3 top-2 text-[#68736C] text-xs">$</span>
                   <input 
                     v-model="gastoForm.monto" 
                     type="number" 
                     min="0.01" 
                     step="0.01"
                     placeholder="0.00"
-                    class="w-full pl-7 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none"
+                    class="w-full pl-7 pr-3 py-2 border border-[#DDE3DE] rounded-xl text-xs text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none"
                     required
                   />
                 </div>
@@ -312,22 +327,22 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Fecha *</label>
               <input 
                 v-model="gastoForm.fecha" 
                 type="date"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none"
+                class="w-full px-3 py-2 border border-[#DDE3DE] rounded-xl text-xs text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none"
                 required
               />
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+              <label class="block text-xs font-semibold text-[#202723] mb-1">Notas</label>
               <textarea 
                 v-model="gastoForm.notas" 
                 rows="2" 
                 placeholder="Información adicional (opcional)"
-                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none resize-none"
+                class="w-full px-3 py-2 border border-[#DDE3DE] rounded-xl text-xs text-[#202723] focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none resize-none"
               ></textarea>
             </div>
           </div>
@@ -336,14 +351,14 @@
             <button 
               type="button"
               @click="showModalGasto = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition font-medium"
+              class="flex-1 py-2 text-xs font-semibold text-[#68736C] bg-gray-100 rounded-xl hover:bg-gray-200 transition cursor-pointer"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               :disabled="guardandoGasto"
-              class="flex-1 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex-1 py-2 text-xs font-semibold text-white bg-[#245C4F] rounded-xl hover:bg-[#1D4A3F] transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <i v-if="guardandoGasto" class="fa-solid fa-spinner fa-spin mr-2"></i>
               {{ guardandoGasto ? 'Guardando...' : 'Registrar gasto' }}
@@ -355,44 +370,46 @@
 
     <!-- Modal de detalle de ingredientes -->
     <div v-if="showDetalleIngredientes" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 animate-fade-in" @click.self="showDetalleIngredientes = false">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 class="text-lg font-semibold text-gray-800">
-            <i class="fa-solid fa-chart-line text-indigo-600 mr-2"></i>
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-[#DDE3DE]">
+        <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-[#DDE3DE]">
+          <h3 class="text-base font-bold text-[#202723] flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-[#245C4F]"></i>
             Detalle de ROI por producto
           </h3>
-          <button @click="showDetalleIngredientes = false" class="text-gray-400 hover:text-gray-600 transition text-xl">✕</button>
+          <button @click="showDetalleIngredientes = false" class="text-[#68736C] hover:text-[#202723] transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
         </div>
         <div class="p-5">
           <div class="space-y-3">
-            <div v-for="p in productosRoi" :key="p.nombre" class="border border-gray-100 rounded-xl p-4 hover:shadow-sm transition">
+            <div v-for="p in productosRoi" :key="p.nombre" class="border border-[#DDE3DE] rounded-xl p-4 hover:shadow-xs transition">
               <div class="flex items-center justify-between mb-2">
-                <h4 class="font-bold text-gray-800">{{ p.nombre }}</h4>
-                <span class="text-xs font-bold px-2 py-1 rounded-full" :class="p.margenColor">
+                <h4 class="font-bold text-[#202723] text-sm">{{ p.nombre }}</h4>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="p.margenColor">
                   {{ p.margen_pct }}% margen
                 </span>
               </div>
               <div class="grid grid-cols-3 gap-3 text-center text-xs">
                 <div>
-                  <p class="text-gray-500">Vendidos</p>
-                  <p class="font-bold text-gray-800">{{ p.total_vendido }} uds</p>
+                  <p class="text-[#68736C]">Vendidos</p>
+                  <p class="font-bold text-[#202723]">{{ p.total_vendido }} uds</p>
                 </div>
                 <div>
-                  <p class="text-gray-500">Venta total</p>
-                  <p class="font-bold text-indigo-600">${{ fm(p.venta_total) }}</p>
+                  <p class="text-[#68736C]">Venta total</p>
+                  <p class="font-bold text-[#245C4F]">${{ fm(p.venta_total) }}</p>
                 </div>
                 <div>
-                  <p class="text-gray-500">Costo total</p>
-                  <p class="font-bold text-red-600">${{ fm(p.costo_total) }}</p>
+                  <p class="text-[#68736C]">Costo total</p>
+                  <p class="font-bold text-[#B93838]">${{ fm(p.costo_total) }}</p>
                 </div>
               </div>
               <div class="mt-3">
-                <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+                <div class="flex justify-between text-[10px] text-[#68736C] mb-1 font-medium">
                   <span>Margen</span>
                   <span>{{ p.margen_pct }}%</span>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2">
-                  <div class="h-2 rounded-full transition-all" :class="p.margenBarColor" :style="{ width: Math.min(p.margen_pct, 100) + '%' }"></div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5">
+                  <div class="h-1.5 rounded-full transition-all" :class="p.margenBarColor" :style="{ width: Math.min(p.margen_pct, 100) + '%' }"></div>
                 </div>
               </div>
             </div>
@@ -466,7 +483,7 @@ const periodos = [
 ]
 
 const COLORES_CATEGORIA = {
-  renta: '#6366f1',
+  renta: '#245C4F',
   nomina: '#f59e0b',
   servicios: '#3b82f6',
   insumos: '#10b981',
@@ -478,13 +495,13 @@ const COLORES_CATEGORIA = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getCategoriaLabel = (cat) => {
   const labels = {
-    renta: '🏢 Renta',
-    nomina: '👥 Nómina',
-    servicios: '💡 Servicios',
-    insumos: '🥩 Insumos',
-    marketing: '📢 Marketing',
-    mantenimiento: '🔧 Mantenimiento',
-    general: '📦 General'
+    renta: 'Renta',
+    nomina: 'Nómina',
+    servicios: 'Servicios',
+    insumos: 'Insumos',
+    marketing: 'Marketing',
+    mantenimiento: 'Mantenimiento',
+    general: 'General'
   }
   return labels[cat] || cat
 }
@@ -569,7 +586,7 @@ const comparacion = computed(() => {
     
     return {
       ...i,
-      tendenciaIcon: diff > 0 ? '📈' : diff < 0 ? '📉' : '➡️',
+      tendenciaIcon: diff > 0 ? 'fa-arrow-trend-up' : diff < 0 ? 'fa-arrow-trend-down' : 'fa-arrow-right',
       tendenciaClass: diff > 0 ? 'text-emerald-600' : diff < 0 ? 'text-red-500' : 'text-gray-500',
       diff: diffPct !== 0 ? (diff > 0 ? '+' : '') + diffPct + '%' : '0%',
       pctActual: Math.round((i.rawA / max) * 45),
@@ -629,7 +646,7 @@ const buildCharts = async () => {
           { 
             label: 'Venta total', 
             data: top.map(p => p.venta_total), 
-            backgroundColor: 'rgba(99,102,241,0.85)', 
+            backgroundColor: 'rgba(36,92,79,0.85)', 
             borderRadius: 6,
             borderSkipped: false
           },
@@ -704,7 +721,7 @@ const buildCharts = async () => {
               ventasActual.value.total_ordenes || 0, 
               ventasActual.value.promedio_por_orden || 0
             ], 
-            backgroundColor: 'rgba(99,102,241,0.85)', 
+            backgroundColor: 'rgba(36,92,79,0.85)', 
             borderRadius: 8, 
             borderSkipped: false 
           },

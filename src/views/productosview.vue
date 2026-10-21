@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5 p-4 sm:p-6">
+  <div class="space-y-5">
 
     <!-- TOASTS -->
     <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
@@ -7,29 +7,60 @@
         v-for="toast in toasts"
         :key="toast.id"
         :class="[
-          'px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in pointer-events-auto',
-          toast.type === 'success' ? 'bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800' : '',
-          toast.type === 'error'   ? 'bg-red-50 border-l-4 border-red-500 text-red-800' : '',
-          toast.type === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800' : '',
-          toast.type === 'info'    ? 'bg-blue-50 border-l-4 border-blue-500 text-blue-800' : '',
+          'px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in pointer-events-auto border',
+          toast.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : '',
+          toast.type === 'error'   ? 'bg-red-50 border-red-500 text-red-800' : '',
+          toast.type === 'warning' ? 'bg-amber-50 border-amber-500 text-amber-800' : '',
+          toast.type === 'info'    ? 'bg-blue-50 border-blue-500 text-blue-800' : '',
         ]"
       >
-        <span class="text-lg">{{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}</span>
+        <i
+          :class="[
+            'text-lg',
+            toast.type === 'success' ? 'fa-solid fa-circle-check text-emerald-600' :
+            toast.type === 'error'   ? 'fa-solid fa-circle-xmark text-red-600' :
+            toast.type === 'warning' ? 'fa-solid fa-triangle-exclamation text-amber-600' :
+            'fa-solid fa-circle-info text-blue-600'
+          ]"
+        ></i>
         <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
         <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
       </div>
     </div>
 
-    <!-- Sucursal badge + Header -->
-    <SucursalBadge />
+    <!-- STICKY TOPBAR: Sucursal + Header + Tabs -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] space-y-3 shadow-xs">
+      <SucursalBadge />
 
-    <ProductsHeader
-      v-model="searchTerm"
-      :exporting="exportingProducts"
-      @new="openCreate"
-      @import="showImport = true"
-      @export="exportProducts"
-    />
+      <ProductsHeader
+        v-model="searchTerm"
+        :exporting="exportingProducts"
+        @new="openCreate"
+        @import="showImport = true"
+        @export="exportProducts"
+      />
+
+      <!-- Tabs -->
+      <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit flex-wrap border border-[#DDE3DE]">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          :class="[
+            'px-5 py-2 text-sm font-semibold rounded-lg transition',
+            activeTab === tab.key ? 'bg-white shadow-xs text-[#202723] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-gray-200'
+          ]"
+        >
+          {{ tab.label }}
+          <span
+            class="ml-1.5 text-xs font-bold rounded-full px-2 py-0.5"
+            :class="activeTab === tab.key ? 'bg-[#E8F1ED] text-[#245C4F]' : 'bg-gray-200 text-gray-500'"
+          >
+            {{ getTabCount(tab.key) }}
+          </span>
+        </button>
+      </div>
+    </div>
 
     <!-- Sugerencia Estratégica (Posición Superior Prioritaria) -->
     <div class="relative z-10 my-4">
@@ -38,27 +69,6 @@
         :products="allProductsForSelection" 
         @execute="handleExecuteBundle"
       />
-    </div>
-
-    <!-- Tabs -->
-    <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        @click="activeTab = tab.key"
-        :class="[
-          'px-5 py-2 text-sm font-medium rounded-lg transition',
-          activeTab === tab.key ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:bg-gray-200'
-        ]"
-      >
-        {{ tab.label }}
-        <span
-          class="ml-1.5 text-xs font-bold rounded-full px-1.5 py-0.5"
-          :class="activeTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'"
-        >
-          {{ getTabCount(tab.key) }}
-        </span>
-      </button>
     </div>
 
     <!-- ── PAQUETES ───────────────────────────────────────── -->
@@ -89,16 +99,17 @@
         </div>
         <button
           @click="showImportPaquetes = true"
-          class="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition"
+          class="flex items-center gap-2 px-4 py-2.5 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs"
         >
-          📥 Importar
+          <i class="fa-solid fa-file-import text-xs"></i>
+          Importar
         </button>
         <ExportMenu :exporting="exportingPaquetes" @export="exportPaquetes" />
         <button
           @click="openCreatePaquete"
-          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition ml-auto"
+          class="flex items-center gap-2 px-4 py-2.5 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs ml-auto"
         >
-          <span class="text-base leading-none">＋</span> Nuevo Paquete
+          <i class="fa-solid fa-plus text-xs"></i> Nuevo Paquete
         </button>
       </div>
       <PaquetesTable 
@@ -123,9 +134,9 @@
         <p class="text-sm font-semibold text-gray-700">Lista de productos</p>
         <button
           @click="openCreate"
-          class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm"
+          class="flex items-center gap-2 px-4 py-2 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs"
         >
-          <span class="text-base leading-none">＋</span>
+          <i class="fa-solid fa-plus text-xs"></i>
           Nuevo Producto
         </button>
       </div>
@@ -143,7 +154,7 @@
             @input="debouncedSearch"
             type="text"
             placeholder="Buscar producto por nombre..."
-            class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm"
+            class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-[#245C4F] focus:border-transparent outline-none transition shadow-sm"
           />
           <button
             v-if="searchTerm"
@@ -171,83 +182,96 @@
       <div class="flex justify-end mb-4">
         <BotonDudas @click="abrirAyuda('ingredientes')" />
       </div>
-      <!-- ... (todo tu código de ingredientes existente se mantiene igual) ... -->
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">🧄 Ingredientes</h1>
+          <h1 class="text-2xl font-bold text-[#202723] flex items-center gap-2">
+            <i class="fa-solid fa-seedling text-[#245C4F]"></i>
+            Ingredientes
+          </h1>
           <p class="text-gray-500 text-sm mt-0.5">Inventario y costos de ingredientes</p>
         </div>
         <div class="flex items-center gap-2">
           <button
             @click="showImportIngredientes = true"
-            class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition shadow-sm cursor-pointer"
+            class="flex items-center gap-2 px-4 py-2.5 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs cursor-pointer"
           >
-            📥 Importar
+            <i class="fa-solid fa-file-import text-xs"></i>
+            Importar
           </button>
           <ExportMenu :exporting="exportingIngredientes" @export="exportIngredientes" />
           <button
             @click="showListaCompras = true"
-            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition shadow-sm cursor-pointer"
+            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#DDE3DE] text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition shadow-xs cursor-pointer"
           >
-            📦 Lista de compras
+            <i class="fa-solid fa-clipboard-list text-xs text-[#245C4F]"></i>
+            Lista de compras
           </button>
           <button
             @click="abrirModalIngrediente()"
-            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer"
+            class="flex items-center gap-2 px-4 py-2.5 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs cursor-pointer"
           >
-            ＋ Nuevo ingrediente
+            <i class="fa-solid fa-plus text-xs"></i>
+            Nuevo ingrediente
           </button>
         </div>
       </div>
 
       <!-- KPIs -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-indigo-500">
+        <div class="bg-white rounded-xl shadow-xs p-4 border border-[#DDE3DE] border-l-4 border-l-[#245C4F]">
           <p class="text-xs text-gray-500 uppercase font-semibold">Total ingredientes</p>
-          <p class="text-2xl font-black text-gray-900 mt-1">{{ statsIngredientes.total }}</p>
+          <p class="text-2xl font-black text-[#202723] mt-1">{{ statsIngredientes.total }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-amber-500">
-          <p class="text-xs text-gray-500 uppercase font-semibold">Bajo stock ⚠️</p>
+        <div class="bg-white rounded-xl shadow-xs p-4 border border-[#DDE3DE] border-l-4 border-l-amber-500">
+          <p class="text-xs text-gray-500 uppercase font-semibold flex items-center gap-1">
+            Bajo stock <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+          </p>
           <p class="text-2xl font-black text-amber-600 mt-1">{{ statsIngredientes.bajo_stock }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500">
-          <p class="text-xs text-gray-500 uppercase font-semibold">Sin stock 🚨</p>
+        <div class="bg-white rounded-xl shadow-xs p-4 border border-[#DDE3DE] border-l-4 border-l-red-500">
+          <p class="text-xs text-gray-500 uppercase font-semibold flex items-center gap-1">
+            Sin stock <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+          </p>
           <p class="text-2xl font-black text-red-600 mt-1">{{ statsIngredientes.sin_stock }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-emerald-500">
+        <div class="bg-white rounded-xl shadow-xs p-4 border border-[#DDE3DE] border-l-4 border-l-[#26734D]">
           <p class="text-xs text-gray-500 uppercase font-semibold">Valor inventario</p>
-          <p class="text-2xl font-black text-emerald-600 mt-1">${{ formatearMoneda(statsIngredientes.costo_total) }}</p>
+          <p class="text-2xl font-black text-[#26734D] mt-1">${{ formatearMoneda(statsIngredientes.costo_total) }}</p>
         </div>
       </div>
 
       <!-- Filtros -->
       <div class="flex items-center gap-3 flex-wrap mb-6">
-        <input
-          v-model="buscarIngrediente"
-          type="text"
-          placeholder="🔍 Buscar ingrediente..."
-          class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-64"
-        />
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input
+            v-model="buscarIngrediente"
+            type="text"
+            placeholder="Buscar ingrediente..."
+            class="pl-8 pr-4 py-2 bg-white border border-[#DDE3DE] rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none w-64"
+          />
+        </div>
         <button
           @click="filtroBajoStock = !filtroBajoStock"
-          :class="['px-4 py-2 rounded-xl text-sm font-semibold transition border',
-            filtroBajoStock ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300']"
+          :class="['px-4 py-2 rounded-xl text-sm font-semibold transition border flex items-center gap-2',
+            filtroBajoStock ? 'bg-amber-100 border-amber-400 text-amber-800' : 'bg-white border-[#DDE3DE] text-gray-600 hover:border-gray-300']"
         >
-          ⚠️ Solo bajo stock
+          <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xs"></i>
+          Solo bajo stock
         </button>
         <span class="text-xs text-gray-400 ml-auto">{{ ingredientesFiltrados.length }} ingredientes</span>
       </div>
 
       <!-- Tabla de ingredientes -->
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="bg-white rounded-xl shadow-xs border border-[#DDE3DE] overflow-hidden">
         <div v-if="loading.ingredientes" class="text-center py-16 text-gray-400">
-          <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <div class="w-8 h-8 border-4 border-gray-200 border-t-[#245C4F] rounded-full animate-spin mx-auto mb-3"></div>
           Cargando ingredientes...
         </div>
         <div v-else-if="ingredientesFiltrados.length === 0" class="text-center py-16 text-gray-400">
-          <span class="text-4xl block mb-3">🧄</span>
+          <i class="fa-solid fa-seedling text-4xl text-gray-300 block mb-3"></i>
           <p>No hay ingredientes{{ buscarIngrediente ? ' con ese nombre' : ' registrados' }}</p>
-          <button @click="abrirModalIngrediente()" class="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition">
+          <button @click="abrirModalIngrediente()" class="mt-3 px-4 py-2 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs">
             Agregar el primero
           </button>
         </div>
@@ -274,10 +298,10 @@
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-3">
                     <div
-                      class="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
-                      :class="ing.sin_stock ? 'bg-red-100' : ing.bajo_stock ? 'bg-amber-100' : 'bg-indigo-50'"
+                      class="w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0"
+                      :class="ing.sin_stock ? 'bg-red-100 text-red-600' : ing.bajo_stock ? 'bg-amber-100 text-amber-600' : 'bg-[#E8F1ED] text-[#245C4F]'"
                     >
-                      {{ ing.sin_stock ? '🚨' : ing.bajo_stock ? '⚠️' : '🧄' }}
+                      <i :class="ing.sin_stock ? 'fa-solid fa-circle-exclamation' : ing.bajo_stock ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-seedling'"></i>
                     </div>
                     <div>
                       <p class="text-sm font-semibold text-gray-900">{{ ing.nombre }}</p>
@@ -303,10 +327,16 @@
                   </span>
                 </td>
                 <td class="px-5 py-4 text-right">
-                  <div class="flex justify-end gap-1">
-                    <button @click="abrirAjusteStock(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition font-medium">📦 Stock</button>
-                    <button @click="abrirModalIngrediente(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition font-medium">✏️</button>
-                    <button @click="handleDeleteIngrediente(ing.id)" class="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">🗑️</button>
+                  <div class="flex justify-end gap-1.5">
+                    <button @click="abrirAjusteStock(ing)" class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium flex items-center gap-1">
+                      <i class="fa-solid fa-boxes-stacked text-[10px]"></i> Stock
+                    </button>
+                    <button @click="abrirModalIngrediente(ing)" class="w-7 h-7 rounded-lg bg-[#E8F1ED] text-[#245C4F] hover:bg-[#D5E5DE] transition flex items-center justify-center text-xs" title="Editar">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button @click="handleDeleteIngrediente(ing.id)" class="w-7 h-7 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition flex items-center justify-center text-xs" title="Eliminar">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
                   </div>
                 </td>
               </tr>

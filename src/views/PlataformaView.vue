@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="space-y-6">
     <!-- Toasts -->
     <div class="fixed top-4 right-4 z-[200] space-y-2">
       <div
@@ -13,27 +13,34 @@
           toast.type === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500 text-amber-800'        : '',
         ]"
       >
-        <span class="text-lg">
-          {{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}
-        </span>
+        <i
+          :class="[
+            'text-lg',
+            toast.type === 'success' ? 'fa-solid fa-circle-check text-emerald-600' :
+            toast.type === 'error'   ? 'fa-solid fa-circle-xmark text-red-600' :
+            toast.type === 'warning' ? 'fa-solid fa-triangle-exclamation text-amber-600' :
+                                       'fa-solid fa-circle-info text-blue-600'
+          ]"
+        ></i>
         <span class="text-sm font-medium flex-1">{{ toast.message }}</span>
         <button @click="removeToast(toast.id)" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
       </div>
     </div>
-    <!-- Header -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+    <!-- Header Sticky -->
+    <header class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">Panel de Plataforma</h1>
-        <p class="text-gray-500 text-sm">Gestión global de propietarios y restaurantes</p>
+        <h1 class="text-2xl font-bold text-[#202723]">Panel de Plataforma</h1>
+        <p class="text-[#68736C] text-sm">Gestión global de propietarios y restaurantes</p>
       </div>
       <div class="flex items-center gap-3">
-        <div class="bg-indigo-50 p-3 rounded-lg flex items-center gap-3 border border-indigo-100">
-          <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+        <div class="bg-[#E8F1ED] p-3 rounded-xl flex items-center gap-3 border border-[#245C4F]/20">
+          <div class="w-10 h-10 bg-[#245C4F] rounded-xl flex items-center justify-center text-white font-bold">
             {{ stats.total_propietarios || 0 }}
           </div>
           <div>
-            <p class="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Propietarios</p>
-            <p class="text-sm font-bold text-indigo-900">Registrados</p>
+            <p class="text-xs text-[#245C4F] font-bold uppercase tracking-wider">Propietarios</p>
+            <p class="text-sm font-bold text-[#202723]">Registrados</p>
           </div>
         </div>
       </div>
@@ -42,53 +49,49 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div v-for="(val, label) in formattedStats" :key="label" 
-           class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <p class="text-sm text-gray-500 font-medium capitalize">{{ label.replace('_', ' ') }}</p>
-        <p class="text-3xl font-bold text-gray-800 mt-2">{{ val }}</p>
+           class="bg-white p-6 rounded-2xl shadow-xs border border-[#DDE3DE] hover:shadow-md transition-shadow">
+        <p class="text-sm text-[#68736C] font-semibold capitalize">{{ label.replace('_', ' ') }}</p>
+        <p class="text-3xl font-black text-[#202723] mt-2">{{ val }}</p>
       </div>
     </div>
 
     <!-- Main Table -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-lg font-bold text-gray-800">Directorio de Propietarios</h2>
+    <div class="bg-white rounded-2xl shadow-xs border border-[#DDE3DE] overflow-hidden">
+      <div class="p-6 border-b border-[#DDE3DE] flex items-center justify-between">
+        <h2 class="text-lg font-bold text-[#202723]">Directorio de Propietarios</h2>
         <div class="relative">
           <input 
             v-model="searchQuery"
             type="text" 
             placeholder="Buscar por nombre o correo..." 
-            class="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-64"
+            class="pl-9 pr-4 py-2 bg-gray-50 border border-[#DDE3DE] rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none w-64"
           >
-          <span class="absolute left-3 top-2.5 text-gray-400 italic">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-xs text-gray-400"></i>
         </div>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider">
-              <th class="px-6 py-4 font-semibold">Propietario</th>
-              <th class="px-6 py-4 font-semibold">Datos Fiscales</th>
-              <th class="px-6 py-4 font-semibold text-center">Restaurantes</th>
-              <th class="px-6 py-4 font-semibold text-center">Usuarios / Empleados</th>
-              <th class="px-6 py-4 font-semibold">Licencia Actual</th>
-              <th class="px-6 py-4 font-semibold text-right">Acciones</th>
+            <tr class="bg-gray-50/50 text-[#68736C] text-xs uppercase tracking-wider border-b border-[#DDE3DE]">
+              <th class="px-6 py-4 font-bold">Propietario</th>
+              <th class="px-6 py-4 font-bold">Datos Fiscales</th>
+              <th class="px-6 py-4 font-bold text-center">Restaurantes</th>
+              <th class="px-6 py-4 font-bold text-center">Usuarios / Empleados</th>
+              <th class="px-6 py-4 font-bold">Licencia Actual</th>
+              <th class="px-6 py-4 font-bold text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 text-sm">
+          <tbody class="divide-y divide-[#DDE3DE] text-sm">
             <tr v-for="prop in filteredPropietarios" :key="prop.id" class="hover:bg-gray-50/50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-700 font-bold">
+                  <div class="w-10 h-10 bg-[#E8F1ED] rounded-xl flex items-center justify-center text-[#245C4F] font-bold">
                     {{ prop.nombre_completo.charAt(0) }}
                   </div>
                   <div>
-                    <p class="font-bold text-gray-800">{{ prop.nombre_completo }}</p>
-                    <p class="text-xs text-gray-500">{{ prop.correo }}</p>
+                    <p class="font-bold text-[#202723]">{{ prop.nombre_completo }}</p>
+                    <p class="text-xs text-[#68736C]">{{ prop.correo }}</p>
                   </div>
                 </div>
               </td>
@@ -104,17 +107,17 @@
                   <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
                     {{ prop.total_restaurantes }} {{ prop.total_restaurantes === 1 ? 'creado' : 'creados' }}
                   </span>
-                  <span class="text-[11px] text-gray-400 font-semibold mt-1.5 uppercase tracking-wide">
+                  <span class="text-[11px] text-[#68736C] font-semibold mt-1.5 uppercase tracking-wide">
                     Límite: {{ prop.licencia_actual?.max_restaurantes ?? 1 }}
                   </span>
                 </div>
               </td>
               <td class="px-6 py-4 text-center">
                 <div class="flex flex-col items-center">
-                  <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold border border-indigo-100">
+                  <span class="bg-[#E8F1ED] text-[#245C4F] px-3 py-1 rounded-full text-xs font-bold border border-[#245C4F]/20">
                     {{ prop.total_usuarios ?? 0 }} {{ prop.total_usuarios === 1 ? 'usuario' : 'usuarios' }}
                   </span>
-                  <span class="text-[11px] text-gray-400 font-semibold mt-1.5 uppercase tracking-wide">
+                  <span class="text-[11px] text-[#68736C] font-semibold mt-1.5 uppercase tracking-wide">
                     Límite: {{ prop.licencia_actual?.max_usuarios ?? 5 }}
                   </span>
                 </div>
@@ -122,7 +125,7 @@
               <td class="px-6 py-4">
                 <div v-if="prop.licencia_actual" class="flex flex-col">
                   <div class="flex items-center gap-1.5">
-                    <span :class="prop.licencia_actual.estado === 'ACTIVA' ? 'text-indigo-600 font-bold' : 'text-red-500 font-bold'">
+                    <span :class="prop.licencia_actual.estado === 'ACTIVA' ? 'text-[#245C4F] font-bold' : 'text-red-500 font-bold'">
                       {{ prop.licencia_actual.nombre }}
                     </span>
                     <span v-if="prop.licencia_actual.estado !== 'ACTIVA'" class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[9px] font-black uppercase">
@@ -140,30 +143,29 @@
                 <button
                   v-if="prop.licencia_actual"
                   @click="openEditLicencia(prop)"
-                  class="text-amber-600 hover:text-amber-900 font-semibold text-xs bg-amber-50 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors"
+                  class="text-amber-700 hover:text-amber-900 font-bold text-xs bg-amber-50 px-3 py-2 rounded-xl hover:bg-amber-100 transition-colors border border-amber-200/60"
                 >
                   Editar Licencia
                 </button>
                 <button
                   v-else
                   @click="openAddLicencia(prop)"
-                  class="text-emerald-600 hover:text-emerald-900 font-semibold text-xs bg-emerald-50 px-3 py-2 rounded-lg hover:bg-emerald-100 transition-colors"
+                  class="text-emerald-700 hover:text-emerald-900 font-bold text-xs bg-emerald-50 px-3 py-2 rounded-xl hover:bg-emerald-100 transition-colors border border-emerald-200/60"
                 >
                   Asignar Licencia
                 </button>
                 <button 
                   @click="selectedPropietario = prop"
-                  class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs bg-indigo-50 px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors"
+                  class="text-[#245C4F] hover:text-[#1D4A3F] font-bold text-xs bg-[#E8F1ED] px-3 py-2 rounded-xl hover:bg-[#245C4F] hover:text-white transition-colors border border-[#245C4F]/20"
                 >
                   Ver Restaurantes
                 </button>
                 <button 
                   @click="deletePropietario(prop)"
-                  class="text-red-600 hover:text-red-900 font-semibold text-xs bg-red-50 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors"
+                  class="text-red-600 hover:text-white hover:bg-[#B93838] font-bold text-xs bg-red-50 p-2 rounded-xl transition-colors border border-red-200"
+                  title="Eliminar propietario"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <i class="fa-solid fa-trash-can text-xs"></i>
                 </button>
               </td>
             </tr>
@@ -174,16 +176,14 @@
 
     <!-- Modal Restaurantes -->
     <div v-if="selectedPropietario" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-        <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-indigo-600 text-white">
+      <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-[#DDE3DE]">
+        <div class="p-6 border-b border-[#DDE3DE] flex items-center justify-between bg-[#245C4F] text-white">
           <div>
             <h3 class="text-xl font-bold">Restaurantes de {{ selectedPropietario.nombre_completo }}</h3>
-            <p class="text-indigo-100 text-sm">Listado detallado y ubicación</p>
+            <p class="text-emerald-100 text-sm">Listado detallado y ubicación</p>
           </div>
-          <button @click="selectedPropietario = null" class="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button @click="selectedPropietario = null" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
         
@@ -193,56 +193,47 @@
           </div>
           
           <div v-for="res in selectedPropietario.restaurantes" :key="res.id" 
-               class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 hover:border-indigo-200 transition-colors">
+               class="bg-white p-5 rounded-2xl border border-[#DDE3DE] shadow-xs flex flex-col md:flex-row gap-6 hover:border-[#245C4F]/40 transition-colors">
             <div class="flex-1 space-y-3">
               <div class="flex items-center justify-between">
-                <h4 class="text-lg font-bold text-gray-800">{{ res.nombre }}</h4>
+                <h4 class="text-lg font-bold text-[#202723]">{{ res.nombre }}</h4>
                 <div class="flex items-center gap-2">
                   <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">ID: #{{ res.id }}</span>
                   <button 
                     @click="deleteRestaurante(res)"
-                    class="bg-red-50 text-red-500 p-1.5 rounded-lg hover:bg-red-100 transition-colors"
+                    class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition-colors border border-red-200"
                     title="Eliminar Restaurante"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <i class="fa-solid fa-trash-can text-xs"></i>
                   </button>
                 </div>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div class="flex items-start gap-2 text-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                <div class="flex items-start gap-2 text-[#68736C]">
+                  <i class="fa-solid fa-location-dot text-[#245C4F] shrink-0 mt-0.5"></i>
                   <p>{{ res.ubicacion }}</p>
                 </div>
-                <div class="flex items-center gap-2 text-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
+                <div class="flex items-center gap-2 text-[#68736C]">
+                  <i class="fa-solid fa-phone text-[#245C4F] shrink-0"></i>
                   <p>{{ res.telefono || 'Sin teléfono' }}</p>
                 </div>
               </div>
             </div>
-            <div class="flex flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">
+            <div class="flex flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-[#DDE3DE] pt-4 md:pt-0 md:pl-6">
               <a 
                 :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(res.nombre + ' ' + res.ubicacion)" 
                 target="_blank"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                class="bg-[#245C4F] text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#1D4A3F] transition-colors shadow-xs"
               >
-                Ver en Maps
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
+                <span>Ver en Maps</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
               </a>
             </div>
           </div>
         </div>
         
-        <div class="p-6 bg-gray-50 text-right">
-          <button @click="selectedPropietario = null" class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-sm text-sm">
+        <div class="p-4 bg-gray-50 border-t border-[#DDE3DE] text-right">
+          <button @click="selectedPropietario = null" class="px-6 py-2 bg-white border border-[#DDE3DE] text-[#202723] rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-xs text-sm">
             Cerrar Detalles
           </button>
         </div>
@@ -250,34 +241,32 @@
     </div>
 
     <!-- Modal de Confirmación Premium -->
-    <div v-if="confirmModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-      <div class="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl transform transition-all scale-100 border border-gray-100">
+    <div v-if="confirmModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all scale-100 border border-[#DDE3DE]">
         <div class="p-8 text-center">
           <!-- Icono de Advertencia -->
-          <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+          <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 border border-red-200">
+            <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
           </div>
           
-          <h3 class="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">{{ confirmModal.title }}</h3>
-          <p class="text-gray-500 text-sm leading-relaxed mb-8">
+          <h3 class="text-xl font-black text-[#202723] mb-2 uppercase tracking-tight">{{ confirmModal.title }}</h3>
+          <p class="text-[#68736C] text-sm leading-relaxed mb-6">
             {{ confirmModal.message }}
           </p>
 
-          <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-2.5">
             <button 
               @click="confirmAction"
               :disabled="confirmModal.loading"
-              class="w-full py-4 bg-red-600 text-white rounded-2xl font-bold text-lg hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2"
+              class="w-full py-3 bg-[#B93838] text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-all shadow-xs disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <span v-if="confirmModal.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span v-if="confirmModal.loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ confirmModal.loading ? 'Procesando...' : confirmModal.confirmText }}
             </button>
             <button 
               @click="confirmModal.show = false"
               :disabled="confirmModal.loading"
-              class="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all"
+              class="w-full py-3 bg-gray-100 text-[#68736C] rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
             >
               Cancelar
             </button>
@@ -287,30 +276,28 @@
     </div>
 
     <!-- Modal Editar/Asignar Licencia -->
-    <div v-if="editLicenciaModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] flex items-center justify-center p-4">
-      <div class="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl border border-gray-100">
-        <div class="p-8">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-gray-900">{{ editLicenciaModal.id ? 'Editar Licencia' : 'Asignar Licencia' }}</h3>
-            <button @click="editLicenciaModal.show = false" class="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+    <div v-if="editLicenciaModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-[#DDE3DE]">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-xl font-bold text-[#202723]">{{ editLicenciaModal.id ? 'Editar Licencia' : 'Asignar Licencia' }}</h3>
+            <button @click="editLicenciaModal.show = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
+              <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
 
-          <p class="text-sm text-gray-500 mb-6">
-            Propietario: <span class="font-semibold text-gray-800">{{ editLicenciaModal.propietario_nombre }}</span>
+          <p class="text-sm text-[#68736C] mb-5">
+            Propietario: <span class="font-bold text-[#202723]">{{ editLicenciaModal.propietario_nombre }}</span>
             <br>
-            Licencia actual: <span class="font-semibold text-gray-800">{{ editLicenciaModal.licencia_nombre }}</span>
+            Licencia actual: <span class="font-bold text-[#245C4F]">{{ editLicenciaModal.licencia_nombre }}</span>
           </p>
 
-          <div class="space-y-5">
+          <div class="space-y-4">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipo de Licencia / Plan</label>
+              <label class="block text-xs font-bold text-[#202723] mb-1.5">Tipo de Licencia / Plan</label>
               <select
                 v-model="editLicenciaModal.licencia_id"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 bg-gray-50 border border-[#DDE3DE] rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none"
               >
                 <option v-for="lic in licencias" :key="lic.id" :value="lic.id">
                   {{ lic.nombre }} · {{ lic.tipo }} ({{ lic.max_restaurantes }} suc · {{ lic.max_usuarios }} usr)
@@ -319,26 +306,26 @@
               <p class="text-[10px] text-gray-400 mt-1">Selecciona el plan que tendrá el propietario</p>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Fecha de Inicio</label>
+              <label class="block text-xs font-bold text-[#202723] mb-1.5">Fecha de Inicio</label>
               <input
                 v-model="editLicenciaModal.fecha_inicio"
                 type="date"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 bg-gray-50 border border-[#DDE3DE] rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none"
               />
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Fecha de Expiración</label>
+              <label class="block text-xs font-bold text-[#202723] mb-1.5">Fecha de Expiración</label>
               <input
                 v-model="editLicenciaModal.fecha_expiracion"
                 type="date"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 bg-gray-50 border border-[#DDE3DE] rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none"
               />
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Estado de la Licencia</label>
+              <label class="block text-xs font-bold text-[#202723] mb-1.5">Estado de la Licencia</label>
               <select
                 v-model="editLicenciaModal.estado"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 bg-gray-50 border border-[#DDE3DE] rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none"
               >
                 <option value="CANCELADA">Cancelada</option>
                 <option value="EXPIRADA">Expirada</option>
@@ -347,26 +334,26 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 mt-8">
+          <div class="flex flex-col gap-2.5 mt-6">
             <button
               @click="updateLicencia"
               :disabled="editLicenciaModal.loading"
-              class="w-full py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 flex items-center justify-center gap-2"
+              class="w-full py-2.5 bg-[#245C4F] text-white rounded-xl font-bold text-sm hover:bg-[#1D4A3F] transition-all shadow-xs disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <span v-if="editLicenciaModal.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span v-if="editLicenciaModal.loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ editLicenciaModal.loading ? 'Guardando...' : (editLicenciaModal.id ? 'Guardar Cambios' : 'Asignar Licencia') }}
             </button>
             <button
               v-if="editLicenciaModal.id"
               @click="removeLicencia(editLicenciaModal.id)"
-              class="w-full py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-all"
+              class="w-full py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-all border border-red-200"
             >
               Quitar Licencia
             </button>
             <button
               @click="editLicenciaModal.show = false"
               :disabled="editLicenciaModal.loading"
-              class="w-full py-3 bg-gray-50 text-gray-500 rounded-2xl font-bold text-sm hover:bg-gray-100 transition-all"
+              class="w-full py-2.5 bg-gray-100 text-[#68736C] rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
             >
               Cancelar
             </button>

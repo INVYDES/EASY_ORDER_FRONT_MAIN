@@ -3,13 +3,13 @@
     <div class="w-full max-w-2xl text-center">
       <div class="flex items-center justify-between mb-6">
         <router-link to="/" class="inline-flex items-center gap-2 no-underline" aria-label="eOrder — Ir al inicio">
-          <span class="text-2xl font-black tracking-tighter text-gray-900 dark:text-slate-100"><i class="not-italic text-indigo-600 dark:text-indigo-400">e</i>Order</span>
+          <span class="text-2xl font-black tracking-tighter text-gray-900 dark:text-slate-100"><i class="not-italic text-[#245C4F]">e</i>Order</span>
         </router-link>
         <PreferenciasControl />
       </div>
 
-      <div class="mx-auto w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center animate-pop">
-        <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+      <div class="mx-auto w-20 h-20 rounded-full bg-[#E8F1ED] dark:bg-emerald-500/15 flex items-center justify-center animate-pop">
+        <svg class="w-10 h-10 text-[#245C4F] dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path class="tick" d="M20 6 9 17l-5-5" />
         </svg>
@@ -25,7 +25,7 @@
         <h2 class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Qué sigue</h2>
 
         <div v-for="paso in pasos" :key="paso.n" class="flex gap-4">
-          <span class="shrink-0 w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-black text-sm flex items-center justify-center">
+          <span class="shrink-0 w-8 h-8 rounded-xl bg-[#E8F1ED] text-[#245C4F] font-black text-sm flex items-center justify-center">
             {{ paso.n }}
           </span>
           <div>
@@ -36,18 +36,18 @@
 
         <p class="pt-4 border-t border-gray-100 dark:border-white/10 text-xs text-gray-400 dark:text-slate-500">
           ¿Urgente? Escríbenos por WhatsApp desde
-          <router-link to="/contactanos" class="text-indigo-600 dark:text-indigo-400 hover:underline">la página de contacto</router-link>
+          <router-link to="/contactanos" class="text-[#245C4F] hover:underline font-semibold">la página de contacto</router-link>
           y te atendemos en el momento.
         </p>
       </div>
 
       <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
         <router-link to="/planes"
-          class="px-6 py-3 rounded-2xl bg-gray-900 dark:bg-indigo-600 text-white text-sm font-black hover:bg-gray-800 dark:hover:bg-indigo-500 hover:-translate-y-0.5 active:translate-y-0 transition shadow-lg shadow-gray-200 dark:shadow-none">
+          class="px-6 py-3 rounded-2xl bg-[#245C4F] text-white text-sm font-black hover:bg-[#1D4A3F] hover:-translate-y-0.5 active:translate-y-0 transition shadow-lg shadow-emerald-900/10 cursor-pointer">
           Ver planes y precios
         </router-link>
         <router-link to="/"
-          class="px-6 py-3 rounded-2xl bg-white dark:bg-white/10 text-gray-700 dark:text-slate-200 text-sm font-bold border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/20 transition">
+          class="px-6 py-3 rounded-2xl bg-white dark:bg-white/10 text-gray-700 dark:text-slate-200 text-sm font-bold border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/20 transition cursor-pointer">
           Volver al inicio
         </router-link>
       </div>

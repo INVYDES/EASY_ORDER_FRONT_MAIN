@@ -7,19 +7,19 @@
 
         <!-- Header -->
         <div class="mb-8">
-          <div class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-            <span>🍽️</span> Easy Order
+          <div class="inline-flex items-center gap-2 bg-[#E8F1ED] text-[#245C4F] text-xs font-bold px-3 py-1.5 rounded-full mb-4 border border-[#DDE3DE]">
+            <i class="fa-solid fa-utensils"></i> Easy Order
           </div>
-          <h1 class="text-3xl font-black text-gray-900 leading-tight">Crea tu cuenta</h1>
-          <p class="text-gray-500 mt-1.5 text-sm">Explora menús, haz pedidos y sigue tus órdenes en tiempo real.</p>
+          <h1 class="text-3xl font-black text-[#202723] leading-tight">Crea tu cuenta</h1>
+          <p class="text-[#68736C] mt-1.5 text-sm">Explora menús, haz pedidos y sigue tus órdenes en tiempo real.</p>
         </div>
 
         <!-- Alerts -->
-        <div v-if="errorMessage" class="mb-4 p-3.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
-          <span>❌</span> {{ errorMessage }}
+        <div v-if="errorMessage" class="mb-4 p-3.5 text-sm text-[#B93838] bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+          <i class="fa-solid fa-circle-xmark"></i> <span>{{ errorMessage }}</span>
         </div>
-        <div v-if="successMessage" class="mb-4 p-3.5 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
-          <span>✅</span> {{ successMessage }}
+        <div v-if="successMessage" class="mb-4 p-3.5 text-sm text-[#26734D] bg-[#E8F1ED] border border-[#26734D]/30 rounded-xl flex items-center gap-2">
+          <i class="fa-solid fa-circle-check"></i> <span>{{ successMessage }}</span>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -57,11 +57,11 @@
             <div class="relative">
               <input v-model="form.password" :type="showPassword ? 'text' : 'password'"
                 placeholder="Mínimo 6 caracteres" required
-                :class="['w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm',
+                :class="['w-full px-4 py-3 pr-12 border rounded-xl focus:ring-1 focus:ring-[#245C4F] focus:outline-none transition-all text-sm',
                   errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200']" />
               <button type="button" @click="showPassword = !showPassword"
-                class="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 transition text-sm">
-                {{ showPassword ? '🙈' : '👁️' }}
+                class="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 transition text-sm cursor-pointer">
+                <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
               </button>
             </div>
             <p v-if="errors.password" class="text-xs text-red-500 mt-1">{{ errors.password[0] }}</p>
@@ -89,51 +89,58 @@
 
           <!-- Botón -->
           <button type="submit" :disabled="loading || passwordMismatch"
-            class="w-full py-3.5 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 font-bold text-sm shadow-lg shadow-indigo-200/50 flex items-center justify-center gap-2 mt-2">
+            class="w-full py-3.5 text-white bg-[#245C4F] rounded-xl hover:bg-[#1D4A3F] transition-all disabled:opacity-50 font-bold text-sm shadow-md flex items-center justify-center gap-2 mt-2 cursor-pointer">
             <div v-if="loading" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
-            <span>{{ loading ? 'Creando cuenta...' : '🚀 Comenzar a pedir' }}</span>
+            <span class="inline-flex items-center gap-2">
+              <i class="fa-solid fa-arrow-right"></i>
+              {{ loading ? 'Creando cuenta...' : 'Comenzar a pedir' }}
+            </span>
           </button>
 
         </form>
 
         <p class="mt-6 text-center text-sm text-gray-500">
           ¿Ya tienes cuenta?
-          <RouterLink to="/login" class="text-indigo-600 font-bold hover:underline">Inicia sesión</RouterLink>
+          <RouterLink to="/login" class="text-[#245C4F] font-bold hover:underline">Inicia sesión</RouterLink>
         </p>
 
         <p class="mt-3 text-center text-xs text-gray-400">
           ¿Eres dueño de un restaurante?
-          <RouterLink to="/registro/dueno" class="text-indigo-500 hover:underline">Regístrate aquí</RouterLink>
+          <RouterLink to="/registro/dueno" class="text-[#245C4F] hover:underline">Regístrate aquí</RouterLink>
         </p>
 
       </div>
     </div>
 
     <!-- ── PANEL DECORATIVO ── -->
-    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 items-center justify-center overflow-hidden">
+    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[#245C4F] via-[#1D4A3F] to-[#14332B] items-center justify-center overflow-hidden">
       <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] [background-size:28px_28px]"></div>
-      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
-      <div class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-400 rounded-full blur-3xl opacity-20"></div>
+      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-600 rounded-full blur-3xl opacity-20"></div>
+      <div class="absolute -top-24 -left-24 w-96 h-96 bg-[#245C4F] rounded-full blur-3xl opacity-20"></div>
 
       <div class="relative z-10 text-center text-white px-12 space-y-8">
-        <div class="text-7xl">🍕🌮🍔</div>
+        <div class="flex justify-center items-center gap-5 text-4xl text-emerald-200">
+          <i class="fa-solid fa-pizza-slice"></i>
+          <i class="fa-solid fa-burger"></i>
+          <i class="fa-solid fa-mug-hot"></i>
+        </div>
         <h2 class="text-4xl font-black leading-tight">
           El menú de todos<br>tus restaurantes<br>favoritos
         </h2>
-        <p class="text-indigo-200 text-lg leading-relaxed">
+        <p class="text-emerald-100 text-lg leading-relaxed">
           Haz pedidos, sigue tus órdenes en tiempo real<br>y disfruta de ofertas exclusivas.
         </p>
-        <div class="flex justify-center gap-6 text-sm text-indigo-300">
-          <div class="flex flex-col items-center gap-1">
-            <span class="text-2xl">🛵</span>
+        <div class="flex justify-center gap-8 text-sm text-emerald-200">
+          <div class="flex flex-col items-center gap-1.5">
+            <i class="fa-solid fa-motorcycle text-2xl"></i>
             <span>A domicilio</span>
           </div>
-          <div class="flex flex-col items-center gap-1">
-            <span class="text-2xl">🏪</span>
+          <div class="flex flex-col items-center gap-1.5">
+            <i class="fa-solid fa-store text-2xl"></i>
             <span>Para recoger</span>
           </div>
-          <div class="flex flex-col items-center gap-1">
-            <span class="text-2xl">📍</span>
+          <div class="flex flex-col items-center gap-1.5">
+            <i class="fa-solid fa-location-dot text-2xl"></i>
             <span>En mesa</span>
           </div>
         </div>

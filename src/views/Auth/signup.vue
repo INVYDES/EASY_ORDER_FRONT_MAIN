@@ -4,9 +4,9 @@
     <div class="flex items-center justify-center w-full lg:w-1/2 bg-white px-6 py-10">
       <div class="w-full max-w-2xl">
         <div class="mb-8">
-          <h1 class="text-3xl font-bold text-indigo-600">Easy Order</h1>
-          <p class="text-2xl font-semibold text-gray-700 mt-1">Crea tu cuenta de Propietario</p>
-          <p class="text-sm text-gray-500 mt-1">Regístrate y configura tu primer restaurante en un solo paso</p>
+          <h1 class="text-3xl font-bold text-[#245C4F]">Easy Order</h1>
+          <p class="text-2xl font-semibold text-[#202723] mt-1">Crea tu cuenta de Propietario</p>
+          <p class="text-sm text-[#68736C] mt-1">Regístrate y configura tu primer restaurante en un solo paso</p>
         </div>
 
         <div v-if="errorMessage" class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
@@ -20,8 +20,8 @@
 
           <!-- SECCIÓN 1: Información Personal -->
           <section>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
-              <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+            <h3 class="text-lg font-semibold text-[#202723] border-b border-[#DDE3DE] pb-2 mb-4 flex items-center gap-2">
+              <span class="bg-[#245C4F] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">1</span>
               Información Personal
             </h3>
 
@@ -51,8 +51,8 @@
 
           <!-- SECCIÓN 2: Tu Primer Restaurante -->
           <section>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
-              <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+            <h3 class="text-lg font-semibold text-[#202723] border-b border-[#DDE3DE] pb-2 mb-4 flex items-center gap-2">
+              <span class="bg-[#245C4F] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">2</span>
               Tu Primer Restaurante
             </h3>
 
@@ -106,8 +106,8 @@
 
           <!-- SECCIÓN 3: Suscripción y Datos Fiscales -->
           <section>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
-              <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+            <h3 class="text-lg font-semibold text-[#202723] border-b border-[#DDE3DE] pb-2 mb-4 flex items-center gap-2">
+              <span class="bg-[#245C4F] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
               Suscripción y Datos Fiscales
             </h3>
 
@@ -160,15 +160,15 @@
 
           <!-- Términos y Condiciones -->
           <div class="flex items-center gap-2 text-sm pt-4">
-            <input v-model="aceptaTerminos" id="terminos_checkbox" type="checkbox" required class="accent-indigo-600 w-4 h-4 cursor-pointer" />
+            <input v-model="aceptaTerminos" id="terminos_checkbox" type="checkbox" required class="accent-[#245C4F] w-4 h-4 cursor-pointer" />
             <label for="terminos_checkbox" class="text-gray-600 cursor-pointer">
-              Acepto los <RouterLink to="/terminos-y-condiciones" target="_blank" class="text-indigo-600 hover:underline font-bold">términos y condiciones</RouterLink>
+              Acepto los <RouterLink to="/terminos-y-condiciones" target="_blank" class="text-[#245C4F] hover:underline font-bold">términos y condiciones</RouterLink>
             </label>
           </div>
 
           <!-- Botón de Envío -->
           <button type="submit" :disabled="cargando || !aceptaTerminos"
-            class="w-full py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:bg-gray-400 font-bold text-lg shadow-lg">
+            class="w-full py-4 text-white bg-[#245C4F] rounded-lg hover:bg-[#1D4A3F] transition disabled:opacity-50 disabled:bg-gray-400 font-bold text-lg shadow-lg cursor-pointer">
             {{ cargando ? 'Procesando registro...' : 'Comenzar ahora' }}
           </button>
 
@@ -176,7 +176,7 @@
 
         <p class="mt-6 pb-10 text-sm text-gray-600 text-center">
           ¿Ya tienes cuenta?
-          <RouterLink to="/login" class="text-indigo-600 font-bold hover:underline">Iniciar sesión</RouterLink>
+          <RouterLink to="/login" class="text-[#245C4F] font-bold hover:underline">Iniciar sesión</RouterLink>
         </p>
 
       </div>
@@ -185,14 +185,14 @@
     <!-- Lado Derecho Decorativo -->
     <div class="hidden lg:flex lg:w-1/2 relative bg-cover bg-center"
       :style="{ backgroundImage: `url(${fondoSignUp})` }">
-      <div class="absolute inset-0 bg-indigo-900/40 backdrop-blur-sm"></div>
+      <div class="absolute inset-0 bg-[#1D4A3F]/75 backdrop-blur-xs"></div>
       <div class="relative z-10 flex flex-col items-center justify-center text-center text-white w-full px-12">
         <h2 class="text-4xl font-bold mb-6">Lleva tu restaurante al siguiente nivel</h2>
         <ul class="text-left space-y-4 text-lg">
-          <li class="flex items-center gap-3">✅ Control de mesas en tiempo real</li>
-          <li class="flex items-center gap-3">✅ Gestión de comandas y cocina</li>
-          <li class="flex items-center gap-3">✅ Reportes de ventas diarios</li>
-          <li class="flex items-center gap-3">✅ Facturación electrónica fácil</li>
+          <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Control de mesas en tiempo real</li>
+          <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Gestión de comandas y cocina</li>
+          <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Reportes de ventas diarios</li>
+          <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Facturación electrónica fácil</li>
         </ul>
       </div>
     </div>

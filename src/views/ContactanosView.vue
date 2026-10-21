@@ -19,7 +19,10 @@
           <router-link to="/login" class="nav-link ghost">Ingresar</router-link>
           <PreferenciasControl />
         </div>
-        <button class="menu-btn" @click="mobileOpen=!mobileOpen">{{ mobileOpen ? '✕' : '☰' }}</button>
+        <button class="menu-btn" @click="mobileOpen=!mobileOpen">
+          <i v-if="!mobileOpen" class="fa-solid fa-bars text-sm"></i>
+          <i v-else class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </div>
       <div v-if="mobileOpen" class="mobile-menu">
         <router-link to="/planes" @click="mobileOpen=false">Planes</router-link>
@@ -34,9 +37,9 @@
         <h1>Hablemos de tu restaurante</h1>
         <p>Déjanos tus datos y un distribuidor o representante de eOrder te ayudará a elegir la solución adecuada para tu operación.</p>
         <div class="hero-badges">
-          <span>⚡ Respuesta &lt; 24h</span>
-          <span>💬 Asesoría gratuita</span>
-          <span>🛡️ Sin compromiso</span>
+          <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-500"></i> Respuesta &lt; 24h</span>
+          <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-comment-dots text-[#245C4F]"></i> Asesoría gratuita</span>
+          <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-emerald-600"></i> Sin compromiso</span>
         </div>
       </section>
 
@@ -120,8 +123,8 @@
           </form>
 
           <div class="trust-row">
-            <span>🔒 Tus datos están protegidos</span>
-            <span>📞 Te contactamos en horario solicitado</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-lock text-emerald-600"></i> Tus datos están protegidos</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-phone text-[#245C4F]"></i> Te contactamos en horario solicitado</span>
           </div>
         </div>
 

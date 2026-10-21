@@ -847,6 +847,21 @@ onMounted(() => {
 .page-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   flex-wrap: wrap; gap: 1rem;
+  position: sticky;
+  top: -1rem;
+  z-index: 20;
+  background: rgba(249, 250, 251, 0.95);
+  backdrop-filter: blur(4px);
+  margin: -1rem -1rem 0;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--c-border);
+}
+@media (min-width: 1024px) {
+  .page-header {
+    top: -2rem;
+    margin: -2rem -2rem 0;
+    padding: 2rem 2rem 0.75rem;
+  }
 }
 .page-header__eyebrow { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--c-indigo); margin-bottom: .25rem; }
 .page-header__title   { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; color: var(--c-text); }

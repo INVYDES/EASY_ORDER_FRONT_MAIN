@@ -14,46 +14,50 @@
     <div v-if="vista === 'restaurantes'">
 
       <!-- Header -->
-      <div class="bg-white border-b border-gray-100 px-5 py-4 sticky top-0 z-20">
-        <h1 class="text-xl font-bold text-gray-900">¿Dónde quieres comer?</h1>
-        <p class="text-gray-400 text-sm mt-0.5">Selecciona un restaurante para ver su menú</p>
+      <div class="bg-white border-b border-[#DDE3DE] px-5 py-4 sticky top-0 z-20">
+        <h1 class="text-xl font-bold text-[#202723]">¿Dónde quieres comer?</h1>
+        <p class="text-[#68736C] text-sm mt-0.5">Selecciona un restaurante para ver su menú</p>
         <div class="relative mt-3">
-          <svg class="absolute left-3.5 top-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-xs text-gray-400"></i>
           <input v-model="busquedaRestaurante" type="text" placeholder="Buscar restaurante..."
-            class="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border-0" />
+            class="w-full pl-9 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#245C4F] border-0" />
         </div>
       </div>
 
       <div v-if="loading.restaurantes" class="flex flex-col items-center justify-center py-20 gap-3">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-gray-400 text-sm">Cargando restaurantes...</p>
+        <div class="w-8 h-8 border-4 border-[#245C4F]/20 border-t-[#245C4F] rounded-full animate-spin"></div>
+        <p class="text-[#68736C] text-sm">Cargando restaurantes...</p>
       </div>
       <div v-else-if="restaurantesFiltrados.length === 0" class="text-center py-20">
-        <span class="text-5xl block mb-3">🍽️</span>
-        <p class="text-gray-500 font-medium">No encontramos restaurantes</p>
+        <i class="fa-solid fa-utensils text-5xl text-gray-300 block mb-3"></i>
+        <p class="text-[#202723] font-medium">No encontramos restaurantes</p>
       </div>
       <div v-else class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <button v-for="rest in restaurantesFiltrados" :key="rest.id"
           @click="seleccionarRestaurante(rest)"
-          class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-left hover:shadow-md hover:-translate-y-0.5 transition-all group">
-          <div class="w-full h-36 bg-gradient-to-br from-indigo-500 to-purple-600 relative overflow-hidden flex items-center justify-center">
+          class="bg-white rounded-2xl shadow-xs border border-[#DDE3DE] overflow-hidden text-left hover:shadow-md hover:-translate-y-0.5 transition-all group">
+          <div class="w-full h-36 bg-gradient-to-r from-[#245C4F] to-[#1D4A3F] relative overflow-hidden flex items-center justify-center">
             <img v-if="rest.imagen" :src="getImageUrl(rest.imagen)" :alt="rest.nombre || 'Imagen del restaurante'" class="w-full h-full object-cover" @error="onImageError" />
-            <span v-else class="text-6xl opacity-30">🍽️</span>
+            <i v-else class="fa-solid fa-utensils text-5xl text-white/30"></i>
             <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-all"></div>
             <div class="absolute top-3 right-3">
-              <span class="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Abierto</span>
+              <span class="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Abierto</span>
             </div>
           </div>
           <div class="p-4">
-            <h3 class="font-bold text-gray-900 text-base">{{ rest.nombre }}</h3>
-            <p v-if="rest.calle || rest.ciudad" class="text-xs text-gray-400 mt-1">
-              📍 {{ [rest.calle, rest.ciudad, rest.estado].filter(Boolean).join(', ') }}
+            <h3 class="font-bold text-[#202723] text-base">{{ rest.nombre }}</h3>
+            <p v-if="rest.calle || rest.ciudad" class="text-xs text-[#68736C] mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-location-dot text-[#245C4F]"></i>
+              <span class="truncate">{{ [rest.calle, rest.ciudad, rest.estado].filter(Boolean).join(', ') }}</span>
             </p>
-            <p v-if="rest.telefono" class="text-xs text-gray-400 mt-0.5">📞 {{ rest.telefono }}</p>
+            <p v-if="rest.telefono" class="text-xs text-[#68736C] mt-0.5 flex items-center gap-1">
+              <i class="fa-solid fa-phone text-[#245C4F]"></i>
+              <span>{{ rest.telefono }}</span>
+            </p>
             <div class="flex items-center justify-between mt-3">
-              <span class="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full">Ver menú →</span>
+              <span class="text-xs text-[#245C4F] font-semibold bg-[#E8F1ED] px-3 py-1 rounded-full group-hover:bg-[#245C4F] group-hover:text-white transition inline-flex items-center gap-1">
+                Ver menú <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </span>
             </div>
           </div>
         </button>
@@ -64,16 +68,16 @@
     <div v-else-if="vista === 'menu'" class="flex flex-col h-screen">
 
       <!-- Header menú -->
-      <div class="bg-white border-b border-gray-100 sticky top-0 z-20">
-        <div class="w-full h-28 bg-gradient-to-br from-indigo-500 to-purple-600 relative flex items-end px-5 pb-4">
+      <div class="bg-white border-b border-[#DDE3DE] sticky top-0 z-20">
+        <div class="w-full h-28 bg-gradient-to-r from-[#245C4F] to-[#1D4A3F] relative flex items-end px-5 pb-4">
           <button @click="volverARestaurantes"
-            class="absolute top-4 left-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition text-white font-bold">
-            ←
+            class="absolute top-4 left-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition text-white font-bold">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
           </button>
           <div>
             <h2 class="text-xl font-bold text-white leading-tight">{{ restauranteSeleccionado?.nombre }}</h2>
-            <p v-if="restauranteSeleccionado?.ciudad" class="text-white/70 text-xs mt-0.5">
-              📍 {{ restauranteSeleccionado.ciudad }}
+            <p v-if="restauranteSeleccionado?.ciudad" class="text-emerald-100 text-xs mt-0.5 flex items-center gap-1">
+              <i class="fa-solid fa-location-dot"></i> {{ restauranteSeleccionado.ciudad }}
             </p>
           </div>
         </div>
@@ -82,14 +86,14 @@
         <div v-if="ofertasProductos.length > 0" class="bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 border-b border-amber-200">
           <div class="px-4 py-3">
             <div class="flex items-center gap-2 mb-3">
-              <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center animate-pulse">
-                <span class="text-white text-lg">🔥</span>
+              <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-xs">
+                <i class="fa-solid fa-fire text-white text-sm"></i>
               </div>
               <div>
-                <h3 class="font-bold text-gray-800">Ofertas Especiales</h3>
+                <h3 class="font-bold text-gray-800 text-sm">Ofertas Especiales</h3>
                 <p class="text-xs text-gray-500">¡Precios exclusivos por tiempo limitado!</p>
               </div>
-              <span class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+              <span class="ml-auto bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
                 {{ ofertasProductos.length }} disponibles
               </span>
             </div>
@@ -99,7 +103,7 @@
                 v-for="oferta in ofertasProductos" 
                 :key="oferta.id"
                 @click="agregarOfertaAlPedido(oferta)"
-                class="bg-white rounded-xl shadow-md border border-amber-200 overflow-hidden flex-shrink-0 w-64 hover:shadow-lg transition-all group"
+                class="bg-white rounded-xl shadow-xs border border-amber-200 overflow-hidden flex-shrink-0 w-64 hover:shadow-md transition-all group"
               >
                 <div class="relative h-28 bg-gradient-to-br from-amber-400 to-orange-500">
                   <img 
@@ -110,7 +114,7 @@
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
                   <div class="absolute top-2 left-2">
-                    <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
+                    <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
                       -{{ oferta.descuento_porcentaje }}%
                     </span>
                   </div>
@@ -123,10 +127,10 @@
                   <div class="flex items-center justify-between mb-2">
                     <div>
                       <span class="text-gray-400 text-xs line-through">${{ oferta.precio_original.toFixed(2) }}</span>
-                      <span class="text-amber-600 font-bold text-lg ml-2">${{ oferta.precio_oferta.toFixed(2) }}</span>
+                      <span class="text-amber-700 font-bold text-base ml-2">${{ oferta.precio_oferta.toFixed(2) }}</span>
                     </div>
-                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition">
-                      <span class="text-lg font-bold">+</span>
+                    <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition">
+                      <i class="fa-solid fa-plus text-xs"></i>
                     </div>
                   </div>
                   <p class="text-xs text-gray-500 line-clamp-2">{{ oferta.descripcion }}</p>
@@ -145,14 +149,14 @@
         <!-- Filtros de categoría -->
         <div class="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide bg-white">
           <button @click="categoriaActiva = null"
-            :class="['px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition shrink-0',
-              categoriaActiva === null ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">
+            :class="['px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shrink-0',
+              categoriaActiva === null ? 'bg-[#245C4F] text-white shadow-xs' : 'bg-gray-100 text-[#68736C] hover:bg-gray-200']">
             Todos
           </button>
           <button v-for="cat in categorias" :key="cat.id" @click="categoriaActiva = cat.id"
-            :class="['px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition shrink-0 border',
-              categoriaActiva === cat.id ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200']"
-            :style="categoriaActiva === cat.id ? { backgroundColor: cat.color || '#6366f1' } : {}">
+            :class="['px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shrink-0 border',
+              categoriaActiva === cat.id ? 'text-white border-transparent' : 'bg-white text-[#68736C] border-[#DDE3DE]']"
+            :style="categoriaActiva === cat.id ? { backgroundColor: cat.color || '#245C4F' } : {}">
             {{ cat.icono ? cat.icono + ' ' : '' }}{{ cat.nombre }}
           </button>
         </div>
@@ -164,51 +168,51 @@
         <!-- Lista de productos -->
         <div class="flex-1 overflow-y-auto p-4 space-y-6">
           <div v-if="loading.productos" class="flex flex-col items-center justify-center py-20 gap-3">
-            <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p class="text-gray-400 text-sm">Cargando menú...</p>
+            <div class="w-8 h-8 border-4 border-[#245C4F]/20 border-t-[#245C4F] rounded-full animate-spin"></div>
+            <p class="text-[#68736C] text-sm">Cargando menú...</p>
           </div>
           <div v-else-if="categoriasFiltradas.length === 0" class="text-center py-20">
-            <span class="text-5xl block mb-3">😔</span>
-            <p class="text-gray-500">Sin productos disponibles</p>
+            <i class="fa-solid fa-utensils text-4xl text-gray-300 block mb-2"></i>
+            <p class="text-[#68736C]">Sin productos disponibles</p>
             <p class="text-xs text-gray-400 mt-2">{{ debugMsg }}</p>
           </div>
           <div v-else v-for="cat in categoriasFiltradas" :key="cat.id">
             <div class="flex items-center gap-2 mb-3">
-              <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
-                :style="{ backgroundColor: (cat.color||'#6366f1')+'22', border:`2px solid ${cat.color||'#6366f1'}` }">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0"
+                :style="{ backgroundColor: (cat.color||'#245C4F')+'22', border:`2px solid ${cat.color||'#245C4F'}` }">
                 {{ cat.icono || '📦' }}
               </div>
-              <h3 class="font-bold text-gray-800">{{ cat.nombre }}</h3>
-              <div class="flex-1 h-px bg-gray-100"></div>
+              <h3 class="font-bold text-[#202723] text-sm">{{ cat.nombre }}</h3>
+              <div class="flex-1 h-px bg-[#DDE3DE]"></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button v-for="p in cat.productos" :key="p.id"
                 @click="agregarAlPedido(p)"
                 :disabled="p.agotado"
-                class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex gap-3 p-3 text-left hover:shadow-md transition-all group disabled:opacity-50 disabled:cursor-not-allowed">
-                <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+                class="bg-white rounded-2xl border border-[#DDE3DE] shadow-xs overflow-hidden flex gap-3 p-3 text-left hover:shadow-md transition-all group disabled:opacity-50 disabled:cursor-not-allowed">
+                <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center border border-[#DDE3DE]">
                   <img v-if="p.imagen_url" :src="getImageUrl(p.imagen_url)" :alt="p.nombre"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     @error="onImageError" />
-                  <span v-else class="text-3xl">🍽️</span>
+                  <i v-else class="fa-solid fa-utensils text-2xl text-gray-300"></i>
                 </div>
                 <div class="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
-                    <p class="font-semibold text-gray-800 text-sm leading-tight">{{ p.nombre }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{{ p.descripcion || 'Sin descripción' }}</p>
-                    <p v-if="p.bajo_stock && !p.agotado" class="text-[10px] text-amber-500 mt-1">
-                      ⚠️ Últimas unidades
+                    <p class="font-bold text-[#202723] text-sm leading-tight">{{ p.nombre }}</p>
+                    <p class="text-xs text-[#68736C] mt-0.5 line-clamp-2">{{ p.descripcion || 'Sin descripción' }}</p>
+                    <p v-if="p.bajo_stock && !p.agotado" class="text-[10px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                      <i class="fa-solid fa-triangle-exclamation"></i> Últimas unidades
                     </p>
                     <span v-if="tieneAnuncio(p.id)"
-                      class="inline-block mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
-                      🔥 Promo
+                      class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
+                      <i class="fa-solid fa-fire text-[9px]"></i> Promo
                     </span>
                   </div>
                   <div class="flex items-center justify-between mt-2">
-                    <span class="font-bold text-indigo-600">${{ Number(p.precio||0).toFixed(2) }}</span>
-                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition"
-                      :class="!p.agotado ? 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 text-gray-400'">
-                      {{ !p.agotado ? '+' : '✕' }}
+                    <span class="font-black text-[#245C4F]">${{ Number(p.precio||0).toFixed(2) }}</span>
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition"
+                      :class="!p.agotado ? 'bg-[#E8F1ED] text-[#245C4F] group-hover:bg-[#245C4F] group-hover:text-white' : 'bg-gray-100 text-gray-400'">
+                      <i :class="!p.agotado ? 'fa-solid fa-plus' : 'fa-solid fa-xmark'"></i>
                     </div>
                   </div>
                 </div>
@@ -218,58 +222,65 @@
         </div>
 
         <!-- Carrito lateral (desktop) -->
-        <div class="hidden lg:flex w-96 shrink-0 bg-white border-l border-gray-100 flex-col shadow-sm">
-          <div class="px-5 py-4 border-b border-gray-100">
-            <h3 class="font-bold text-gray-800">Tu pedido</h3>
-            <p class="text-xs text-gray-400 mt-0.5">{{ restauranteSeleccionado?.nombre }}</p>
+        <div class="hidden lg:flex w-96 shrink-0 bg-white border-l border-[#DDE3DE] flex-col shadow-xs">
+          <div class="px-5 py-4 border-b border-[#DDE3DE]">
+            <h3 class="font-bold text-[#202723]">Tu pedido</h3>
+            <p class="text-xs text-[#68736C] mt-0.5">{{ restauranteSeleccionado?.nombre }}</p>
           </div>
           <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2">
             <div v-if="pedido.length === 0" class="flex flex-col items-center justify-center h-full py-10 text-center">
-              <span class="text-4xl mb-3">🛒</span>
-              <p class="text-gray-400 text-sm">Agrega productos<br>para comenzar</p>
+              <i class="fa-solid fa-cart-shopping text-4xl text-gray-300 mb-3"></i>
+              <p class="text-[#68736C] text-sm">Agrega productos<br>para comenzar</p>
             </div>
             <div v-else v-for="item in pedido" :key="item.id"
-              class="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl">
-              <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+              class="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl border border-[#DDE3DE]">
+              <div class="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0 flex items-center justify-center border border-[#DDE3DE]">
                 <img v-if="item.imagen" :src="item.imagen" :alt="item.nombre" class="w-full h-full object-cover" @error="onImageError" />
-                <span v-else class="text-lg">🍽️</span>
+                <i v-else class="fa-solid fa-utensils text-gray-400 text-xs"></i>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-gray-800 truncate">{{ item.nombre }}</p>
+                <p class="text-xs font-bold text-[#202723] truncate">{{ item.nombre }}</p>
                 <div class="flex items-center gap-1.5 mt-1.5">
                   <button @click="decrementar(item.id)"
-                    class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 text-xs hover:bg-gray-300 transition flex items-center justify-center font-bold">−</button>
+                    class="w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-xs hover:bg-gray-300 transition flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-minus text-[8px]"></i>
+                  </button>
                   <span class="text-xs font-bold w-4 text-center">{{ item.cantidad }}</span>
                   <button @click="incrementar(item.id)"
-                    class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-xs hover:bg-indigo-200 transition flex items-center justify-center font-bold">+</button>
+                    class="w-5 h-5 rounded-full bg-[#E8F1ED] text-[#245C4F] text-xs hover:bg-[#245C4F] hover:text-white transition flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-plus text-[8px]"></i>
+                  </button>
                 </div>
               </div>
               <div class="text-right shrink-0">
-                <p class="text-xs font-bold text-gray-800">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
-                <button @click="eliminarDelPedido(item.id)" class="text-gray-300 hover:text-red-400 transition text-xs mt-0.5 block ml-auto">✕</button>
+                <p class="text-xs font-black text-[#202723]">${{ (item.precio * item.cantidad).toFixed(2) }}</p>
+                <button @click="eliminarDelPedido(item.id)" class="text-gray-300 hover:text-red-500 transition text-xs mt-0.5 block ml-auto">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </div>
             </div>
           </div>
-          <div class="px-4 py-4 border-t border-gray-100 space-y-3">
+          <div class="px-4 py-4 border-t border-[#DDE3DE] space-y-3">
             <template v-if="pedido.length > 0">
               <div class="flex justify-between font-bold text-base">
-                <span>Total</span>
-                <span class="text-indigo-600">${{ totalPedido.toFixed(2) }}</span>
+                <span class="text-[#202723]">Total</span>
+                <span class="text-[#245C4F] font-black">${{ totalPedido.toFixed(2) }}</span>
               </div>
-              <textarea v-model="notaGeneral" rows="2" placeholder="📝 Nota general del pedido..."
-                class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none"></textarea>
+              <textarea v-model="notaGeneral" rows="2" placeholder="Nota general del pedido..."
+                class="w-full text-xs px-3 py-2 border border-[#DDE3DE] rounded-xl bg-gray-50 focus:ring-2 focus:ring-[#245C4F] focus:outline-none resize-none"></textarea>
             </template>
             <button @click="showCheckout = true" :disabled="pedido.length === 0"
-              class="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
-              Ir a pagar 💳
+              class="w-full py-3 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              <span>Ir a pagar</span>
+              <i class="fa-solid fa-credit-card text-xs"></i>
             </button>
-            <div v-if="ordenConfirmada" class="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium rounded-xl text-center animate-fade-in">
-              ✅ ¡Pedido enviado correctamente!
+            <div v-if="ordenConfirmada" class="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium rounded-xl text-center animate-fade-in flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i> ¡Pedido enviado correctamente!
             </div>
-            <div v-if="errorOrden" class="p-2.5 bg-red-50 border border-red-200 text-red-600 text-xs font-medium rounded-xl text-center animate-fade-in">
-              ❌ {{ errorOrden }}
+            <div v-if="errorOrden" class="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-xl text-center animate-fade-in flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-circle-xmark text-red-600"></i> {{ errorOrden }}
             </div>
-            <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-1.5 text-xs text-gray-400 hover:text-red-400 transition">
+            <button v-if="pedido.length > 0" @click="vaciarPedido" class="w-full py-1.5 text-xs text-[#68736C] hover:text-red-500 transition">
               Vaciar pedido
             </button>
           </div>
@@ -280,7 +291,7 @@
       <!-- Botón flotante carrito (móvil) -->
       <div v-if="pedido.length > 0" class="lg:hidden fixed bottom-5 left-4 right-4 z-20">
         <button @click="showCarritoMobile = true"
-          class="w-full py-4 bg-indigo-600 text-white rounded-2xl shadow-xl flex items-center justify-between px-5 font-semibold animate-slide-up">
+          class="w-full py-3.5 bg-[#245C4F] text-white rounded-xl shadow-lg flex items-center justify-between px-5 font-semibold animate-slide-up">
           <span class="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ totalItems }}</span>
           <span>Ver pedido</span>
           <span class="font-bold">${{ totalPedido.toFixed(2) }}</span>
@@ -291,39 +302,46 @@
       <div v-if="showCarritoMobile" class="lg:hidden fixed inset-0 bg-black/50 z-30 flex items-end animate-fade-in"
         @click.self="showCarritoMobile = false">
         <div class="bg-white w-full rounded-t-3xl p-5 max-h-[85vh] overflow-y-auto animate-slide-up">
-          <div class="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2">
-            <h3 class="font-bold text-gray-800">Tu pedido</h3>
-            <button @click="showCarritoMobile = false" class="text-gray-400 text-xl hover:text-gray-600">✕</button>
+          <div class="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2 border-b border-[#DDE3DE]">
+            <h3 class="font-bold text-[#202723]">Tu pedido</h3>
+            <button @click="showCarritoMobile = false" class="text-gray-400 text-lg hover:text-gray-600">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
           <div class="space-y-2 mb-4 max-h-[45vh] overflow-y-auto">
-            <div v-for="item in pedido" :key="item.id" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <div v-for="item in pedido" :key="item.id" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-[#DDE3DE]">
               <div class="flex-1">
-                <p class="text-sm font-semibold text-gray-800">{{ item.nombre }}</p>
-                <p class="text-xs text-gray-400">${{ item.precio.toFixed(2) }} c/u</p>
+                <p class="text-sm font-bold text-[#202723]">{{ item.nombre }}</p>
+                <p class="text-xs text-[#68736C]">${{ item.precio.toFixed(2) }} c/u</p>
               </div>
               <div class="flex items-center gap-2">
-                <button @click="decrementar(item.id)" class="w-6 h-6 rounded-full bg-gray-200 text-sm flex items-center justify-center font-bold">−</button>
+                <button @click="decrementar(item.id)" class="w-6 h-6 rounded-full bg-gray-200 text-sm flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-minus text-[9px]"></i>
+                </button>
                 <span class="text-sm font-bold w-5 text-center">{{ item.cantidad }}</span>
-                <button @click="incrementar(item.id)" class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-sm flex items-center justify-center font-bold">+</button>
+                <button @click="incrementar(item.id)" class="w-6 h-6 rounded-full bg-[#E8F1ED] text-[#245C4F] text-sm flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-plus text-[9px]"></i>
+                </button>
               </div>
-              <span class="text-sm font-bold text-gray-800 w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
+              <span class="text-sm font-black text-[#202723] w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
             </div>
           </div>
-          <div class="flex justify-between font-bold text-lg mb-4 pt-3 border-t border-gray-100">
-            <span>Total</span>
-            <span class="text-indigo-600">${{ totalPedido.toFixed(2) }}</span>
+          <div class="flex justify-between font-bold text-lg mb-4 pt-3 border-t border-[#DDE3DE]">
+            <span class="text-[#202723]">Total</span>
+            <span class="text-[#245C4F] font-black">${{ totalPedido.toFixed(2) }}</span>
           </div>
-          <textarea v-model="notaGeneral" rows="2" placeholder="📝 Nota general del pedido..."
-            class="w-full text-sm px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none mb-3"></textarea>
+          <textarea v-model="notaGeneral" rows="2" placeholder="Nota general del pedido..."
+            class="w-full text-sm px-3 py-2 border border-[#DDE3DE] rounded-xl bg-gray-50 focus:ring-2 focus:ring-[#245C4F] focus:outline-none resize-none mb-3"></textarea>
           <button @click="showCheckout = true; showCarritoMobile = false"
-            class="w-full py-3.5 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition">
-            Ir a pagar 💳
+            class="w-full py-3.5 bg-[#245C4F] text-white font-bold rounded-xl hover:bg-[#1D4A3F] transition flex items-center justify-center gap-2">
+            <span>Ir a pagar</span>
+            <i class="fa-solid fa-credit-card text-sm"></i>
           </button>
-          <div v-if="ordenConfirmada" class="mt-3 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium rounded-xl text-center animate-fade-in">
-            ✅ ¡Pedido enviado correctamente!
+          <div v-if="ordenConfirmada" class="mt-3 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium rounded-xl text-center animate-fade-in flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i> ¡Pedido enviado correctamente!
           </div>
-          <div v-if="errorOrden" class="mt-3 p-3 bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-xl text-center animate-fade-in">
-            ❌ {{ errorOrden }}
+          <div v-if="errorOrden" class="mt-3 p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-xl text-center animate-fade-in flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-circle-xmark text-red-600"></i> {{ errorOrden }}
           </div>
         </div>
       </div>

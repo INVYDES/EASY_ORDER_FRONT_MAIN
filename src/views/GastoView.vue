@@ -15,8 +15,8 @@
       </div>
     </div>
 
-    <!-- Encabezado -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <!-- Encabezado Sticky -->
+    <div class="sticky -top-4 lg:-top-8 z-20 bg-gray-50/95 backdrop-blur-xs -mx-4 lg:-mx-8 px-4 lg:px-8 pt-4 lg:pt-8 pb-3 border-b border-[#DDE3DE] shadow-xs flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-semibold text-[#202723]">Gestión de Gastos</h2>
         <p class="text-xs text-[#68736C] mt-0.5">Control y análisis de gastos operativos del restaurante</p>

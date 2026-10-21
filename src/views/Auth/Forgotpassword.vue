@@ -8,9 +8,9 @@
         <!-- Volver -->
         <router-link
           to="/login"
-          class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition mb-8"
+          class="inline-flex items-center gap-2 text-sm text-[#68736C] hover:text-[#245C4F] transition mb-8"
         >
-          ← Volver al inicio de sesión
+          <i class="fa-solid fa-arrow-left text-xs"></i> Volver al inicio de sesión
         </router-link>
 
         <h1 class="text-3xl font-semibold text-gray-800 mb-2">
@@ -21,8 +21,8 @@
         </p>
 
         <!-- ÉXITO -->
-        <div v-if="successMessage" class="mb-6 p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl">
-          <p class="font-semibold mb-1">✅ Correo enviado</p>
+        <div v-if="successMessage" class="mb-6 p-4 text-sm text-[#26734D] bg-[#E8F1ED] border border-[#26734D]/30 rounded-xl">
+          <p class="font-semibold mb-1 flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Correo enviado</p>
           <p>{{ successMessage }}</p>
         </div>
 
@@ -43,14 +43,14 @@
               required
               autocomplete="email"
               placeholder="info@gmail.com"
-              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-4 py-3 border border-[#DDE3DE] rounded-xl focus:ring-1 focus:ring-[#245C4F] focus:border-[#245C4F] focus:outline-none"
             />
           </div>
 
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-3 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 font-medium"
+            class="w-full py-3 text-white bg-[#245C4F] rounded-xl hover:bg-[#1D4A3F] transition disabled:opacity-50 font-semibold cursor-pointer shadow-xs"
           >
             {{ loading ? 'Enviando...' : 'Enviar enlace de recuperación' }}
           </button>
@@ -62,7 +62,7 @@
           <button
             @click="reenviar"
             :disabled="loading || reenviarCooldown > 0"
-            class="w-full py-3 text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition disabled:opacity-50 font-medium text-sm"
+            class="w-full py-3 text-[#245C4F] border border-[#245C4F]/30 rounded-xl hover:bg-[#E8F1ED] transition disabled:opacity-50 font-semibold text-sm cursor-pointer"
           >
             {{ reenviarCooldown > 0 ? `Reenviar en ${reenviarCooldown}s` : 'Reenviar correo' }}
           </button>
@@ -72,11 +72,11 @@
     </div>
 
     <!-- DERECHA -->
-    <div class="hidden lg:flex w-1/2 bg-indigo-900 relative items-center justify-center">
+    <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-[#245C4F] via-[#1D4A3F] to-[#14332B] relative items-center justify-center">
       <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] [background-size:40px_40px]"></div>
       <div class="relative z-10 text-center text-white px-10">
         <h2 class="text-4xl font-bold mb-4">Easy Order</h2>
-        <p class="text-indigo-200">Sistema de gestión para restaurantes</p>
+        <p class="text-emerald-100">Sistema de gestión para restaurantes</p>
       </div>
     </div>
 

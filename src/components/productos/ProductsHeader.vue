@@ -1,37 +1,30 @@
 <template>
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-xl font-semibold text-gray-800">Gestión de Productos</h1>
+    <h1 class="text-xl lg:text-2xl font-bold text-[#202723] tracking-tight">Gestión de Productos</h1>
     <div class="flex items-center gap-2 flex-wrap">
 
       <!-- Buscador -->
       <div class="relative">
-        <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[#68736C] text-xs"></i>
         <input
           :value="modelValue"
           @input="$emit('update:modelValue', $event.target.value)"
           placeholder="Buscar producto..."
-          class="w-64 pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          class="w-64 pl-8 pr-4 py-2 bg-white border border-[#DDE3DE] rounded-xl text-sm text-[#202723] placeholder-[#68736C] focus:outline-none focus:ring-2 focus:ring-[#245C4F]"
         />
       </div>
 
       <!-- Importar -->
       <button
         @click="$emit('import')"
-        class="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition"
+        class="flex items-center gap-2 px-3.5 py-2 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs"
       >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
+        <i class="fa-solid fa-file-import text-xs"></i>
         Importar
       </button>
 
       <!-- Exportar -->
       <ExportMenu :exporting="exporting" @export="emit('export', $event)" />
-
-      <!-- El botón "Nuevo Producto" vive en la barra de la lista (productosview.vue)
-           para que siempre sea visible, sin depender de este header. -->
 
     </div>
   </div>
