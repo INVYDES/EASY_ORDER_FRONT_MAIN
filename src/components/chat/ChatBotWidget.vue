@@ -1,4 +1,4 @@
-op<template>
+<template>
   <div class="chatbot-wrapper">
     <!-- Botón Flotante -->
     <button 
@@ -6,7 +6,7 @@ op<template>
       :aria-expanded="isOpen"
       :aria-label="isOpen ? 'Cerrar asistente' : 'Abrir asistente de soporte'"
       @click="toggleChat"
-      class="chat-trigger shadow-2xl transition-all duration-300 active:scale-90"
+      class="chat-trigger shadow-2xl transition-all duration-300 active:scale-90 cursor-pointer"
       :class="{ 'trigger-active': isOpen }"
     >
       <div v-if="!isOpen" class="icon-container">
@@ -15,7 +15,7 @@ op<template>
         </svg>
         <span class="pulse-ring"></span>
       </div>
-      <span v-else class="text-xl">✕</span>
+      <i v-else class="fa-solid fa-xmark text-xl"></i>
     </button>
 
     <!-- Ventana de Chat -->
@@ -25,15 +25,15 @@ op<template>
         <div class="chat-header">
           <div class="flex items-center gap-3">
             <div class="avatar-status">
-              <span class="bot-avatar">🤖</span>
+              <span class="bot-avatar"><i class="fa-solid fa-robot text-[#245C4F]"></i></span>
               <span class="status-dot"></span>
             </div>
             <div>
               <h3 class="font-bold text-white text-sm">Asistente eOrder</h3>
-              <p class="text-[10px] text-indigo-200 uppercase tracking-widest font-black">Soporte Administrativo • IA</p>
+              <p class="text-[10px] text-emerald-100 uppercase tracking-widest font-black">Soporte Administrativo • IA</p>
             </div>
           </div>
-          <button @click="clearChat" class="text-indigo-300 hover:text-white transition text-xs font-bold">Limpiar</button>
+          <button @click="clearChat" class="text-emerald-100 hover:text-white transition text-xs font-bold cursor-pointer">Limpiar</button>
         </div>
 
         <!-- Mensajes -->
@@ -64,7 +64,7 @@ op<template>
             v-for="q in quickActions" 
             :key="q"
             @click="sendQuick(q)"
-            class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-bold border border-indigo-100 hover:bg-indigo-600 hover:text-white transition shadow-sm"
+            class="px-3 py-1.5 bg-[#E8F1ED] text-[#245C4F] rounded-full text-[10px] font-bold border border-[#DDE3DE] hover:bg-[#245C4F] hover:text-white transition shadow-sm"
           >
             {{ q }}
           </button>
@@ -97,7 +97,9 @@ op<template>
           <div v-if="showSuggestionForm" class="suggestion-overlay">
             <div class="suggestion-card scale-in shadow-2xl">
               <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">📱</div>
+                <div class="w-12 h-12 bg-emerald-50 text-[#245C4F] rounded-2xl flex items-center justify-center mx-auto mb-3 text-lg">
+                  <i class="fa-solid fa-mobile-screen"></i>
+                </div>
                 <h4 class="font-black text-slate-800">Enviar Comentario</h4>
                 <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Llegará directamente al dueño</p>
               </div>
@@ -122,7 +124,7 @@ op<template>
                 <button 
                   @click="submitSuggestion"
                   :disabled="sendingSuggestion || !suggestionForm.name || !suggestionForm.contact"
-                  class="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:opacity-50"
+                  class="flex-1 py-3 bg-[#245C4F] hover:bg-[#1D4A3F] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-900/10 disabled:opacity-50 transition"
                 >
                   {{ sendingSuggestion ? 'Enviando...' : 'Enviar' }}
                 </button>
@@ -296,7 +298,7 @@ watch(isOpen, (val) => {
 .chat-trigger {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #245C4F 0%, #1D4A3F 100%);
   border-radius: 22px;
   color: white;
   display: flex;
@@ -317,7 +319,7 @@ watch(isOpen, (val) => {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 2px solid #6366f1;
+  border: 2px solid #245C4F;
   border-radius: 22px;
   animation: pulse 2s infinite;
   opacity: 0;
@@ -353,7 +355,7 @@ watch(isOpen, (val) => {
 
 /* Header */
 .chat-header {
-  background: #4f46e5;
+  background: #245C4F;
   padding: 24px;
   display: flex;
   align-items: center;
@@ -384,7 +386,7 @@ watch(isOpen, (val) => {
   width: 12px;
   height: 12px;
   background: #10b981;
-  border: 2px solid #4f46e5;
+  border: 2px solid #245C4F;
   border-radius: 50%;
 }
 
@@ -426,7 +428,7 @@ watch(isOpen, (val) => {
 }
 
 .bubble-user {
-  background: #4f46e5;
+  background: #245C4F;
   color: white;
   border-radius: 20px 20px 4px 20px;
 }
@@ -482,7 +484,7 @@ watch(isOpen, (val) => {
 .send-btn {
   width: 40px;
   height: 40px;
-  background: #4f46e5;
+  background: #245C4F;
   color: white;
   border: none;
   border-radius: 16px;
@@ -494,7 +496,7 @@ watch(isOpen, (val) => {
 }
 
 .send-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-.send-btn:hover:not(:disabled) { transform: scale(1.05); background: #4338ca; }
+.send-btn:hover:not(:disabled) { transform: scale(1.05); background: #1D4A3F; }
 
 /* Quick Actions */
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -532,9 +534,9 @@ watch(isOpen, (val) => {
 }
 
 .form-input:focus {
-  border-color: #6366f1;
+  border-color: #245C4F;
   background: white;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(36, 92, 79, 0.15);
 }
 
 /* Animaciones */

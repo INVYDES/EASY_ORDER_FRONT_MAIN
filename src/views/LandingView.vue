@@ -31,7 +31,7 @@
           :aria-label="mobileOpen ? t('nav.cerrarMenu') : t('nav.abrirMenu')"
           @click="mobileOpen = !mobileOpen"
         >
-          {{ mobileOpen ? '✕' : '☰' }}
+          <i :class="mobileOpen ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-bars text-xl'"></i>
         </button>
       </div>
       <div v-if="mobileOpen" id="menu-movil" class="mobile-menu">
@@ -93,11 +93,13 @@
                 @click="activarTab(tab.id, i)"
                 @keydown="onTabKey($event, i)"
               >
-                <span class="tb-ico" aria-hidden="true">{{ tab.icon }}</span>
+                <span class="tb-ico" aria-hidden="true"><i :class="tab.icon"></i></span>
                 <span class="lbl-lg">{{ t(tab.labelKey) }}</span>
                 <span class="lbl-sm">{{ t(tab.labelCortoKey) }}</span>
               </button>
-              <button type="button" class="btn-reset" @click="resetDemo" :title="t('demo.reset')">🔄</button>
+              <button type="button" class="btn-reset" @click="resetDemo" :title="t('demo.reset')">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
             </div>
 
             <div class="demo-panel">
@@ -122,9 +124,11 @@
                     <div class="dp-order-head">
                       <span class="dp-folio">{{ demo.folio }}</span>
                       <span class="dp-mesa">{{ t('demo.mesa') }} {{ demo.mesa }}</span>
-                      <span v-if="comandaRetrasada && demo.urgenteKey" class="dp-urgente">⚠️ {{ urgenteEtiqueta }}</span>
+                      <span v-if="comandaRetrasada && demo.urgenteKey" class="dp-urgente">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ urgenteEtiqueta }}
+                      </span>
                       <span v-if="demo.arranque" class="dp-clock" :class="tonoTiempo(msComanda)">
-                        ⏱ {{ mmss(msComanda) }}
+                        <i class="fa-regular fa-clock mr-1"></i> {{ mmss(msComanda) }}
                       </span>
                       <span v-else class="dp-clock">{{ demo.hora }}</span>
 
@@ -134,7 +138,7 @@
                             v-if="comandaCompleta && demo.metodo"
                             class="dp-metodo"
                             :class="`dp-metodo--${demo.metodo}`"
-                          >{{ metodoIcono }}</span>
+                          ><i :class="metodoIcono"></i></span>
                           ${{ demo.total }}
                         </span>
                         <em class="pill" :class="`pill-${estadoComanda.tone}`">{{ estadoComanda.label }}</em>
@@ -153,7 +157,7 @@
                     <span class="dp-cant">{{ item.cantidad }}×</span>
                     <span class="dp-item">
                       <span class="dp-name">{{ t(item.nombreKey) }}</span>
-                      <span v-if="item.notaKey" class="dp-nota">📝 {{ t(item.notaKey) }}</span>
+                      <span v-if="item.notaKey" class="dp-nota"><i class="fa-solid fa-pen text-xs mr-1"></i>{{ t(item.notaKey) }}</span>
                       <span class="dp-cat">{{ t(item.categoriaKey) }}</span>
                     </span>
                     <span class="dp-meta">
@@ -215,9 +219,9 @@
 
                   <!-- Pie de la tarjeta: mesero, estimado y conteo -->
                   <div class="dp-foot-info">
-                    <span>👤 {{ demo.mesero }}</span>
+                    <span><i class="fa-regular fa-user mr-1"></i> {{ demo.mesero }}</span>
                     <div class="dp-foot-meta">
-                      <span v-if="demo.estimado" class="dp-est">⏱️ {{ t('demo.est') }}: {{ demo.estimado }} min</span>
+                      <span v-if="demo.estimado" class="dp-est"><i class="fa-regular fa-clock mr-1"></i> {{ t('demo.est') }}: {{ demo.estimado }} min</span>
                       <span>{{ demo.items.length }} {{ t(demo.unidadKey) }}</span>
                     </div>
                   </div>
@@ -251,17 +255,17 @@
 
           <div class="impact">
             <div class="impact-card">
-              <span class="ico">⏱️</span>
+              <span class="ico"><i class="fa-solid fa-stopwatch text-[#245C4F]"></i></span>
               <h3>{{ t('impacto.1.titulo') }}</h3>
               <p>{{ t('impacto.1.texto') }}</p>
             </div>
             <div class="impact-card">
-              <span class="ico">📴</span>
+              <span class="ico"><i class="fa-solid fa-wifi text-[#245C4F]"></i></span>
               <h3>{{ t('impacto.2.titulo') }}</h3>
               <p>{{ t('impacto.2.texto') }}</p>
             </div>
             <div class="impact-card">
-              <span class="ico">📊</span>
+              <span class="ico"><i class="fa-solid fa-chart-line text-[#245C4F]"></i></span>
               <h3>{{ t('impacto.3.titulo') }}</h3>
               <p>{{ t('impacto.3.texto') }}</p>
             </div>
@@ -281,37 +285,37 @@
           <h2 class="center">{{ t('modulos.titulo') }}</h2>
           <div class="grid">
             <div class="card">
-              <span class="ico">🧾</span>
+              <span class="ico"><i class="fa-solid fa-cash-register text-[#245C4F]"></i></span>
               <h3>{{ t('modulos.1.titulo') }}</h3>
               <p><b>{{ t('modulos.problema') }}</b> {{ t('modulos.1.problema') }}</p>
               <p class="sol"><b>{{ t('modulos.solucion') }}</b> {{ t('modulos.1.solucion') }}</p>
             </div>
             <div class="card">
-              <span class="ico">👨‍🍳</span>
+              <span class="ico"><i class="fa-solid fa-kitchen-set text-[#245C4F]"></i></span>
               <h3>{{ t('modulos.2.titulo') }}</h3>
               <p><b>{{ t('modulos.problema') }}</b> {{ t('modulos.2.problema') }}</p>
               <p class="sol"><b>{{ t('modulos.solucion') }}</b> {{ t('modulos.2.solucion') }}</p>
             </div>
             <div class="card">
-              <span class="ico">🍹</span>
+              <span class="ico"><i class="fa-solid fa-martini-glass-citrus text-[#245C4F]"></i></span>
               <h3>{{ t('modulos.3.titulo') }}</h3>
               <p><b>{{ t('modulos.problema') }}</b> {{ t('modulos.3.problema') }}</p>
               <p class="sol"><b>{{ t('modulos.solucion') }}</b> {{ t('modulos.3.solucion') }}</p>
             </div>
             <div class="card">
-              <span class="ico">📊</span>
+              <span class="ico"><i class="fa-solid fa-chart-pie text-[#245C4F]"></i></span>
               <h3>{{ t('modulos.4.titulo') }}</h3>
               <p><b>{{ t('modulos.problema') }}</b> {{ t('modulos.4.problema') }}</p>
               <p class="sol"><b>{{ t('modulos.solucion') }}</b> {{ t('modulos.4.solucion') }}</p>
             </div>
             <div class="card">
-              <span class="ico">📈</span>
+              <span class="ico"><i class="fa-solid fa-boxes-stacked text-[#245C4F]"></i></span>
               <h3>{{ t('modulos.5.titulo') }}</h3>
               <p><b>{{ t('modulos.problema') }}</b> {{ t('modulos.5.problema') }}</p>
               <p class="sol"><b>{{ t('modulos.solucion') }}</b> {{ t('modulos.5.solucion') }}</p>
             </div>
             <div class="card">
-              <span class="ico">🔔</span>
+              <span class="ico"><i class="fa-solid fa-bell text-[#245C4F]"></i></span>
               <h3>{{ t('modulos.6.titulo') }}</h3>
               <p><b>{{ t('modulos.problema') }}</b> {{ t('modulos.6.problema') }}</p>
               <p class="sol"><b>{{ t('modulos.solucion') }}</b> {{ t('modulos.6.solucion') }}</p>
@@ -495,10 +499,10 @@ type DemoEstado = { label: string; tone: DemoTone }
 type DemoEstadoBase = { labelKey: ClaveTexto; tone: DemoTone }
 
 const DEMO_TABS: { id: DemoTab; labelKey: ClaveTexto; labelCortoKey: ClaveTexto; icon: string }[] = [
-  { id: 'pos', labelKey: 'demo.tab.pos', labelCortoKey: 'demo.tab.posCorto', icon: '🧾' },
-  { id: 'cocina', labelKey: 'demo.tab.cocina', labelCortoKey: 'demo.tab.cocinaCorto', icon: '👨‍🍳' },
-  { id: 'barra', labelKey: 'demo.tab.barra', labelCortoKey: 'demo.tab.barraCorto', icon: '🍹' },
-  { id: 'postres', labelKey: 'demo.tab.postres', labelCortoKey: 'demo.tab.postresCorto', icon: '🍰' },
+  { id: 'pos', labelKey: 'demo.tab.pos', labelCortoKey: 'demo.tab.posCorto', icon: 'fa-solid fa-cash-register' },
+  { id: 'cocina', labelKey: 'demo.tab.cocina', labelCortoKey: 'demo.tab.cocinaCorto', icon: 'fa-solid fa-kitchen-set' },
+  { id: 'barra', labelKey: 'demo.tab.barra', labelCortoKey: 'demo.tab.barraCorto', icon: 'fa-solid fa-martini-glass-citrus' },
+  { id: 'postres', labelKey: 'demo.tab.postres', labelCortoKey: 'demo.tab.postresCorto', icon: 'fa-solid fa-cake-candles' },
 ]
 
 /**
@@ -726,7 +730,7 @@ const indiceComanda = computed(() => Math.min(...estados[demoTab.value]))
 const comandaCompleta = computed(() => estados[demoTab.value].every((e) => e === ultimoEstado.value))
 
 /** Icono del método de pago, como en el ticket de caja */
-const METODO_ICONO: Record<string, string> = { efectivo: '💵', tarjeta: '💳', transferencia: '📲' }
+const METODO_ICONO: Record<string, string> = { efectivo: 'fa-solid fa-money-bill-wave', tarjeta: 'fa-solid fa-credit-card', transferencia: 'fa-solid fa-mobile-screen' }
 const metodoIcono = computed(() => METODO_ICONO[demo.value.metodo ?? ''] ?? '')
 
 /** Aviso del semáforo del panel (RETRASADO en cocina, URGENTE en barra) */
@@ -1012,15 +1016,15 @@ const etiquetaFila = (label: string) => {
   position: absolute;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(36, 92, 79, 0.12) 0%, transparent 70%);
   filter: blur(60px);
   z-index: -1;
   border-radius: 50%;
   pointer-events: none;
 }
 .blob-1 { top: -100px; right: -100px; }
-.blob-2 { top: 40%; left: -150px; background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%); }
-.blob-3 { bottom: -100px; right: 10%; background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%); }
+.blob-2 { top: 40%; left: -150px; background: radial-gradient(circle, rgba(38, 115, 77, 0.10) 0%, transparent 70%); }
+.blob-3 { bottom: -100px; right: 10%; background: radial-gradient(circle, rgba(36, 92, 79, 0.10) 0%, transparent 70%); }
 
 @keyframes blob-move {
   from { transform: translate(0, 0) scale(1); }
@@ -1029,7 +1033,7 @@ const etiquetaFila = (label: string) => {
 
 /* Eye-catching Typography */
 .text-gradient {
-  background: linear-gradient(135deg, #0f172a 0%, #4f46e5 50%, #9333ea 100%);
+  background: linear-gradient(135deg, #18221e 0%, #245C4F 50%, #26734D 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1059,44 +1063,45 @@ const etiquetaFila = (label: string) => {
 .nav { display: flex; align-items: center; justify-content: space-between; height: 80px; position: relative; z-index: 51; }
 .logo { display: flex; flex-direction: column; line-height: 1; padding: 6px 0; text-decoration: none; color: #0f172a; }
 .logo span { font-size: 22px; font-weight: 800; }
-.logo i { font-style: normal; color: #4f46e5; }
+.logo i { font-style: normal; color: #245C4F; }
 .logo small { font-size: 10px; letter-spacing: .18em; color: #94a3b8; text-transform: uppercase; }
 .logo-img { height: 52px; width: auto; max-width: 210px; object-fit: contain; display: block; border-radius: 8px; }
 .foot-logo { padding: 0; }
 .foot-logo-img { background: #fff; padding: 4px 8px; border-radius: 8px; }
 .nav-links { display: flex; align-items: center; gap: 14px; position: relative; z-index: 52; pointer-events: auto; }
-.nav-link { text-decoration: none; color: #334155; font-weight: 600; font-size: 15px; padding: 14px 12px; border-radius: 10px; pointer-events: auto; position: relative; }
-.nav-link:hover { color: #4f46e5; background: #f8fafc; }
-.nav-link.ghost { color: #4f46e5; }
-.nav-cta { background: #4f46e5; color: #fff; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 22px; border-radius: 12px; box-shadow: 0 4px 14px rgba(79,70,229,.2); pointer-events: auto; position: relative; }
-.nav-cta:hover { background: #4338ca; box-shadow: 0 6px 18px rgba(79,70,229,.3); }
-.nav-cta:hover { background: #4338ca; }
+.nav-link { text-decoration: none; color: #334155; font-weight: 600; font-size: 15px; padding: 14px 12px; border-radius: 10px; pointer-events: auto; position: relative; transition: color 0.15s, background 0.15s; }
+.nav-link:hover { color: #245C4F; background: #E8F1ED; }
+.nav-link.ghost { color: #245C4F; }
+.nav-cta { background: #245C4F; color: #fff; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 22px; border-radius: 12px; box-shadow: 0 4px 14px rgba(36,92,79,.2); pointer-events: auto; position: relative; transition: all 0.2s; }
+.nav-cta:hover { background: #1D4A3F; box-shadow: 0 6px 18px rgba(36,92,79,.3); }
 .nav-auth-mobile { display: none; }
-.menu-btn { display: none; background: none; border: 0; font-size: 20px; color: #0f172a; }
+.menu-btn { display: none; background: none; border: 0; font-size: 20px; color: #0f172a; cursor: pointer; }
 .mobile-menu { display: none; }
 
 /* Hero */
 .hero { padding: 64px 0 40px; }
 .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; }
-.eyebrow { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #4f46e5; background: #eef2ff; padding: 6px 12px; border-radius: 999px; }
+.eyebrow { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #245C4F; background: #E8F1ED; padding: 6px 12px; border-radius: 999px; }
 .eyebrow.center { margin-top: 8px; }
 .hero h1 { font-size: 44px; line-height: 1.08; margin: 16px 0 14px; letter-spacing: -.02em; }
-.hero h1 em { font-style: normal; color: #4f46e5; }
+.hero h1 em { font-style: normal; color: #245C4F; }
 .hero p { font-size: 17px; color: #475569; max-width: 520px; }
 .hero-actions { display: flex; gap: 12px; margin: 24px 0 14px; flex-wrap: wrap; align-items: center; }
 .hero-actions.center { justify-content: center; }
-.btn { display: inline-block; padding: 13px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; }
+.btn { display: inline-block; padding: 13px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; cursor: pointer; }
 .btn small { display: block; font-size: 11px; font-weight: 600; opacity: .85; }
 .btn-primary {
-  background: #4f46e5;
+  background: #245C4F;
   color: #fff;
-  box-shadow: 0 8px 20px rgba(79,70,229,.25);
+  box-shadow: 0 8px 20px rgba(36,92,79,.25);
   position: relative;
   overflow: hidden;
 }
-.btn-primary:hover { background: #4338ca; }
-.btn-ghost { color: #4f46e5; background: #eef2ff; }
-.btn-outline { color: #4f46e5; border: 2px solid #c7d2fe; }
+.btn-primary:hover { background: #1D4A3F; }
+.btn-ghost { color: #245C4F; background: #E8F1ED; }
+.btn-ghost:hover { background: #d7e6e0; }
+.btn-outline { color: #245C4F; border: 2px solid #245C4F; }
+.btn-outline:hover { background: #E8F1ED; }
 .proof-bar { font-size: 13px; color: #64748b; border-top: 1px solid #eef2f7; padding-top: 14px; max-width: 520px; }
 
 /* Mock KDS - sin desplazamiento automático */
@@ -1142,16 +1147,16 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 }
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    background: #4f46e5;
-    border-color: #4f46e5;
+    background: #245C4F;
+    border-color: #245C4F;
     transform: translateY(-6px);
-    box-shadow: 0 16px 32px rgba(79,70,229,.25);
+    box-shadow: 0 16px 32px rgba(36,92,79,.25);
   }
   .card:hover h3 { color: #fff; }
-  .card:hover p { color: #e0e7ff; }
+  .card:hover p { color: #E8F1ED; }
   .card:hover p.sol { color: #fff; }
   .card:hover p.sol b { color: #fff; }
-  .card:hover .ico { filter: brightness(1.2); }
+  .card:hover .ico i { color: #fff !important; }
 }
 .card:active {
   transform: translateY(-2px);
@@ -1169,18 +1174,18 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .matrix thead th { background: #f8fafc; color: #0f172a; font-size: 15px; }
 .matrix thead th small { display: block; font-size: 12px; color: #64748b; font-weight: 600; }
 .matrix .hl {
-  background: #eef2ff;
+  background: #E8F1ED;
   position: relative;
-  box-shadow: inset 0 0 0 2px #4f46e5;
+  box-shadow: inset 0 0 0 2px #245C4F;
 }
 .plan-badge {
   display: block;
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  color: #4f46e5;
+  color: #245C4F;
   background: #fff;
-  border: 1px solid #4f46e5;
+  border: 1px solid #245C4F;
   border-radius: 999px;
   padding: 2px 6px;
   width: fit-content;
@@ -1189,28 +1194,31 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .matrix tbody tr:last-child td { border-bottom: 0; }
 
 /* Demo interactiva */
-.section.demo { background: linear-gradient(180deg, #fff 0%, #eef2ff 100%); scroll-margin-top: 80px; }
+.section.demo { background: linear-gradient(180deg, #fff 0%, #E8F1ED 100%); scroll-margin-top: 80px; }
 .demo-shell { max-width: 760px; margin: 26px auto 0; }
 
 /* Pestañas */
-.demo-tabs { display: flex; gap: 6px; justify-content: center; background: #dfe5fb; padding: 6px; border-radius: 16px; box-shadow: inset 0 1px 3px rgba(15,23,42,.10); }
-.demo-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: transparent; padding: 12px 8px; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; color: #4f46e5; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .18s, color .18s, box-shadow .18s; }
+.demo-tabs { display: flex; gap: 6px; justify-content: center; background: #dce7e2; padding: 6px; border-radius: 16px; box-shadow: inset 0 1px 3px rgba(15,23,42,.10); }
+.demo-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: transparent; padding: 12px 8px; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; color: #245C4F; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .18s, color .18s, box-shadow .18s; }
 .demo-tabs .btn-reset {
   flex: 0 0 auto;
   background: #fff;
-  color: #4f46e5;
+  color: #245C4F;
   width: 44px;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #c2d6ce;
   box-shadow: 0 2px 4px rgba(0,0,0,.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .demo-tabs .btn-reset:hover {
-  background: #eef2ff;
+  background: #E8F1ED;
   transform: rotate(45deg);
 }
 .demo-tabs button:hover { background: rgba(255,255,255,.6); }
-.demo-tabs button.active { background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; box-shadow: 0 10px 20px -8px rgba(79,70,229,.85); }
-.demo-tabs button:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
-.tb-ico { font-size: 16px; line-height: 1; }
+.demo-tabs button.active { background: linear-gradient(135deg, #245C4F, #1D4A3F); color: #fff; box-shadow: 0 10px 20px -8px rgba(36,92,79,.85); }
+.demo-tabs button:focus-visible { outline: 2px solid #245C4F; outline-offset: 2px; }
+.tb-ico { font-size: 16px; line-height: 1; display: inline-flex; align-items: center; }
 .lbl-sm { display: none; }
 
 /* Panel — cada estación conserva los colores del panel real: cocina ámbar,
@@ -1218,7 +1226,7 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .demo-panel { margin-top: 16px; }
 .dp-frame {
   --dp-bg: linear-gradient(180deg, #131f36, #0f172a 45%);
-  --dp-glow: radial-gradient(closest-side, rgba(99,102,241,.4), transparent);
+  --dp-glow: radial-gradient(closest-side, rgba(36,92,79,.4), transparent);
   --dp-surface: #0b1526;
   --dp-border: #24324d;
   --dp-line: #1e293b;
@@ -1231,15 +1239,15 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
   --dp-chip: #1e293b;
   --dp-steel: #334155;
   --dp-steel-hover: #3f4d63;
-  --dp-accent: #a5b4fc;
-  --dp-accent-soft: rgba(99,102,241,.14);
-  --dp-accent-line: rgba(99,102,241,.3);
+  --dp-accent: #6EE7B7;
+  --dp-accent-soft: rgba(36,92,79,.14);
+  --dp-accent-line: rgba(36,92,79,.3);
   --dp-btn-start: linear-gradient(135deg, #f97316, #fb923c);
   --dp-btn-next: linear-gradient(135deg, #10b981, #34d399);
-  --dp-btn-pay: linear-gradient(135deg, #4f46e5, #6366f1);
+  --dp-btn-pay: linear-gradient(135deg, #245C4F, #1D4A3F);
   --dp-btn-glow-start: rgba(249,115,22,.9);
   --dp-btn-glow-next: rgba(16,185,129,.9);
-  --dp-btn-glow-pay: rgba(79,70,229,.9);
+  --dp-btn-glow-pay: rgba(36,92,79,.9);
   --dp-shadow: 0 34px 60px -24px rgba(30,41,90,.55);
   position: relative; overflow: hidden;
   background: var(--dp-bg); border: 1px solid var(--dp-border);
@@ -1250,15 +1258,14 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 /* Cocina: ámbar, como los encabezados del KDS (bg-amber-500/10 · text-amber-300) */
 .dp-frame--cocina { --dp-accent: #fbbf24; --dp-accent-soft: rgba(245,158,11,.12); --dp-accent-line: rgba(245,158,11,.3); --dp-glow: radial-gradient(closest-side, rgba(245,158,11,.26), transparent); }
 /* Barra: azul, como el KDS de bebidas (bg-blue-500/10 · text-blue-300); sus
-   botones son azul ("🍹 Comenzar a preparar") y esmeralda. */
+   botones son azul y esmeralda. */
 .dp-frame--barra { --dp-accent: #93c5fd; --dp-accent-soft: rgba(59,130,246,.12); --dp-accent-line: rgba(59,130,246,.32); --dp-glow: radial-gradient(closest-side, rgba(59,130,246,.28), transparent); --dp-btn-start: linear-gradient(135deg, #2563eb, #3b82f6); --dp-btn-next: linear-gradient(135deg, #059669, #10b981); --dp-btn-glow-start: rgba(37,99,235,.9); }
-/* Postres: rosa y morado, como el KDS de repostería (bg-pink-500/10 ·
-   text-pink-300, "En preparación" en morado); sus botones son rosa y rojo. */
+/* Postres: rosa y morado, como el KDS de repostería */
 .dp-frame--postres { --dp-accent: #f9a8d4; --dp-accent-soft: rgba(236,72,153,.12); --dp-accent-line: rgba(236,72,153,.32); --dp-glow: radial-gradient(closest-side, rgba(236,72,153,.26), transparent); --dp-btn-start: linear-gradient(135deg, #db2777, #ec4899); --dp-btn-next: linear-gradient(135deg, #f43f5e, #fb7185); --dp-btn-glow-start: rgba(219,39,119,.9); --dp-btn-glow-next: rgba(244,63,94,.9); }
-/* Caja: el ticket del panel de cobro es claro (bg-white · text-gray-800) */
+/* Caja: el ticket del panel de cobro es claro */
 .dp-frame--pos {
   --dp-bg: linear-gradient(180deg, #fff, #f8fafc 55%);
-  --dp-glow: radial-gradient(closest-side, rgba(79,70,229,.10), transparent);
+  --dp-glow: radial-gradient(closest-side, rgba(36,92,79,.10), transparent);
   --dp-surface: #fff;
   --dp-border: #e2e8f0;
   --dp-line: #eef2f7;
@@ -1271,10 +1278,12 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
   --dp-chip: #f1f5f9;
   --dp-steel: #f1f5f9;
   --dp-steel-hover: #e2e8f0;
-  --dp-accent: #4f46e5;
-  --dp-accent-soft: rgba(79,70,229,.08);
-  --dp-accent-line: rgba(79,70,229,.2);
-  --dp-shadow: 0 30px 55px -26px rgba(30,41,90,.35);
+  --dp-accent: #245C4F;
+  --dp-accent-soft: rgba(36,92,79,.08);
+  --dp-accent-line: rgba(36,92,79,.2);
+  --dp-btn-pay: linear-gradient(135deg, #245C4F, #1D4A3F);
+  --dp-btn-glow-pay: rgba(36,92,79,.9);
+  --dp-shadow: 0 30px 55px -26px rgba(36,92,79,.35);
 }
 
 /* Barra del título con el tinte de la estación, igual que la columna del sistema */
@@ -1303,12 +1312,12 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .dp-total { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; color: var(--dp-strong); }
 .dp-metodo { padding: 2px 6px; border: 1px solid transparent; border-radius: 6px; font-size: 11px; }
 .dp-metodo--efectivo { background: rgba(52,211,153,.14); border-color: rgba(52,211,153,.35); color: #34d399; }
-.dp-metodo--tarjeta { background: rgba(129,140,248,.16); border-color: rgba(129,140,248,.35); color: #a5b4fc; }
-.dp-metodo--transferencia { background: rgba(192,132,252,.16); border-color: rgba(192,132,252,.35); color: #d8b4fe; }
-/* Los badges de cobro del ticket claro, como en el panel de caja */
+.dp-metodo--tarjeta { background: rgba(36,92,79,.16); border-color: rgba(36,92,79,.35); color: #6EE7B7; }
+.dp-metodo--transferencia { background: rgba(16,185,129,.16); border-color: rgba(16,185,129,.35); color: #6EE7B7; }
+/* Los badges de cobro del ticket claro */
 .dp-frame--pos .dp-metodo--efectivo { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
-.dp-frame--pos .dp-metodo--tarjeta { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
-.dp-frame--pos .dp-metodo--transferencia { background: #faf5ff; border-color: #e9d5ff; color: #7e22ce; }
+.dp-frame--pos .dp-metodo--tarjeta { background: #E8F1ED; border-color: #c2d6ce; color: #245C4F; }
+.dp-frame--pos .dp-metodo--transferencia { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
 
 /* Renglones interactivos */
 .dp-row { position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 12px 10px; border: 0; border-bottom: 1px solid var(--dp-line); background: transparent; color: var(--dp-soft); font-family: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: background .15s; }
@@ -1344,8 +1353,8 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .dp-cobro { position: relative; display: grid; gap: 5px; margin: 12px 2px 0; }
 .dp-cobro div { display: flex; justify-content: space-between; font-size: 12px; color: var(--dp-muted); }
 .dp-cobro b { color: var(--dp-strong); }
-.dp-cobro code { padding: 1px 6px; border-radius: 5px; background: rgba(129,140,248,.14); color: #a5b4fc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
-.dp-frame--pos .dp-cobro code { background: #eff6ff; color: #2563eb; }
+.dp-cobro code { padding: 1px 6px; border-radius: 5px; background: rgba(36,92,79,.14); color: #6EE7B7; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+.dp-frame--pos .dp-cobro code { background: #E8F1ED; color: #245C4F; }
 
 /* Ingredientes del botón secundario */
 .dp-ingredientes { position: relative; margin: 12px 2px 0; padding: 10px 12px; background: var(--dp-surface); border: 1px solid var(--dp-border); border-radius: 10px; }
@@ -1357,7 +1366,7 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .dp-foot-meta { display: inline-flex; align-items: center; gap: 12px; }
 .dp-est { font-weight: 800; color: var(--dp-accent); }
 
-/* Acciones de la tarjeta — mismos botones que el panel real */
+/* Acciones de la tarjeta */
 .dp-acciones { position: relative; display: grid; gap: 8px; padding: 12px 10px 0; }
 .dp-btn-sec, .dp-btn-main { width: 100%; min-height: 40px; border: 1px solid transparent; border-radius: 10px; font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; transition: background .18s, transform .18s, box-shadow .18s; }
 .dp-btn-sec { background: var(--dp-steel); color: var(--dp-text); }
@@ -1367,7 +1376,7 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .dp-btn-main--iniciar { background: var(--dp-btn-start); color: #fff; box-shadow: 0 10px 22px -12px var(--dp-btn-glow-start); }
 /* ✅ Marcar como lista / listo */
 .dp-btn-main--listo { background: var(--dp-btn-next); color: #fff; box-shadow: 0 10px 22px -12px var(--dp-btn-glow-next); }
-/* 💰 Cobrar (indigo-600 en caja) */
+/* 💰 Cobrar (Forest Green en caja) */
 .dp-btn-main--cobrar { background: var(--dp-btn-pay); color: #fff; box-shadow: 0 10px 22px -12px var(--dp-btn-glow-pay); }
 /* ✓ Pagado / todo listo (bloque esmeralda suave) */
 .dp-btn-main--ok { background: rgba(52,211,153,.16); color: #34d399; box-shadow: none; }
@@ -1406,10 +1415,11 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
   }
   .impact-card:hover h3 { color: #fff; }
   .impact-card:hover p { color: #cbd5e1; }
-  .impact-card:hover .ico { background: rgba(99,102,241,.25); }
+  .impact-card:hover .ico { background: rgba(36,92,79,.35); }
+  .impact-card:hover .ico i { color: #6EE7B7 !important; }
 }
 .impact-card:active { transform: translateY(-2px); }
-.impact-card .ico { display: inline-grid; place-items: center; width: 42px; height: 42px; font-size: 20px; border-radius: 13px; background: linear-gradient(135deg, #eef2ff, #e0e7ff); transition: background 0.25s ease; }
+.impact-card .ico { display: inline-grid; place-items: center; width: 42px; height: 42px; font-size: 20px; border-radius: 13px; background: linear-gradient(135deg, #E8F1ED, #d7e6e0); transition: background 0.25s ease; }
 .impact-card h3 { margin: 12px 0 6px; font-size: 16px; transition: color 0.25s ease; }
 .impact-card p { color: #64748b; font-size: 13.5px; line-height: 1.55; transition: color 0.25s ease; }
 .planes-figure { margin: 26px 0 0; }
@@ -1441,7 +1451,7 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .footer p { font-size: 13px; line-height: 1.6; margin-top: 10px; }
 .footer b { display: block; color: #e2e8f0; font-size: 13px; margin-bottom: 10px; }
 .footer a { display: block; color: #94a3b8; text-decoration: none; font-size: 13px; padding: 13px 0; }
-.footer a:hover { color: #c7d2fe; }
+.footer a:hover { color: #6EE7B7; }
 .copy { text-align: center; margin-top: 28px; font-size: 12px; color: #64748b; }
 
 /* Responsive */
@@ -1457,7 +1467,7 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
   .menu-btn { display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; }
   .mobile-menu { display: flex; flex-direction: column; gap: 4px; padding: 10px 20px 16px; border-top: 1px solid #eef2f7; }
   .mobile-menu a { text-decoration: none; color: #334155; font-weight: 600; padding: 12px 4px; }
-  .mobile-menu a.m-cta { background: #4f46e5; color: #fff; border-radius: 10px; text-align: center; margin-top: 6px; }
+  .mobile-menu a.m-cta { background: #245C4F; color: #fff; border-radius: 10px; text-align: center; margin-top: 6px; }
 }
 
 @media (max-width: 650px) {
@@ -1508,12 +1518,13 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 
 /* ── CTA intermedio ────────────────────────────────────────────────── */
 .cta-band {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #db2777 100%);
+  background: linear-gradient(135deg, #245C4F 0%, #1D4A3F 55%, #14332B 100%);
 }
 .cta-band h2 { color: #fff; }
 .cta-band .sub, .cta-band .eyebrow { color: rgba(255,255,255,.9); }
-.cta-band .btn-primary { background: #fff; color: #4f46e5; }
-.cta-band .btn-primary:hover { background: #f1f5f9; }
+.cta-band .eyebrow { background: rgba(255,255,255,.18); color: #fff; }
+.cta-band .btn-primary { background: #fff; color: #245C4F; }
+.cta-band .btn-primary:hover { background: #f8fafc; color: #1D4A3F; }
 .cta-band .btn-outline { border-color: rgba(255,255,255,.65); color: #fff; }
 .cta-band .btn-outline:hover { background: rgba(255,255,255,.15); }
 
@@ -1539,8 +1550,8 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 }
 .testimonio-card:hover {
   transform: translateY(-5px);
-  border-color: #c7d2fe;
-  box-shadow: 0 18px 34px rgba(79,70,229,.14);
+  border-color: #245C4F;
+  box-shadow: 0 18px 34px rgba(36,92,79,.14);
 }
 .testimonio-card .stars { color: #f59e0b; letter-spacing: 3px; font-size: 15px; }
 .testimonio-card blockquote { margin: 0; font-size: 15px; line-height: 1.65; color: #334155; }
@@ -1550,12 +1561,12 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .testimonio-card .avatar {
   width: 42px; height: 42px; flex: none;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #245C4F, #26734D);
   color: #fff; font-weight: 800; font-size: 16px;
   display: flex; align-items: center; justify-content: center;
 }
 .testimonios-nota { margin-top: 22px; text-align: center; font-size: 13px; color: #64748b; }
-.testimonios-nota a { color: #4f46e5; font-weight: 600; text-decoration: none; }
+.testimonios-nota a { color: #245C4F; font-weight: 600; text-decoration: none; }
 .testimonios-nota a:hover { text-decoration: underline; }
 
 /* ── Elevación suave de tarjetas al pasar el cursor ────────────────── */
@@ -1564,8 +1575,8 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 }
 .grid > *:hover {
   transform: translateY(-4px);
-  border-color: #c7d2fe;
-  box-shadow: 0 16px 30px rgba(79,70,229,.12);
+  border-color: #245C4F;
+  box-shadow: 0 16px 30px rgba(36,92,79,.12);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1589,23 +1600,42 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .landing.oscuro .logo { color: #e6edfb; }
 .landing.oscuro .logo small { color: #64748b; }
 .landing.oscuro .nav-link { color: #c7d2e4; }
-.landing.oscuro .nav-link:hover { color: #a5b4fc; background: rgba(255, 255, 255, .06); }
-.landing.oscuro .nav-link.ghost { color: #a5b4fc; }
+.landing.oscuro .nav-link:hover { color: #6EE7B7; background: rgba(36, 92, 79, .2); }
+.landing.oscuro .nav-link.ghost { color: #6EE7B7; }
+.landing.oscuro .nav-cta {
+  background: #245C4F;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(36, 92, 79, .4);
+}
+.landing.oscuro .nav-cta:hover {
+  background: #1D4A3F;
+}
 .landing.oscuro .menu-btn { color: #e6edfb; }
 .landing.oscuro .mobile-menu { border-top-color: rgba(255, 255, 255, .09); }
 .landing.oscuro .mobile-menu a { color: #c7d2e4; }
+.landing.oscuro .mobile-menu a.m-cta { background: #245C4F; color: #fff; }
 
 .landing.oscuro .text-gradient {
-  background: linear-gradient(135deg, #f1f5ff 0%, #a5b4fc 50%, #d8b4fe 100%);
+  background: linear-gradient(135deg, #f1f5ff 0%, #6EE7B7 50%, #34D399 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
-.landing.oscuro .eyebrow { color: #a5b4fc; background: rgba(99, 102, 241, .18); }
-.landing.oscuro .hero h1 em { color: #a5b4fc; }
+.landing.oscuro .eyebrow { color: #6EE7B7; background: rgba(36, 92, 79, .3); }
+.landing.oscuro .hero h1 em { color: #6EE7B7; }
 .landing.oscuro .hero p { color: #b6c2d9; }
 .landing.oscuro .proof-bar { color: #8fa0bd; border-top-color: rgba(255, 255, 255, .1); }
-.landing.oscuro .btn-ghost { color: #c7d2fe; background: rgba(99, 102, 241, .18); }
-.landing.oscuro .btn-outline { color: #c7d2fe; border-color: rgba(165, 180, 252, .45); }
+.landing.oscuro .btn-primary {
+  background: #245C4F;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(36, 92, 79, .45);
+}
+.landing.oscuro .btn-primary:hover {
+  background: #1D4A3F;
+}
+.landing.oscuro .btn-ghost { color: #6EE7B7; background: rgba(36, 92, 79, .3); }
+.landing.oscuro .btn-ghost:hover { background: rgba(36, 92, 79, .45); }
+.landing.oscuro .btn-outline { color: #6EE7B7; border-color: rgba(110, 231, 183, .45); }
+.landing.oscuro .btn-outline:hover { background: rgba(36, 92, 79, .25); }
 
 .landing.oscuro h2 { color: #f1f5ff; }
 .landing.oscuro .sub { color: #8fa0bd; }
@@ -1618,17 +1648,34 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 }
 .landing.oscuro .card p { color: #9fb0cb; }
 .landing.oscuro .card p.sol { color: #d7e0f2; }
+.landing.oscuro .card:hover {
+  background: #245C4F;
+  border-color: #245C4F;
+  box-shadow: 0 16px 32px rgba(36, 92, 79, .4);
+}
+.landing.oscuro .card:hover h3 { color: #fff; }
+.landing.oscuro .card:hover p { color: #E8F1ED; }
+.landing.oscuro .card:hover p.sol { color: #fff; }
+.landing.oscuro .card:hover p.sol b { color: #fff; }
+.landing.oscuro .card:hover .ico i { color: #fff !important; }
 
 .landing.oscuro .section.demo { background: linear-gradient(180deg, #0b1220 0%, #131f36 100%); }
 .landing.oscuro .demo-tabs { background: #16233c; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .5); }
-.landing.oscuro .demo-tabs button { color: #a5b4fc; }
+.landing.oscuro .demo-tabs button { color: #6EE7B7; }
 .landing.oscuro .demo-tabs button:hover { background: rgba(255, 255, 255, .08); }
-.landing.oscuro .demo-tabs .btn-reset { background: #111c33; border-color: rgba(165, 180, 252, .3); color: #a5b4fc; }
+.landing.oscuro .demo-tabs button.active {
+  background: linear-gradient(135deg, #245C4F, #1D4A3F);
+  color: #fff;
+  box-shadow: 0 10px 20px -8px rgba(36, 92, 79, .85);
+}
+.landing.oscuro .demo-tabs .btn-reset { background: #111c33; border-color: rgba(110, 231, 183, .3); color: #6EE7B7; }
 .landing.oscuro .demo-tabs .btn-reset:hover { background: #1b2740; }
 
 .landing.oscuro .impact-card { background: #111c33; border-color: rgba(255, 255, 255, .08); }
 .landing.oscuro .impact-card p { color: #9fb0cb; }
 .landing.oscuro .impact-card .ico { background: linear-gradient(135deg, #1b2740, #22304d); }
+.landing.oscuro .impact-card .ico i { color: #6EE7B7 !important; }
+.landing.oscuro .card .ico i { color: #6EE7B7; }
 
 .landing.oscuro .table-wrap { border-color: rgba(255, 255, 255, .1); }
 .landing.oscuro .matrix { background: #111c33; }
@@ -1636,8 +1683,8 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .landing.oscuro .matrix th:first-child, .landing.oscuro .matrix td:first-child { color: #d7e0f2; }
 .landing.oscuro .matrix thead th { background: #16233c; color: #f1f5ff; }
 .landing.oscuro .matrix thead th small { color: #8fa0bd; }
-.landing.oscuro .matrix .hl { background: rgba(99, 102, 241, .18); }
-.landing.oscuro .plan-badge { background: #111c33; color: #a5b4fc; border-color: #6366f1; }
+.landing.oscuro .matrix .hl { background: rgba(36, 92, 79, .25); box-shadow: inset 0 0 0 2px #245C4F; }
+.landing.oscuro .plan-badge { background: #111c33; color: #6EE7B7; border-color: #245C4F; }
 .landing.oscuro .planes-figure img { border-color: rgba(255, 255, 255, .1); }
 .landing.oscuro .matrix-note, .landing.oscuro .table-hint { color: #8fa0bd; }
 
@@ -1648,9 +1695,11 @@ h2 { font-size: 30px; letter-spacing: -.01em; margin: 8px 0 10px; }
 .landing.oscuro .testimonio-card { background: #111c33; border-color: rgba(255, 255, 255, .08); }
 .landing.oscuro .testimonio-card blockquote { color: #d7e0f2; }
 .landing.oscuro .testimonio-card figcaption b { color: #f1f5ff; }
+.landing.oscuro .testimonio-card .avatar { background: linear-gradient(135deg, #245C4F, #26734D); }
 .landing.oscuro .testimonios-nota { color: #8fa0bd; }
-.landing.oscuro .testimonios-nota a { color: #a5b4fc; }
-.landing.oscuro .grid > *:hover { border-color: rgba(165, 180, 252, .45); }
+.landing.oscuro .testimonios-nota a { color: #6EE7B7; }
+.landing.oscuro .grid > *:hover { border-color: rgba(110, 231, 183, .45); }
+.landing.oscuro .footer a:hover { color: #6EE7B7; }
 </style>
 
 <style>

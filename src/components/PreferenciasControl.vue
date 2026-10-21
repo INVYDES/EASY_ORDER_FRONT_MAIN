@@ -22,7 +22,7 @@
       :title="oscuro ? t('pref.modoClaro') : t('pref.modoOscuro')"
       @click="alternarTema"
     >
-      <span aria-hidden="true">{{ oscuro ? '☀️' : '🌙' }}</span>
+      <i :class="oscuro ? 'fa-solid fa-sun text-amber-300' : 'fa-solid fa-moon text-[#245C4F]'"></i>
     </button>
   </div>
 </template>
@@ -62,17 +62,17 @@ const { idioma, oscuro, idiomas, t, setIdioma, alternarTema } = usePreferencias(
   transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 
-.pref-btn:hover { background: #e2e8f0; color: #4f46e5; }
+.pref-btn:hover { background: #e2e8f0; color: #245C4F; }
 .pref-btn:active { transform: scale(.94); }
-.pref-btn:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
+.pref-btn:focus-visible { outline: 2px solid #245C4F; outline-offset: 2px; }
 
 .pref-lang.on {
-  background: #4f46e5;
+  background: #245C4F;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, .3);
+  box-shadow: 0 4px 12px rgba(36, 92, 79, .3);
 }
 
-.pref-tema { font-size: 14px; padding: 0 7px; }
+.pref-tema { font-size: 13px; padding: 0 7px; }
 
 /* Modo oscuro: el propio componente conoce el tema, así que no depende de la landing. */
 .pref-oscuro {
@@ -81,7 +81,7 @@ const { idioma, oscuro, idiomas, t, setIdioma, alternarTema } = usePreferencias(
 }
 .pref-oscuro .pref-btn { color: #cbd5e1; }
 .pref-oscuro .pref-btn:hover { background: rgba(255, 255, 255, .12); color: #fff; }
-.pref-oscuro .pref-lang.on { background: #6366f1; color: #fff; }
+.pref-oscuro .pref-lang.on { background: #245C4F; color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .pref-btn { transition: none; }
