@@ -1,10 +1,12 @@
 <template>
-  <div class="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-2xl shadow-lg text-white">
+  <div class="bg-gradient-to-br from-[#245C4F] to-[#1D4A3F] p-6 rounded-2xl shadow-xl text-white border border-[#26734D]/30">
     <div class="flex items-center gap-3 mb-5">
-      <div class="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center text-2xl">📦</div>
+      <div class="w-11 h-11 bg-[#E8F1ED] rounded-xl flex items-center justify-center text-[#245C4F] shadow-sm">
+        <i class="fa-solid fa-boxes-packing text-lg"></i>
+      </div>
       <div>
         <h3 class="text-lg font-bold">Sugerencia de Paquete Estratégico (Ingeniería de Menú)</h3>
-        <p class="text-indigo-100 text-xs">Cocina (mayor utilidad, fuera Top 10) · Bebida #1 ventas · Postre menor volumen con ROI+</p>
+        <p class="text-emerald-100 text-xs">Cocina (mayor utilidad, fuera Top 10) · Bebida #1 ventas · Postre menor volumen con ROI+</p>
       </div>
     </div>
 
@@ -12,55 +14,55 @@
       <!-- Cocina -->
       <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
         <div class="flex items-center gap-2 mb-3">
-          <span class="text-2xl">🍳</span>
+          <i class="fa-solid fa-kitchen-set text-lg text-emerald-300"></i>
           <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase">Cocina</span>
-          <span class="ml-auto text-[10px] text-indigo-200">Alta Utilidad</span>
+          <span class="ml-auto text-[10px] text-emerald-200">Alta Utilidad</span>
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.kitchen || 'Calculando...' }}</p>
-        <p class="text-indigo-200 text-xs mt-1">No está en Top 10 ventas</p>
+        <p class="text-emerald-200 text-xs mt-1">No está en Top 10 ventas</p>
         <div v-if="bundle.kitchenVentas !== undefined" class="mt-2 flex items-center gap-1">
           <span class="text-emerald-300 text-xs font-black">{{ bundle.kitchenVentas }} uds</span>
-          <span class="text-indigo-300 text-[10px]">vendidas</span>
+          <span class="text-emerald-200 text-[10px]">vendidas</span>
         </div>
       </div>
 
       <!-- Bebida -->
       <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
         <div class="flex items-center gap-2 mb-3">
-          <span class="text-2xl">🥤</span>
+          <i class="fa-solid fa-martini-glass-citrus text-lg text-emerald-300"></i>
           <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase">Bebida</span>
-          <span class="ml-auto text-[10px] text-indigo-200">Top Ventas</span>
+          <span class="ml-auto text-[10px] text-emerald-200">Top Ventas</span>
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.drink || 'Calculando...' }}</p>
-        <p class="text-indigo-200 text-xs mt-1">Bebida más vendida</p>
+        <p class="text-emerald-200 text-xs mt-1">Bebida más vendida</p>
         <div v-if="bundle.drinkVentas" class="mt-2 flex items-center gap-1">
           <span class="text-emerald-300 text-xs font-black">{{ bundle.drinkVentas }} uds</span>
-          <span class="text-indigo-300 text-[10px]">vendidas</span>
+          <span class="text-emerald-200 text-[10px]">vendidas</span>
         </div>
       </div>
 
       <!-- Postre -->
       <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
         <div class="flex items-center gap-2 mb-3">
-          <span class="text-2xl">🍮</span>
+          <i class="fa-solid fa-cake-candles text-lg text-emerald-300"></i>
           <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase">Postre</span>
-          <span class="ml-auto text-[10px] text-indigo-200">Bajo Vol. (ROI+)</span>
+          <span class="ml-auto text-[10px] text-emerald-200">Bajo Vol. (ROI+)</span>
         </div>
         <p class="font-bold text-base leading-tight">{{ bundle.dessert || 'Calculando...' }}</p>
-        <p class="text-indigo-200 text-xs mt-1">Menor volumen con ROI positivo</p>
+        <p class="text-emerald-200 text-xs mt-1">Menor volumen con ROI positivo</p>
         <div v-if="bundle.dessertVentas !== undefined" class="mt-2 flex items-center gap-1">
           <span class="text-emerald-300 text-xs font-black">{{ bundle.dessertVentas }} uds</span>
-          <span class="text-indigo-300 text-[10px]">vendidas</span>
+          <span class="text-emerald-200 text-[10px]">vendidas</span>
         </div>
       </div>
     </div>
 
     <div class="mt-5 flex items-center justify-between">
-      <p class="text-[11px] text-indigo-200 italic">
+      <p class="text-[11px] text-emerald-200 italic">
         Lógica: Margen Max(Cocina ∉ Top10) + Ventas Max(Bebida) + Vol Min(Postre con ROI+)
       </p>
       <button @click="executeBundle"
-        class="px-5 py-2 bg-white text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-50 transition uppercase tracking-wide shrink-0">
+        class="px-5 py-2.5 bg-white text-[#245C4F] text-xs font-bold rounded-xl hover:bg-[#E8F1ED] transition uppercase tracking-wide shrink-0 shadow-md cursor-pointer">
         Ejecutar Paquete
       </button>
     </div>

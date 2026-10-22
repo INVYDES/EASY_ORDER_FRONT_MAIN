@@ -33,7 +33,7 @@
 
           <div class="flex gap-2 mt-4">
             <button v-if="!estado.conectado || !estado.vigente" @click="conectar" :disabled="procesando"
-              class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50">
+              class="px-4 py-2 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition disabled:opacity-50">
               Conectar Mercado Pago
             </button>
             <button v-if="estado.conectado" @click="desconectar" :disabled="procesando"
@@ -48,7 +48,7 @@
           <div class="flex items-center justify-between mb-3">
             <p class="text-sm font-semibold text-gray-700">Terminales</p>
             <button @click="sincronizar" :disabled="procesando"
-              class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-50">
+              class="text-xs font-semibold text-[#245C4F] hover:text-[#1D4A3F] disabled:opacity-50">
               ↻ Sincronizar
             </button>
           </div>

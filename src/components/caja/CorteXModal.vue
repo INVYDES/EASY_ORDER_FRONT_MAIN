@@ -3,7 +3,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">✂️</span>
+          <i class="fa-solid fa-scissors text-xl text-[#245C4F]"></i>
           <h3 class="modal-title">Realizar Corte X</h3>
         </div>
         <button @click="$emit('close')" class="close-btn">✕</button>
@@ -227,8 +227,8 @@ const guardar = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border-color: #245C4F;
+  box-shadow: 0 0 0 4px rgba(36, 92, 79, 0.1);
 }
 
 .pl-money { padding-left: 2.5rem; }
@@ -260,13 +260,13 @@ const guardar = async () => {
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 12px rgba(36, 92, 79, 0.25);
 }
 
 .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
-.bg-blue { background-color: #3b82f6; }
-.btn-submit:not(:disabled):hover { background-color: #2563eb; transform: translateY(-2px); }
+.bg-blue { background-color: #245C4F; }
+.btn-submit:not(:disabled):hover { background-color: #1D4A3F; transform: translateY(-2px); }
 
 @keyframes modalPop {
   from { opacity: 0; transform: translateY(20px) scale(0.95); }

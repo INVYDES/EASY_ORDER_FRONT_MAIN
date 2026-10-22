@@ -4,38 +4,34 @@
       type="button"
       @click="abierto = !abierto"
       :disabled="exporting"
-      class="flex items-center gap-1.5 px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+      class="flex items-center gap-1.5 px-3.5 py-2 bg-[#245C4F] text-white text-sm font-semibold rounded-xl hover:bg-[#1D4A3F] transition shadow-xs disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
     >
       <svg v-if="exporting" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
-      <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
+      <i v-else class="fa-solid fa-file-export text-xs"></i>
       {{ exporting ? 'Exportando...' : label }}
-      <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
+      <i class="fa-solid fa-chevron-down text-[10px] ml-0.5" :class="{ 'rotate-180': abierto }"></i>
     </button>
 
     <div
       v-if="abierto && !exporting"
-      class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-30"
+      class="absolute right-0 mt-2 w-48 bg-white border border-[#DDE3DE] rounded-xl shadow-lg py-1 z-30"
     >
       <button
         type="button"
         @click="elegir('xlsx')"
-        class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+        class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-[#E8F1ED] transition text-left cursor-pointer"
       >
-        <span>📊</span> Excel (.xlsx)
+        <i class="fa-solid fa-file-excel text-emerald-600 text-sm w-4"></i> Excel (.xlsx)
       </button>
       <button
         type="button"
         @click="elegir('csv')"
-        class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+        class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-[#E8F1ED] transition text-left cursor-pointer"
       >
-        <span>📄</span> CSV
+        <i class="fa-solid fa-file-csv text-blue-600 text-sm w-4"></i> CSV (.csv)
       </button>
     </div>
   </div>

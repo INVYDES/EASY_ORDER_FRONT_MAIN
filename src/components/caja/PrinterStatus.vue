@@ -15,7 +15,7 @@
         <span :class="['relative inline-flex rounded-full h-2 w-2', dotClass]"></span>
       </span>
       <span class="hidden sm:inline">{{ statusLabel }}</span>
-      <span class="text-base leading-none">🖨️</span>
+      <i class="fa-solid fa-print text-xs"></i>
     </button>
 
     <!-- Panel desplegable -->
@@ -29,7 +29,7 @@
             <!-- Header -->
             <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="text-lg">🖨️</span>
+                <i class="fa-solid fa-print text-sm text-[#245C4F]"></i>
                 <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest">Impresora Térmica</h4>
               </div>
               <button @click="panelOpen = false" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-200 text-slate-400 hover:bg-slate-300 text-xs">✕</button>
@@ -50,29 +50,30 @@
             <!-- Botones de acción -->
             <div class="px-4 py-3 space-y-2 border-b border-slate-50">
               <button v-if="!isConnected" @click="handleConnect" :disabled="!isSupported || status === 'connecting'"
-                class="w-full py-2.5 text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm">
+                class="w-full py-2.5 text-xs font-black text-white bg-[#245C4F] rounded-xl hover:bg-[#1D4A3F] transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm">
                 <span v-if="status === 'connecting'" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                {{ status === 'connecting' ? 'Conectando...' : '🔌 Conectar Impresora' }}
+                <i v-else class="fa-solid fa-plug text-xs"></i>
+                {{ status === 'connecting' ? 'Conectando...' : 'Conectar Impresora' }}
               </button>
               <template v-else>
                 <div class="grid grid-cols-2 gap-2">
                   <button @click="handleTestPrint" :disabled="isPrinting"
-                    class="py-2 text-[10px] font-black text-indigo-700 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition disabled:opacity-50 flex items-center justify-center gap-1">
-                    🧪 Prueba
+                    class="py-2 text-[10px] font-black text-[#245C4F] bg-[#E8F1ED] rounded-xl hover:bg-[#d5e5dd] transition disabled:opacity-50 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-vial text-xs"></i> Prueba
                   </button>
                   <button @click="handleOpenDrawer" :disabled="isPrinting"
-                    class="py-2 text-[10px] font-black text-amber-700 bg-amber-50 rounded-xl hover:bg-amber-100 transition disabled:opacity-50 flex items-center justify-center gap-1">
-                    🗄️ Cajón
+                    class="py-2 text-[10px] font-black text-amber-700 bg-amber-50 rounded-xl hover:bg-amber-100 transition disabled:opacity-50 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-cash-register text-xs"></i> Cajón
                   </button>
                 </div>
                 <button @click="handleDisconnect"
-                  class="w-full py-2 text-[10px] font-black text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition flex items-center justify-center gap-1">
-                  ⏏️ Desconectar
+                  class="w-full py-2 text-[10px] font-black text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-power-off text-xs"></i> Desconectar
                 </button>
               </template>
 
-              <p v-if="!isSupported" class="text-[10px] font-bold text-amber-600 bg-amber-50 p-2 rounded-xl text-center">
-                ⚠️ Web Serial no soportado. Usa Chrome o Edge.
+              <p v-if="!isSupported" class="text-[10px] font-bold text-amber-600 bg-amber-50 p-2 rounded-xl text-center flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-xs"></i> Web Serial no soportado. Usa Chrome o Edge.
               </p>
             </div>
 
@@ -87,7 +88,7 @@
                   <button v-for="size in ['80mm', '58mm']" :key="size"
                     @click="updateConfig({ paperSize: size as any })"
                     :class="['px-2.5 py-1 rounded-lg text-[10px] font-black transition',
-                      config.paperSize === size ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200']">
+                      config.paperSize === size ? 'bg-[#245C4F] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200']">
                     {{ size }}
                   </button>
                 </div>
@@ -98,7 +99,7 @@
                 <span class="text-xs font-bold text-slate-600">Abrir cajón al cobrar</span>
                 <button @click="updateConfig({ openDrawer: !config.openDrawer })"
                   :class="['w-10 h-5 rounded-full transition-colors relative',
-                    config.openDrawer ? 'bg-indigo-600' : 'bg-slate-200']">
+                    config.openDrawer ? 'bg-[#245C4F]' : 'bg-slate-200']">
                   <span :class="['absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform',
                     config.openDrawer ? 'translate-x-5' : 'translate-x-0']"></span>
                 </button>
@@ -164,7 +165,7 @@ const statusClasses = computed(() => {
   switch (status.value) {
     case 'connected':  return 'bg-emerald-50 text-emerald-700 border-emerald-200'
     case 'connecting': return 'bg-amber-50 text-amber-700 border-amber-200'
-    case 'printing':   return 'bg-indigo-50 text-indigo-700 border-indigo-200 animate-pulse'
+    case 'printing':   return 'bg-[#E8F1ED] text-[#245C4F] border-[#245C4F]/30 animate-pulse'
     case 'error':      return 'bg-red-50 text-red-700 border-red-200'
     default:           return 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
   }
@@ -174,7 +175,7 @@ const dotClass = computed(() => {
   switch (status.value) {
     case 'connected':  return 'bg-emerald-500'
     case 'connecting': return 'bg-amber-500'
-    case 'printing':   return 'bg-indigo-500'
+    case 'printing':   return 'bg-[#245C4F]'
     case 'error':      return 'bg-red-500'
     default:           return 'bg-slate-300'
   }
@@ -184,7 +185,7 @@ const statusBadgeClass = computed(() => {
   switch (status.value) {
     case 'connected':  return 'bg-emerald-100 text-emerald-700'
     case 'connecting': return 'bg-amber-100 text-amber-700'
-    case 'printing':   return 'bg-indigo-100 text-indigo-700'
+    case 'printing':   return 'bg-[#E8F1ED] text-[#245C4F]'
     case 'error':      return 'bg-red-100 text-red-700'
     default:           return 'bg-slate-100 text-slate-500'
   }

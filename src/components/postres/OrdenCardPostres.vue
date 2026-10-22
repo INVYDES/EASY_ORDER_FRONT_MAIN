@@ -10,11 +10,13 @@
           {{ order.folio || ('#' + order.id) }}
         </span>
         <span v-if="order.mesa"
-          class="text-xs text-gray-400 bg-gray-700/70 px-2 py-0.5 rounded-full shrink-0">
-          🪑 Mesa {{ order.mesa }}
+          class="text-xs text-gray-400 bg-gray-700/70 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+          <i class="fa-solid fa-chair text-[11px] text-gray-400"></i> Mesa {{ order.mesa }}
         </span>
       </div>
-      <span :class="['text-xs shrink-0 ml-2', tiempoClass]">⏱ {{ tiempoTexto }}</span>
+      <span :class="['text-xs shrink-0 ml-2 flex items-center gap-1', tiempoClass]">
+        <i class="fa-regular fa-clock text-[11px]"></i> {{ tiempoTexto }}
+      </span>
     </div>
 
     <!-- Solo los postres -->
@@ -26,21 +28,23 @@
         </span>
         <div class="flex-1 min-w-0">
           <p class="text-sm text-gray-200 leading-snug">{{ getNombreProducto(item) }}</p>
-          <p v-if="item.notas" class="text-[10px] text-amber-400 mt-0.5 italic">
-            📝 {{ item.notas }}
+          <p v-if="item.notas" class="text-[10px] text-amber-400 mt-0.5 italic flex items-center gap-1">
+            <i class="fa-solid fa-pen text-[9px] text-amber-400 shrink-0"></i> {{ item.notas }}
           </p>
         </div>
       </div>
     </div>
 
     <!-- Footer de Info -->
-    <div class="px-3 pb-2 flex items-center justify-between text-[10px] text-gray-600 font-medium">
-      <span v-if="order.user?.name || order.usuario?.name">
-        👤 {{ order.user?.name || order.usuario?.name }}
+    <div class="px-3 pb-2 flex items-center justify-between text-[10px] text-gray-400 font-medium">
+      <span v-if="order.user?.name || order.usuario?.name" class="flex items-center gap-1">
+        <i class="fa-regular fa-user text-[10px]"></i> {{ order.user?.name || order.usuario?.name }}
       </span>
       <span v-else class="opacity-0">—</span>
       <div class="flex items-center gap-2">
-        <span v-if="tiempoEstimadoTotal > 0" class="text-indigo-400 font-bold">⏱️ Est: {{ tiempoEstimadoTotal }} min</span>
+        <span v-if="tiempoEstimadoTotal > 0" class="text-emerald-400 font-bold flex items-center gap-1">
+          <i class="fa-regular fa-clock text-[10px]"></i> Est: {{ tiempoEstimadoTotal }} min
+        </span>
         <span>
           {{ postresFiltrados.length }} postre{{ postresFiltrados.length !== 1 ? 's' : '' }}
         </span>
@@ -55,7 +59,7 @@
         @click="$emit('secondary-action')"
         class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-black/20 flex items-center justify-center gap-1.5"
       >
-        <span>👁️</span> {{ secondaryActionLabel || 'Receta' }}
+        <i class="fa-regular fa-eye"></i> {{ secondaryActionLabel || 'Receta' }}
       </button>
 
       <!-- Botón Principal de Estado (bloqueado para admin/owner) -->
@@ -64,11 +68,16 @@
         :disabled="procesando || esAdminOPropietario"
         :class="[
           esAdminOPropietario ? 'bg-gray-700 text-gray-500 cursor-not-allowed shadow-none' : accionClass,
-          'w-full py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20'
+          'w-full py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-50 shadow-lg shadow-black/20 flex items-center justify-center gap-1.5'
         ]"
       >
-        <span v-if="procesando" class="inline-block animate-spin mr-2">⏳</span>
-        {{ esAdminOPropietario ? '🚫 Bloqueado' : (procesando ? 'Actualizando...' : accionLabel) }}
+        <i v-if="procesando" class="fa-solid fa-spinner animate-spin"></i>
+        <template v-if="esAdminOPropietario">
+          <i class="fa-solid fa-ban"></i> Bloqueado
+        </template>
+        <template v-else>
+          {{ procesando ? 'Actualizando...' : accionLabel }}
+        </template>
       </button>
     </div>
   </div>

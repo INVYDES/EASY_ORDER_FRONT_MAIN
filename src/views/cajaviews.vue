@@ -299,7 +299,7 @@ const renderChart = async () => {
     }
   })
 
-  const colors = totals.map(v => v > 0 ? 'rgba(99,102,241,0.85)' : 'rgba(229,231,235,0.5)')
+  const colors = totals.map(v => v > 0 ? 'rgba(36, 92, 79, 0.85)' : 'rgba(229,231,235,0.5)')
 
   if (chartInstance) {
     chartInstance.data.labels = hours
@@ -942,20 +942,20 @@ onUnmounted(() => {
 }
 
 .btn-primary-action {
-  background: #6366f1;
+  background: #245C4F;
   color: white;
   padding: 1rem 2.5rem;
   border-radius: 1rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: transform 0.2s, background-color 0.2s;
+  box-shadow: 0 4px 12px rgba(36, 92, 79, 0.25);
 }
 
 .btn-primary-action:hover {
   transform: translateY(-2px);
-  background: #4f46e5;
+  background: #1D4A3F;
 }
 
 /* Dashboard Grid */
@@ -1072,7 +1072,7 @@ onUnmounted(() => {
   width: 3rem;
   height: 3rem;
   border: 4px solid #f1f5f9;
-  border-top-color: #6366f1;
+  border-top-color: #245C4F;
   border-radius: 50%;
   animation: spinner-rotate 0.8s linear infinite;
   margin-bottom: 1rem;

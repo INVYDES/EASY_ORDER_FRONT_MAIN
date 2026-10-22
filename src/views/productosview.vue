@@ -47,10 +47,11 @@
           :key="tab.key"
           @click="activeTab = tab.key"
           :class="[
-            'px-5 py-2 text-sm font-semibold rounded-lg transition',
+            'px-5 py-2 text-sm font-semibold rounded-lg transition flex items-center gap-1.5',
             activeTab === tab.key ? 'bg-white shadow-xs text-[#202723] border border-[#DDE3DE]' : 'text-[#68736C] hover:text-[#202723] hover:bg-gray-200'
           ]"
         >
+          <i v-if="tab.icon" :class="tab.icon" class="text-xs text-[#245C4F]"></i>
           {{ tab.label }}
           <span
             class="ml-1.5 text-xs font-bold rounded-full px-2 py-0.5"
@@ -89,7 +90,7 @@
             @input="debouncedSearchPaquetes"
             type="text"
             placeholder="Buscar paquete por nombre..."
-            class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm"
+            class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-[#245C4F] focus:border-transparent outline-none transition shadow-sm"
           />
           <button
             v-if="searchTermPaquetes"
@@ -549,10 +550,10 @@ const loading = reactive({
 
 // ── TABS ───────────────────────────────────────────────────
 const tabs = [
-  { key: 'ingredientes', label: '🧄 Ingredientes' },
-  { key: 'productos',    label: '📦 Productos' },
-  { key: 'paquetes',     label: '🎁 Paquetes' },
-  { key: 'anuncios',     label: '📢 Anuncios' },
+  { key: 'ingredientes', label: 'Ingredientes', icon: 'fa-solid fa-seedling' },
+  { key: 'productos',    label: 'Productos',    icon: 'fa-solid fa-box' },
+  { key: 'paquetes',     label: 'Paquetes',     icon: 'fa-solid fa-cubes' },
+  { key: 'anuncios',     label: 'Anuncios',     icon: 'fa-solid fa-bullhorn' },
 ]
 
 const getTabCount = (key) => {

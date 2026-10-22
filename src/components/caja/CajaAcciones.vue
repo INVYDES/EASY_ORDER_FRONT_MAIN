@@ -4,22 +4,22 @@
 
     <button :disabled="esAdminOPropietario" @click="$emit('movimiento')"
       :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition',
-               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700']">
-      <span class="text-lg">💵</span> Movimiento de efectivo
+               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-[#E8F1ED] hover:bg-[#d5e5dd] text-[#245C4F] cursor-pointer']">
+      <i class="fa-solid fa-money-bill-transfer text-[#245C4F] text-base w-5 text-center"></i> Movimiento de efectivo
     </button>
     <button :disabled="esAdminOPropietario" @click="$emit('corte-x')"
       :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition',
-               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-sky-50 hover:bg-sky-100 text-sky-700']">
-      <span class="text-lg">✂️</span> Corte X
+               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-sky-50 hover:bg-sky-100 text-sky-700 cursor-pointer']">
+      <i class="fa-solid fa-scissors text-sky-600 text-base w-5 text-center"></i> Corte X
     </button>
     <button @click="$emit('exportar')"
-      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-sm transition">
-      <span class="text-lg">🖨️</span> Exportar corte
+      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-sm transition cursor-pointer">
+      <i class="fa-solid fa-print text-emerald-600 text-base w-5 text-center"></i> Exportar corte
     </button>
     <button :disabled="esAdminOPropietario" @click="$emit('cerrar')"
       :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition',
-               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-red-50 hover:bg-red-100 text-red-600']">
-      <span class="text-lg">🔒</span> Cerrar caja
+               esAdminOPropietario ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60' : 'bg-red-50 hover:bg-red-100 text-red-600 cursor-pointer']">
+      <i class="fa-solid fa-lock text-red-600 text-base w-5 text-center"></i> Cerrar caja
     </button>
 
     <div class="mt-auto pt-4 border-t border-gray-100 space-y-2 text-sm">

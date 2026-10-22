@@ -2,7 +2,7 @@
   <div class="kpi-grid">
     <div class="kpi-card br-slate">
       <div class="kpi-content">
-        <div class="kpi-icon bg-slate">💵</div>
+        <div class="kpi-icon bg-slate"><i class="fa-solid fa-vault text-slate-700"></i></div>
         <div>
           <p class="kpi-label">Apertura</p>
           <p class="kpi-value text-slate">${{ format(openingAmount) }}</p>
@@ -12,7 +12,7 @@
 
     <div class="kpi-card br-emerald">
       <div class="kpi-content">
-        <div class="kpi-icon bg-emerald">💰</div>
+        <div class="kpi-icon bg-emerald"><i class="fa-solid fa-money-bill-wave text-emerald-600"></i></div>
         <div>
           <p class="kpi-label">Ventas Efectivo</p>
           <p class="kpi-value text-emerald">${{ format(efectivoSales) }}</p>
@@ -22,7 +22,7 @@
 
     <div class="kpi-card br-blue">
       <div class="kpi-content">
-        <div class="kpi-icon bg-blue">💳</div>
+        <div class="kpi-icon bg-blue"><i class="fa-solid fa-credit-card text-blue-600"></i></div>
         <div>
           <p class="kpi-label">Ventas Tarjeta</p>
           <p class="kpi-value text-blue">${{ format(cardSales) }}</p>
@@ -30,19 +30,19 @@
       </div>
     </div>
 
-    <div class="kpi-card br-purple">
+    <div class="kpi-card br-forest">
       <div class="kpi-content">
-        <div class="kpi-icon bg-purple">📲</div>
+        <div class="kpi-icon bg-forest"><i class="fa-solid fa-mobile-screen text-[#245C4F]"></i></div>
         <div>
           <p class="kpi-label">Transferencias</p>
-          <p class="kpi-value text-purple">${{ format(transferSales) }}</p>
+          <p class="kpi-value text-forest">${{ format(transferSales) }}</p>
         </div>
       </div>
     </div>
 
     <div class="kpi-card br-sky">
       <div class="kpi-content">
-        <div class="kpi-icon bg-sky">🧾</div>
+        <div class="kpi-icon bg-sky"><i class="fa-solid fa-cash-register text-sky-600"></i></div>
         <div>
           <p class="kpi-label">Efectivo en Caja</p>
           <p class="kpi-value text-sky">${{ format(cashInRegister) }}</p>
@@ -52,7 +52,7 @@
 
     <div class="kpi-card br-amber">
       <div class="kpi-content">
-        <div class="kpi-icon bg-amber">✨</div>
+        <div class="kpi-icon bg-amber"><i class="fa-solid fa-hand-holding-dollar text-amber-500"></i></div>
         <div>
           <p class="kpi-label">Propinas</p>
           <p class="kpi-value text-amber">${{ format(totalTips) }}</p>
@@ -148,9 +148,9 @@ const format = (v) => Number(v || 0).toLocaleString('en-US', { minimumFractionDi
 .bg-blue { background-color: #eff6ff; }
 .text-blue { color: #1d4ed8; }
 
-.br-purple { border-left-color: #a855f7; }
-.bg-purple { background-color: #faf5ff; }
-.text-purple { color: #7e22ce; }
+.br-forest { border-left-color: #245C4F; }
+.bg-forest { background-color: #E8F1ED; }
+.text-forest { color: #245C4F; }
 
 .br-sky { border-left-color: #0ea5e9; }
 .bg-sky { background-color: #f0f9ff; }

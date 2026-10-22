@@ -11,8 +11,9 @@
       <div v-if="errorMessage" class="mb-4 p-3 text-sm rounded-lg"
         :class="cajaYaAbierta ? 'bg-amber-50 border border-amber-200 text-amber-700' : 'bg-red-50 border border-red-200 text-red-700'"
       >
-        <p class="font-semibold mb-0.5">
-          {{ cajaYaAbierta ? '⚠️ Caja ya abierta' : '❌ Error' }}
+        <p class="font-semibold mb-0.5 flex items-center gap-1.5">
+          <i :class="cajaYaAbierta ? 'fa-solid fa-triangle-exclamation text-amber-500' : 'fa-solid fa-circle-xmark text-red-500'"></i>
+          <span>{{ cajaYaAbierta ? 'Caja ya abierta' : 'Error' }}</span>
         </p>
         <p>{{ errorMessage }}</p>
       </div>
@@ -21,7 +22,7 @@
       <template v-if="cajaYaAbierta">
         <button
           @click="$emit('already-open')"
-          class="w-full py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+          class="w-full py-2.5 bg-[#245C4F] text-white rounded-lg hover:bg-[#1D4A3F] transition font-medium"
         >
           Continuar con la caja actual
         </button>
@@ -35,7 +36,7 @@
           step="0.01"
           min="0"
           placeholder="Monto inicial"
-          class="w-full px-3 py-2.5 border rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          class="w-full px-3 py-2.5 border rounded-lg mb-2 focus:ring-2 focus:ring-[#245C4F] focus:outline-none"
           :class="{ 'border-red-400': fieldError }"
           autofocus
         />
@@ -45,7 +46,7 @@
           v-model="observations"
           placeholder="Observaciones (opcional)"
           rows="2"
-          class="w-full px-3 py-2 border rounded-lg mb-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          class="w-full px-3 py-2 border rounded-lg mb-4 text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none"
         ></textarea>
 
         <div class="flex gap-2">
@@ -58,7 +59,7 @@
           <button
             @click="openCaja"
             :disabled="!isValid || loading"
-            class="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 text-sm font-medium"
+            class="flex-1 py-2.5 bg-[#245C4F] text-white rounded-lg hover:bg-[#1D4A3F] transition disabled:opacity-50 text-sm font-medium"
           >
             {{ loading ? 'Abriendo...' : 'Abrir Caja' }}
           </button>

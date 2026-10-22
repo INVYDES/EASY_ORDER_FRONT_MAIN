@@ -41,7 +41,7 @@
             min="0"
             placeholder="0.00"
             autofocus
-            class="w-full pl-7 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+            class="w-full pl-7 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-[#245C4F] focus:outline-none text-sm"
             :class="fieldError ? 'border-red-400' : 'border-gray-200'"
           />
         </div>
@@ -76,7 +76,7 @@
           v-model="observations"
           placeholder="Notas del turno, incidencias..."
           rows="2"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#245C4F] focus:outline-none resize-none"
         ></textarea>
       </div>
 
